@@ -36,7 +36,7 @@ public class ParsedPosting extends net.ktnx.mobileledger.json.ParsedPosting {
     private String pcomment = "";
     private List<List<String>> ptags = new ArrayList<>();
     private String poriginal = null;
-    private int ptransaction_;
+    private String ptransaction_ = "1";
     public ParsedPosting() {
     }
     public static ParsedPosting fromLedgerAccount(LedgerTransactionAccount acc) {
@@ -60,7 +60,8 @@ public class ParsedPosting extends net.ktnx.mobileledger.json.ParsedPosting {
         style.setAscommodityside(getCommoditySide());
         style.setAscommodityspaced(getCommoditySpaced());
         style.setAsprecision(2);
-        style.setAsdecimalpoint('.');
+        style.setAsdecimalmark(".");
+        style.setAsrounding("NoRounding");
         amt.setAstyle(style);
         if (acc.getCurrency() != null)
             amt.setAcommodity(acc.getCurrency());
@@ -74,10 +75,10 @@ public class ParsedPosting extends net.ktnx.mobileledger.json.ParsedPosting {
     public void setPdate2(String pdate2) {
         this.pdate2 = pdate2;
     }
-    public int getPtransaction_() {
+    public String getPtransaction_() {
         return ptransaction_;
     }
-    public void setPtransaction_(int ptransaction_) {
+    public void setPtransaction_(String ptransaction_) {
         this.ptransaction_ = ptransaction_;
     }
     public String getPdate() {

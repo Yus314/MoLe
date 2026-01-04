@@ -134,7 +134,7 @@ public class ParsedLedgerTransaction implements net.ktnx.mobileledger.json.Parse
         this.tindex = tindex;
         if (tpostings != null)
             for (ParsedPosting p : tpostings) {
-                p.setPtransaction_(tindex);
+                p.setPtransaction_(String.valueOf(tindex));
             }
     }
     public List<ParsedPosting> getTpostings() {
@@ -144,7 +144,7 @@ public class ParsedLedgerTransaction implements net.ktnx.mobileledger.json.Parse
         this.tpostings = tpostings;
     }
     public void addPosting(ParsedPosting posting) {
-        posting.setPtransaction_(tindex);
+        posting.setPtransaction_(String.valueOf(tindex));
         tpostings.add(posting);
     }
     public LedgerTransaction asLedgerTransaction() throws ParseException {

@@ -1,0 +1,125 @@
+# MoLe テスト用 hledger-web サーバー群
+#
+# 使用方法:
+#   docker-compose -f docker-compose.test.yml up -d
+#
+# 停止方法:
+#   docker-compose -f docker-compose.test.yml down
+#
+# ログ確認:
+#   docker-compose -f docker-compose.test.yml logs -f
+
+services:
+  # hledger-web v1.32 (最初に追加したバージョン)
+  # ポート: 5032
+  # 新機能: adeclarationinfo フィールド
+  hledger-web-1-32:
+    image: dastapov/hledger:1.32.1
+    container_name: mole-test-hledger-1.32
+    ports:
+      - "5032:5000"
+    volumes:
+      - ./docs/test-data/test.journal:/data/test.journal
+    command: >
+      hledger-web
+      --serve
+      --host=0.0.0.0
+      --port 5000
+      --file /data/test.journal
+      --base-url http://localhost:5032
+    restart: unless-stopped
+    networks:
+      - mole-test-network
+
+  # hledger-web v1.40 (中間バージョン)
+  # ポート: 5040
+  # 改善: base-url処理の改善
+  hledger-web-1-40:
+    image: dastapov/hledger:1.40
+    container_name: mole-test-hledger-1.40
+    ports:
+      - "5040:5000"
+    volumes:
+      - ./docs/test-data/test.journal:/data/test.journal
+    command: >
+      hledger-web
+      --serve
+      --host=0.0.0.0
+      --port 5000
+      --file /data/test.journal
+      --base-url http://localhost:5040
+    restart: unless-stopped
+    networks:
+      - mole-test-network
+
+  # hledger-web v1.50 (最新バージョン)
+  # ポート: 5050
+  # 要件: GHC 9.6+（サーバー側のみ、クライアントには影響なし）
+  hledger-web-1-50:
+    image: dastapov/hledger:1.50
+    container_name: mole-test-hledger-1.50
+    user: "0:0"
+    ports:
+      - "5050:5000"
+    volumes:
+      - ./docs/test-data/test.journal:/data/test.journal
+    command: >
+      hledger-web
+      --serve
+      --host=0.0.0.0
+      --port 5000
+      --file /data/test.journal
+      --base-url http://localhost:5050
+    restart: unless-stopped
+    networks:
+      - mole-test-network
+
+  # hledger-web v1.23 (後方互換性テスト用)
+  # ポート: 5023
+  # レガシーバージョン、既存のサポート確認用
+  hledger-web-1-23:
+    image: dastapov/hledger:1.23
+    container_name: mole-test-hledger-1.23
+    ports:
+      - "5023:5000"
+    volumes:
+      - ./docs/test-data/test.journal:/data/test.journal
+    command: >
+      hledger-web
+      --serve
+      --host=0.0.0.0
+      --port 5000
+      --file /data/test.journal
+    restart: unless-stopped
+    networks:
+      - mole-test-network
+
+networks:
+  mole-test-network:
+    driver: bridge
+
+# 使用例:
+#
+# 1. 全サーバーを起動:
+#    docker-compose -f docker-compose.test.yml up -d
+#
+# 2. 特定のバージョンのみ起動:
+#    docker-compose -f docker-compose.test.yml up -d hledger-web-1-32
+#
+# 3. サーバーの状態確認:
+#    docker-compose -f docker-compose.test.yml ps
+#
+# 4. ログ確認:
+#    docker-compose -f docker-compose.test.yml logs -f hledger-web-1-32
+#
+# 5. バージョン確認:
+#    curl http://localhost:5032/version  # v1.32
+#    curl http://localhost:5040/version  # v1.40
+#    curl http://localhost:5050/version  # v1.50
+#    curl http://localhost:5023/version  # v1.23
+#
+# 6. JSON API確認:
+#    curl http://localhost:5032/json | jq .
+#
+# 7. 全サーバーを停止:
+#    docker-compose -f docker-compose.test.yml down

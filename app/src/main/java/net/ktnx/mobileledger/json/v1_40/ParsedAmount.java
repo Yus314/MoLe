@@ -25,14 +25,14 @@ public class ParsedAmount {
     private ParsedQuantity aquantity;
     private boolean aismultiplier;
     private ParsedStyle astyle;
-    private ParsedPrice aprice;
+    private ParsedPrice acost;
     public ParsedAmount() {
     }
-    public ParsedPrice getAprice() {
-        return aprice;
+    public ParsedPrice getAcost() {
+        return acost;
     }
-    public void setAprice(ParsedPrice aprice) {
-        this.aprice = aprice;
+    public void setAcost(ParsedPrice acost) {
+        this.acost = acost;
     }
     public String getAcommodity() {
         return acommodity;
