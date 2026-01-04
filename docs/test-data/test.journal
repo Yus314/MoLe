@@ -1,0 +1,89 @@
+; MoLe テスト用仕訳データ
+; このファイルは実機テスト用のサンプルデータです
+;
+; アカウント構造:
+;   - assets:bank:checking (資産:銀行:当座預金)
+;   - expenses:food (支出:食費)
+;   - expenses:transport (支出:交通費)
+;   - income:salary (収入:給料)
+;   - equity:opening balances (資本:期首残高)
+
+; アカウント宣言（v1.32+で宣言情報が取得可能）
+account assets:bank:checking
+account expenses:food
+account expenses:transport
+account income:salary
+account equity:opening balances
+
+; 期首残高
+2024-01-01 * Opening Balance
+    ; 最初の残高を設定
+    assets:bank:checking    1000.00 USD
+    equity:opening balances
+
+; 日常的な支出
+2024-01-05 * Grocery Shopping
+    ; スーパーマーケットでの買い物
+    expenses:food           50.00 USD
+    assets:bank:checking
+
+2024-01-10 * Subway Ticket
+    ; 地下鉄の切符
+    expenses:transport      2.50 USD
+    assets:bank:checking
+
+; 収入
+2024-01-15 * Monthly Salary
+    ; 月給の入金
+    income:salary          -3000.00 USD
+    assets:bank:checking
+
+; 追加の支出
+2024-01-20 * Restaurant
+    ; レストランでの食事
+    expenses:food           75.00 USD
+    assets:bank:checking
+
+2024-01-22 * Bus Pass
+    ; バスの定期券
+    expenses:transport      30.00 USD
+    assets:bank:checking
+
+2024-01-25 * Coffee Shop
+    ; カフェでの飲み物
+    expenses:food           5.50 USD
+    assets:bank:checking
+
+; 月末
+2024-01-31 * Grocery Shopping
+    ; 月末の買い出し
+    expenses:food           120.00 USD
+    assets:bank:checking
+
+; 2月のトランザクション
+2024-02-01 * Rent Payment
+    ; 家賃の支払い（新しいカテゴリ）
+    expenses:housing        800.00 USD
+    assets:bank:checking
+
+2024-02-05 * Utility Bill
+    ; 光熱費（新しいカテゴリ）
+    expenses:utilities      75.00 USD
+    assets:bank:checking
+
+2024-02-15 * Monthly Salary
+    ; 2月の給料
+    income:salary          -3000.00 USD
+    assets:bank:checking
+
+; アカウント宣言（追加カテゴリ）
+account expenses:housing
+account expenses:utilities
+
+; 期待される残高（2024-02-15時点）:
+;   assets:bank:checking: 1000 - 50 - 2.50 + 3000 - 75 - 30 - 5.50 - 120 - 800 - 75 + 3000 = 4,842.00 USD
+;   expenses:food: 50 + 75 + 5.50 + 120 = 250.50 USD
+;   expenses:transport: 2.50 + 30 = 32.50 USD
+;   expenses:housing: 800.00 USD
+;   expenses:utilities: 75.00 USD
+;   income:salary: -6,000.00 USD

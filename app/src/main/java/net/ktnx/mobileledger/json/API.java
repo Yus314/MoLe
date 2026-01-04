@@ -1,5 +1,5 @@
 /*
- * Copyright © 2020 Damyan Ivanov.
+ * Copyright © 2020, 2024 Damyan Ivanov.
  * This file is part of MoLe.
  * MoLe is free software: you can distribute it and/or modify it
  * under the term of the GNU General Public License as published by
@@ -23,9 +23,9 @@ import android.util.SparseArray;
 import net.ktnx.mobileledger.R;
 
 public enum API {
-    auto(0), html(-1), v1_14(-2), v1_15(-3), v1_19_1(-4), v1_23(-5);
+    auto(0), html(-1), v1_14(-2), v1_15(-3), v1_19_1(-4), v1_23(-5), v1_32(-6), v1_40(-7), v1_50(-8);
     private static final SparseArray<API> map = new SparseArray<>();
-    public static API[] allVersions = {v1_23, v1_19_1, v1_15, v1_14};
+    public static API[] allVersions = {v1_50, v1_40, v1_32, v1_23, v1_19_1, v1_15, v1_14};
 
     static {
         for (API item : API.values()) {
@@ -58,6 +58,12 @@ public enum API {
                 return resources.getString(R.string.api_1_19_1);
             case v1_23:
                 return resources.getString(R.string.api_1_23);
+            case v1_32:
+                return resources.getString(R.string.api_1_32);
+            case v1_40:
+                return resources.getString(R.string.api_1_40);
+            case v1_50:
+                return resources.getString(R.string.api_1_50);
             default:
                 throw new IllegalStateException("Unexpected value: " + value);
         }
@@ -76,6 +82,12 @@ public enum API {
                 return "1.19.1";
             case v1_23:
                 return "1.23";
+            case v1_32:
+                return "1.32";
+            case v1_40:
+                return "1.40";
+            case v1_50:
+                return "1.50";
             default:
                 throw new IllegalStateException("Unexpected value: " + this);
         }

@@ -211,6 +211,9 @@
     <string name="no_profile_restore_hint">… or, you may restore from backup</string>
     <string name="profile_not_available">Profile not available</string>
     <string name="api_1_23">Version 1.23</string>
+    <string name="api_1_32">Version 1.32</string>
+    <string name="api_1_40">Version 1.40</string>
+    <string name="api_1_50">Version 1.50</string>
     <string name="accounts_menu_show_zero">Show zero balances</string>
     <string name="accounts_menu_show_zero_condensed">Zero balances</string>
 </resources>

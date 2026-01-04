@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 Damyan Ivanov.
+ * Copyright © 2021, 2024 Damyan Ivanov.
  * This file is part of MoLe.
  * MoLe is free software: you can distribute it and/or modify it
  * under the term of the GNU General Public License as published by
@@ -32,6 +32,12 @@ abstract public class Gateway {
                 return new net.ktnx.mobileledger.json.v1_19_1.Gateway();
             case v1_23:
                 return new net.ktnx.mobileledger.json.v1_23.Gateway();
+            case v1_32:
+                return new net.ktnx.mobileledger.json.v1_32.Gateway();
+            case v1_40:
+                return new net.ktnx.mobileledger.json.v1_40.Gateway();
+            case v1_50:
+                return new net.ktnx.mobileledger.json.v1_50.Gateway();
             default:
                 throw new RuntimeException(
                         "JSON API version " + apiVersion + " save implementation missing");

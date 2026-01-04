@@ -18,6 +18,7 @@
 package net.ktnx.mobileledger.ui.activity;
 
 import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -42,8 +43,15 @@ public abstract class CrashReportingActivity extends AppCompatActivity {
             PrintWriter pw = new PrintWriter(sw);
 
             try {
-                PackageInfo pi = getApplicationContext().getPackageManager()
-                                                        .getPackageInfo(getPackageName(), 0);
+                PackageManager pm = getApplicationContext().getPackageManager();
+                PackageInfo pi;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    pi = pm.getPackageInfo(getPackageName(), PackageManager.PackageInfoFlags.of(0));
+                } else {
+                    @SuppressWarnings("deprecation")
+                    PackageInfo piCompat = pm.getPackageInfo(getPackageName(), 0);
+                    pi = piCompat;
+                }
                 pw.format("MoLe version: %s\n", pi.versionName);
             }
             catch (Exception oh) {

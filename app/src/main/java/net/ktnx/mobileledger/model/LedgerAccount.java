@@ -239,11 +239,14 @@ public class LedgerAccount {
         dbo.account = toDBO();
 
         dbo.amounts = new ArrayList<>();
-        for (LedgerAmount amt : getAmounts()) {
-            AccountValue val = new AccountValue();
-            val.setCurrency(amt.getCurrency());
-            val.setValue(amt.getAmount());
-            dbo.amounts.add(val);
+        List<LedgerAmount> amounts = getAmounts();
+        if (amounts != null) {
+            for (LedgerAmount amt : amounts) {
+                AccountValue val = new AccountValue();
+                val.setCurrency(amt.getCurrency());
+                val.setValue(amt.getAmount());
+                dbo.amounts.add(val);
+            }
         }
 
         return dbo;

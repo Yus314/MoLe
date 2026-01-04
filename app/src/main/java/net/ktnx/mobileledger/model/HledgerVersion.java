@@ -1,5 +1,5 @@
 /*
- * Copyright © 2020 Damyan Ivanov.
+ * Copyright © 2020, 2024 Damyan Ivanov.
  * This file is part of MoLe.
  * MoLe is free software: you can distribute it and/or modify it
  * under the term of the GNU General Public License as published by
@@ -98,6 +98,31 @@ public class HledgerVersion {
         if (isPre_1_20_1)
             return null;
 
-        return API.v1_19_1;
+        // Return the most appropriate API version based on detected hledger-web version
+        // Versions are checked in descending order to select the highest compatible API
+        if (atLeast(1, 50)) {
+            return API.v1_50;
+        }
+        else if (atLeast(1, 40)) {
+            return API.v1_40;
+        }
+        else if (atLeast(1, 32)) {
+            return API.v1_32;
+        }
+        else if (atLeast(1, 23)) {
+            return API.v1_23;
+        }
+        else if (atLeast(1, 19)) {
+            return API.v1_19_1;
+        }
+        else if (atLeast(1, 15)) {
+            return API.v1_15;
+        }
+        else if (atLeast(1, 14)) {
+            return API.v1_14;
+        }
+
+        // For versions older than 1.14, return null (not supported)
+        return null;
     }
 }

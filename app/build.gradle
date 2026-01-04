@@ -1,5 +1,5 @@
 /*
- * Copyright © 2023 Damyan Ivanov.
+ * Copyright © 2023, 2024 Damyan Ivanov.
  * This file is part of MoLe.
  * MoLe is free software: you can distribute it and/or modify it
  * under the term of the GNU General Public License as published by
@@ -17,6 +17,13 @@
 
 apply plugin: 'com.android.application'
 
+// Load keystore properties for release signing
+def keystorePropertiesFile = rootProject.file("keystore.properties")
+def keystoreProperties = new Properties()
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
 android {
     compileSdkVersion 33
     defaultConfig {
@@ -24,8 +31,8 @@ android {
         minSdkVersion 22
         targetSdkVersion 33
         vectorDrawables.useSupportLibrary true
-        versionCode 56
-        versionName '0.21.7'
+        versionCode 58
+        versionName '0.22.0'
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         javaCompileOptions {
             annotationProcessorOptions {
@@ -37,8 +44,21 @@ android {
             }
         }
     }
+    signingConfigs {
+        release {
+            if (keystorePropertiesFile.exists()) {
+                storeFile file(keystoreProperties['storeFile'])
+                storePassword keystoreProperties['storePassword']
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+            }
+        }
+    }
     buildTypes {
         release {
+            if (keystorePropertiesFile.exists()) {
+                signingConfig signingConfigs.release
+            }
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
