@@ -1,5 +1,23 @@
 # Changes
 
+## [0.22.0] - 2026-01-02
+
+* FEATURES:
+    + add support for hledger-web v1.32, v1.40, and v1.50
+    + automatic version detection now selects appropriate API version based on detected hledger-web version
+    + support for account declaration info (hledger-web v1.32+)
+* IMPROVEMENTS:
+    + enhanced `HledgerVersion.getSuitableApiVersion()` to return optimal API version based on detected hledger-web version
+    + updated API enum with v1_32, v1_40, and v1_50
+* FIXES:
+    + fixed `TransactionListParser` missing support for v1_32, v1_40, and v1_50
+    + fixed `NullPointerException` in `LedgerAccount.toDBOWithAmounts()` when amounts list is null
+    + added null checks in `ParsedLedgerAccount.getSimpleBalance()` across all API versions (v1_14-v1_50)
+* TECHNICAL:
+    + new JSON parser packages: `v1_32`, `v1_40`, `v1_50`
+    + `ParsedLedgerAccount` now includes optional `adeclarationinfo` field (v1.32+)
+    + maintains full backward compatibility with hledger-web v1.14-v1.23
+
 ## [0.21.7] = 2024-03-19
 
 * FIXES:

@@ -35,6 +35,12 @@ public abstract class TransactionListParser {
                 return new net.ktnx.mobileledger.json.v1_19_1.TransactionListParser(input);
             case v1_23:
                 return new net.ktnx.mobileledger.json.v1_23.TransactionListParser(input);
+            case v1_32:
+                return new net.ktnx.mobileledger.json.v1_32.TransactionListParser(input);
+            case v1_40:
+                return new net.ktnx.mobileledger.json.v1_40.TransactionListParser(input);
+            case v1_50:
+                return new net.ktnx.mobileledger.json.v1_50.TransactionListParser(input);
             default:
                 throw new RuntimeException("Unsupported version " + apiVersion.toString());
         }

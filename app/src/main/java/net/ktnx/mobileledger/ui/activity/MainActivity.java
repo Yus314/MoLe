@@ -20,6 +20,7 @@ package net.ktnx.mobileledger.ui.activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.content.pm.ShortcutInfo;
 import android.content.pm.ShortcutManager;
 import android.content.res.ColorStateList;
@@ -173,8 +174,15 @@ public class MainActivity extends ProfileThemedActivity implements FabManager.Fa
         barDrawerToggle.syncState();
 
         try {
-            PackageInfo pi = getApplicationContext().getPackageManager()
-                                                    .getPackageInfo(getPackageName(), 0);
+            PackageManager pm = getApplicationContext().getPackageManager();
+            PackageInfo pi;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                pi = pm.getPackageInfo(getPackageName(), PackageManager.PackageInfoFlags.of(0));
+            } else {
+                @SuppressWarnings("deprecation")
+                PackageInfo piCompat = pm.getPackageInfo(getPackageName(), 0);
+                pi = piCompat;
+            }
             ((TextView) b.navUpper.findViewById(R.id.drawer_version_text)).setText(pi.versionName);
             ((TextView) b.noProfilesLayout.findViewById(R.id.drawer_version_text)).setText(pi.versionName);
         }

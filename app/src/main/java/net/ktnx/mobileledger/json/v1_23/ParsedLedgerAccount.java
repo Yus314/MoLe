@@ -43,9 +43,12 @@ public class ParsedLedgerAccount extends net.ktnx.mobileledger.json.ParsedLedger
     @Override
     public List<SimpleBalance> getSimpleBalance() {
         List<SimpleBalance> result = new ArrayList<SimpleBalance>();
-        for (ParsedBalance b : getAibalance()) {
-            result.add(new SimpleBalance(b.getAcommodity(), b.getAquantity()
-                                                             .asFloat()));
+        List<ParsedBalance> balances = getAibalance();
+        if (balances != null) {
+            for (ParsedBalance b : balances) {
+                result.add(new SimpleBalance(b.getAcommodity(), b.getAquantity()
+                                                                 .asFloat()));
+            }
         }
 
         return result;
