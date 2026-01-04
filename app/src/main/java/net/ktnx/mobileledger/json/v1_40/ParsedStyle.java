@@ -22,6 +22,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ParsedStyle extends net.ktnx.mobileledger.json.ParsedStyle {
     private int asprecision;
+    private String asdecimalmark = ".";
+    private String asrounding = "NoRounding";
     public ParsedStyle() {
     }
     public int getAsprecision() {
@@ -29,5 +31,17 @@ public class ParsedStyle extends net.ktnx.mobileledger.json.ParsedStyle {
     }
     public void setAsprecision(int asprecision) {
         this.asprecision = asprecision;
+    }
+    public String getAsdecimalmark() {
+        return asdecimalmark;
+    }
+    public void setAsdecimalmark(String asdecimalmark) {
+        this.asdecimalmark = asdecimalmark;
+    }
+    public String getAsrounding() {
+        return asrounding;
+    }
+    public void setAsrounding(String asrounding) {
+        this.asrounding = asrounding;
     }
 }
