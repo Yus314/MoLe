@@ -168,8 +168,8 @@ public class RawConfigWriter {
             w.name(Keys.URL)
              .value(p.getUrl());
             w.name(Keys.USE_AUTH)
-             .value(p.useAuthentication());
-            if (p.useAuthentication()) {
+             .value(p.isAuthEnabled());
+            if (p.isAuthEnabled()) {
                 w.name(Keys.AUTH_USER)
                  .value(p.getAuthUser());
                 w.name(Keys.AUTH_PASS)
@@ -179,9 +179,9 @@ public class RawConfigWriter {
                 w.name(Keys.API_VER)
                  .value(p.getApiVersion());
             w.name(Keys.CAN_POST)
-             .value(p.permitPosting());
-            if (p.permitPosting()) {
-                String defaultCommodity = p.getDefaultCommodity();
+             .value(p.canPost());
+            if (p.canPost()) {
+                String defaultCommodity = p.getDefaultCommodityOrEmpty();
                 if (!defaultCommodity.isEmpty())
                     w.name(Keys.DEFAULT_COMMODITY)
                      .value(defaultCommodity);

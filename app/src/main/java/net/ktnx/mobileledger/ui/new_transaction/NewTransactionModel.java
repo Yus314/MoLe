@@ -195,7 +195,7 @@ public class NewTransactionModel extends ViewModel {
         Item.resetIdDispenser();
         list.add(new TransactionHead(""));
         final String defaultCurrency = Objects.requireNonNull(Data.getProfile())
-                                              .getDefaultCommodity();
+                                              .getDefaultCommodityOrEmpty();
         list.add(new TransactionAccount("", defaultCurrency));
         list.add(new TransactionAccount("", defaultCurrency));
         noteFocusChanged(0, FocusedElement.Description);
@@ -413,7 +413,7 @@ public class NewTransactionModel extends ViewModel {
         final Profile profile = Objects.requireNonNull(Data.getProfile());
         for (int i = 1; i < list.size(); i++) {
             ((TransactionAccount) list.get(i)).setCurrency(
-                    newValue ? profile.getDefaultCommodity() : "");
+                    newValue ? profile.getDefaultCommodityOrEmpty() : "");
         }
         checkTransactionSubmittable(null);
         showCurrency.setValue(newValue);

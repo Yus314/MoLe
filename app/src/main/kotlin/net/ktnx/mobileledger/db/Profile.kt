@@ -75,13 +75,14 @@ class Profile {
     var showCommodityByDefault: Boolean = false
 
     @ColumnInfo(name = "default_commodity")
-    private var _defaultCommodity: String? = null
+    var defaultCommodity: String? = null
+        private set
 
-    var defaultCommodity: String
-        get() = _defaultCommodity ?: ""
-        set(value) {
-            _defaultCommodity = Misc.nullIsEmpty(value)
-        }
+    fun getDefaultCommodityOrEmpty(): String = defaultCommodity ?: ""
+
+    fun setDefaultCommodity(value: String?) {
+        defaultCommodity = Misc.nullIsEmpty(value)
+    }
 
     @ColumnInfo(name = "show_comments_by_default", defaultValue = "1")
     var showCommentsByDefault: Boolean = true
@@ -95,11 +96,11 @@ class Profile {
     @ColumnInfo(name = "detected_version_minor")
     var detectedVersionMinor: Int = 0
 
-    fun useAuthentication(): Boolean = useAuthentication
+    fun isAuthEnabled(): Boolean = useAuthentication
 
-    fun permitPosting(): Boolean = permitPosting
+    fun canPost(): Boolean = permitPosting
 
-    fun detectedVersionPre_1_19(): Boolean = detectedVersionPre_1_19
+    fun isVersionPre_1_19(): Boolean = detectedVersionPre_1_19
 
     override fun toString(): String = name
 
@@ -119,7 +120,7 @@ class Profile {
                 futureDates == other.futureDates &&
                 apiVersion == other.apiVersion &&
                 showCommentsByDefault == other.showCommentsByDefault &&
-                Misc.equalStrings(_defaultCommodity, other._defaultCommodity) &&
+                Misc.equalStrings(defaultCommodity, other.defaultCommodity) &&
                 showCommentsByDefault == other.showCommentsByDefault &&
                 detectedVersionPre_1_19 == other.detectedVersionPre_1_19 &&
                 detectedVersionMajor == other.detectedVersionMajor &&
@@ -135,13 +136,13 @@ class Profile {
 
     @Transaction
     fun wipeAllDataSync() {
-        val optDao = DB.get().optionDAO
+        val optDao = DB.get().getOptionDAO()
         optDao.deleteSync(optDao.allForProfileSync(id))
 
-        val accDao = DB.get().accountDAO
+        val accDao = DB.get().getAccountDAO()
         accDao.deleteSync(accDao.allForProfileSync(id))
 
-        val trnDao = DB.get().transactionDAO
+        val trnDao = DB.get().getTransactionDAO()
         trnDao.deleteSync(trnDao.getAllForProfileUnorderedSync(id))
     }
 
