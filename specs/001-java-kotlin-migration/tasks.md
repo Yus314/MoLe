@@ -514,3 +514,20 @@ kapt {
 // Changed from annotationProcessor to kapt
 kapt "androidx.room:room-compiler:$room_version"
 ```
+
+### Issue 6: ThreadLocal initialization in Kotlin
+**Symptom**: `java.text.ParseException: Failed to parse ISO date: 2026-01-01` when updating data
+**Cause**: ThreadLocal initialized with `.apply { set(...) }` only sets value for creating thread, other threads get null
+**File**: Globals.kt
+**Fix**:
+```kotlin
+// Before (broken - only works for creating thread)
+private val isoDateFormatter = ThreadLocal<SimpleDateFormat>().apply {
+    set(SimpleDateFormat("yyyy-MM-dd", Locale.US))
+}
+
+// After (works for all threads)
+private val isoDateFormatter: ThreadLocal<SimpleDateFormat> = ThreadLocal.withInitial {
+    SimpleDateFormat("yyyy-MM-dd", Locale.US)
+}
+```
