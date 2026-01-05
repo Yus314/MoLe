@@ -87,7 +87,7 @@ public class TemplateDetailsViewModel extends ViewModel {
 
         if (srcList.size() < 1) {
             final TemplateDetailsItem.Header header = TemplateDetailsItem.createHeader();
-            header.setId(0);
+            header.setId(0L);
             newList.add(header);
             changes = true;
         }
@@ -119,7 +119,7 @@ public class TemplateDetailsViewModel extends ViewModel {
         while (newList.size() < 3) {
             final TemplateDetailsItem.AccountRow accountRow =
                     TemplateDetailsItem.createAccountRow();
-            accountRow.setId(genItemId());
+            accountRow.setId((long) genItemId());
             accountRow.setPosition(newList.size());
             newList.add(accountRow);
             changes = true;
@@ -129,7 +129,7 @@ public class TemplateDetailsViewModel extends ViewModel {
         if (!hasEmptyItem) {
             final TemplateDetailsItem.AccountRow accountRow =
                     TemplateDetailsItem.createAccountRow();
-            accountRow.setId(genItemId());
+            accountRow.setId((long) genItemId());
             accountRow.setPosition(newList.size());
             newList.add(accountRow);
             changes = true;

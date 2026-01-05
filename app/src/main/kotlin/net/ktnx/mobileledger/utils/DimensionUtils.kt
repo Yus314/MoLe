@@ -1,5 +1,5 @@
 /*
- * Copyright © 2022 Damyan Ivanov.
+ * Copyright © 2019 Damyan Ivanov.
  * This file is part of MoLe.
  * MoLe is free software: you can distribute it and/or modify it
  * under the term of the GNU General Public License as published by
@@ -15,30 +15,26 @@
  * along with MoLe. If not, see <https://www.gnu.org/licenses/>.
  */
 
-// Top-level build file where you can add configuration options common to all sub-projects/modules.
+package net.ktnx.mobileledger.utils
 
-buildscript {
-    
-    repositories {
-        google()
-        mavenCentral()
+import android.content.Context
+import android.util.TypedValue
+import kotlin.math.roundToInt
+
+object DimensionUtils {
+    @JvmStatic
+    fun dp2px(context: Context, dp: Float): Int {
+        return TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP, dp,
+            context.resources.displayMetrics
+        ).roundToInt()
     }
-    dependencies {
-        classpath 'com.android.tools.build:gradle:8.0.2'
-        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.25'
 
-        // NOTE: Do not place your application dependencies here; they belong
-        // in the individual module build.gradle files
+    @JvmStatic
+    fun sp2px(context: Context, sp: Float): Int {
+        return TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_SP, sp,
+            context.resources.displayMetrics
+        ).roundToInt()
     }
-}
-
-allprojects {
-    repositories {
-        google()
-        mavenCentral()
-    }
-}
-
-task clean(type: Delete) {
-    delete rootProject.buildDir
 }
