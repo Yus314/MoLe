@@ -20,6 +20,7 @@ package net.ktnx.mobileledger.db
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.Ignore
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
@@ -68,8 +69,10 @@ class Account {
     @ColumnInfo(defaultValue = "0")
     var generation: Long = 0
 
+    @Ignore
     fun isExpanded(): Boolean = expanded
 
+    @Ignore
     fun isAmountsExpanded(): Boolean = amountsExpanded
 
     override fun toString(): String = name

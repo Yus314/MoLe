@@ -41,7 +41,7 @@ abstract class AccountDAO : BaseDAO<Account>() {
 
     @Transaction
     open fun insertSync(accountWithAmounts: AccountWithAmounts) {
-        val valueDAO = DB.get().accountValueDAO
+        val valueDAO = DB.get().getAccountValueDAO()
         val account = accountWithAmounts.account
         account.id = insertSync(account)
         for (value in accountWithAmounts.amounts) {

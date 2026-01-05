@@ -28,7 +28,7 @@ class TransactionDescriptionAutocompleteAdapter(
 ) : ArrayAdapter<String>(context, android.R.layout.simple_dropdown_item_1line, ArrayList()) {
 
     private val filter = TransactionFilter()
-    private val dao: TransactionDAO = DB.get().transactionDAO
+    private val dao: TransactionDAO = DB.get().getTransactionDAO()
 
     override fun getFilter(): Filter = filter
 

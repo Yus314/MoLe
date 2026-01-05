@@ -28,7 +28,7 @@ object NetworkUtil {
     @JvmStatic
     @Throws(IOException::class)
     fun prepareConnection(profile: Profile, path: String): HttpURLConnection {
-        return prepareConnection(profile.url, path, profile.useAuthentication())
+        return prepareConnection(profile.url, path, profile.isAuthEnabled())
     }
 
     @JvmStatic

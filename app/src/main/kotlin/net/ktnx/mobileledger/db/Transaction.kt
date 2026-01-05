@@ -63,7 +63,7 @@ class Transaction {
     @ColumnInfo
     var day: Int = 0
 
-    @ColumnInfo(collate = ColumnInfo.NOCASE)
+    @ColumnInfo(name = "description", collate = ColumnInfo.NOCASE)
     private var _description: String = ""
 
     var description: String

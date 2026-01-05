@@ -25,7 +25,7 @@ import net.ktnx.mobileledger.utils.Logger
 
 class AccountAutocompleteAdapter : ArrayAdapter<String> {
     private val filter = AccountFilter()
-    private val dao: AccountDAO = DB.get().accountDAO
+    private val dao: AccountDAO = DB.get().getAccountDAO()
     private var profileId: Long = Profile.NO_PROFILE_ID
 
     constructor(context: Context) : super(

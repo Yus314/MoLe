@@ -59,27 +59,27 @@ import java.util.regex.Pattern
 )
 abstract class DB : RoomDatabase() {
 
-    abstract val templateDAO: TemplateHeaderDAO
-    abstract val templateAccountDAO: TemplateAccountDAO
-    abstract val currencyDAO: CurrencyDAO
-    abstract val accountDAO: AccountDAO
-    abstract val accountValueDAO: AccountValueDAO
-    abstract val transactionDAO: TransactionDAO
-    abstract val transactionAccountDAO: TransactionAccountDAO
-    abstract val optionDAO: OptionDAO
-    abstract val profileDAO: ProfileDAO
+    abstract fun getTemplateDAO(): TemplateHeaderDAO
+    abstract fun getTemplateAccountDAO(): TemplateAccountDAO
+    abstract fun getCurrencyDAO(): CurrencyDAO
+    abstract fun getAccountDAO(): AccountDAO
+    abstract fun getAccountValueDAO(): AccountValueDAO
+    abstract fun getTransactionDAO(): TransactionDAO
+    abstract fun getTransactionAccountDAO(): TransactionAccountDAO
+    abstract fun getOptionDAO(): OptionDAO
+    abstract fun getProfileDAO(): ProfileDAO
 
     @androidx.room.Transaction
     open fun deleteAllSync() {
-        transactionAccountDAO.deleteAllSync()
-        transactionDAO.deleteAllSync()
-        accountValueDAO.deleteAllSync()
-        accountDAO.deleteAllSync()
-        templateAccountDAO.deleteAllSync()
-        templateDAO.deleteAllSync()
-        currencyDAO.deleteAllSync()
-        optionDAO.deleteAllSync()
-        profileDAO.deleteAllSync()
+        getTransactionAccountDAO().deleteAllSync()
+        getTransactionDAO().deleteAllSync()
+        getAccountValueDAO().deleteAllSync()
+        getAccountDAO().deleteAllSync()
+        getTemplateAccountDAO().deleteAllSync()
+        getTemplateDAO().deleteAllSync()
+        getCurrencyDAO().deleteAllSync()
+        getOptionDAO().deleteAllSync()
+        getProfileDAO().deleteAllSync()
     }
 
     companion object {

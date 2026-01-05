@@ -42,7 +42,7 @@ object Data {
     val backgroundTaskProgress = MutableLiveData<RetrieveTransactionsTask.Progress>()
 
     @JvmField
-    val profiles: LiveData<List<Profile>> = DB.get().profileDAO.getAllOrdered()
+    val profiles: LiveData<List<Profile>> = DB.get().getProfileDAO().getAllOrdered()
 
     @JvmField
     val currencySymbolPosition = MutableLiveData<Currency.Position>()
