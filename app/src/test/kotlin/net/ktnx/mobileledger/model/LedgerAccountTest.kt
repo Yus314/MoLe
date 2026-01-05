@@ -15,19 +15,18 @@
  * along with MoLe. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ktnx.mobileledger.model;
+package net.ktnx.mobileledger.model
 
-import org.junit.Test;
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
+import org.junit.Test
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-
-public class LedgerAccountTest {
+class LedgerAccountTest {
 
     @Test
-    public void extractParentName() {
-        assertNull(LedgerAccount.extractParentName("Top-level Account"));
-        assertEquals("top", LedgerAccount.extractParentName("top:second"));
-        assertEquals("top:second level", LedgerAccount.extractParentName("top:second level:leaf"));
+    fun extractParentName() {
+        assertNull(LedgerAccount.extractParentName("Top-level Account"))
+        assertEquals("top", LedgerAccount.extractParentName("top:second"))
+        assertEquals("top:second level", LedgerAccount.extractParentName("top:second level:leaf"))
     }
 }
