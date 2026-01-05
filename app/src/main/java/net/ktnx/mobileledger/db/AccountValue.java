@@ -18,6 +18,7 @@
 package net.ktnx.mobileledger.db;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.ForeignKey;
@@ -45,6 +46,9 @@ public class AccountValue {
     private float value;
     @ColumnInfo(defaultValue = "0")
     private long generation = 0;
+    @Nullable
+    @ColumnInfo(name = "amount_style")
+    private String amountStyle;
     public long getId() {
         return id;
     }
@@ -75,5 +79,12 @@ public class AccountValue {
     }
     public void setGeneration(long generation) {
         this.generation = generation;
+    }
+    @Nullable
+    public String getAmountStyle() {
+        return amountStyle;
+    }
+    public void setAmountStyle(@Nullable String amountStyle) {
+        this.amountStyle = amountStyle;
     }
 }

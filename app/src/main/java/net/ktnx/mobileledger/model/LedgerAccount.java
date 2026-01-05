@@ -28,6 +28,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import net.ktnx.mobileledger.model.AmountStyle;
+
 public class LedgerAccount {
     private static final char ACCOUNT_DELIMITER = ':';
     static Pattern reHigherAccount = Pattern.compile("^[^:]+:");
@@ -72,7 +74,7 @@ public class LedgerAccount {
 
         res.amounts = new ArrayList<>();
         for (AccountValue val : in.amounts) {
-            res.amounts.add(new LedgerAmount(val.getValue(), val.getCurrency()));
+            res.amounts.add(LedgerAmount.fromDBO(val));
         }
 
         return res;
@@ -135,6 +137,11 @@ public class LedgerAccount {
         if (amounts == null)
             amounts = new ArrayList<>();
         amounts.add(new LedgerAmount(amount, currency));
+    }
+    public void addAmount(float amount, @NonNull String currency, @Nullable AmountStyle amountStyle) {
+        if (amounts == null)
+            amounts = new ArrayList<>();
+        amounts.add(new LedgerAmount(amount, currency, amountStyle));
     }
     public void addAmount(float amount) {
         this.addAmount(amount, "");
@@ -245,6 +252,10 @@ public class LedgerAccount {
                 AccountValue val = new AccountValue();
                 val.setCurrency(amt.getCurrency());
                 val.setValue(amt.getAmount());
+                // Save amount style if present
+                if (amt.getAmountStyle() != null) {
+                    val.setAmountStyle(amt.getAmountStyle().serialize());
+                }
                 dbo.amounts.add(val);
             }
         }

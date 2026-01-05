@@ -17,7 +17,10 @@
 
 package net.ktnx.mobileledger.json;
 
+import androidx.annotation.Nullable;
+
 import net.ktnx.mobileledger.async.RetrieveTransactionsTask;
+import net.ktnx.mobileledger.model.AmountStyle;
 import net.ktnx.mobileledger.model.LedgerAccount;
 
 import java.util.ArrayList;
@@ -63,23 +66,27 @@ public abstract class ParsedLedgerAccount {
 
         String lastCurrency = null;
         float lastCurrencyAmount = 0;
+        AmountStyle lastAmountStyle = null;
         for (SimpleBalance b : getSimpleBalance()) {
             task.throwIfCancelled();
             final String currency = b.getCommodity();
             final float amount = b.getAmount();
+            final AmountStyle amountStyle = b.getAmountStyle();
             if (currency.equals(lastCurrency)) {
                 lastCurrencyAmount += amount;
+                // Keep the first amountStyle found for this currency
             }
             else {
                 if (lastCurrency != null) {
-                    acc.addAmount(lastCurrencyAmount, lastCurrency);
+                    acc.addAmount(lastCurrencyAmount, lastCurrency, lastAmountStyle);
                 }
                 lastCurrency = currency;
                 lastCurrencyAmount = amount;
+                lastAmountStyle = amountStyle;
             }
         }
         if (lastCurrency != null) {
-            acc.addAmount(lastCurrencyAmount, lastCurrency);
+            acc.addAmount(lastCurrencyAmount, lastCurrency, lastAmountStyle);
         }
         for (LedgerAccount p : createdParents)
             acc.propagateAmountsTo(p);
@@ -90,9 +97,16 @@ public abstract class ParsedLedgerAccount {
     static public class SimpleBalance {
         private String commodity;
         private float amount;
+        @Nullable
+        private AmountStyle amountStyle;
         public SimpleBalance(String commodity, float amount) {
             this.commodity = commodity;
             this.amount = amount;
+        }
+        public SimpleBalance(String commodity, float amount, @Nullable AmountStyle amountStyle) {
+            this.commodity = commodity;
+            this.amount = amount;
+            this.amountStyle = amountStyle;
         }
         public String getCommodity() {
             return commodity;
@@ -105,6 +119,13 @@ public abstract class ParsedLedgerAccount {
         }
         public void setAmount(float amount) {
             this.amount = amount;
+        }
+        @Nullable
+        public AmountStyle getAmountStyle() {
+            return amountStyle;
+        }
+        public void setAmountStyle(@Nullable AmountStyle amountStyle) {
+            this.amountStyle = amountStyle;
         }
     }
 }
