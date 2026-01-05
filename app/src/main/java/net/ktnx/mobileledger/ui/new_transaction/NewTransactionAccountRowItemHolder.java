@@ -198,7 +198,7 @@ class NewTransactionAccountRowItemHolder extends NewTransactionItemViewHolder {
                          if (showCurrency) {
                              b.currency.setVisibility(View.VISIBLE);
                              b.currencyButton.setVisibility(View.VISIBLE);
-                             setCurrencyString(mProfile.getDefaultCommodity());
+                             setCurrencyString(mProfile.getDefaultCommodityOrEmpty());
                          }
                          else {
                              b.currency.setVisibility(View.GONE);

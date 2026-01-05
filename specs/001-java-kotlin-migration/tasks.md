@@ -451,3 +451,66 @@ Task: "Convert v1_50 package files to Kotlin" (T072)
 - Stop at any checkpoint to validate story independently
 - Avoid: vague tasks, same file conflicts, cross-story dependencies
 - Run `./gradlew test` after each package conversion to catch issues early
+
+---
+
+## Migration Issues & Fixes Log
+
+### Issue 1: Room annotation processor doesn't work with Kotlin
+**Symptom**: `DB_Impl does not exist` at runtime
+**Cause**: `annotationProcessor` doesn't process Kotlin files
+**Fix**:
+- Added `id 'org.jetbrains.kotlin.kapt'` plugin
+- Changed `annotationProcessor` to `kapt` for Room compiler
+- Added `kapt { arguments { ... } }` block
+
+### Issue 2: Ambiguous getter for boolean fields
+**Symptom**: `All of the following match: getPermitPosting, permitPosting`
+**Cause**: Kotlin boolean properties generate both `get*` and `is*` getters, Room gets confused
+**Files affected**: Profile.kt, Account.kt
+**Fix**:
+- Profile.kt: Renamed methods (`useAuthentication()` → `isAuthEnabled()`, `permitPosting()` → `canPost()`, `detectedVersionPre_1_19()` → `isVersionPre_1_19()`)
+- Account.kt: Added `@Ignore` annotation to duplicate getter methods
+
+### Issue 3: SQL column name mismatch
+**Symptom**: `no such column: description`
+**Cause**: Private backing field `_description` didn't have explicit column name
+**File**: Transaction.kt
+**Fix**: Added `name = "description"` to `@ColumnInfo` annotation
+
+### Issue 4: NullPointerException from Java calling Kotlin setter
+**Symptom**: `NullPointerException: Parameter specified as non-null is null: method Profile.setDefaultCommodity`
+**Cause**: Kotlin property setter had non-null `String` parameter, but Java code passed `null`
+**File**: Profile.kt
+**Fix**:
+- Changed property to `var defaultCommodity: String? = null` with private setter
+- Added explicit `getDefaultCommodityOrEmpty(): String` for non-null return
+- Added explicit `setDefaultCommodity(value: String?)` to accept null
+- Updated all Java callers to use `getDefaultCommodityOrEmpty()`
+
+### Issue 5: Room DAO parameter names not preserved
+**Symptom**: `Cannot find method parameters for :id` in Room queries
+**Cause**: Kotlin by default doesn't emit parameter names in bytecode
+**Fix**: Added `javaParameters = true` to `kotlinOptions` in build.gradle
+
+### build.gradle changes summary
+```groovy
+plugins {
+    id 'org.jetbrains.kotlin.kapt'  // Added
+}
+
+kotlinOptions {
+    javaParameters = true  // Added for Room DAO parameter names
+}
+
+kapt {
+    arguments {
+        arg("room.schemaLocation", "$projectDir/schemas")
+        arg("room.incremental", "true")
+        arg("room.expandProjection", "true")
+    }
+}
+
+// Changed from annotationProcessor to kapt
+kapt "androidx.room:room-compiler:$room_version"
+```

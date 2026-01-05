@@ -233,11 +233,11 @@ public class ProfileDetailModel extends ViewModel {
             profileId.setValue(mProfile.getId());
             profileName.setValue(mProfile.getName());
             orderNo.setValue(mProfile.getOrderNo());
-            postingPermitted.setValue(mProfile.permitPosting());
+            postingPermitted.setValue(mProfile.canPost());
             showCommentsByDefault.setValue(mProfile.getShowCommentsByDefault());
             showCommodityByDefault.setValue(mProfile.getShowCommodityByDefault());
             {
-                String comm = mProfile.getDefaultCommodity();
+                String comm = mProfile.getDefaultCommodityOrEmpty();
                 if (TextUtils.isEmpty(comm))
                     setDefaultCommodity(null);
                 else
@@ -246,12 +246,12 @@ public class ProfileDetailModel extends ViewModel {
             futureDates.setValue(FutureDates.valueOf(mProfile.getFutureDates()));
             apiVersion.setValue(API.valueOf(mProfile.getApiVersion()));
             url.setValue(mProfile.getUrl());
-            useAuthentication.setValue(mProfile.useAuthentication());
-            authUserName.setValue(mProfile.useAuthentication() ? mProfile.getAuthUser() : "");
-            authPassword.setValue(mProfile.useAuthentication() ? mProfile.getAuthPassword() : "");
+            useAuthentication.setValue(mProfile.isAuthEnabled());
+            authUserName.setValue(mProfile.isAuthEnabled() ? mProfile.getAuthUser() : "");
+            authPassword.setValue(mProfile.isAuthEnabled() ? mProfile.getAuthPassword() : "");
             preferredAccountsFilter.setValue(mProfile.getPreferredAccountsFilter());
             themeId.setValue(mProfile.getTheme());
-            detectedVersion.setValue(mProfile.detectedVersionPre_1_19() ? new HledgerVersion(true)
+            detectedVersion.setValue(mProfile.isVersionPre_1_19() ? new HledgerVersion(true)
                                                                         : new HledgerVersion(
                                                                                 mProfile.getDetectedVersionMajor(),
                                                                                 mProfile.getDetectedVersionMinor()));
