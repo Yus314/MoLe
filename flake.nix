@@ -1,5 +1,5 @@
 {
-  description = "MoLe - Mobile Ledger development environment";
+  description = "MoLe - Mobile Ledger development environment and build system";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -21,13 +21,38 @@
           };
         };
 
+        # バージョン管理
+        version = "0.22.1";
+        appName = "MoLe";
+
+        # Android SDKバージョン (メタデータ用)
+        androidVersions = {
+          buildTools = "34.0.0";    # Android SDK Build Tools 34.0.0
+          platform = "34";          # Android 14 (API Level 34)
+          compileSdk = "34";
+          targetSdk = "34";
+        };
+
         # Android SDK setup using android-nixpkgs
         android-sdk = android-nixpkgs.sdk.${system} (sdkPkgs: with sdkPkgs; [
           cmdline-tools-latest
-          build-tools-30-0-3
+          build-tools-34-0-0        # Build Tools 34.0.0
           platform-tools
-          platforms-android-33
+          platforms-android-34      # Android 14 (API Level 34)
         ]);
+
+        # 共通の環境変数設定
+        commonEnvVars = ''
+          export JAVA_HOME="${pkgs.jdk17.home}"
+          export ANDROID_HOME="${android-sdk}/share/android-sdk"
+          export ANDROID_SDK_ROOT="$ANDROID_HOME"
+          export PATH="$JAVA_HOME/bin:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"
+        '';
+
+        # local.properties生成
+        makeLocalProperties = ''
+          echo 'sdk.dir=${android-sdk}/share/android-sdk' > local.properties
+        '';
 
         # FHS環境を構築
         fhsEnv = pkgs.buildFHSEnv {
@@ -73,15 +98,7 @@
           ];
 
           profile = ''
-            # Java環境変数（Nixストアから直接）
-            export JAVA_HOME="${pkgs.jdk17.home}"
-
-            # Android SDK環境変数
-            export ANDROID_HOME="${android-sdk}/share/android-sdk"
-            export ANDROID_SDK_ROOT="$ANDROID_HOME"
-
-            # パス設定
-            export PATH="$JAVA_HOME/bin:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"
+            ${commonEnvVars}
 
             # Gradle設定
             export GRADLE_USER_HOME="$HOME/.gradle"
@@ -91,14 +108,21 @@
             export LC_ALL=C.UTF-8
 
             echo "================================================="
-            echo "MoLe Android Build Environment (FHS)"
+            echo "${appName} Android Build Environment (FHS)"
+            echo "Version: ${version}"
             echo "================================================="
             echo ""
             echo "Java version:"
             java -version 2>&1 | head -1
             echo ""
-            echo "JAVA_HOME: $JAVA_HOME"
-            echo "ANDROID_HOME: $ANDROID_HOME"
+            echo "Environment:"
+            echo "  JAVA_HOME: $JAVA_HOME"
+            echo "  ANDROID_HOME: $ANDROID_HOME"
+            echo ""
+            echo "Android SDK:"
+            echo "  Build Tools: ${androidVersions.buildTools}"
+            echo "  Platform: ${androidVersions.platform} (Android 14)"
+            echo "  Target SDK: ${androidVersions.targetSdk}"
             echo ""
             echo "この環境内でGradleビルドが実行できます:"
             echo "  ./gradlew assembleDebug    # デバッグAPKビルド"
@@ -113,44 +137,41 @@
           runScript = "bash";
         };
 
+        # FHS環境でコマンドを実行するヘルパー
+        runInFhs = command: ''
+          ${fhsEnv}/bin/mole-android-fhs -c "
+            ${commonEnvVars}
+            ${command}
+          "
+        '';
+
         # APKビルド用のderivation
         buildApk = pkgs.stdenv.mkDerivation {
           name = "mole-apk";
-          version = "0.22.0";
+          inherit version;
 
           src = ./.;
 
           nativeBuildInputs = [ fhsEnv ];
 
-          buildPhase = ''
-            # FHS環境内でGradleビルドを実行
-            ${fhsEnv}/bin/mole-android-fhs -c "
-              export JAVA_HOME=${pkgs.jdk17.home}
-              export ANDROID_HOME=${android-sdk}/share/android-sdk
-              export ANDROID_SDK_ROOT=\$ANDROID_HOME
-              export GRADLE_USER_HOME=$TMPDIR/.gradle
-              export PATH=\$JAVA_HOME/bin:\$ANDROID_HOME/cmdline-tools/latest/bin:\$ANDROID_HOME/platform-tools:\$PATH
-
-              # local.propertiesを生成
-              echo 'sdk.dir=${android-sdk}/share/android-sdk' > local.properties
-
-              # ビルド実行
-              ./gradlew --no-daemon assembleDebug
-            "
+          buildPhase = runInFhs ''
+            export GRADLE_USER_HOME=$TMPDIR/.gradle
+            ${makeLocalProperties}
+            ./gradlew --no-daemon assembleDebug
           '';
 
           installPhase = ''
             mkdir -p $out
-            cp app/build/outputs/apk/debug/app-debug.apk $out/mole-0.22.0.apk
+            cp app/build/outputs/apk/debug/app-debug.apk $out/mole-${version}.apk
 
             # メタデータも保存
-            echo "MoLe v0.22.0" > $out/VERSION
+            echo "${appName} v${version}" > $out/VERSION
             echo "Built with Nix Flakes" >> $out/BUILD_INFO
             echo "Build date: $(date -u +%Y-%m-%d)" >> $out/BUILD_INFO
           '';
 
           meta = with pkgs.lib; {
-            description = "MoLe - Mobile Ledger Android application";
+            description = "${appName} - Mobile Ledger Android application (v${version})";
             license = licenses.gpl3Plus;
             platforms = platforms.linux;
           };
@@ -160,22 +181,13 @@
         buildScript = pkgs.writeShellScriptBin "build-mole" ''
           set -e
           echo "================================================="
-          echo "Building MoLe APK with Nix"
+          echo "Building ${appName} APK with Nix (v${version})"
           echo "================================================="
 
-          # FHS環境でビルド
-          ${fhsEnv}/bin/mole-android-fhs -c "
-            export JAVA_HOME=${pkgs.jdk17.home}
-            export ANDROID_HOME=${android-sdk}/share/android-sdk
-            export ANDROID_SDK_ROOT=\$ANDROID_HOME
-            export PATH=\$JAVA_HOME/bin:\$ANDROID_HOME/cmdline-tools/latest/bin:\$ANDROID_HOME/platform-tools:\$PATH
-
-            # local.propertiesを生成
-            echo 'sdk.dir=${android-sdk}/share/android-sdk' > local.properties
-
-            # ビルド実行
+          ${runInFhs ''
+            ${makeLocalProperties}
             ./gradlew assembleDebug
-          "
+          ''}
 
           echo ""
           echo "✅ Build complete!"
@@ -187,7 +199,7 @@
         buildReleaseScript = pkgs.writeShellScriptBin "build-mole-release" ''
           set -e
           echo "================================================="
-          echo "Building MoLe RELEASE APK with Nix"
+          echo "Building ${appName} RELEASE APK with Nix (v${version})"
           echo "================================================="
           echo ""
 
@@ -201,25 +213,14 @@
           echo "✅ keystore.properties found"
           echo ""
 
-          # FHS環境でビルド
-          ${fhsEnv}/bin/mole-android-fhs -c "
-            export JAVA_HOME=${pkgs.jdk17.home}
-            export ANDROID_HOME=${android-sdk}/share/android-sdk
-            export ANDROID_SDK_ROOT=\$ANDROID_HOME
-            export PATH=\$JAVA_HOME/bin:\$ANDROID_HOME/cmdline-tools/latest/bin:\$ANDROID_HOME/platform-tools:\$PATH
-
-            # local.propertiesを生成
-            echo 'sdk.dir=${android-sdk}/share/android-sdk' > local.properties
-
-            # クリーンビルド
+          ${runInFhs ''
+            ${makeLocalProperties}
             echo 'Cleaning previous build...'
             ./gradlew clean
-
             echo ""
             echo 'Building release APK...'
-            # リリースビルド実行
             ./gradlew assembleRelease
-          "
+          ''}
 
           echo ""
           echo "✅ Release build complete!"
@@ -277,25 +278,24 @@
           ];
 
           shellHook = ''
-            # Set JAVA_HOME
-            export JAVA_HOME="${pkgs.jdk17}"
-
-            # Set Android SDK environment variables
-            export ANDROID_HOME="${android-sdk}/share/android-sdk"
-            export ANDROID_SDK_ROOT="$ANDROID_HOME"
-
-            # Add tools to PATH
-            export PATH="$JAVA_HOME/bin:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"
+            ${commonEnvVars}
 
             echo "================================================="
-            echo "MoLe Development Environment"
+            echo "${appName} Development Environment"
+            echo "Version: ${version}"
             echo "================================================="
             echo ""
             echo "Java version:"
             java -version 2>&1 | head -1
             echo ""
-            echo "JAVA_HOME: $JAVA_HOME"
-            echo "ANDROID_HOME: $ANDROID_HOME"
+            echo "Environment:"
+            echo "  JAVA_HOME: $JAVA_HOME"
+            echo "  ANDROID_HOME: $ANDROID_HOME"
+            echo ""
+            echo "Android SDK:"
+            echo "  Build Tools: ${androidVersions.buildTools}"
+            echo "  Platform: ${androidVersions.platform} (Android 14)"
+            echo "  Target SDK: ${androidVersions.targetSdk}"
             echo ""
             echo "⚠️  WARNING: ビルドにはFHS環境が必要です"
             echo ""
