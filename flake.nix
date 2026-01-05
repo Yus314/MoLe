@@ -24,6 +24,7 @@
         # バージョン管理
         version = "0.22.1";
         appName = "MoLe";
+        javaVersion = pkgs.jdk17;   # Java Development Kit
 
         # Android SDKバージョン (メタデータ用)
         androidVersions = {
@@ -44,7 +45,7 @@
 
         # 共通の環境変数設定
         commonEnvVars = ''
-          export JAVA_HOME="${pkgs.jdk17.home}"
+          export JAVA_HOME="${javaVersion.home}"
           export ANDROID_HOME="${android-sdk}/share/android-sdk"
           export ANDROID_SDK_ROOT="$ANDROID_HOME"
           export PATH="$JAVA_HOME/bin:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"
@@ -60,9 +61,6 @@
           name = "mole-android-fhs";
 
           targetPkgs = p: (with p; [
-            # Java Development Kit
-            jdk17
-
             # 基本的な開発ツール
             git
             which
@@ -90,7 +88,7 @@
             glibc
             expat
             libxcrypt-legacy
-          ]) ++ [ android-sdk ];
+          ]) ++ [ javaVersion android-sdk ];
 
           multiPkgs = p: with p; [
             # 32bitと64bitの両方が必要なライブラリ
@@ -187,7 +185,7 @@
 
           ${runInFhs ''
             ${makeLocalProperties}
-            ./gradlew assembleDebug
+            ./gradlew --no-daemon assembleDebug
           ''}
 
           echo ""
@@ -217,10 +215,10 @@
           ${runInFhs ''
             ${makeLocalProperties}
             echo 'Cleaning previous build...'
-            ./gradlew clean
+            ./gradlew --no-daemon clean
             echo ""
             echo 'Building release APK...'
-            ./gradlew assembleRelease
+            ./gradlew --no-daemon assembleRelease
           ''}
 
           echo ""
@@ -235,6 +233,38 @@
           fi
         '';
 
+        # テスト実行スクリプト (nix run .#test で実行可能)
+        testScript = pkgs.writeShellScriptBin "test-mole" ''
+          set -e
+          echo "================================================="
+          echo "Running ${appName} Tests (v${version})"
+          echo "================================================="
+
+          ${runInFhs ''
+            ${makeLocalProperties}
+            ./gradlew --no-daemon test
+          ''}
+
+          echo ""
+          echo "✅ Tests complete!"
+        '';
+
+        # クリーンスクリプト (nix run .#clean で実行可能)
+        cleanScript = pkgs.writeShellScriptBin "clean-mole" ''
+          set -e
+          echo "================================================="
+          echo "Cleaning ${appName} Build (v${version})"
+          echo "================================================="
+
+          ${runInFhs ''
+            ${makeLocalProperties}
+            ./gradlew --no-daemon clean
+          ''}
+
+          echo ""
+          echo "✅ Clean complete!"
+        '';
+
       in
       {
         # パッケージ定義
@@ -242,6 +272,8 @@
           default = buildApk;
           apk = buildApk;
           build-script = buildScript;
+          test-script = testScript;
+          clean-script = cleanScript;
         };
 
         # アプリケーション定義
@@ -254,6 +286,14 @@
             type = "app";
             program = "${buildReleaseScript}/bin/build-mole-release";
           };
+          test = {
+            type = "app";
+            program = "${testScript}/bin/test-mole";
+          };
+          clean = {
+            type = "app";
+            program = "${cleanScript}/bin/clean-mole";
+          };
         };
 
         # FHS環境でのビルド用シェル (推奨)
@@ -261,13 +301,13 @@
 
         # 通常のNix環境（開発ツールのみ、ビルドは不可）
         devShells.default = pkgs.mkShell {
-          buildInputs = with pkgs; [
+          buildInputs = [
             # Java Development Kit
-            jdk17
+            javaVersion
 
             # Android SDK
             android-sdk
-
+          ] ++ (with pkgs; [
             # Git for version control
             git
 
@@ -276,7 +316,7 @@
             gnused
             findutils
             coreutils
-          ];
+          ]);
 
           shellHook = ''
             ${commonEnvVars}
