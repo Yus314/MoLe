@@ -1,5 +1,5 @@
 /*
- * Copyright © 2022 Damyan Ivanov.
+ * Copyright © 2019 Damyan Ivanov.
  * This file is part of MoLe.
  * MoLe is free software: you can distribute it and/or modify it
  * under the term of the GNU General Public License as published by
@@ -15,30 +15,29 @@
  * along with MoLe. If not, see <https://www.gnu.org/licenses/>.
  */
 
-// Top-level build file where you can add configuration options common to all sub-projects/modules.
+package net.ktnx.mobileledger.utils
 
-buildscript {
-    
-    repositories {
-        google()
-        mavenCentral()
+import android.util.Log
+import net.ktnx.mobileledger.BuildConfig
+
+object Logger {
+    @JvmStatic
+    fun debug(tag: String, msg: String) {
+        if (BuildConfig.DEBUG) Log.d(tag, msg)
     }
-    dependencies {
-        classpath 'com.android.tools.build:gradle:8.0.2'
-        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.25'
 
-        // NOTE: Do not place your application dependencies here; they belong
-        // in the individual module build.gradle files
+    @JvmStatic
+    fun debug(tag: String, msg: String, e: Throwable) {
+        if (BuildConfig.DEBUG) Log.d(tag, msg, e)
     }
-}
 
-allprojects {
-    repositories {
-        google()
-        mavenCentral()
+    @JvmStatic
+    fun warn(tag: String, msg: String) {
+        Log.w(tag, msg)
     }
-}
 
-task clean(type: Delete) {
-    delete rootProject.buildDir
+    @JvmStatic
+    fun warn(tag: String, msg: String, e: Throwable) {
+        Log.w(tag, msg, e)
+    }
 }

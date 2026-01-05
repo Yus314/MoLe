@@ -1,5 +1,5 @@
 /*
- * Copyright © 2022 Damyan Ivanov.
+ * Copyright © 2020 Damyan Ivanov.
  * This file is part of MoLe.
  * MoLe is free software: you can distribute it and/or modify it
  * under the term of the GNU General Public License as published by
@@ -15,30 +15,27 @@
  * along with MoLe. If not, see <https://www.gnu.org/licenses/>.
  */
 
-// Top-level build file where you can add configuration options common to all sub-projects/modules.
+package net.ktnx.mobileledger.utils
 
-buildscript {
-    
-    repositories {
-        google()
-        mavenCentral()
+import org.junit.After
+import org.junit.Assert.assertTrue
+import org.junit.Test
+
+class SimpleDateTest {
+
+    @After
+    fun tearDown() {
     }
-    dependencies {
-        classpath 'com.android.tools.build:gradle:8.0.2'
-        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.25'
 
-        // NOTE: Do not place your application dependencies here; they belong
-        // in the individual module build.gradle files
+    @Test
+    fun compareTo() {
+        val d1 = SimpleDate(2020, 6, 1)
+        val d2 = SimpleDate(2019, 7, 6)
+
+        assertTrue(d1.compareTo(d2) > 0)
+        assertTrue(d2.compareTo(d1) < 0)
+        assertTrue(d1.compareTo(SimpleDate(2020, 6, 2)) < 0)
+        assertTrue(d1.compareTo(SimpleDate(2020, 5, 2)) > 0)
+        assertTrue(d1.compareTo(SimpleDate(2019, 5, 2)) > 0)
     }
-}
-
-allprojects {
-    repositories {
-        google()
-        mavenCentral()
-    }
-}
-
-task clean(type: Delete) {
-    delete rootProject.buildDir
 }

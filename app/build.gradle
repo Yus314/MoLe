@@ -15,7 +15,12 @@
  * along with MoLe. If not, see <https://www.gnu.org/licenses/>.
  */
 
-apply plugin: 'com.android.application'
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+    // KSP available but disabled during Java→Kotlin migration.
+    // Enable after DAO conversion: id 'com.google.devtools.ksp' version '1.9.25-1.0.20'
+}
 
 // Load keystore properties for release signing
 def keystorePropertiesFile = rootProject.file("keystore.properties")
@@ -43,6 +48,13 @@ android {
                 ]
             }
         }
+
+        // KSP Room configuration (disabled during migration)
+        // ksp {
+        //     arg("room.schemaLocation", "$projectDir/schemas")
+        //     arg("room.incremental", "true")
+        //     arg("room.expandProjection", "true")
+        // }
     }
     signingConfigs {
         release {
@@ -73,10 +85,25 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-    sourceSets { main { assets.srcDirs = ['src/main/assets', 'src/main/assets/'] } }
+    sourceSets {
+        main {
+            assets.srcDirs = ['src/main/assets', 'src/main/assets/']
+            java.srcDirs += 'src/main/kotlin'
+        }
+        test {
+            java.srcDirs += 'src/test/kotlin'
+        }
+        androidTest {
+            java.srcDirs += 'src/androidTest/kotlin'
+        }
+    }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = '1.8'
+        freeCompilerArgs += ["-Xjsr305=strict"]
     }
     productFlavors {
     }
@@ -86,26 +113,47 @@ android {
 }
 
 dependencies {
+    // Kotlin
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.9.25"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3"
+
+    // AndroidX Lifecycle
     implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.4.1'
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.4.1'
+
+    // Room
+    // Note: Using annotationProcessor during Java→Kotlin migration for compatibility.
+    // Will switch to KSP once all DAOs are converted to Kotlin.
     def room_version = '2.4.2'
-    implementation "androidx.room:room-runtime:2.4.2"
+    implementation "androidx.room:room-runtime:$room_version"
+    implementation "androidx.room:room-ktx:$room_version"
     annotationProcessor "androidx.room:room-compiler:$room_version"
+
+    // Navigation
     def nav_version = '2.4.2'
+    implementation "androidx.navigation:navigation-fragment:$nav_version"
+    implementation "androidx.navigation:navigation-ui:$nav_version"
+
+    // Jackson with Kotlin module
+    implementation 'com.fasterxml.jackson.module:jackson-modules-java8:2.17.1'
+    implementation 'com.fasterxml.jackson.module:jackson-module-kotlin:2.17.1'
+
+    // AndroidX
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     implementation 'com.google.android.material:material:1.5.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation 'androidx.lifecycle:lifecycle-extensions:2.2.0'
     implementation 'androidx.recyclerview:recyclerview:1.2.1'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+
+    // Annotations
+    implementation 'org.jetbrains:annotations:24.1.0'
+
+    // Testing
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test:runner:1.5.0-alpha02'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.0-alpha05'
-    implementation 'org.jetbrains:annotations:24.1.0'
-    implementation 'com.fasterxml.jackson.module:jackson-modules-java8:2.17.1'
-    implementation "androidx.navigation:navigation-fragment:$nav_version"
-    implementation "androidx.navigation:navigation-ui:$nav_version"
-    implementation 'androidx.appcompat:appcompat:1.6.1'
 }
 
 allprojects {
