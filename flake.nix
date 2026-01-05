@@ -34,11 +34,12 @@
         };
 
         # Android SDK setup using android-nixpkgs
-        android-sdk = android-nixpkgs.sdk.${system} (sdkPkgs: with sdkPkgs; [
-          cmdline-tools-latest
-          build-tools-34-0-0        # Build Tools 34.0.0
-          platform-tools
-          platforms-android-34      # Android 14 (API Level 34)
+        # androidVersionsの値を使用してSDKパッケージを動的に選択
+        android-sdk = android-nixpkgs.sdk.${system} (sdkPkgs: [
+          sdkPkgs.cmdline-tools-latest
+          sdkPkgs."build-tools-${builtins.replaceStrings ["."] ["-"] androidVersions.buildTools}"
+          sdkPkgs.platform-tools
+          sdkPkgs."platforms-android-${androidVersions.platform}"
         ]);
 
         # 共通の環境変数設定
