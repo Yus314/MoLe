@@ -19,6 +19,8 @@ package net.ktnx.mobileledger.json.v1_19_1;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import net.ktnx.mobileledger.model.AmountStyle;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,8 +48,9 @@ public class ParsedLedgerAccount extends net.ktnx.mobileledger.json.ParsedLedger
         List<ParsedBalance> balances = getAibalance();
         if (balances != null) {
             for (ParsedBalance b : balances) {
+                AmountStyle style = AmountStyle.fromParsedStyle(b.getAstyle(), b.getAcommodity());
                 result.add(new SimpleBalance(b.getAcommodity(), b.getAquantity()
-                                                                 .asFloat()));
+                                                                 .asFloat(), style));
             }
         }
 
