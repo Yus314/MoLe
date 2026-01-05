@@ -281,18 +281,30 @@
           build = {
             type = "app";
             program = "${buildScript}/bin/build-mole";
+            meta = {
+              description = "Build debug APK for ${appName}";
+            };
           };
           buildRelease = {
             type = "app";
             program = "${buildReleaseScript}/bin/build-mole-release";
+            meta = {
+              description = "Build release APK for ${appName}";
+            };
           };
           test = {
             type = "app";
             program = "${testScript}/bin/test-mole";
+            meta = {
+              description = "Run unit tests for ${appName}";
+            };
           };
           clean = {
             type = "app";
             program = "${cleanScript}/bin/clean-mole";
+            meta = {
+              description = "Clean build artifacts for ${appName}";
+            };
           };
         };
 
