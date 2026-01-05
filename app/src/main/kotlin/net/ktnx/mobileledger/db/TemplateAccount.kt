@@ -111,7 +111,7 @@ class TemplateAccount : TemplateBase {
     fun getCurrencyObject(): Currency? {
         val curr = currency
         if (curr == null || curr <= 0) return null
-        return DB.get().currencyDAO.getByIdSync(curr)
+        return DB.get().getCurrencyDAO().getByIdSync(curr)
     }
 
     fun createDuplicate(header: TemplateHeader): TemplateAccount {

@@ -99,7 +99,7 @@ abstract class TemplateHeaderDAO {
         val templateId = insertSync(templateWithAccounts.header)
         for (acc in templateWithAccounts.accounts) {
             acc.templateId = templateId
-            DB.get().templateAccountDAO.insertSync(acc)
+            DB.get().getTemplateAccountDAO().insertSync(acc)
         }
     }
 
@@ -126,7 +126,7 @@ abstract class TemplateHeaderDAO {
             val dup = src.createDuplicate()
             dup.header.name = dup.header.name
             dup.header.id = insertSync(dup.header)
-            val accDao = DB.get().templateAccountDAO
+            val accDao = DB.get().getTemplateAccountDAO()
             for (dupAcc in dup.accounts) {
                 dupAcc.templateId = dup.header.id
                 dupAcc.id = accDao.insertSync(dupAcc)

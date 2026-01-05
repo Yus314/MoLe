@@ -364,7 +364,7 @@ public class MainActivity extends ProfileThemedActivity implements FabManager.Fa
             if (shortcuts.size() >= sm.getMaxShortcutCountPerActivity())
                 break;
 
-            if (!p.permitPosting())
+            if (!p.canPost())
                 continue;
 
             final ShortcutInfo.Builder builder =
@@ -461,7 +461,7 @@ public class MainActivity extends ProfileThemedActivity implements FabManager.Fa
         mProfileListAdapter.notifyDataSetChanged();
 
         if (haveProfile) {
-            if (newProfile.permitPosting()) {
+            if (newProfile.canPost()) {
                 b.toolbar.setSubtitle(null);
                 b.btnAddTransaction.show();
             }
@@ -730,7 +730,7 @@ public class MainActivity extends ProfileThemedActivity implements FabManager.Fa
         }
     }
     public void fabShouldShow() {
-        if ((profile != null) && profile.permitPosting() && !b.drawerLayout.isOpen())
+        if ((profile != null) && profile.canPost() && !b.drawerLayout.isOpen())
             fabManager.showFab();
     }
     @Override

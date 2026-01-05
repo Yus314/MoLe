@@ -165,7 +165,7 @@ abstract class TransactionDAO : BaseDAO<Transaction>() {
 
     @androidx.room.Transaction
     open fun storeSync(rec: TransactionWithAccounts) {
-        val trAccDao = DB.get().transactionAccountDAO
+        val trAccDao = DB.get().getTransactionAccountDAO()
 
         var transaction = rec.transaction
         val existing = getByLedgerId(transaction.profileId, transaction.ledgerId)
@@ -202,9 +202,9 @@ abstract class TransactionDAO : BaseDAO<Transaction>() {
 
     @androidx.room.Transaction
     open fun appendSync(rec: TransactionWithAccounts) {
-        val trAccDao = DB.get().transactionAccountDAO
-        val accDao = DB.get().accountDAO
-        val accValDao = DB.get().accountValueDAO
+        val trAccDao = DB.get().getTransactionAccountDAO()
+        val accDao = DB.get().getAccountDAO()
+        val accValDao = DB.get().getAccountValueDAO()
 
         val transaction = rec.transaction
         val profileId = transaction.profileId

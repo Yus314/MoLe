@@ -101,7 +101,7 @@ public class App extends Application {
         if (profileModel != null)
             return profileModel.getUseAuthentication();
         return Data.getProfile()
-                   .useAuthentication();
+                   .isAuthEnabled();
     }
     @Override
     public void onCreate() {

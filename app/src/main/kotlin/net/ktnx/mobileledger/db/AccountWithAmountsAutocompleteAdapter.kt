@@ -64,7 +64,7 @@ class AccountWithAmountsAutocompleteAdapter(
     }
 
     inner class AccountFilter : Filter() {
-        private val dao: AccountDAO = DB.get().accountDAO
+        private val dao: AccountDAO = DB.get().getAccountDAO()
 
         override fun performFiltering(constraint: CharSequence?): FilterResults {
             val results = FilterResults()
