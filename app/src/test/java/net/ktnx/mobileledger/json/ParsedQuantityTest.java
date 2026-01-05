@@ -17,8 +17,6 @@
 
 package net.ktnx.mobileledger.json;
 
-import net.ktnx.mobileledger.json.v1_15.ParsedQuantity;
-
 import org.junit.Test;
 
 import static junit.framework.TestCase.assertEquals;
