@@ -26,12 +26,12 @@ import java.util.Locale
 import java.util.regex.Pattern
 
 object Globals {
-    private val dateFormatter = ThreadLocal<SimpleDateFormat>().apply {
-        set(SimpleDateFormat("yyyy/MM/dd", Locale.US))
+    private val dateFormatter: ThreadLocal<SimpleDateFormat> = ThreadLocal.withInitial {
+        SimpleDateFormat("yyyy/MM/dd", Locale.US)
     }
 
-    private val isoDateFormatter = ThreadLocal<SimpleDateFormat>().apply {
-        set(SimpleDateFormat("yyyy-MM-dd", Locale.US))
+    private val isoDateFormatter: ThreadLocal<SimpleDateFormat> = ThreadLocal.withInitial {
+        SimpleDateFormat("yyyy-MM-dd", Locale.US)
     }
 
     @JvmField
