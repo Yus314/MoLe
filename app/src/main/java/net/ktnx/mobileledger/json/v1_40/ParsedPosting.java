@@ -137,9 +137,22 @@ public class ParsedPosting extends net.ktnx.mobileledger.json.ParsedPosting {
     }
     public LedgerTransactionAccount asLedgerAccount() {
         ParsedAmount amt = pamount.get(0);
-        return new LedgerTransactionAccount(paccount, amt.getAquantity()
-                                                         .asFloat(), amt.getAcommodity(),
-                getPcomment());
+        ParsedStyle parsedStyle = amt.getAstyle();
+
+        // Preserve style information from hledger JSON
+        net.ktnx.mobileledger.model.AmountStyle amountStyle = null;
+        if (parsedStyle != null) {
+            amountStyle = net.ktnx.mobileledger.model.AmountStyle.fromParsedStyle(
+                    parsedStyle, amt.getAcommodity());
+        }
+
+        return new LedgerTransactionAccount(
+                paccount,
+                amt.getAquantity().asFloat(),
+                amt.getAcommodity(),
+                getPcomment(),
+                amountStyle
+        );
     }
 
 }

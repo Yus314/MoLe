@@ -52,6 +52,8 @@ public class TransactionAccount {
     private float amount;
     @ColumnInfo
     private String comment;
+    @ColumnInfo(name = "amount_style")
+    private String amountStyle;
     @ColumnInfo(defaultValue = "0")
     private long generation = 0;
     public long getId() {
@@ -105,6 +107,12 @@ public class TransactionAccount {
     public void setGeneration(long generation) {
         this.generation = generation;
     }
+    public String getAmountStyle() {
+        return amountStyle;
+    }
+    public void setAmountStyle(String amountStyle) {
+        this.amountStyle = amountStyle;
+    }
 
     public void copyDataFrom(TransactionAccount o) {
         // id = o.id
@@ -114,6 +122,7 @@ public class TransactionAccount {
         currency = Misc.nullIsEmpty(o.currency);
         amount = o.amount;
         comment = o.comment;
+        amountStyle = o.amountStyle;
         generation = o.generation;
     }
 }

@@ -35,14 +35,21 @@ public class LedgerTransactionAccount {
     private String comment;
     private boolean amountValid = true;
     private long dbId;
+    @Nullable
+    private AmountStyle amountStyle;
     public LedgerTransactionAccount(String accountName, float amount, String currency,
                                     String comment) {
+        this(accountName, amount, currency, comment, null);
+    }
+    public LedgerTransactionAccount(String accountName, float amount, String currency,
+                                    String comment, @Nullable AmountStyle amountStyle) {
         this.setAccountName(accountName);
         this.amount = amount;
         this.amountSet = true;
         this.amountValid = true;
         this.currency = Misc.emptyIsNull(currency);
         this.comment = Misc.emptyIsNull(comment);
+        this.amountStyle = amountStyle;
     }
     public LedgerTransactionAccount(String accountName) {
         this.accountName = accountName;
@@ -59,10 +66,13 @@ public class LedgerTransactionAccount {
             setAmount(origin.getAmount());
         amountValid = origin.amountValid;
         currency = origin.getCurrency();
+        amountStyle = origin.amountStyle;
     }
     public LedgerTransactionAccount(TransactionAccount dbo) {
         this(dbo.getAccountName(), dbo.getAmount(), Misc.emptyIsNull(dbo.getCurrency()),
-                Misc.emptyIsNull(dbo.getComment()));
+                Misc.emptyIsNull(dbo.getComment()),
+                dbo.getAmountStyle() != null ? AmountStyle.deserialize(dbo.getAmountStyle()) :
+                        null);
         amountSet = true;
         amountValid = true;
         dbId = dbo.getId();
@@ -112,19 +122,83 @@ public class LedgerTransactionAccount {
     public void setCurrency(String currency) {
         this.currency = Misc.emptyIsNull(currency);
     }
+    @Nullable
+    public AmountStyle getAmountStyle() {
+        return amountStyle;
+    }
+    public void setAmountStyle(@Nullable AmountStyle amountStyle) {
+        this.amountStyle = amountStyle;
+    }
+    @NonNull
+    public AmountStyle getEffectiveStyle() {
+        if (amountStyle != null) {
+            return amountStyle;
+        }
+        return AmountStyle.getDefault(currency);
+    }
     @NonNull
     public String toString() {
         if (!amountSet)
             return "";
 
+        AmountStyle style = getEffectiveStyle();
         StringBuilder sb = new StringBuilder();
-        if (currency != null) {
+
+        // Currency before amount
+        if (currency != null && style.getCommodityPosition() == AmountStyle.Position.BEFORE) {
             sb.append(currency);
-            sb.append(' ');
+            if (style.isCommoditySpaced()) {
+                sb.append(' ');
+            }
         }
-        sb.append(String.format(Locale.US, "%,1.2f", amount));
+
+        // Format the amount
+        sb.append(formatAmount(amount, style));
+
+        // Currency after amount
+        if (currency != null && style.getCommodityPosition() == AmountStyle.Position.AFTER) {
+            if (style.isCommoditySpaced()) {
+                sb.append(' ');
+            }
+            sb.append(currency);
+        }
 
         return sb.toString();
+    }
+
+    /**
+     * Formats the amount value according to the given style
+     */
+    private String formatAmount(float amount, AmountStyle style) {
+        int precision = style.getPrecision();
+        String decimalMark = style.getDecimalMark();
+
+        // Check if amount is effectively an integer
+        boolean isInteger = Math.abs(amount - Math.round(amount)) < 0.001f;
+
+        // For zero precision and integer amounts, format as integer
+        if (precision == 0 && isInteger) {
+            return String.format(Locale.US, "%,d", Math.round(amount));
+        }
+
+        // Format with specified precision
+        String pattern = "%,." + precision + "f";
+        String formatted = String.format(Locale.US, pattern, amount);
+
+        // Replace decimal mark if needed
+        if (!".".equals(decimalMark)) {
+            // When decimal mark is comma, we need to be careful not to replace thousand separators
+            // First replace decimal point with a placeholder, then replace commas, then restore decimal mark
+            if (",".equals(decimalMark)) {
+                formatted = formatted.replace(".", "DECIMAL_PLACEHOLDER");
+                // Thousand separator remains as comma (no change needed)
+                formatted = formatted.replace("DECIMAL_PLACEHOLDER", decimalMark);
+            } else {
+                formatted = formatted.replace(".", decimalMark);
+            }
+        }
+
+        return formatted;
     }
     public TransactionAccount toDBO() {
         TransactionAccount dbo = new TransactionAccount();
@@ -134,6 +208,11 @@ public class LedgerTransactionAccount {
         dbo.setComment(comment);
         dbo.setCurrency(Misc.nullIsEmpty(currency));
         dbo.setId(dbId);
+
+        // Save amount style if present
+        if (amountStyle != null) {
+            dbo.setAmountStyle(amountStyle.serialize());
+        }
 
         return dbo;
     }
