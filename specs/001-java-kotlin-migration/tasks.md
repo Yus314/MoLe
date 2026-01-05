@@ -99,9 +99,9 @@
 - [X] T033 [P] [US1] Convert `AmountStyle.java` → `app/src/main/kotlin/net/ktnox/mobileledger/model/AmountStyle.kt` (use data class with enum)
 - [X] T034 [P] [US1] Convert `Data.java` → `app/src/main/kotlin/net/ktnx/mobileledger/model/Data.kt` (use object singleton)
 - [X] T035 [P] [US1] Convert remaining model files to `app/src/main/kotlin/net/ktnox/mobileledger/model/`
-- [ ] T036 [P] [US1] Convert `LedgerAccountTest.java` → `app/src/test/kotlin/net/ktnox/mobileledger/model/LedgerAccountTest.kt`
-- [ ] T037 [P] [US1] Convert `AmountStyleTest.java` → `app/src/test/kotlin/net/ktnox/mobileledger/model/AmountStyleTest.kt`
-- [ ] T038 [US1] Verify model tests pass with `./gradlew test --tests "*.LedgerAccountTest" --tests "*.AmountStyleTest"`
+- [X] T036 [P] [US1] Convert `LedgerAccountTest.java` → `app/src/test/kotlin/net/ktnox/mobileledger/model/LedgerAccountTest.kt`
+- [X] T037 [P] [US1] Convert `AmountStyleTest.java` → `app/src/test/kotlin/net/ktnox/mobileledger/model/AmountStyleTest.kt`
+- [X] T038 [US1] Verify model tests pass with `./gradlew test --tests "*.LedgerAccountTest" --tests "*.AmountStyleTest"`
 
 ### db Package Conversion (16 files) - Room Entities
 
@@ -129,14 +129,14 @@
 
 ### async Package Conversion (7 files)
 
-- [ ] T057 [P] [US1] Convert `DescriptionSelectedCallback.java` → `app/src/main/kotlin/net/ktnox/mobileledger/async/DescriptionSelectedCallback.kt`
-- [ ] T058 [P] [US1] Convert `SendTransactionTask.java` → `app/src/main/kotlin/net/ktnox/mobileledger/async/SendTransactionTask.kt`
-- [ ] T059 [P] [US1] Convert `RetrieveTransactionsTask.java` → `app/src/main/kotlin/net/ktnox/mobileledger/async/RetrieveTransactionsTask.kt`
-- [ ] T060 [P] [US1] Convert remaining async files to `app/src/main/kotlin/net/ktnox/mobileledger/async/`
+- [X] T057 [P] [US1] Convert `DescriptionSelectedCallback.java` → `app/src/main/kotlin/net/ktnox/mobileledger/async/DescriptionSelectedCallback.kt`
+- [X] T058 [P] [US1] Convert `SendTransactionTask.java` → `app/src/main/kotlin/net/ktnox/mobileledger/async/SendTransactionTask.kt`
+- [X] T059 [P] [US1] Convert `RetrieveTransactionsTask.java` → `app/src/main/kotlin/net/ktnox/mobileledger/async/RetrieveTransactionsTask.kt`
+- [X] T060 [P] [US1] Convert remaining async files to `app/src/main/kotlin/net/ktnox/mobileledger/async/`
 
 ### backup Package Conversion (6 files)
 
-- [ ] T061 [P] [US1] Convert backup package files to `app/src/main/kotlin/net/ktnox/mobileledger/backup/`
+- [X] T061 [P] [US1] Convert backup package files to `app/src/main/kotlin/net/ktnox/mobileledger/backup/`
 
 ### json Package - Base Conversion (102 files)
 

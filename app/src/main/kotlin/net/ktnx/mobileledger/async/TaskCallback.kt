@@ -15,8 +15,8 @@
  * along with MoLe. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ktnx.mobileledger.async;
+package net.ktnx.mobileledger.async
 
-public interface TaskCallback {
-    void onTransactionSaveDone(String error, Object args);
+fun interface TaskCallback {
+    fun onTransactionSaveDone(error: String?, args: Any?)
 }

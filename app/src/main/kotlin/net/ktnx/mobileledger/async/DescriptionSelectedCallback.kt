@@ -15,8 +15,8 @@
  * along with MoLe. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ktnx.mobileledger.async;
+package net.ktnx.mobileledger.async
 
-public interface DescriptionSelectedCallback {
-    void onDescriptionSelected(String description);
+fun interface DescriptionSelectedCallback {
+    fun onDescriptionSelected(description: String)
 }
