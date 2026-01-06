@@ -82,10 +82,8 @@ class LedgerAccount(
 
     @JvmOverloads
     fun addAmount(amount: Float, currency: String = "", amountStyle: AmountStyle? = null) {
-        if (amounts == null) {
-            amounts = ArrayList()
-        }
-        amounts!!.add(LedgerAmount(amount, currency, amountStyle))
+        val amountList = amounts ?: ArrayList<LedgerAmount>().also { amounts = it }
+        amountList.add(LedgerAmount(amount, currency, amountStyle))
     }
 
     fun getAmountsString(): String {

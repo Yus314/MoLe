@@ -123,7 +123,7 @@ class RetrieveTransactionsTask(private val profile: Profile) : Thread() {
                         }
                         val m = reAccountName.matcher(line)
                         if (m.find()) {
-                            val acctEncoded = m.group(1)!!
+                            val acctEncoded = requireNotNull(m.group(1)) { "Account name match group is null" }
                             var accName = URLDecoder.decode(acctEncoded, "UTF-8")
                             accName = accName.replace("\"", "")
                             L(String.format("found account: %s", accName))
@@ -156,7 +156,7 @@ class RetrieveTransactionsTask(private val profile: Profile) : Thread() {
                             throwIfCancelled()
 
                             matchFound = true
-                            var value = m.group(1)!!
+                            var value = requireNotNull(m.group(1)) { "Value match group is null" }
                             var currency = m.group(2) ?: ""
 
                             val tmpM = reDecimalComma.matcher(value)
@@ -173,7 +173,7 @@ class RetrieveTransactionsTask(private val profile: Profile) : Thread() {
 
                             L("curr=$currency, value=$value")
                             val floatVal = value.toFloat()
-                            val currentAccount = lastAccount!!
+                            val currentAccount = requireNotNull(lastAccount) { "No current account" }
                             currentAccount.addAmount(floatVal, currency)
                             for (syn in syntheticAccounts) {
                                 L(String.format(Locale.ENGLISH, "propagating %s %1.2f to %s",
@@ -192,7 +192,7 @@ class RetrieveTransactionsTask(private val profile: Profile) : Thread() {
                         if (line.isNotEmpty() && line[0] == ' ') continue
                         val m = reTransactionStart.matcher(line)
                         if (m.find()) {
-                            transactionId = m.group(1)!!.toInt()
+                            transactionId = requireNotNull(m.group(1)) { "Transaction ID match group is null" }.toInt()
                             state = ParserState.EXPECTING_TRANSACTION_DESCRIPTION
                             L(String.format(Locale.ENGLISH,
                                 "found transaction %d → expecting description", transactionId))
@@ -220,7 +220,7 @@ class RetrieveTransactionsTask(private val profile: Profile) : Thread() {
                                     "Transaction Id is 0 while expecting description")
                             }
 
-                            var date = m.group(1)!!
+                            var date = requireNotNull(m.group(1)) { "Date match group is null" }
                             try {
                                 val equalsIndex = date.indexOf('=')
                                 if (equalsIndex >= 0) {
@@ -238,20 +238,21 @@ class RetrieveTransactionsTask(private val profile: Profile) : Thread() {
                         }
                     }
                     ParserState.EXPECTING_TRANSACTION_DETAILS -> {
+                        val currentTransaction = requireNotNull(transaction) { "Transaction is null" }
                         if (line.isEmpty()) {
                             // transaction data collected
-                            transaction!!.finishLoading()
+                            currentTransaction.finishLoading()
                             transactions.add(transaction)
 
                             state = ParserState.EXPECTING_TRANSACTION
                             L(String.format("transaction %s parsed → expecting transaction",
-                                transaction.ledgerId))
+                                currentTransaction.ledgerId))
                         } else {
                             val lta = parseTransactionAccountLine(line)
                             if (lta != null) {
-                                transaction!!.addAccount(lta)
+                                currentTransaction.addAccount(lta)
                                 L(String.format(Locale.ENGLISH, "%d: %s = %s",
-                                    transaction.ledgerId, lta.accountName, lta.amount))
+                                    currentTransaction.ledgerId, lta.accountName, lta.amount))
                             } else {
                                 throw IllegalStateException(
                                     String.format("Can't parse transaction %d details: %s",
@@ -646,9 +647,9 @@ class RetrieveTransactionsTask(private val profile: Profile) : Thread() {
             val m = reTransactionDetails.matcher(line)
             if (m.find()) {
                 val postingStatus = m.group(1)
-                val accName = m.group(2)
+                val accName = requireNotNull(m.group(2)) { "Account name is null" }
                 val currencyPre = m.group(3)
-                var amount = m.group(4)!!
+                var amount = requireNotNull(m.group(4)) { "Amount is null" }
                 val currencyPost = m.group(5)
 
                 val currency: String? = when {
@@ -662,7 +663,7 @@ class RetrieveTransactionsTask(private val profile: Profile) : Thread() {
 
                 amount = amount.replace(',', '.')
 
-                return LedgerTransactionAccount(accName!!, amount.toFloat(), currency, null)
+                return LedgerTransactionAccount(accName, amount.toFloat(), currency, null)
             }
             return null
         }

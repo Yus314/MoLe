@@ -303,10 +303,12 @@ abstract class TemplateDetailsItem protected constructor(val type: Type) {
                 } catch (ex: PatternSyntaxException) {
                     patternError = ex.description
                     compiledPattern = null
-                    testMatch = SpannableString(testText)
-                    if (testText.isNotEmpty())
-                        testMatch!!.setSpan(notMatchedSpan(), 0, testText.length - 1,
-                            Spanned.SPAN_INCLUSIVE_INCLUSIVE)
+                    testMatch = SpannableString(testText).also { ss ->
+                        if (testText.isNotEmpty()) {
+                            ss.setSpan(notMatchedSpan(), 0, testText.length - 1,
+                                Spanned.SPAN_INCLUSIVE_INCLUSIVE)
+                        }
+                    }
                 }
             }
 
@@ -413,8 +415,9 @@ abstract class TemplateDetailsItem protected constructor(val type: Type) {
         }
 
         fun getMatchGroupText(group: Int): String {
-            if (compiledPattern != null && testText.isNotEmpty()) {
-                val m = compiledPattern!!.matcher(testText)
+            val pattern = compiledPattern
+            if (pattern != null && testText.isNotEmpty()) {
+                val m = pattern.matcher(testText)
                 if (m.matches())
                     return m.group(group) ?: "ø"
             }
@@ -475,9 +478,10 @@ abstract class TemplateDetailsItem protected constructor(val type: Type) {
 
             if (pattern.isNotEmpty()) {
                 try {
+                    val compiledPat = compiledPattern ?: return
                     if (Misc.emptyIsNull(testText) != null) {
                         val ss = SpannableString(testText)
-                        val m = compiledPattern!!.matcher(testText)
+                        val m = compiledPat.matcher(testText)
                         if (m.find()) {
                             if (m.start() > 0)
                                 ss.setSpan(notMatchedSpan(), 0, m.start(),
@@ -551,30 +555,25 @@ abstract class TemplateDetailsItem protected constructor(val type: Type) {
                     header.pattern = p.regularExpression
                     header.testText = p.testText ?: ""
 
-                    if (p.transactionDescriptionMatchGroup == null)
-                        header.setTransactionDescription(p.transactionDescription)
-                    else
-                        header.setTransactionDescriptionMatchGroup(p.transactionDescriptionMatchGroup!!)
+                    p.transactionDescriptionMatchGroup?.let { group ->
+                        header.setTransactionDescriptionMatchGroup(group)
+                    } ?: header.setTransactionDescription(p.transactionDescription)
 
-                    if (p.transactionCommentMatchGroup == null)
-                        header.setTransactionComment(p.transactionComment)
-                    else
-                        header.setTransactionCommentMatchGroup(p.transactionCommentMatchGroup!!)
+                    p.transactionCommentMatchGroup?.let { group ->
+                        header.setTransactionCommentMatchGroup(group)
+                    } ?: header.setTransactionComment(p.transactionComment)
 
-                    if (p.dateDayMatchGroup == null)
-                        header.setDateDay(p.dateDay)
-                    else
-                        header.setDateDayMatchGroup(p.dateDayMatchGroup!!)
+                    p.dateDayMatchGroup?.let { group ->
+                        header.setDateDayMatchGroup(group)
+                    } ?: header.setDateDay(p.dateDay)
 
-                    if (p.dateMonthMatchGroup == null)
-                        header.setDateMonth(p.dateMonth)
-                    else
-                        header.setDateMonthMatchGroup(p.dateMonthMatchGroup!!)
+                    p.dateMonthMatchGroup?.let { group ->
+                        header.setDateMonthMatchGroup(group)
+                    } ?: header.setDateMonth(p.dateMonth)
 
-                    if (p.dateYearMatchGroup == null)
-                        header.setDateYear(p.dateYear)
-                    else
-                        header.setDateYearMatchGroup(p.dateYearMatchGroup!!)
+                    p.dateYearMatchGroup?.let { group ->
+                        header.setDateYearMatchGroup(group)
+                    } ?: header.setDateYear(p.dateYear)
 
                     header.isFallback = p.isFallback
 
@@ -585,21 +584,17 @@ abstract class TemplateDetailsItem protected constructor(val type: Type) {
                     acc.id = p.id
                     acc.position = p.position
 
-                    if (p.accountNameMatchGroup == null)
-                        acc.setAccountName(Misc.nullIsEmpty(p.accountName))
-                    else
-                        acc.setAccountNameMatchGroup(p.accountNameMatchGroup!!)
+                    p.accountNameMatchGroup?.let { group ->
+                        acc.setAccountNameMatchGroup(group)
+                    } ?: acc.setAccountName(Misc.nullIsEmpty(p.accountName))
 
-                    if (p.accountCommentMatchGroup == null)
-                        acc.setAccountComment(Misc.nullIsEmpty(p.accountComment))
-                    else
-                        acc.setAccountCommentMatchGroup(p.accountCommentMatchGroup!!)
+                    p.accountCommentMatchGroup?.let { group ->
+                        acc.setAccountCommentMatchGroup(group)
+                    } ?: acc.setAccountComment(Misc.nullIsEmpty(p.accountComment))
 
-                    if (p.currencyMatchGroup == null) {
-                        acc.setCurrency(p.getCurrencyObject())
-                    } else {
-                        acc.setCurrencyMatchGroup(p.currencyMatchGroup!!)
-                    }
+                    p.currencyMatchGroup?.let { group ->
+                        acc.setCurrencyMatchGroup(group)
+                    } ?: acc.setCurrency(p.getCurrencyObject())
 
                     val amountMatchGroup = p.amountMatchGroup
                     if (amountMatchGroup != null && amountMatchGroup > 0) {

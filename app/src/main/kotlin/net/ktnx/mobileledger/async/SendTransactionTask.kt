@@ -187,15 +187,16 @@ class SendTransactionTask(
                         // the token needs to be updated
                         val reader = BufferedReader(InputStreamReader(resp))
                         val re = Pattern.compile("<input type=\"hidden\" name=\"_token\" value=\"([^\"]+)\">")
-                        var line: String?
-                        while (reader.readLine().also { line = it } != null) {
-                            val m = re.matcher(line!!)
+                        var line: String? = reader.readLine()
+                        while (line != null) {
+                            val m = re.matcher(line)
                             if (m.matches()) {
                                 token = m.group(1)
-                                Logger.debug("save-transaction", line!!)
+                                Logger.debug("save-transaction", line)
                                 Logger.debug("save-transaction", "Token=$token")
                                 return false // retry
                             }
+                            line = reader.readLine()
                         }
                         throw IOException("Can't find _token string")
                     }

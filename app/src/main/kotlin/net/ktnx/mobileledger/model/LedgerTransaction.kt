@@ -84,7 +84,7 @@ class LedgerTransaction {
     }
 
     constructor(ledgerId: Long, date: SimpleDate?, description: String?) :
-            this(ledgerId, date, description, Data.getProfile()!!)
+            this(ledgerId, date, description, requireNotNull(Data.getProfile()) { "No profile selected" })
 
     constructor(date: SimpleDate?, description: String?) :
             this(0, date, description)
@@ -115,14 +115,15 @@ class LedgerTransaction {
     }
 
     fun toDBO(): TransactionWithAccounts {
+        val d = requireNotNull(date) { "Transaction date must be set before converting to DBO" }
         val o = TransactionWithAccounts()
         o.transaction = Transaction()
         o.transaction.id = dbId
         o.transaction.profileId = profile
         o.transaction.ledgerId = ledgerId
-        o.transaction.year = date!!.year
-        o.transaction.month = date!!.month
-        o.transaction.day = date!!.day
+        o.transaction.year = d.year
+        o.transaction.month = d.month
+        o.transaction.day = d.day
         o.transaction.description = description ?: ""
         o.transaction.comment = comment
         fillDataHash()
@@ -176,7 +177,7 @@ class LedgerTransaction {
 
     fun getDataHash(): String {
         fillDataHash()
-        return dataHash!!
+        return checkNotNull(dataHash) { "Data hash computation failed" }
     }
 
     fun finishLoading() {

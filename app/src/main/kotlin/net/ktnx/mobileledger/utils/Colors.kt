@@ -99,12 +99,12 @@ object Colors {
     @ColorInt
     fun getPrimaryColorForHue(hueDegrees: Int): Int {
         if (hueDegrees == DEFAULT_HUE_DEG) {
-            return themePrimaryColor[R.style.AppTheme_default]!!
+            return themePrimaryColor.getValue(R.style.AppTheme_default)
         }
         val mod = hueDegrees % HueRing.hueStepDegrees
         return if (mod == 0) {
             val themeId = getThemeIdForHue(hueDegrees)
-            val result = themePrimaryColor[themeId]!!
+            val result = themePrimaryColor.getValue(themeId)
             Logger.debug(
                 "colors",
                 String.format(Locale.US, "getPrimaryColorForHue(%d) = %x", hueDegrees, result)
@@ -113,8 +113,8 @@ object Colors {
         } else {
             val x0 = hueDegrees - mod
             val x1 = (x0 + HueRing.hueStepDegrees) % 360
-            val y0 = themePrimaryColor[getThemeIdForHue(x0)]!!.toFloat()
-            val y1 = themePrimaryColor[getThemeIdForHue(x1)]!!.toFloat()
+            val y0 = themePrimaryColor.getValue(getThemeIdForHue(x0)).toFloat()
+            val y1 = themePrimaryColor.getValue(getThemeIdForHue(x1)).toFloat()
             kotlin.math.round(y0 + hueDegrees * (y1 - y0) / (x1 - x0)).toInt()
         }
     }

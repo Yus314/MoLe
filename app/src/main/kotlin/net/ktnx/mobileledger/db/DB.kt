@@ -253,7 +253,7 @@ abstract class DB : RoomDatabase() {
                         val m = endOfStatement.matcher(line)
                         if (m.find()) {
                             try {
-                                db.execSQL(sqlStatement!!)
+                                db.execSQL(checkNotNull(sqlStatement) { "SQL statement is null" })
                                 sqlStatement = null
                             } catch (e: Exception) {
                                 throw RuntimeException(
