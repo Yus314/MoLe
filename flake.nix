@@ -265,6 +265,76 @@
           echo "✅ Clean complete!"
         '';
 
+        # ビルド＋インストールスクリプト (nix run .#install で実行可能)
+        installScript = pkgs.writeShellScriptBin "install-mole" ''
+          set -e
+          echo "================================================="
+          echo "Building and Installing ${appName} (v${version})"
+          echo "================================================="
+
+          ${runInFhs ''
+            ${makeLocalProperties}
+            ./gradlew --no-daemon assembleDebug
+          ''}
+
+          echo ""
+          echo "📱 Installing APK to connected device..."
+          ${android-sdk}/share/android-sdk/platform-tools/adb install -r app/build/outputs/apk/debug/app-debug.apk
+
+          echo ""
+          echo "✅ Build and install complete!"
+          echo "Please verify on device and report any issues."
+        '';
+
+        # フルワークフロー: テスト → ビルド → インストール (nix run .#verify で実行可能)
+        verifyScript = pkgs.writeShellScriptBin "verify-mole" ''
+          set -e
+          echo "================================================="
+          echo "${appName} Verification Workflow (v${version})"
+          echo "================================================="
+          echo ""
+          echo "Step 1/3: Running unit tests..."
+          echo "-------------------------------------------------"
+
+          ${runInFhs ''
+            ${makeLocalProperties}
+            ./gradlew --no-daemon test
+          ''}
+
+          echo ""
+          echo "✅ Tests passed!"
+          echo ""
+          echo "Step 2/3: Building debug APK..."
+          echo "-------------------------------------------------"
+
+          ${runInFhs ''
+            ${makeLocalProperties}
+            ./gradlew --no-daemon assembleDebug
+          ''}
+
+          echo ""
+          echo "✅ Build complete!"
+          echo ""
+          echo "Step 3/3: Installing to device..."
+          echo "-------------------------------------------------"
+
+          ${android-sdk}/share/android-sdk/platform-tools/adb install -r app/build/outputs/apk/debug/app-debug.apk
+
+          echo ""
+          echo "================================================="
+          echo "✅ Verification workflow complete!"
+          echo ""
+          echo "📱 APK has been installed on the connected device."
+          echo "Please verify the following manually:"
+          echo "  1. App launches without crash"
+          echo "  2. Data refresh works correctly"
+          echo "  3. Profile creation/editing works"
+          echo "  4. Transaction submission works"
+          echo ""
+          echo "Report any issues found during verification."
+          echo "================================================="
+        '';
+
       in
       {
         # パッケージ定義
@@ -304,6 +374,20 @@
             program = "${cleanScript}/bin/clean-mole";
             meta = {
               description = "Clean build artifacts for ${appName}";
+            };
+          };
+          install = {
+            type = "app";
+            program = "${installScript}/bin/install-mole";
+            meta = {
+              description = "Build and install debug APK to connected device";
+            };
+          };
+          verify = {
+            type = "app";
+            program = "${verifyScript}/bin/verify-mole";
+            meta = {
+              description = "Full verification workflow: test → build → install";
             };
           };
         };

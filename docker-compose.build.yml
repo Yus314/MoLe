@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  mole-builder:
+    build:
+      context: .
+      dockerfile: Dockerfile.build
+    volumes:
+      # ソースコードをマウント
+      - .:/app
+      # Gradleキャッシュを永続化
+      - gradle-cache:/root/.gradle
+    working_dir: /app
+    command: ./gradlew assembleDebug
+
+volumes:
+  gradle-cache:

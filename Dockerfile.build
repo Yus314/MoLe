@@ -1,0 +1,46 @@
+# Androidアプリビルド用Dockerfile
+FROM openjdk:17-slim
+
+# 環境変数
+ENV ANDROID_HOME=/opt/android-sdk
+ENV PATH=${PATH}:${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/platform-tools
+
+# 必要なパッケージをインストール
+RUN apt-get update && apt-get install -y \
+    wget \
+    unzip \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Android SDK cmdline-toolsをインストール
+RUN mkdir -p ${ANDROID_HOME}/cmdline-tools && \
+    cd ${ANDROID_HOME}/cmdline-tools && \
+    wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip && \
+    unzip commandlinetools-linux-9477386_latest.zip && \
+    mv cmdline-tools latest && \
+    rm commandlinetools-linux-9477386_latest.zip
+
+# ライセンス同意
+RUN yes | sdkmanager --licenses
+
+# 必要なAndroid SDKコンポーネントをインストール
+RUN sdkmanager \
+    "platform-tools" \
+    "platforms;android-33" \
+    "build-tools;30.0.3"
+
+# 作業ディレクトリ
+WORKDIR /app
+
+# Gradleラッパーをコピー
+COPY gradlew gradle.properties settings.gradle /app/
+COPY gradle /app/gradle/
+
+# 依存関係を事前ダウンロード（キャッシュ効率化）
+RUN ./gradlew --version || true
+
+# ソースコードをコピー
+COPY . /app/
+
+# ビルド実行
+CMD ["./gradlew", "assembleDebug"]

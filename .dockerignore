@@ -1,0 +1,51 @@
+# Git
+.git/
+.gitignore
+
+# IDE and editor
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+
+# Gradle
+.gradle/
+build/
+*/build/
+local.properties
+
+# Android Studio
+.externalNativeBuild/
+captures/
+*.apk
+*.aab
+
+# Kotlin/Java
+*.class
+*.jar
+*.log
+
+# Secrets
+keystore.properties
+*.keystore
+*.jks
+.env*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Documentation and specs (not needed in container)
+docs/
+specs/
+*.md
+
+# Nix
+result
+result-*
+.direnv/
+
+# Test outputs
+coverage/
+test-results/
