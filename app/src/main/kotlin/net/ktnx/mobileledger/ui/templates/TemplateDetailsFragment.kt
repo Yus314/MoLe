@@ -109,9 +109,14 @@ class TemplateDetailsFragment : Fragment() {
             else -> GridLayoutManager(context, columnCount)
         }
 
-        val adapter = TemplateDetailsAdapter(viewModel!!)
+        val vm = viewModel
+        if (vm == null) {
+            Logger.debug("flow", "PatternDetailsFragment.onCreateView(): viewModel is null")
+            return b.root
+        }
+        val adapter = TemplateDetailsAdapter(vm)
         b.patternDetailsRecyclerView.adapter = adapter
-        viewModel?.getItems(patternId)?.observe(viewLifecycleOwner) { items ->
+        vm.getItems(patternId).observe(viewLifecycleOwner) { items ->
             adapter.setItems(items)
         }
 

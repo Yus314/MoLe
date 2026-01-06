@@ -36,7 +36,8 @@ class ConfigWriter @Throws(FileNotFoundException::class) constructor(
     override fun getStreamMode(): String = "w"
 
     override fun initStream() {
-        w = RawConfigWriter(FileOutputStream(pfd!!.fileDescriptor))
+        val fd = pfd?.fileDescriptor ?: throw IllegalStateException("File descriptor not available")
+        w = RawConfigWriter(FileOutputStream(fd))
     }
 
     @Throws(IOException::class)

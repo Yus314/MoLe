@@ -44,8 +44,9 @@ object HelpDialog {
             val m = MARKDOWN_LINK_PATTERN.matcher(message)
             if (m.find()) {
                 richTextMessage.append(message.substring(0, m.start()))
-                var linkText = m.group(1)!!
-                val linkURL = m.group(2)!!
+                // Groups 1 and 2 are guaranteed to exist when find() returns true
+                var linkText = m.group(1) ?: ""
+                val linkURL = m.group(2) ?: ""
 
                 if (linkText.isEmpty()) {
                     linkText = linkURL

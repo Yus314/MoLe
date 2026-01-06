@@ -63,7 +63,8 @@ class TemplateDetailSourceSelectorFragment : AppCompatDialogFragment(), OnSource
                     mPatternProblem = R.string.missing_test_text
                 } else {
                     val pattern = Pattern.compile(patternText)
-                    val matcher = pattern.matcher(testText!!)
+                    // testText is guaranteed non-null here (checked by Misc.emptyIsNull above)
+                    val matcher = pattern.matcher(testText)
                     Logger.debug("templates",
                         String.format("Trying to match pattern '%s' against text '%s'",
                             patternText, testText))
@@ -104,7 +105,7 @@ class TemplateDetailSourceSelectorFragment : AppCompatDialogFragment(), OnSource
 
             model = ViewModelProvider(this)[TemplateDetailSourceSelectorModel::class.java]
             onSourceSelectedListener?.let { model?.setOnSourceSelectedListener(it) }
-            model?.setSourcesList(mSources!!)
+            mSources?.let { model?.setSourcesList(it) }
 
             val adapter = TemplateDetailSourceSelectorRecyclerViewAdapter()
             model?.groups?.observe(this) { adapter.submitList(it) }

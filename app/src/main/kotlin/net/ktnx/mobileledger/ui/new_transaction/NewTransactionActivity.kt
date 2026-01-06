@@ -264,7 +264,8 @@ class NewTransactionActivity : ProfileThemedActivity(),
                 }
                 try {
                     val pattern = Pattern.compile(patternSource)
-                    val matcher = pattern.matcher(text!!)
+                    val matcherText = text ?: continue
+                    val matcher = pattern.matcher(matcherText)
                     if (!matcher.matches()) {
                         continue
                     }
@@ -299,10 +300,11 @@ class NewTransactionActivity : ProfileThemedActivity(),
                 matchingTemplates
             }
 
+            val textToMatch = text ?: return@observe
             when {
-                templatesToUse.isEmpty() -> alertNoTemplateMatch(text!!)
-                templatesToUse.size == 1 -> model.applyTemplate(templatesToUse[0], text!!)
-                else -> chooseTemplate(templatesToUse, text!!)
+                templatesToUse.isEmpty() -> alertNoTemplateMatch(textToMatch)
+                templatesToUse.size == 1 -> model.applyTemplate(templatesToUse[0], textToMatch)
+                else -> chooseTemplate(templatesToUse, textToMatch)
             }
         }
     }
@@ -367,8 +369,9 @@ class NewTransactionActivity : ProfileThemedActivity(),
             val trDao = DB.get()
                 .getTransactionDAO()
 
-            var tr = if (Misc.emptyIsNull(accFilter) != null) {
-                trDao.getFirstByDescriptionHavingAccountSync(description, accFilter!!)
+            val filterValue = Misc.emptyIsNull(accFilter)
+            var tr = if (filterValue != null) {
+                trDao.getFirstByDescriptionHavingAccountSync(description, filterValue)
             } else {
                 null
             }

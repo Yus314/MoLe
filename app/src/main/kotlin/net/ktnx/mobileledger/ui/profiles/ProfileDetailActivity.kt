@@ -80,11 +80,12 @@ class ProfileDetailActivity : CrashReportingActivity() {
             // using a fragment transaction.
             val arguments = Bundle()
             arguments.putInt(ProfileDetailFragment.ARG_HUE, themeHue)
-            mFragment = ProfileDetailFragment()
-            mFragment?.arguments = arguments
-            supportFragmentManager.beginTransaction()
-                .add(R.id.profile_detail_container, mFragment!!)
-                .commit()
+            mFragment = ProfileDetailFragment().also { fragment ->
+                fragment.arguments = arguments
+                supportFragmentManager.beginTransaction()
+                    .add(R.id.profile_detail_container, fragment)
+                    .commit()
+            }
         }
     }
 

@@ -231,10 +231,10 @@ class RawConfigReader(inputStream: InputStream) {
     }
 
     private fun restoreTemplates() {
-        templates ?: return
+        val templatesList = templates ?: return
 
         val dao = DB.get().getTemplateDAO()
-        for (t in templates!!) {
+        for (t in templatesList) {
             if (dao.getTemplateWithAccountsByUuidSync(t.header.uuid) == null) {
                 dao.insertSync(t)
             }
@@ -242,10 +242,10 @@ class RawConfigReader(inputStream: InputStream) {
     }
 
     private fun restoreProfiles() {
-        profiles ?: return
+        val profilesList = profiles ?: return
 
         val dao = DB.get().getProfileDAO()
-        for (p in profiles!!) {
+        for (p in profilesList) {
             if (dao.getByUuidSync(p.uuid) == null) {
                 dao.insert(p)
             }
@@ -253,10 +253,10 @@ class RawConfigReader(inputStream: InputStream) {
     }
 
     private fun restoreCommodities() {
-        commodities ?: return
+        val commoditiesList = commodities ?: return
 
         val dao = DB.get().getCurrencyDAO()
-        for (c in commodities!!) {
+        for (c in commoditiesList) {
             if (dao.getByNameSync(c.name) == null) {
                 dao.insert(c)
             }
@@ -269,8 +269,9 @@ class RawConfigReader(inputStream: InputStream) {
             return
         }
 
+        val currentProfileUuid = currentProfile ?: return
         val dao = DB.get().getProfileDAO()
-        val p = dao.getByUuidSync(currentProfile!!)
+        val p = dao.getByUuidSync(currentProfileUuid)
 
         if (p != null) {
             Logger.debug("backup", "Restoring current profile ${p.name}")

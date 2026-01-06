@@ -153,7 +153,7 @@ class NewTransactionModel : ViewModel() {
     }
 
     private fun shallowCopyList(): MutableList<Item> {
-        return ArrayList(items.value!!)
+        return ArrayList(items.value ?: emptyList())
     }
 
     internal fun getShowComments(): LiveData<Boolean> = showComments
@@ -181,7 +181,7 @@ class NewTransactionModel : ViewModel() {
         val list = mutableListOf<Item>()
         Item.resetIdDispenser()
         list.add(TransactionHead(""))
-        val defaultCurrency = Data.getProfile()!!.getDefaultCommodityOrEmpty()
+        val defaultCurrency = Data.getProfile()?.getDefaultCommodityOrEmpty() ?: ""
         list.add(TransactionAccount("", defaultCurrency))
         list.add(TransactionAccount("", defaultCurrency))
         noteFocusChanged(0, FocusedElement.Description)
@@ -401,14 +401,14 @@ class NewTransactionModel : ViewModel() {
     }
 
     internal fun toggleCurrencyVisible() {
-        val newValue = !showCurrency.value!!
+        val newValue = !(showCurrency.value ?: false)
 
         // remove currency from all items, or reset currency to the default
         // no need to clone the list, because the removal of the currency won't lead to
         // visual changes -- the currency fields will be hidden or reset to default anyway
         // still, there may be changes in the submittable state
-        val list = this.items.value!!
-        val profile = Data.getProfile()!!
+        val list = this.items.value ?: return
+        val profile = Data.getProfile() ?: return
         for (i in 1 until list.size) {
             (list[i] as TransactionAccount).currency =
                 if (newValue) profile.getDefaultCommodityOrEmpty() else ""
@@ -438,11 +438,11 @@ class NewTransactionModel : ViewModel() {
     fun getBusyFlag(): LiveData<Boolean> = busyFlag
 
     fun toggleShowComments() {
-        showComments.value = !showComments.value!!
+        showComments.value = !(showComments.value ?: true)
     }
 
     fun constructLedgerTransaction(): LedgerTransaction {
-        val list = items.value!!
+        val list = requireNotNull(items.value) { "Items list must be initialized before constructing a transaction" }
         val head = list[0].toTransactionHead()
         val tr = head.asLedgerTransaction()
 
@@ -495,7 +495,7 @@ class NewTransactionModel : ViewModel() {
                 }
             } else {
                 for (currency in emptyAmountAccounts.keys) {
-                    val accounts = emptyAmountAccounts[currency]!!
+                    val accounts = emptyAmountAccounts[currency] ?: continue
                     val balance = emptyAmountAccountBalance[currency]
                     if (balance != null && !Misc.isZero(balance) && accounts.size != 1) {
                         throw RuntimeException(
@@ -520,7 +520,7 @@ class NewTransactionModel : ViewModel() {
         val newList = mutableListOf<Item>()
         Item.resetIdDispenser()
 
-        val currentHead = items.value!![0]
+        val currentHead = items.value?.getOrNull(0)
         val head = TransactionHead(tr.transaction.description)
         head.comment = tr.transaction.comment
         if (currentHead is TransactionHead) {
@@ -576,10 +576,10 @@ class NewTransactionModel : ViewModel() {
         }
 
         if (singleNegativeIndex != -1) {
-            firstNegative!!.resetAmount()
+            firstNegative?.resetAmount()
             moveItemLast(newList, singleNegativeIndex)
         } else if (singlePositiveIndex != -1) {
-            firstPositive!!.resetAmount()
+            firstPositive?.resetAmount()
             moveItemLast(newList, singlePositiveIndex)
         }
 
@@ -924,7 +924,7 @@ class NewTransactionModel : ViewModel() {
     }
 
     fun setItemCurrency(position: Int, newCurrency: String) {
-        val item = items.value!![position].toTransactionAccount()
+        val item = (items.value?.getOrNull(position) ?: return).toTransactionAccount()
         val oldCurrency = item.currency
 
         if (Misc.equalStrings(oldCurrency, newCurrency)) return
@@ -936,7 +936,7 @@ class NewTransactionModel : ViewModel() {
     }
 
     fun accountListIsEmpty(): Boolean {
-        val items = this.items.value!!
+        val items = this.items.value ?: return true
 
         for (item in items) {
             if (item !is TransactionAccount) continue
@@ -1038,12 +1038,13 @@ class NewTransactionModel : ViewModel() {
 
         @Throws(ParseException::class)
         fun setDate(text: String?) {
-            if (Misc.emptyIsNull(text) == null) {
+            val trimmedText = Misc.emptyIsNull(text)
+            if (trimmedText == null) {
                 date = null
                 return
             }
 
-            date = Globals.parseLedgerDate(text!!)
+            date = Globals.parseLedgerDate(trimmedText)
         }
 
         /**
@@ -1098,7 +1099,7 @@ class NewTransactionModel : ViewModel() {
                 0,
                 date ?: SimpleDate.today(),
                 description,
-                Data.getProfile()!!
+                requireNotNull(Data.getProfile()) { "Profile must be set before creating a transaction" }
             )
         }
 
