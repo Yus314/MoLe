@@ -15,8 +15,7 @@ Auto-generated from all feature plans. Last updated: 2026-01-06
 app/
 ├── src/
 │   ├── main/
-│   │   ├── java/net/ktnx/mobileledger/   # 移行前 Java ファイル
-│   │   ├── kotlin/net/ktnx/mobileledger/ # 移行後 Kotlin ファイル
+│   │   ├── kotlin/net/ktnx/mobileledger/ # Kotlin ソースファイル
 │   │   │   └── di/                       # Hilt DI モジュール
 │   │   └── res/                          # Android リソース
 │   ├── test/                             # ユニットテスト
@@ -106,7 +105,6 @@ Kotlin 2.0.21 / Java 8 互換 (JVM target 1.8): Follow standard conventions
 - `var` より `val` を優先
 - data class を適切に使用
 - スコープ関数のネストは 2 段階まで
-- Java 互換性のため `@JvmStatic` / `@JvmField` を適切に使用
 
 ## Hilt Dependency Injection
 
