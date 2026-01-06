@@ -133,13 +133,13 @@
 - ProfileThemedActivity is extended by multiple activities
 - Convert base before derived
 
-- [ ] U035 Convert `activity/CrashReportingActivity.java` → `ui/activity/CrashReportingActivity.kt`
-- [ ] U036 Verify build: `nix run .#build`
-- [ ] U037 Convert `activity/ProfileThemedActivity.java` → `ui/activity/ProfileThemedActivity.kt`
-- [ ] U038 Verify build: `nix run .#build`
-- [ ] U039 Convert `activity/SplashActivity.java` → `ui/activity/SplashActivity.kt`
-- [ ] U040 Verify build: `nix run .#build`
-- [ ] U041 Delete converted Java files after verification
+- [X] U035 Convert `activity/CrashReportingActivity.java` → `ui/activity/CrashReportingActivity.kt`
+- [X] U036 Verify build: `nix run .#build`
+- [X] U037 Convert `activity/ProfileThemedActivity.java` → `ui/activity/ProfileThemedActivity.kt`
+- [X] U038 Verify build: `nix run .#build`
+- [X] U039 Convert `activity/SplashActivity.java` → `ui/activity/SplashActivity.kt`
+- [X] U040 Verify build: `nix run .#build`
+- [X] U041 Delete converted Java files after verification
 
 **Checkpoint**: Activity base classes converted ✅
 
@@ -149,14 +149,14 @@
 
 **Purpose**: Convert dialog fragments and simple fragments
 
-- [ ] U042 [P] Convert `CrashReportDialogFragment.java` → `ui/CrashReportDialogFragment.kt`
-- [ ] U043 [P] Convert `DatePickerFragment.java` → `ui/DatePickerFragment.kt`
-- [ ] U044 [P] Convert `NewTransactionSavingFragment.java` → `ui/NewTransactionSavingFragment.kt`
-- [ ] U045 Verify build: `nix run .#build`
-- [ ] U046 [P] Convert `CurrencySelectorFragment.java` → `ui/CurrencySelectorFragment.kt`
-- [ ] U047 [P] Convert `TemplateDetailSourceSelectorFragment.java` → `ui/TemplateDetailSourceSelectorFragment.kt`
-- [ ] U048 Verify build: `nix run .#build`
-- [ ] U049 Delete converted Java files after verification
+- [X] U042 [P] Convert `CrashReportDialogFragment.java` → `ui/CrashReportDialogFragment.kt`
+- [X] U043 [P] Convert `DatePickerFragment.java` → `ui/DatePickerFragment.kt`
+- [X] U044 [P] Convert `NewTransactionSavingFragment.java` → `ui/NewTransactionSavingFragment.kt`
+- [X] U045 Verify build: `nix run .#build`
+- [X] U046 [P] Convert `CurrencySelectorFragment.java` → `ui/CurrencySelectorFragment.kt`
+- [X] U047 [P] Convert `TemplateDetailSourceSelectorFragment.java` → `ui/TemplateDetailSourceSelectorFragment.kt`
+- [X] U048 Verify build: `nix run .#build`
+- [X] U049 Delete converted Java files after verification
 
 **Checkpoint**: Dialogs and simple fragments converted ✅
 
@@ -166,13 +166,13 @@
 
 **Purpose**: Convert RecyclerView adapters without complex ViewHolder hierarchies
 
-- [ ] U050 [P] Convert `CurrencySelectorRecyclerViewAdapter.java` → `ui/CurrencySelectorRecyclerViewAdapter.kt`
-- [ ] U051 [P] Convert `TemplateDetailSourceSelectorRecyclerViewAdapter.java` → `ui/TemplateDetailSourceSelectorRecyclerViewAdapter.kt`
-- [ ] U052 Verify build: `nix run .#build`
-- [ ] U053 [P] Convert `profiles/ProfilesRecyclerViewAdapter.java` → `ui/profiles/ProfilesRecyclerViewAdapter.kt`
-- [ ] U054 [P] Convert `account_summary/AccountSummaryAdapter.java` → `ui/account_summary/AccountSummaryAdapter.kt`
-- [ ] U055 Verify build: `nix run .#build`
-- [ ] U056 Delete converted Java files after verification
+- [X] U050 [P] Convert `CurrencySelectorRecyclerViewAdapter.java` → `ui/CurrencySelectorRecyclerViewAdapter.kt`
+- [X] U051 [P] Convert `TemplateDetailSourceSelectorRecyclerViewAdapter.java` → `ui/TemplateDetailSourceSelectorRecyclerViewAdapter.kt`
+- [X] U052 Verify build: `nix run .#build`
+- [X] U053 [P] Convert `profiles/ProfilesRecyclerViewAdapter.java` → `ui/profiles/ProfilesRecyclerViewAdapter.kt`
+- [X] U054 [P] Convert `account_summary/AccountSummaryAdapter.java` → `ui/account_summary/AccountSummaryAdapter.kt`
+- [X] U055 Verify build: `nix run .#build`
+- [X] U056 Delete converted Java files after verification
 
 **Checkpoint**: Simple adapters converted ✅
 
@@ -182,9 +182,9 @@
 
 **Purpose**: Convert account_summary package
 
-- [ ] U057 Convert `account_summary/AccountSummaryFragment.java` → `ui/account_summary/AccountSummaryFragment.kt`
-- [ ] U058 Verify build: `nix run .#build`
-- [ ] U059 Delete converted Java files after verification
+- [X] U057 Convert `account_summary/AccountSummaryFragment.java` → `ui/account_summary/AccountSummaryFragment.kt`
+- [X] U058 Verify build: `nix run .#build`
+- [X] U059 Delete converted Java files after verification
 
 **Checkpoint**: Account summary feature converted ✅
 
@@ -194,13 +194,13 @@
 
 **Purpose**: Convert profiles package
 
-- [ ] U060 Convert `profiles/ProfileDetailModel.java` → `ui/profiles/ProfileDetailModel.kt`
-- [ ] U061 Verify build: `nix run .#build`
-- [ ] U062 Convert `profiles/ProfileDetailFragment.java` → `ui/profiles/ProfileDetailFragment.kt`
-- [ ] U063 Verify build: `nix run .#build`
-- [ ] U064 Convert `profiles/ProfileDetailActivity.java` → `ui/profiles/ProfileDetailActivity.kt`
-- [ ] U065 Verify build: `nix run .#build`
-- [ ] U066 Delete converted Java files after verification
+- [X] U060 Convert `profiles/ProfileDetailModel.java` → `ui/profiles/ProfileDetailModel.kt`
+- [X] U061 Verify build: `nix run .#build`
+- [X] U062 Convert `profiles/ProfileDetailFragment.java` → `ui/profiles/ProfileDetailFragment.kt`
+- [X] U063 Verify build: `nix run .#build`
+- [X] U064 Convert `profiles/ProfileDetailActivity.java` → `ui/profiles/ProfileDetailActivity.kt`
+- [X] U065 Verify build: `nix run .#build`
+- [X] U066 Delete converted Java files after verification
 
 **Checkpoint**: Profiles feature converted ✅
 
@@ -216,20 +216,20 @@
 - Then Adapter
 - Finally Fragment and Activity
 
-- [ ] U067 Convert `templates/TemplateDetailsViewModel.java` → `ui/templates/TemplateDetailsViewModel.kt`
-- [ ] U068 Verify build: `nix run .#build`
-- [ ] U069 Convert `templates/TemplateViewHolder.java` → `ui/templates/TemplateViewHolder.kt`
-- [ ] U070 Convert `templates/TemplateListDivider.java` → `ui/templates/TemplateListDivider.kt`
-- [ ] U071 Verify build: `nix run .#build`
-- [ ] U072 Convert `templates/TemplatesRecyclerViewAdapter.java` → `ui/templates/TemplatesRecyclerViewAdapter.kt`
-- [ ] U073 Convert `templates/TemplateDetailsAdapter.java` → `ui/templates/TemplateDetailsAdapter.kt`
-- [ ] U074 Verify build: `nix run .#build`
-- [ ] U075 Convert `templates/TemplateListFragment.java` → `ui/templates/TemplateListFragment.kt`
-- [ ] U076 Convert `templates/TemplateDetailsFragment.java` → `ui/templates/TemplateDetailsFragment.kt`
-- [ ] U077 Verify build: `nix run .#build`
-- [ ] U078 Convert `templates/TemplatesActivity.java` → `ui/templates/TemplatesActivity.kt`
-- [ ] U079 Verify build: `nix run .#build`
-- [ ] U080 Delete converted Java files after verification
+- [X] U067 Convert `templates/TemplateDetailsViewModel.java` → `ui/templates/TemplateDetailsViewModel.kt`
+- [X] U068 Verify build: `nix run .#build`
+- [X] U069 Convert `templates/TemplateViewHolder.java` → `ui/templates/TemplateViewHolder.kt`
+- [X] U070 Convert `templates/TemplateListDivider.java` → `ui/templates/TemplateListDivider.kt`
+- [X] U071 Verify build: `nix run .#build`
+- [X] U072 Convert `templates/TemplatesRecyclerViewAdapter.java` → `ui/templates/TemplatesRecyclerViewAdapter.kt`
+- [X] U073 Convert `templates/TemplateDetailsAdapter.java` → `ui/templates/TemplateDetailsAdapter.kt`
+- [X] U074 Verify build: `nix run .#build`
+- [X] U075 Convert `templates/TemplateListFragment.java` → `ui/templates/TemplateListFragment.kt`
+- [X] U076 Convert `templates/TemplateDetailsFragment.java` → `ui/templates/TemplateDetailsFragment.kt`
+- [X] U077 Verify build: `nix run .#build`
+- [X] U078 Convert `templates/TemplatesActivity.java` → `ui/templates/TemplatesActivity.kt`
+- [X] U079 Verify build: `nix run .#build`
+- [X] U080 Delete converted Java files after verification
 
 **Checkpoint**: Templates feature converted ✅
 
@@ -245,17 +245,17 @@
 - Then Adapter
 - Finally Fragment
 
-- [ ] U081 Convert `transaction_list/TransactionRowHolderBase.java` → `ui/transaction_list/TransactionRowHolderBase.kt`
-- [ ] U082 Verify build: `nix run .#build`
-- [ ] U083 [P] Convert `transaction_list/TransactionRowHolder.java` → `ui/transaction_list/TransactionRowHolder.kt`
-- [ ] U084 [P] Convert `transaction_list/TransactionListDelimiterRowHolder.java` → `ui/transaction_list/TransactionListDelimiterRowHolder.kt`
-- [ ] U085 [P] Convert `transaction_list/TransactionListLastUpdateRowHolder.java` → `ui/transaction_list/TransactionListLastUpdateRowHolder.kt`
-- [ ] U086 Verify build: `nix run .#build`
-- [ ] U087 Convert `transaction_list/TransactionListAdapter.java` → `ui/transaction_list/TransactionListAdapter.kt`
-- [ ] U088 Verify build: `nix run .#build`
-- [ ] U089 Convert `transaction_list/TransactionListFragment.java` → `ui/transaction_list/TransactionListFragment.kt`
-- [ ] U090 Verify build: `nix run .#build`
-- [ ] U091 Delete converted Java files after verification
+- [X] U081 Convert `transaction_list/TransactionRowHolderBase.java` → `ui/transaction_list/TransactionRowHolderBase.kt`
+- [X] U082 Verify build: `nix run .#build`
+- [X] U083 [P] Convert `transaction_list/TransactionRowHolder.java` → `ui/transaction_list/TransactionRowHolder.kt`
+- [X] U084 [P] Convert `transaction_list/TransactionListDelimiterRowHolder.java` → `ui/transaction_list/TransactionListDelimiterRowHolder.kt`
+- [X] U085 [P] Convert `transaction_list/TransactionListLastUpdateRowHolder.java` → `ui/transaction_list/TransactionListLastUpdateRowHolder.kt`
+- [X] U086 Verify build: `nix run .#build`
+- [X] U087 Convert `transaction_list/TransactionListAdapter.java` → `ui/transaction_list/TransactionListAdapter.kt`
+- [X] U088 Verify build: `nix run .#build`
+- [X] U089 Convert `transaction_list/TransactionListFragment.java` → `ui/transaction_list/TransactionListFragment.kt`
+- [X] U090 Verify build: `nix run .#build`
+- [X] U091 Delete converted Java files after verification
 
 **Checkpoint**: Transaction list feature converted ✅
 
