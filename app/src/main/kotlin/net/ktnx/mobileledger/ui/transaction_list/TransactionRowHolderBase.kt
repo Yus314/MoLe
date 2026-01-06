@@ -15,23 +15,22 @@
  * along with MoLe. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ktnx.mobileledger.ui.transaction_list;
+package net.ktnx.mobileledger.ui.transaction_list
 
-import net.ktnx.mobileledger.databinding.LastUpdateLayoutBinding;
-import net.ktnx.mobileledger.model.Data;
-import net.ktnx.mobileledger.ui.activity.MainActivity;
+import android.view.View
+import androidx.recyclerview.widget.RecyclerView
 
-class TransactionListLastUpdateRowHolder extends TransactionRowHolderBase {
-    private final LastUpdateLayoutBinding b;
-    TransactionListLastUpdateRowHolder(LastUpdateLayoutBinding binding) {
-        super(binding.getRoot());
-        b = binding;
+open class TransactionRowHolderBase(itemView: View) : RecyclerView.ViewHolder(itemView) {
+
+    internal fun asHeader(): TransactionListLastUpdateRowHolder {
+        return this as TransactionListLastUpdateRowHolder
     }
-    void setLastUpdateText(String text) {
-        b.lastUpdateText.setText(text);
+
+    internal fun asTransaction(): TransactionRowHolder {
+        return this as TransactionRowHolder
     }
-    public void bind() {
-        Data.lastTransactionsUpdateText.observe((MainActivity) b.lastUpdateText.getContext(),
-                b.lastUpdateText::setText);
+
+    internal fun asDelimiter(): TransactionListDelimiterRowHolder {
+        return this as TransactionListDelimiterRowHolder
     }
 }
