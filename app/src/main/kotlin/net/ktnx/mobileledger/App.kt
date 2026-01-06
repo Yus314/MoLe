@@ -21,6 +21,7 @@ import android.app.Application
 import android.content.Context
 import android.content.res.Configuration
 import android.util.Log
+import dagger.hilt.android.HiltAndroidApp
 import net.ktnx.mobileledger.model.Data
 import net.ktnx.mobileledger.ui.profiles.ProfileDetailModel
 import net.ktnx.mobileledger.utils.Colors
@@ -32,6 +33,7 @@ import java.net.PasswordAuthentication
 import java.net.URL
 import java.util.Locale
 
+@HiltAndroidApp
 class App : Application() {
     private var monthNamesPrepared = false
 

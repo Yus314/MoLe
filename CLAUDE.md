@@ -6,6 +6,7 @@ Auto-generated from all feature plans. Last updated: 2026-01-06
 - AGP 8.7.3 / Gradle 8.9 (002-agp-update)
 - Kotlin 2.0.21 / Coroutines 1.9.0 / Java 8 互換 (JVM target 1.8) (003-kotlin-update)
 - Room Database (SQLite) with KSP 2.0.21-1.0.26 (004-kapt-ksp-migration)
+- Hilt 2.51.1 for Dependency Injection (005-hilt-di-setup)
 - AndroidX Lifecycle 2.4.1, Room 2.4.2, Navigation 2.4.2, Jackson 2.17.1, Material 1.5.0 (001-java-kotlin-migration)
 
 ## Project Structure
@@ -16,13 +17,14 @@ app/
 │   ├── main/
 │   │   ├── java/net/ktnx/mobileledger/   # 移行前 Java ファイル
 │   │   ├── kotlin/net/ktnx/mobileledger/ # 移行後 Kotlin ファイル
+│   │   │   └── di/                       # Hilt DI モジュール
 │   │   └── res/                          # Android リソース
 │   ├── test/                             # ユニットテスト
 │   └── androidTest/                      # インストルメンテーションテスト
 ├── build.gradle                          # アプリビルド設定
 └── schemas/                              # Room データベーススキーマ
 specs/
-└── 001-java-kotlin-migration/            # 現在の移行仕様
+└── 005-hilt-di-setup/                    # 現在の機能仕様
 ```
 
 ## Commands
@@ -106,11 +108,45 @@ Kotlin 2.0.21 / Java 8 互換 (JVM target 1.8): Follow standard conventions
 - スコープ関数のネストは 2 段階まで
 - Java 互換性のため `@JvmStatic` / `@JvmField` を適切に使用
 
+## Hilt Dependency Injection
+
+### 新しい ViewModel の作成方法
+
+```kotlin
+@HiltViewModel
+class MyViewModel @Inject constructor(
+    private val profileDAO: ProfileDAO,
+    private val data: Data
+) : ViewModel() {
+    // ビジネスロジック
+}
+```
+
+### Activity での使用
+
+```kotlin
+@AndroidEntryPoint
+class MyActivity : AppCompatActivity() {
+    private val viewModel: MyViewModel by viewModels()
+}
+```
+
+### 利用可能な依存関係
+
+- **DatabaseModule**: DB, ProfileDAO, TransactionDAO, AccountDAO, AccountValueDAO, TemplateHeaderDAO, TemplateAccountDAO, CurrencyDAO, OptionDAO
+- **DataModule**: Data (グローバル状態)
+
+### DI ベストプラクティス
+
+- 新しい ViewModel は `@HiltViewModel` と `@Inject constructor` を使用
+- Activity は `@AndroidEntryPoint` でマーク
+- `by viewModels()` デリゲートで ViewModel 取得
+- 既存の `DB.get()` / `Data` 直接アクセスは動作するが、新規コードでは DI を使用
+
 ## Recent Changes
+- 005-hilt-di-setup: Added Hilt 2.51.1 DI framework, migrated MainModel to constructor injection, created DatabaseModule and DataModule, added instrumentation test infrastructure with HiltTestRunner and TestDatabaseModule
 - 004-kapt-ksp-migration: Migrated annotation processing from KAPT to KSP 2.0.21-1.0.26
 - 003-kotlin-update: Upgraded Kotlin 1.9.25 → 2.0.21, Coroutines 1.7.3 → 1.9.0, applied `data object` modernization
-- 002-agp-update: Upgraded AGP 8.0.2 → 8.7.3, Gradle 8.0 → 8.9
-- 001-java-kotlin-migration: Added Kotlin support + AndroidX Lifecycle 2.4.1, Room 2.4.2, Navigation 2.4.2, Jackson 2.17.1, Material 1.5.0
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->

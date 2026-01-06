@@ -32,6 +32,7 @@ import android.util.Log
 import android.view.View
 import android.view.animation.AnimationUtils
 import android.widget.TextView
+import androidx.activity.viewModels
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AlertDialog
 import androidx.core.view.GravityCompat
@@ -40,12 +41,12 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.snackbar.Snackbar
+import dagger.hilt.android.AndroidEntryPoint
 import net.ktnx.mobileledger.BackupsActivity
 import net.ktnx.mobileledger.R
 import net.ktnx.mobileledger.async.RetrieveTransactionsTask
@@ -75,6 +76,7 @@ import java.util.Locale
  * TODO: reports
  *  */
 
+@AndroidEntryPoint
 class MainActivity : ProfileThemedActivity(), FabManager.FabHandler {
     private var converterThread: ConverterThread? = null
     private var mSectionsPagerAdapter: SectionsPagerAdapter? = null
@@ -85,7 +87,7 @@ class MainActivity : ProfileThemedActivity(), FabManager.FabHandler {
     private var barDrawerToggle: ActionBarDrawerToggle? = null
     private var pageChangeCallback: ViewPager2.OnPageChangeCallback? = null
     private var profile: Profile? = null
-    private lateinit var mainModel: MainModel
+    private val mainModel: MainModel by viewModels()
     private lateinit var b: ActivityMainBinding
     private var fabVerticalOffset = 0
     private lateinit var fabManager: FabManager
@@ -130,7 +132,7 @@ class MainActivity : ProfileThemedActivity(), FabManager.FabHandler {
         b = ActivityMainBinding.inflate(layoutInflater)
         setContentView(b.root)
 
-        mainModel = ViewModelProvider(this)[MainModel::class.java]
+        // mainModel is now injected via Hilt using by viewModels()
 
         mSectionsPagerAdapter = SectionsPagerAdapter(this)
 
