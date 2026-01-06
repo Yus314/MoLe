@@ -118,15 +118,15 @@ class CurrencySelectorFragment :
                     .getCurrencyDAO()
                     .insert(
                         net.ktnx.mobileledger.db.Currency(
-                        0,
-                        tvNewCurrName.text.toString(),
-                        if (rgPosition.checkedRadioButtonId == R.id.currency_position_left) {
-                            "before"
-                        } else {
-                            "after"
-                        },
-                        gap.isChecked
-                    )
+                            0,
+                            tvNewCurrName.text.toString(),
+                            if (rgPosition.checkedRadioButtonId == R.id.currency_position_left) {
+                                "before"
+                            } else {
+                                "after"
+                            },
+                            gap.isChecked
+                        )
                     )
             }
 
@@ -223,10 +223,10 @@ class CurrencySelectorFragment :
 
         @JvmStatic
         fun newInstance(columnCount: Int, showParams: Boolean): CurrencySelectorFragment = CurrencySelectorFragment().apply {
-                arguments = Bundle().apply {
-                    putInt(ARG_COLUMN_COUNT, columnCount)
-                    putBoolean(ARG_SHOW_PARAMS, showParams)
-                }
+            arguments = Bundle().apply {
+                putInt(ARG_COLUMN_COUNT, columnCount)
+                putBoolean(ARG_SHOW_PARAMS, showParams)
             }
+        }
     }
 }

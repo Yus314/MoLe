@@ -108,18 +108,18 @@ class TemplateHeader : TemplateBase {
         if (other !is TemplateHeader) return false
 
         return Misc.equalLongs(id, other.id) &&
-                Misc.equalStrings(name, other.name) &&
-                Misc.equalStrings(regularExpression, other.regularExpression) &&
-                Misc.equalStrings(transactionDescription, other.transactionDescription) &&
-                Misc.equalStrings(transactionComment, other.transactionComment) &&
-                Misc.equalIntegers(transactionDescriptionMatchGroup, other.transactionDescriptionMatchGroup) &&
-                Misc.equalIntegers(transactionCommentMatchGroup, other.transactionCommentMatchGroup) &&
-                Misc.equalIntegers(dateDay, other.dateDay) &&
-                Misc.equalIntegers(dateDayMatchGroup, other.dateDayMatchGroup) &&
-                Misc.equalIntegers(dateMonth, other.dateMonth) &&
-                Misc.equalIntegers(dateMonthMatchGroup, other.dateMonthMatchGroup) &&
-                Misc.equalIntegers(dateYear, other.dateYear) &&
-                Misc.equalIntegers(dateYearMatchGroup, other.dateYearMatchGroup)
+            Misc.equalStrings(name, other.name) &&
+            Misc.equalStrings(regularExpression, other.regularExpression) &&
+            Misc.equalStrings(transactionDescription, other.transactionDescription) &&
+            Misc.equalStrings(transactionComment, other.transactionComment) &&
+            Misc.equalIntegers(transactionDescriptionMatchGroup, other.transactionDescriptionMatchGroup) &&
+            Misc.equalIntegers(transactionCommentMatchGroup, other.transactionCommentMatchGroup) &&
+            Misc.equalIntegers(dateDay, other.dateDay) &&
+            Misc.equalIntegers(dateDayMatchGroup, other.dateDayMatchGroup) &&
+            Misc.equalIntegers(dateMonth, other.dateMonth) &&
+            Misc.equalIntegers(dateMonthMatchGroup, other.dateMonthMatchGroup) &&
+            Misc.equalIntegers(dateYear, other.dateYear) &&
+            Misc.equalIntegers(dateYearMatchGroup, other.dateYearMatchGroup)
     }
 
     override fun hashCode(): Int {

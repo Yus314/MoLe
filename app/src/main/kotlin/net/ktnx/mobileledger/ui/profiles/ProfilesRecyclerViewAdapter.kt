@@ -56,10 +56,10 @@ class ProfilesRecyclerViewAdapter : RecyclerView.Adapter<ProfilesRecyclerViewAda
         listDiffer = AsyncListDiffer(
             this,
             object : DiffUtil.ItemCallback<Profile>() {
-            override fun areItemsTheSame(oldItem: Profile, newItem: Profile): Boolean = oldItem.id == newItem.id
+                override fun areItemsTheSame(oldItem: Profile, newItem: Profile): Boolean = oldItem.id == newItem.id
 
-            override fun areContentsTheSame(oldItem: Profile, newItem: Profile): Boolean = oldItem == newItem
-        }
+                override fun areContentsTheSame(oldItem: Profile, newItem: Profile): Boolean = oldItem == newItem
+            }
         )
 
         val cb = object : ItemTouchHelper.Callback() {

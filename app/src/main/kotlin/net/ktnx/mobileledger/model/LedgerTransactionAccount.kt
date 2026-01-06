@@ -64,7 +64,7 @@ class LedgerTransactionAccount {
         get() = amountStyle ?: AmountStyle.getDefault(currency)
 
     constructor(accountName: String, amount: Float, currency: String?, comment: String?) :
-            this(accountName, amount, currency, comment, null)
+        this(accountName, amount, currency, comment, null)
 
     constructor(
         accountName: String,

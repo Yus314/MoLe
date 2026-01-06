@@ -15,11 +15,6 @@ max_line_length = 120
 # ktlint specific settings
 ktlint_code_style = android_studio
 
-# Phase 3: 高リスク（違反数 20+）- 別ブランチで対応
-ktlint_standard_multiline-expression-wrapping = disabled
-ktlint_standard_indent = disabled
-ktlint_standard_function-signature = disabled
-
 # Phase 4: 手動修正が必要
 ktlint_standard_filename = disabled
 ktlint_standard_property-naming = disabled

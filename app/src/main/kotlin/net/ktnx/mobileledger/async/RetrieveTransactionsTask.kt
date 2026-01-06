@@ -181,7 +181,7 @@ class RetrieveTransactionsTask(private val profile: Profile) : Thread() {
                                     String.format(
                                         Locale.ENGLISH,
                                         "propagating %s %1.2f to %s",
-                                    currency,
+                                        currency,
                                         floatVal,
                                         syn.name
                                     )
@@ -206,7 +206,7 @@ class RetrieveTransactionsTask(private val profile: Profile) : Thread() {
                             L(
                                 String.format(
                                     Locale.ENGLISH,
-                                "found transaction %d → expecting description",
+                                    "found transaction %d → expecting description",
                                     transactionId
                                 )
                             )
@@ -252,8 +252,8 @@ class RetrieveTransactionsTask(private val profile: Profile) : Thread() {
                             L(
                                 String.format(
                                     Locale.ENGLISH,
-                                "transaction %d created for %s (%s) → expecting details",
-                                transactionId,
+                                    "transaction %d created for %s (%s) → expecting details",
+                                    transactionId,
                                     date,
                                     m.group(2)
                                 )
@@ -272,7 +272,7 @@ class RetrieveTransactionsTask(private val profile: Profile) : Thread() {
                             L(
                                 String.format(
                                     "transaction %s parsed → expecting transaction",
-                                currentTransaction.ledgerId
+                                    currentTransaction.ledgerId
                                 )
                             )
                         } else {
@@ -283,7 +283,7 @@ class RetrieveTransactionsTask(private val profile: Profile) : Thread() {
                                     String.format(
                                         Locale.ENGLISH,
                                         "%d: %s = %s",
-                                    currentTransaction.ledgerId,
+                                        currentTransaction.ledgerId,
                                         lta.accountName,
                                         lta.amount
                                     )
@@ -360,7 +360,7 @@ class RetrieveTransactionsTask(private val profile: Profile) : Thread() {
                         "Error during account list retrieval using API %s",
                         ver.description
                     ),
-                            e
+                    e
                 )
             } catch (e: RuntimeJsonMappingException) {
                 Logger.debug(
@@ -370,7 +370,7 @@ class RetrieveTransactionsTask(private val profile: Profile) : Thread() {
                         "Error during account list retrieval using API %s",
                         ver.description
                     ),
-                            e
+                    e
                 )
             }
         }
@@ -448,10 +448,10 @@ class RetrieveTransactionsTask(private val profile: Profile) : Thread() {
                     "json",
                     String.format(
                         Locale.US,
-                    "Error during transaction list retrieval using API %s",
-                    ver.description
+                        "Error during transaction list retrieval using API %s",
+                        ver.description
                     ),
-                        e
+                    e
                 )
             }
         }
@@ -549,7 +549,7 @@ class RetrieveTransactionsTask(private val profile: Profile) : Thread() {
             e.printStackTrace()
             finish(
                 Result(
-                String.format("HTTP error %d: %s", e.responseCode, e.message)
+                    String.format("HTTP error %d: %s", e.responseCode, e.message)
                 )
             )
         } catch (e: IOException) {
@@ -641,9 +641,9 @@ class RetrieveTransactionsTask(private val profile: Profile) : Thread() {
 
             @JvmStatic
             fun finished(error: String?): Progress = Progress().apply {
-                    state = ProgressState.FINISHED
-                    this.error = error
-                }
+                state = ProgressState.FINISHED
+                this.error = error
+            }
         }
     }
 
@@ -710,7 +710,7 @@ class RetrieveTransactionsTask(private val profile: Profile) : Thread() {
                     Option(
                         profile.id,
                         Option.OPT_LAST_SCRAPE,
-                    Date().time.toString()
+                        Date().time.toString()
                     )
                 )
         }

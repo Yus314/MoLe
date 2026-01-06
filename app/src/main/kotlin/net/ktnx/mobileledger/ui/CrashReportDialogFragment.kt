@@ -56,7 +56,7 @@ class CrashReportDialogFragment : DialogFragment() {
                 startActivity(
                     Intent.createChooser(
                         email,
-                    resources.getString(R.string.send_crash_via)
+                        resources.getString(R.string.send_crash_via)
                     )
                 )
             }

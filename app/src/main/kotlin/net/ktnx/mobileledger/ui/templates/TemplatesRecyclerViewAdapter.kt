@@ -34,16 +34,16 @@ class TemplatesRecyclerViewAdapter : RecyclerView.Adapter<BaseTemplateViewHolder
         listDiffer = AsyncListDiffer(
             this,
             object : DiffUtil.ItemCallback<BaseTemplateItem>() {
-            override fun areItemsTheSame(
-                oldItem: BaseTemplateItem,
-                newItem: BaseTemplateItem
-            ): Boolean = oldItem.id == newItem.id
+                override fun areItemsTheSame(
+                    oldItem: BaseTemplateItem,
+                    newItem: BaseTemplateItem
+                ): Boolean = oldItem.id == newItem.id
 
-            override fun areContentsTheSame(
-                oldItem: BaseTemplateItem,
-                newItem: BaseTemplateItem
-            ): Boolean = oldItem == newItem
-        }
+                override fun areContentsTheSame(
+                    oldItem: BaseTemplateItem,
+                    newItem: BaseTemplateItem
+                ): Boolean = oldItem == newItem
+            }
         )
     }
 
@@ -69,10 +69,10 @@ class TemplatesRecyclerViewAdapter : RecyclerView.Adapter<BaseTemplateViewHolder
     }
 
     override fun getItemViewType(position: Int): Int = when (val item = getItem(position)) {
-            is TemplateItem -> ITEM_TYPE_TEMPLATE
-            is TemplateDivider -> ITEM_TYPE_DIVIDER
-            else -> throw RuntimeException("Can't handle $item")
-        }
+        is TemplateItem -> ITEM_TYPE_TEMPLATE
+        is TemplateDivider -> ITEM_TYPE_DIVIDER
+        else -> throw RuntimeException("Can't handle $item")
+    }
 
     override fun getItemCount(): Int = listDiffer.currentList.size
 

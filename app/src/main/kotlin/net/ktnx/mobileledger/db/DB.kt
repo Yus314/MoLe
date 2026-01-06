@@ -94,8 +94,8 @@ abstract class DB : RoomDatabase() {
 
         @JvmStatic
         fun get(): DB = instance ?: synchronized(DB::class.java) {
-                instance ?: buildDatabase().also { instance = it }
-            }
+            instance ?: buildDatabase().also { instance = it }
+        }
 
         private fun buildDatabase(): DB {
             val builder = Room.databaseBuilder(App.instance, DB::class.java, DB_NAME)
@@ -174,45 +174,45 @@ abstract class DB : RoomDatabase() {
         }
 
         private fun singleVersionMigration(toVersion: Int): Migration = object : Migration(toVersion - 1, toVersion) {
-                override fun migrate(db: SupportSQLiteDatabase) {
-                    val fileName = String.format(Locale.US, "db_%d", toVersion)
-                    applyRevisionFile(db, fileName)
+            override fun migrate(db: SupportSQLiteDatabase) {
+                val fileName = String.format(Locale.US, "db_%d", toVersion)
+                applyRevisionFile(db, fileName)
 
-                    if (toVersion == 59) {
-                        db.query(
-                            "SELECT p.id, p.theme FROM profiles p WHERE p.id=(SELECT o.value " +
-                                    "FROM options o WHERE o.profile_id=0 AND o.name=?)",
-                            arrayOf("profile_id")
-                        ).use { c ->
-                            if (c.moveToFirst()) {
-                                val currentProfileId = c.getLong(0)
-                                val currentTheme = c.getInt(1)
-                                if (currentProfileId >= 0 && currentTheme >= 0) {
-                                    App.storeStartupProfileAndTheme(currentProfileId, currentTheme)
-                                }
-                            }
-                        }
-                    }
-
-                    if (toVersion == 63) {
-                        db.query("SELECT id FROM templates").use { c ->
-                            while (c.moveToNext()) {
-                                db.execSQL(
-                                    "UPDATE templates SET uuid=? WHERE id=?",
-                                    arrayOf(UUID.randomUUID().toString(), c.getLong(0))
-                                )
+                if (toVersion == 59) {
+                    db.query(
+                        "SELECT p.id, p.theme FROM profiles p WHERE p.id=(SELECT o.value " +
+                            "FROM options o WHERE o.profile_id=0 AND o.name=?)",
+                        arrayOf("profile_id")
+                    ).use { c ->
+                        if (c.moveToFirst()) {
+                            val currentProfileId = c.getLong(0)
+                            val currentTheme = c.getInt(1)
+                            if (currentProfileId >= 0 && currentTheme >= 0) {
+                                App.storeStartupProfileAndTheme(currentProfileId, currentTheme)
                             }
                         }
                     }
                 }
+
+                if (toVersion == 63) {
+                    db.query("SELECT id FROM templates").use { c ->
+                        while (c.moveToNext()) {
+                            db.execSQL(
+                                "UPDATE templates SET uuid=? WHERE id=?",
+                                arrayOf(UUID.randomUUID().toString(), c.getLong(0))
+                            )
+                        }
+                    }
+                }
             }
+        }
 
         private fun multiVersionMigration(fromVersion: Int, toVersion: Int): Migration = object : Migration(fromVersion, toVersion) {
-                override fun migrate(db: SupportSQLiteDatabase) {
-                    val fileName = String.format(Locale.US, "db_%d_%d", fromVersion, toVersion)
-                    applyRevisionFile(db, fileName)
-                }
+            override fun migrate(db: SupportSQLiteDatabase) {
+                val fileName = String.format(Locale.US, "db_%d_%d", fromVersion, toVersion)
+                applyRevisionFile(db, fileName)
             }
+        }
 
         @JvmStatic
         fun applyRevisionFile(db: SupportSQLiteDatabase, fileName: String) {
@@ -257,7 +257,7 @@ abstract class DB : RoomDatabase() {
                                         lineNo,
                                         sqlStatement
                                     ),
-                                        e
+                                    e
                                 )
                             }
                         }
@@ -267,7 +267,7 @@ abstract class DB : RoomDatabase() {
                         throw RuntimeException(
                             String.format(
                                 "Error applying %s: EOF after continuation. Line %s, " +
-                                        "Incomplete statement: %s",
+                                    "Incomplete statement: %s",
                                 fileName,
                                 lineNo,
                                 sqlStatement

@@ -165,11 +165,11 @@ class TemplateDetailSourceSelectorFragment :
             pattern: String?,
             testText: String?
         ): TemplateDetailSourceSelectorFragment = TemplateDetailSourceSelectorFragment().apply {
-                arguments = Bundle().apply {
-                    putInt(ARG_COLUMN_COUNT, columnCount)
-                    pattern?.let { putString(ARG_PATTERN, it) }
-                    testText?.let { putString(ARG_TEST_TEXT, it) }
-                }
+            arguments = Bundle().apply {
+                putInt(ARG_COLUMN_COUNT, columnCount)
+                pattern?.let { putString(ARG_PATTERN, it) }
+                testText?.let { putString(ARG_TEST_TEXT, it) }
             }
+        }
     }
 }

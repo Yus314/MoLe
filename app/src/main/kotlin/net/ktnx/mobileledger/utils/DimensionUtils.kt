@@ -24,15 +24,15 @@ import kotlin.math.roundToInt
 object DimensionUtils {
     @JvmStatic
     fun dp2px(context: Context, dp: Float): Int = TypedValue.applyDimension(
-            TypedValue.COMPLEX_UNIT_DIP,
-            dp,
-            context.resources.displayMetrics
-        ).roundToInt()
+        TypedValue.COMPLEX_UNIT_DIP,
+        dp,
+        context.resources.displayMetrics
+    ).roundToInt()
 
     @JvmStatic
     fun sp2px(context: Context, sp: Float): Int = TypedValue.applyDimension(
-            TypedValue.COMPLEX_UNIT_SP,
-            sp,
-            context.resources.displayMetrics
-        ).roundToInt()
+        TypedValue.COMPLEX_UNIT_SP,
+        sp,
+        context.resources.displayMetrics
+    ).roundToInt()
 }

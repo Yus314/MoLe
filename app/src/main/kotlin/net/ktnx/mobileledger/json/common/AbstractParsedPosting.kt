@@ -35,8 +35,7 @@ object PostingHelper {
      * @return 'R' for right (after), 'L' for left (before)
      */
     @JvmStatic
-    fun getCommoditySide(): Char =
-        if (Data.currencySymbolPosition.value == Currency.Position.after) 'R' else 'L'
+    fun getCommoditySide(): Char = if (Data.currencySymbolPosition.value == Currency.Position.after) 'R' else 'L'
 
     /**
      * Get whether commodity should have a gap from the amount.

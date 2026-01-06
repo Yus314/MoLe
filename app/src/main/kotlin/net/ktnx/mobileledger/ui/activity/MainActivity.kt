@@ -334,11 +334,11 @@ class MainActivity :
             } else {
                 Logger.debug(
                     "db",
-                        String.format(
+                    String.format(
                         Locale.ENGLISH,
                         "WEB data last fetched at %1.3f and now is %1.3f. re-fetching",
                         lastUpdate / 1000f,
-                            now / 1000f
+                        now / 1000f
                     )
                 )
             }
@@ -469,9 +469,9 @@ class MainActivity :
         if (sameProfileId && newProfile != null) {
             Logger.debug(
                 TAG,
-                    String.format(
+                String.format(
                     Locale.ROOT,
-                        "Short-cut profile 'changed' to %d",
+                    "Short-cut profile 'changed' to %d",
                     newProfile.id
                 )
             )
@@ -587,9 +587,9 @@ class MainActivity :
             } else {
                 Logger.debug(
                     TAG,
-                        String.format(
+                    String.format(
                         Locale.ENGLISH,
-                            "manager stack: %d",
+                        "manager stack: %d",
                         supportFragmentManager.backStackEntryCount
                     )
                 )
@@ -631,7 +631,7 @@ class MainActivity :
 
     private fun refreshLastUpdateInfo() {
         val formatFlags = DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_SHOW_YEAR or
-                DateUtils.FORMAT_SHOW_TIME or DateUtils.FORMAT_NUMERIC_DATE
+            DateUtils.FORMAT_SHOW_TIME or DateUtils.FORMAT_NUMERIC_DATE
         val templateForTransactions = resources.getString(R.string.transaction_count_summary)
         val templateForAccounts = resources.getString(R.string.account_count_summary)
         val accountCount = Data.lastUpdateAccountCount.value
