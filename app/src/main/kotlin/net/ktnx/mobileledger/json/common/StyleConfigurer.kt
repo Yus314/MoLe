@@ -34,7 +34,7 @@ sealed interface StyleConfigurer {
     /**
      * Group A: v1_14, v1_15 - uses asdecimalpoint (Char)
      */
-    object DecimalPointChar : StyleConfigurer {
+    data object DecimalPointChar : StyleConfigurer {
         override fun configureStyle(style: Any, precision: Int) {
             when (style) {
                 is net.ktnx.mobileledger.json.v1_14.ParsedStyle -> {
@@ -52,7 +52,7 @@ sealed interface StyleConfigurer {
     /**
      * v1_19_1 only - uses asdecimalpoint (Char) with ParsedPrecision object
      */
-    object DecimalPointCharWithParsedPrecision : StyleConfigurer {
+    data object DecimalPointCharWithParsedPrecision : StyleConfigurer {
         override fun configureStyle(style: Any, precision: Int) {
             when (style) {
                 is net.ktnx.mobileledger.json.v1_19_1.ParsedStyle -> {
@@ -66,7 +66,7 @@ sealed interface StyleConfigurer {
     /**
      * v1_23 - uses asdecimalpoint (Char) with Int precision
      */
-    object DecimalPointCharIntPrecision : StyleConfigurer {
+    data object DecimalPointCharIntPrecision : StyleConfigurer {
         override fun configureStyle(style: Any, precision: Int) {
             when (style) {
                 is net.ktnx.mobileledger.json.v1_23.ParsedStyle -> {
@@ -80,7 +80,7 @@ sealed interface StyleConfigurer {
     /**
      * Group B: v1_32, v1_40, v1_50 - uses asdecimalmark (String) + asrounding
      */
-    object DecimalMarkString : StyleConfigurer {
+    data object DecimalMarkString : StyleConfigurer {
         override fun configureStyle(style: Any, precision: Int) {
             when (style) {
                 is net.ktnx.mobileledger.json.v1_32.ParsedStyle -> {
