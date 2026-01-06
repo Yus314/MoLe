@@ -1,13 +1,12 @@
 # MoLe Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-01-05
+Auto-generated from all feature plans. Last updated: 2026-01-06
 
 ## Active Technologies
 - AGP 8.7.3 / Gradle 8.9 (002-agp-update)
-- Kotlin 1.9.25 / Java 8 互換 (002-agp-update)
-- Room Database (SQLite) (002-agp-update)
-
-- Kotlin 1.9.x (AGP 8.7.3 互換)、現在: Java 8 互換 + AndroidX Lifecycle 2.4.1, Room 2.4.2, Navigation 2.4.2, Jackson 2.17.1, Material 1.5.0 (001-java-kotlin-migration)
+- Kotlin 2.0.21 / Coroutines 1.9.0 / Java 8 互換 (JVM target 1.8) (003-kotlin-update)
+- Room Database (SQLite) with kapt (002-agp-update)
+- AndroidX Lifecycle 2.4.1, Room 2.4.2, Navigation 2.4.2, Jackson 2.17.1, Material 1.5.0 (001-java-kotlin-migration)
 
 ## Project Structure
 
@@ -85,7 +84,7 @@ adb logcat | grep -E "(MoLe|mobileledger)"
 
 ## Code Style
 
-Kotlin 1.9.x (AGP 8.7.3 互換)、現在: Java 8 互換: Follow standard conventions
+Kotlin 2.0.21 / Java 8 互換 (JVM target 1.8): Follow standard conventions
 
 ### Kotlin コードレビュー基準
 
@@ -96,9 +95,9 @@ Kotlin 1.9.x (AGP 8.7.3 互換)、現在: Java 8 互換: Follow standard convent
 - Java 互換性のため `@JvmStatic` / `@JvmField` を適切に使用
 
 ## Recent Changes
+- 003-kotlin-update: Upgraded Kotlin 1.9.25 → 2.0.21, Coroutines 1.7.3 → 1.9.0, applied `data object` modernization
 - 002-agp-update: Upgraded AGP 8.0.2 → 8.7.3, Gradle 8.0 → 8.9
-
-- 001-java-kotlin-migration: Added Kotlin 1.9.x (AGP 8.7.3 互換)、現在: Java 8 互換 + AndroidX Lifecycle 2.4.1, Room 2.4.2, Navigation 2.4.2, Jackson 2.17.1, Material 1.5.0
+- 001-java-kotlin-migration: Added Kotlin support + AndroidX Lifecycle 2.4.1, Room 2.4.2, Navigation 2.4.2, Jackson 2.17.1, Material 1.5.0
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->
