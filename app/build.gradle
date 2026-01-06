@@ -16,9 +16,9 @@
  */
 
 plugins {
-    id 'com.android.application'
-    id 'org.jetbrains.kotlin.android'
-    id 'org.jetbrains.kotlin.kapt'
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.kapt)
     // KSP available but disabled during Java→Kotlin migration.
     // Enable after DAO conversion: id 'com.google.devtools.ksp' version '1.9.25-1.0.20'
 }
@@ -123,46 +123,40 @@ android {
 
 dependencies {
     // Kotlin
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.9.25"
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3"
+    implementation libs.kotlin.stdlib
+    implementation libs.kotlinx.coroutines.android
 
     // AndroidX Lifecycle
-    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.4.1'
-    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.4.1'
+    implementation libs.bundles.lifecycle
 
     // Room
     // Note: Using kapt for Room annotation processing with Kotlin files.
     // Will switch to KSP once migration is complete for better performance.
-    def room_version = '2.4.2'
-    implementation "androidx.room:room-runtime:$room_version"
-    implementation "androidx.room:room-ktx:$room_version"
-    kapt "androidx.room:room-compiler:$room_version"
+    implementation libs.bundles.room
+    kapt libs.androidx.room.compiler
 
     // Navigation
-    def nav_version = '2.4.2'
-    implementation "androidx.navigation:navigation-fragment:$nav_version"
-    implementation "androidx.navigation:navigation-ui:$nav_version"
+    implementation libs.bundles.navigation
 
     // Jackson with Kotlin module
-    implementation 'com.fasterxml.jackson.module:jackson-modules-java8:2.17.1'
-    implementation 'com.fasterxml.jackson.module:jackson-module-kotlin:2.17.1'
+    implementation libs.bundles.jackson
 
     // AndroidX
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
-    implementation 'com.google.android.material:material:1.5.0'
-    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-    implementation 'androidx.lifecycle:lifecycle-extensions:2.2.0'
-    implementation 'androidx.recyclerview:recyclerview:1.2.1'
-    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation libs.androidx.legacy.support.v4
+    implementation libs.google.material
+    implementation libs.androidx.constraintlayout
+    implementation libs.androidx.lifecycle.extensions
+    implementation libs.androidx.recyclerview
+    implementation libs.androidx.appcompat
 
     // Annotations
-    implementation 'org.jetbrains:annotations:24.1.0'
+    implementation libs.jetbrains.annotations
 
     // Testing
-    testImplementation 'junit:junit:4.13.2'
-    androidTestImplementation 'androidx.test:runner:1.5.0-alpha02'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.0-alpha05'
+    testImplementation libs.junit
+    androidTestImplementation libs.androidx.test.runner
+    androidTestImplementation libs.androidx.test.espresso.core
 }
 
 allprojects {
