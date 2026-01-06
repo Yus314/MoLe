@@ -27,6 +27,7 @@ import net.ktnx.mobileledger.BuildConfig
 import net.ktnx.mobileledger.R
 import net.ktnx.mobileledger.db.Profile
 import net.ktnx.mobileledger.ui.HueRing
+
 import java.util.Locale
 
 object Colors {
@@ -114,7 +115,7 @@ object Colors {
             val x1 = (x0 + HueRing.hueStepDegrees) % 360
             val y0 = themePrimaryColor[getThemeIdForHue(x0)]!!.toFloat()
             val y1 = themePrimaryColor[getThemeIdForHue(x1)]!!.toFloat()
-            Math.round(y0 + hueDegrees * (y1 - y0) / (x1 - x0))
+            kotlin.math.round(y0 + hueDegrees * (y1 - y0) / (x1 - x0)).toInt()
         }
     }
 
@@ -129,7 +130,7 @@ object Colors {
                     "profiles",
                     String.format(Locale.US, "Adjusting unexpected hue %d", adjustedHue)
                 )
-                themeIndex = Math.round(1f * adjustedHue / HueRing.hueStepDegrees)
+                themeIndex = kotlin.math.round(1f * adjustedHue / HueRing.hueStepDegrees).toInt()
             } else {
                 themeIndex = adjustedHue / HueRing.hueStepDegrees
             }

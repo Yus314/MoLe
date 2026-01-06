@@ -140,70 +140,76 @@
 
 ### json Package - Base Conversion (102 files)
 
-- [ ] T062 [P] [US1] Convert `API.java` → `app/src/main/kotlin/net/ktnox/mobileledger/json/API.kt` (use enum class)
-- [ ] T063 [P] [US1] Convert `Gateway.java` → `app/src/main/kotlin/net/ktnox/mobileledger/json/Gateway.kt` (abstract class with companion object)
-- [ ] T064 [P] [US1] Convert `AccountListParser.java` → `app/src/main/kotlin/net/ktnox/mobileledger/json/AccountListParser.kt`
-- [ ] T065 [P] [US1] Convert `TransactionListParser.java` → `app/src/main/kotlin/net/ktnx/mobileledger/json/TransactionListParser.kt`
+- [X] T062 [P] [US1] Convert `API.java` → `app/src/main/kotlin/net/ktnox/mobileledger/json/API.kt` (use enum class)
+- [X] T063 [P] [US1] Convert `Gateway.java` → `app/src/main/kotlin/net/ktnox/mobileledger/json/Gateway.kt` (abstract class with companion object)
+- [X] T064 [P] [US1] Convert `AccountListParser.java` → `app/src/main/kotlin/net/ktnox/mobileledger/json/AccountListParser.kt`
+- [X] T065 [P] [US1] Convert `TransactionListParser.java` → `app/src/main/kotlin/net/ktnox/mobileledger/json/TransactionListParser.kt`
 
 ### json/v1_14 Conversion (12 files)
 
-- [ ] T066 [P] [US1] Convert v1_14 package files to `app/src/main/kotlin/net/ktnox/mobileledger/json/v1_14/`
+- [X] T066 [P] [US1] Convert v1_14 package files to `app/src/main/kotlin/net/ktnox/mobileledger/json/v1_14/`
 
 ### json/v1_15 Conversion (12 files)
 
-- [ ] T067 [P] [US1] Convert v1_15 package files to `app/src/main/kotlin/net/ktnox/mobileledger/json/v1_15/`
+- [X] T067 [P] [US1] Convert v1_15 package files to `app/src/main/kotlin/net/ktnox/mobileledger/json/v1_15/`
 
 ### json/v1_19_1 Conversion (13 files)
 
-- [ ] T068 [P] [US1] Convert v1_19_1 package files to `app/src/main/kotlin/net/ktnox/mobileledger/json/v1_19_1/`
+- [X] T068 [P] [US1] Convert v1_19_1 package files to `app/src/main/kotlin/net/ktnox/mobileledger/json/v1_19_1/`
 
 ### json/v1_23 Conversion (12 files)
 
-- [ ] T069 [P] [US1] Convert v1_23 package files to `app/src/main/kotlin/net/ktnox/mobileledger/json/v1_23/`
+- [X] T069 [P] [US1] Convert v1_23 package files to `app/src/main/kotlin/net/ktnox/mobileledger/json/v1_23/`
 
 ### json/v1_32 Conversion (13 files)
 
-- [ ] T070 [P] [US1] Convert v1_32 package files to `app/src/main/kotlin/net/ktnox/mobileledger/json/v1_32/`
+- [X] T070 [P] [US1] Convert v1_32 package files to `app/src/main/kotlin/net/ktnox/mobileledger/json/v1_32/`
 
 ### json/v1_40 Conversion (13 files)
 
-- [ ] T071 [P] [US1] Convert v1_40 package files to `app/src/main/kotlin/net/ktnox/mobileledger/json/v1_40/`
+- [X] T071 [P] [US1] Convert v1_40 package files to `app/src/main/kotlin/net/ktnox/mobileledger/json/v1_40/`
 
 ### json/v1_50 Conversion (15 files)
 
-- [ ] T072 [P] [US1] Convert v1_50 package files to `app/src/main/kotlin/net/ktnox/mobileledger/json/v1_50/`
+- [X] T072 [P] [US1] Convert v1_50 package files to `app/src/main/kotlin/net/ktnox/mobileledger/json/v1_50/`
 
 ### json Test Conversion
 
-- [ ] T073 [P] [US1] Convert `ParsedQuantityTest.java` → `app/src/test/kotlin/net/ktnox/mobileledger/json/ParsedQuantityTest.kt`
-- [ ] T074 [P] [US1] Convert `LegacyParserTest.java` → `app/src/test/kotlin/net/ktnox/mobileledger/json/LegacyParserTest.kt`
-- [ ] T075 [US1] Verify JSON parser tests pass with `./gradlew test --tests "*.ParsedQuantityTest" --tests "*.LegacyParserTest"`
+- [X] T073 [P] [US1] Convert `ParsedQuantityTest.java` → `app/src/test/kotlin/net/ktnox/mobileledger/json/ParsedQuantityTest.kt`
+- [X] T074 [P] [US1] Convert `LegacyParserTest.java` → `app/src/test/kotlin/net/ktnx/mobileledger/async/LegacyParserTest.kt`
+- [X] T075 [US1] Verify JSON parser tests pass with `./gradlew test --tests "*.ParsedQuantityTest" --tests "*.LegacyParserTest"`
 
 ### ui Package Conversion (56 files)
 
-- [ ] T076 [P] [US1] Convert ViewModel classes in `app/src/main/java/net/ktnx/mobileledger/ui/` to Kotlin
-- [ ] T077 [P] [US1] Convert Fragment classes in `app/src/main/java/net/ktnx/mobileledger/ui/` to Kotlin
-- [ ] T078 [P] [US1] Convert Activity classes in `app/src/main/java/net/ktnox/mobileledger/ui/` to Kotlin
-- [ ] T079 [P] [US1] Convert adapter classes in `app/src/main/java/net/ktnox/mobileledger/ui/` to Kotlin
-- [ ] T080 [US1] Convert remaining UI files to `app/src/main/kotlin/net/ktnox/mobileledger/ui/`
+**⚠️ DEFERRED**: UI conversion attempted but reverted due to complex interdependencies requiring manual conversion:
+- Private field access patterns (Kotlin visibility vs Java)
+- Companion object references from Java code
+- Complex inner class structures with companion objects
+- 235+ compilation errors after automated conversion
+
+- [~] T076 [P] [US1] Convert ViewModel classes in `app/src/main/java/net/ktnx/mobileledger/ui/` to Kotlin - **DEFERRED**
+- [~] T077 [P] [US1] Convert Fragment classes in `app/src/main/java/net/ktnx/mobileledger/ui/` to Kotlin - **DEFERRED**
+- [~] T078 [P] [US1] Convert Activity classes in `app/src/main/java/net/ktnx/mobileledger/ui/` to Kotlin - **DEFERRED**
+- [~] T079 [P] [US1] Convert adapter classes in `app/src/main/java/net/ktnx/mobileledger/ui/` to Kotlin - **DEFERRED**
+- [~] T080 [US1] Convert remaining UI files to `app/src/main/kotlin/net/ktnx/mobileledger/ui/` - **DEFERRED**
 
 ### Root Level Conversion
 
-- [ ] T081 [US1] Convert `App.java` → `app/src/main/kotlin/net/ktnox/mobileledger/App.kt` (add @JvmStatic, @JvmField for Java interop)
-- [ ] T082 [P] [US1] Convert remaining root-level files to `app/src/main/kotlin/net/ktnox/mobileledger/`
+- [~] T081 [US1] Convert `App.java` → `app/src/main/kotlin/net/ktnox/mobileledger/App.kt` - **DEFERRED** (requires UI conversion first)
+- [~] T082 [P] [US1] Convert remaining root-level files to `app/src/main/kotlin/net/ktnox/mobileledger/` - **DEFERRED**
 
 ### Instrumented Test Conversion
 
 - [ ] T083 [US1] Convert `ExampleInstrumentedTest.java` → `app/src/androidTest/kotlin/net/ktnox/mobileledger/ExampleInstrumentedTest.kt`
 
-### User Story 1 Verification
+### User Story 1 Partial Verification
 
-- [ ] T084 [US1] Run `./gradlew clean assembleDebug` and verify success
-- [ ] T085 [US1] Run `./gradlew test` and verify all 6 unit tests pass
+- [X] T084 [US1] Run `./gradlew clean assembleDebug` and verify success ✅ (core packages only)
+- [X] T085 [US1] Run `./gradlew test` and verify all unit tests pass ✅
 - [ ] T086 [US1] Run `./gradlew connectedAndroidTest` and verify instrumented test passes
 - [ ] T087 [US1] Delete all original Java files from `app/src/main/java/` after verification
 
-**Checkpoint**: User Story 1 complete - all Java files converted, all tests pass
+**Checkpoint**: User Story 1 PARTIAL - core packages converted (json, async, backup, model, utils, db, dao, err), UI deferred to separate task
 
 ---
 
@@ -531,3 +537,23 @@ private val isoDateFormatter: ThreadLocal<SimpleDateFormat> = ThreadLocal.withIn
     SimpleDateFormat("yyyy-MM-dd", Locale.US)
 }
 ```
+
+### Issue 7: UI package conversion deferred
+**Symptom**: 235+ compilation errors after automated UI conversion
+**Cause**: Complex interdependencies between UI classes:
+- Kotlin visibility modifiers (private by default) conflict with Java callers expecting package-private access
+- Companion object references from Java code don't match Kotlin syntax
+- Inner classes with companion objects not allowed in Kotlin
+- Automated conversion generates incorrect code for complex patterns
+**Files affected**: All files in `app/src/main/java/net/ktnx/mobileledger/ui/`
+**Resolution**: UI conversion deferred. Core packages (json, async, backup, model, utils, db, dao, err) successfully converted. UI should be converted manually, file-by-file, with careful attention to:
+1. Private field access patterns - add explicit getter methods or use `internal` visibility
+2. Companion object static references - ensure Java callers use correct syntax
+3. Inner class structures - avoid companion objects in inner classes
+**Current state**: Build succeeds with mixed Java (ui/) and Kotlin (all other packages)
+
+### Issue 8: Kotlin files created with wrong package path
+**Symptom**: `duplicate class: net.ktnox.mobileledger.*` during kapt
+**Cause**: Automated conversion agents created files under `ktnox` instead of `ktnx`
+**Files affected**: `/home/kaki/MoLe/app/src/main/kotlin/net/ktnox/` directory (typo)
+**Fix**: Deleted the incorrectly-pathed directory: `rm -rf app/src/main/kotlin/net/ktnox/`
