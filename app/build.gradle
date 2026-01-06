@@ -18,9 +18,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.kapt)
-    // KSP available but disabled during Java→Kotlin migration.
-    // Enable after DAO conversion: id 'com.google.devtools.ksp' version '1.9.25-1.0.20'
+    alias(libs.plugins.ksp)
 }
 
 // Load keystore properties for release signing
@@ -40,22 +38,6 @@ android {
         versionCode 59
         versionName '0.22.1'
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-        javaCompileOptions {
-            annotationProcessorOptions {
-                arguments += [
-                        "room.schemaLocation"  : "$projectDir/schemas".toString(),
-                        "room.incremental"     : "true",
-                        "room.expandProjection": "true"
-                ]
-            }
-        }
-
-        // KSP Room configuration (disabled during migration)
-        // ksp {
-        //     arg("room.schemaLocation", "$projectDir/schemas")
-        //     arg("room.incremental", "true")
-        //     arg("room.expandProjection", "true")
-        // }
     }
     signingConfigs {
         release {
@@ -107,18 +89,17 @@ android {
         freeCompilerArgs += ["-Xjsr305=strict"]
         javaParameters = true
     }
-    kapt {
-        arguments {
-            arg("room.schemaLocation", "$projectDir/schemas")
-            arg("room.incremental", "true")
-            arg("room.expandProjection", "true")
-        }
-    }
     productFlavors {
     }
     buildFeatures.viewBinding = true
     buildToolsVersion '34.0.0'
     namespace 'net.ktnx.mobileledger'
+}
+
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
+    arg("room.incremental", "true")
+    arg("room.expandProjection", "true")
 }
 
 dependencies {
@@ -130,10 +111,8 @@ dependencies {
     implementation libs.bundles.lifecycle
 
     // Room
-    // Note: Using kapt for Room annotation processing with Kotlin files.
-    // Will switch to KSP once migration is complete for better performance.
     implementation libs.bundles.room
-    kapt libs.androidx.room.compiler
+    ksp libs.androidx.room.compiler
 
     // Navigation
     implementation libs.bundles.navigation
