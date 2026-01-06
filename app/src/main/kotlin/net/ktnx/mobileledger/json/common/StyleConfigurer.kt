@@ -50,21 +50,27 @@ sealed interface StyleConfigurer {
     }
 
     /**
-     * Group A variant: v1_19_1, v1_23 - uses asdecimalpoint (Char) with ParsedPrecision
+     * v1_19_1 only - uses asdecimalpoint (Char) with ParsedPrecision object
      */
     object DecimalPointCharWithParsedPrecision : StyleConfigurer {
         override fun configureStyle(style: Any, precision: Int) {
             when (style) {
                 is net.ktnx.mobileledger.json.v1_19_1.ParsedStyle -> {
-                    style.asprecision = net.ktnx.mobileledger.json.v1_19_1.ParsedPrecision().apply {
-                        decimalPlaces = precision
-                    }
+                    style.asprecision = net.ktnx.mobileledger.json.v1_19_1.ParsedPrecision(precision)
                     style.asdecimalpoint = '.'
                 }
+            }
+        }
+    }
+
+    /**
+     * v1_23 - uses asdecimalpoint (Char) with Int precision
+     */
+    object DecimalPointCharIntPrecision : StyleConfigurer {
+        override fun configureStyle(style: Any, precision: Int) {
+            when (style) {
                 is net.ktnx.mobileledger.json.v1_23.ParsedStyle -> {
-                    style.asprecision = net.ktnx.mobileledger.json.v1_23.ParsedPrecision().apply {
-                        decimalPlaces = precision
-                    }
+                    style.asprecision = precision
                     style.asdecimalpoint = '.'
                 }
             }
