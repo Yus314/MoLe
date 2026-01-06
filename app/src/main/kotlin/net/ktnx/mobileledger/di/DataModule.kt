@@ -21,8 +21,8 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import net.ktnx.mobileledger.model.Data
 import javax.inject.Singleton
+import net.ktnx.mobileledger.model.Data
 
 /**
  * Hilt module providing the global [Data] singleton.

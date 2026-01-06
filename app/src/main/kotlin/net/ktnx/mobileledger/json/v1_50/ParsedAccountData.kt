@@ -71,7 +71,8 @@ class ParsedAccountData {
                     if (entryNode.isArray && entryNode.size() >= 2) {
                         val date = entryNode.get(0).asText()
                         val balanceData = mapper.treeToValue(
-                            entryNode.get(1), ParsedBalanceData::class.java
+                            entryNode.get(1),
+                            ParsedBalanceData::class.java
                         )
                         result.add(PeriodEntry(date, balanceData))
                     }

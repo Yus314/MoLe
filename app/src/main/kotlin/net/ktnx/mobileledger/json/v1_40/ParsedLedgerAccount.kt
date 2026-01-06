@@ -25,7 +25,7 @@ import net.ktnx.mobileledger.model.AmountStyle
 class ParsedLedgerAccount : BaseAccount() {
     var aebalance: List<ParsedBalance>? = null
     var aibalance: List<ParsedBalance>? = null
-    var adeclarationinfo: ParsedDeclarationInfo? = null  // Added in hledger-web v1.32
+    var adeclarationinfo: ParsedDeclarationInfo? = null // Added in hledger-web v1.32
 
     override fun getSimpleBalance(): List<SimpleBalance> {
         val result = mutableListOf<SimpleBalance>()

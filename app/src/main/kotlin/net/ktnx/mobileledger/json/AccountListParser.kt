@@ -18,11 +18,11 @@
 package net.ktnx.mobileledger.json
 
 import com.fasterxml.jackson.databind.MappingIterator
+import java.io.IOException
+import java.io.InputStream
 import net.ktnx.mobileledger.async.RetrieveTransactionsTask
 import net.ktnx.mobileledger.model.LedgerAccount
 import net.ktnx.mobileledger.utils.Logger.debug
-import java.io.IOException
-import java.io.InputStream
 
 abstract class AccountListParser {
     protected lateinit var iterator: MappingIterator<ParsedLedgerAccount>

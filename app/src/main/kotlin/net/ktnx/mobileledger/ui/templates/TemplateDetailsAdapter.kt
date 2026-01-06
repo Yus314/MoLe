@@ -32,6 +32,8 @@ import androidx.recyclerview.widget.AsyncListDiffer
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
+import java.text.ParseException
+import java.util.Locale
 import net.ktnx.mobileledger.BuildConfig
 import net.ktnx.mobileledger.R
 import net.ktnx.mobileledger.databinding.TemplateDetailsAccountBinding
@@ -46,8 +48,6 @@ import net.ktnx.mobileledger.ui.QR
 import net.ktnx.mobileledger.ui.TemplateDetailSourceSelectorFragment
 import net.ktnx.mobileledger.utils.Logger
 import net.ktnx.mobileledger.utils.Misc
-import java.text.ParseException
-import java.util.Locale
 
 internal class TemplateDetailsAdapter(
     private val mModel: TemplateDetailsViewModel
@@ -59,7 +59,9 @@ internal class TemplateDetailsAdapter(
     init {
         setHasStableIds(true)
 
-        differ = AsyncListDiffer(this, object : DiffUtil.ItemCallback<TemplateDetailsItem>() {
+        differ = AsyncListDiffer(
+            this,
+            object : DiffUtil.ItemCallback<TemplateDetailsItem>() {
             override fun areItemsTheSame(
                 oldItem: TemplateDetailsItem,
                 newItem: TemplateDetailsItem
@@ -84,7 +86,8 @@ internal class TemplateDetailsAdapter(
                     oldAcc.equalContents(newAcc)
                 }
             }
-        })
+        }
+        )
 
         itemTouchHelper = ItemTouchHelper(object : ItemTouchHelper.Callback() {
             override fun getMoveThreshold(viewHolder: RecyclerView.ViewHolder): Float = 0.5f
@@ -163,7 +166,8 @@ internal class TemplateDetailsAdapter(
                         String.format(
                             Locale.US,
                             "Ignoring request to move an account from position %d to %d",
-                            fromPosition, toPosition
+                            fromPosition,
+                            toPosition
                         )
                     )
                     return false
@@ -174,7 +178,8 @@ internal class TemplateDetailsAdapter(
                     String.format(
                         Locale.US,
                         "Moving account from %d to %d",
-                        fromPosition, toPosition
+                        fromPosition,
+                        toPosition
                     )
                 )
                 mModel.moveItem(fromPosition, toPosition)
@@ -261,11 +266,18 @@ internal class TemplateDetailsAdapter(
     }
 
     private enum class HeaderDetail {
-        DESCRIPTION, COMMENT, DATE_YEAR, DATE_MONTH, DATE_DAY
+        DESCRIPTION,
+        COMMENT,
+        DATE_YEAR,
+        DATE_MONTH,
+        DATE_DAY
     }
 
     private enum class AccDetail {
-        ACCOUNT, COMMENT, AMOUNT, CURRENCY
+        ACCOUNT,
+        COMMENT,
+        AMOUNT,
+        CURRENCY
     }
 
     abstract class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -406,7 +418,9 @@ internal class TemplateDetailsAdapter(
             Logger.debug(D_TEMPLATE_UI, "header is $header")
 
             val sel = TemplateDetailSourceSelectorFragment.newInstance(
-                1, header.pattern, header.testText
+                1,
+                header.pattern,
+                header.testText
             )
             sel.setOnSourceSelectedListener { literal, group ->
                 if (literal) {
@@ -453,7 +467,8 @@ internal class TemplateDetailsAdapter(
                 } else {
                     b.yearLayout.visibility = View.GONE
                     b.yearSource.text = String.format(
-                        Locale.US, groupNoText,
+                        Locale.US,
+                        groupNoText,
                         header.getDateYearMatchGroup(),
                         getMatchGroupText(header.getDateYearMatchGroup())
                     )
@@ -473,7 +488,8 @@ internal class TemplateDetailsAdapter(
                 } else {
                     b.monthLayout.visibility = View.GONE
                     b.monthSource.text = String.format(
-                        Locale.US, groupNoText,
+                        Locale.US,
+                        groupNoText,
                         header.getDateMonthMatchGroup(),
                         getMatchGroupText(header.getDateMonthMatchGroup())
                     )
@@ -493,7 +509,8 @@ internal class TemplateDetailsAdapter(
                 } else {
                     b.dayLayout.visibility = View.GONE
                     b.daySource.text = String.format(
-                        Locale.US, groupNoText,
+                        Locale.US,
+                        groupNoText,
                         header.getDateDayMatchGroup(),
                         getMatchGroupText(header.getDateDayMatchGroup())
                     )
@@ -512,7 +529,8 @@ internal class TemplateDetailsAdapter(
                 } else {
                     b.transactionDescriptionLayout.visibility = View.GONE
                     b.templateTransactionDescriptionSource.text = String.format(
-                        Locale.US, groupNoText,
+                        Locale.US,
+                        groupNoText,
                         header.getTransactionDescriptionMatchGroup(),
                         getMatchGroupText(header.getTransactionDescriptionMatchGroup())
                     )
@@ -531,7 +549,8 @@ internal class TemplateDetailsAdapter(
                 } else {
                     b.transactionCommentLayout.visibility = View.GONE
                     b.templateTransactionCommentSource.text = String.format(
-                        Locale.US, groupNoText,
+                        Locale.US,
+                        groupNoText,
                         header.getTransactionCommentMatchGroup(),
                         getMatchGroupText(header.getTransactionCommentMatchGroup())
                     )
@@ -648,7 +667,9 @@ internal class TemplateDetailsAdapter(
                                 String.format(
                                     Locale.US,
                                     "Storing changed account amount %s [%4.2f]; accRow=%s",
-                                    s, amount, accRow
+                                    s,
+                                    amount,
+                                    accRow
                                 )
                             )
                         } catch (e: NumberFormatException) {
@@ -711,7 +732,9 @@ internal class TemplateDetailsAdapter(
                     String.format(
                         Locale.US,
                         "Binding account id %d, pos %d at %d",
-                        item.id, item.position, bindingAdapterPosition
+                        item.id,
+                        item.position,
+                        bindingAdapterPosition
                     )
                 )
 
@@ -729,7 +752,8 @@ internal class TemplateDetailsAdapter(
                 } else {
                     b.templateDetailsAccountNameLayout.visibility = View.GONE
                     b.templateDetailsAccountNameSource.text = String.format(
-                        Locale.US, groupNoText,
+                        Locale.US,
+                        groupNoText,
                         accRow.getAccountNameMatchGroup(),
                         getMatchGroupText(accRow.getAccountNameMatchGroup())
                     )
@@ -742,7 +766,8 @@ internal class TemplateDetailsAdapter(
                 } else {
                     b.templateDetailsAccountCommentLayout.visibility = View.GONE
                     b.templateDetailsAccountCommentSource.text = String.format(
-                        Locale.US, groupNoText,
+                        Locale.US,
+                        groupNoText,
                         accRow.getAccountCommentMatchGroup(),
                         getMatchGroupText(accRow.getAccountCommentMatchGroup())
                     )
@@ -761,7 +786,8 @@ internal class TemplateDetailsAdapter(
                     b.templateDetailsNegateAmountText.visibility = View.GONE
                 } else {
                     b.templateDetailsAccountAmountSource.text = String.format(
-                        Locale.US, groupNoText,
+                        Locale.US,
+                        groupNoText,
                         accRow.getAmountMatchGroup(),
                         getMatchGroupText(accRow.getAmountMatchGroup())
                     )
@@ -787,7 +813,8 @@ internal class TemplateDetailsAdapter(
                     b.templateDetailsAccountCurrency.visibility = View.VISIBLE
                 } else {
                     b.templateDetailsAccountCurrencySource.text = String.format(
-                        Locale.US, groupNoText,
+                        Locale.US,
+                        groupNoText,
                         accRow.getCurrencyMatchGroup(),
                         getMatchGroupText(accRow.getCurrencyMatchGroup())
                     )
@@ -822,7 +849,8 @@ internal class TemplateDetailsAdapter(
                 if (accRow.hasLiteralCurrency()) {
                     b.templateDetailsAccountCurrency.setOnClickListener {
                         val cpf = CurrencySelectorFragment.newInstance(
-                            CurrencySelectorFragment.DEFAULT_COLUMN_COUNT, false
+                            CurrencySelectorFragment.DEFAULT_COLUMN_COUNT,
+                            false
                         )
                         cpf.setOnCurrencySelectedListener { text ->
                             if (text == null) {
@@ -859,7 +887,9 @@ internal class TemplateDetailsAdapter(
             Logger.debug(D_TEMPLATE_UI, "header is $header")
 
             val sel = TemplateDetailSourceSelectorFragment.newInstance(
-                1, header.pattern, header.testText
+                1,
+                header.pattern,
+                header.testText
             )
             sel.setOnSourceSelectedListener { literal, group ->
                 if (literal) {

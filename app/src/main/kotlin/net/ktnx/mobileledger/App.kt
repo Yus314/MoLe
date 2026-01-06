@@ -22,16 +22,16 @@ import android.content.Context
 import android.content.res.Configuration
 import android.util.Log
 import dagger.hilt.android.HiltAndroidApp
-import net.ktnx.mobileledger.model.Data
-import net.ktnx.mobileledger.ui.profiles.ProfileDetailModel
-import net.ktnx.mobileledger.utils.Colors
-import net.ktnx.mobileledger.utils.Globals
-import net.ktnx.mobileledger.utils.Logger
 import java.net.Authenticator
 import java.net.MalformedURLException
 import java.net.PasswordAuthentication
 import java.net.URL
 import java.util.Locale
+import net.ktnx.mobileledger.model.Data
+import net.ktnx.mobileledger.ui.profiles.ProfileDetailModel
+import net.ktnx.mobileledger.utils.Colors
+import net.ktnx.mobileledger.utils.Globals
+import net.ktnx.mobileledger.utils.Logger
 
 @HiltAndroidApp
 class App : Application() {
@@ -75,7 +75,8 @@ class App : Application() {
                                 "http-auth",
                                 String.format(
                                     "Requesting host [%s] differs from expected [%s]",
-                                    requestingHost, expectedHost
+                                    requestingHost,
+                                    expectedHost
                                 )
                             )
                         }

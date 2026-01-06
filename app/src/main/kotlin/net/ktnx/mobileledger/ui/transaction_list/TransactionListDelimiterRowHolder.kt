@@ -19,14 +19,14 @@ package net.ktnx.mobileledger.ui.transaction_list
 
 import android.view.View
 import androidx.constraintlayout.widget.ConstraintLayout
+import java.text.DateFormat
+import java.util.GregorianCalendar
+import java.util.TimeZone
 import net.ktnx.mobileledger.App
 import net.ktnx.mobileledger.databinding.TransactionDelimiterBinding
 import net.ktnx.mobileledger.model.TransactionListItem
 import net.ktnx.mobileledger.utils.DimensionUtils
 import net.ktnx.mobileledger.utils.Globals
-import java.text.DateFormat
-import java.util.GregorianCalendar
-import java.util.TimeZone
 
 internal class TransactionListDelimiterRowHolder(
     private val b: TransactionDelimiterBinding

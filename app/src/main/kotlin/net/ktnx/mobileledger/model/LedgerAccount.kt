@@ -17,10 +17,10 @@
 
 package net.ktnx.mobileledger.model
 
+import java.util.regex.Pattern
 import net.ktnx.mobileledger.db.Account
 import net.ktnx.mobileledger.db.AccountValue
 import net.ktnx.mobileledger.db.AccountWithAmounts
-import java.util.regex.Pattern
 
 class LedgerAccount(
     name: String,
@@ -49,8 +49,11 @@ class LedgerAccount(
     init {
         if (parent != null && !name.startsWith(parent.name + ":")) {
             throw IllegalStateException(
-                String.format("Account name '%s' doesn't match parent account '%s'",
-                    name, parent.name)
+                String.format(
+                    "Account name '%s' doesn't match parent account '%s'",
+                    name,
+                    parent.name
+                )
             )
         }
         this.name = name

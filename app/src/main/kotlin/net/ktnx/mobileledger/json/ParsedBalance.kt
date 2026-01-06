@@ -26,5 +26,7 @@ open class ParsedBalance {
     private var _acommodity: String? = null
     var acommodity: String
         get() = _acommodity ?: ""
-        set(value) { _acommodity = value }
+        set(value) {
+            _acommodity = value
+        }
 }

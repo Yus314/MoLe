@@ -39,7 +39,9 @@ class PostingFieldDelegate {
     private var _pcomment: String = ""
     var pcomment: String
         get() = _pcomment
-        set(value) { _pcomment = value.trim() }
+        set(value) {
+            _pcomment = value.trim()
+        }
 
     var ptags: MutableList<List<String>> = mutableListOf()
 }

@@ -28,7 +28,10 @@ class Currency(
     constructor(id: Int, name: String?) : this(id, name, Position.after, true)
 
     enum class Position {
-        before, after, unknown, none
+        before,
+        after,
+        unknown,
+        none
     }
 
     companion object {

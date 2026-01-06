@@ -17,6 +17,8 @@
 
 package net.ktnx.mobileledger.model
 
+import java.nio.charset.StandardCharsets
+import java.text.ParseException
 import net.ktnx.mobileledger.db.Profile
 import net.ktnx.mobileledger.db.Transaction
 import net.ktnx.mobileledger.db.TransactionAccount
@@ -24,8 +26,6 @@ import net.ktnx.mobileledger.db.TransactionWithAccounts
 import net.ktnx.mobileledger.utils.Digest
 import net.ktnx.mobileledger.utils.Globals
 import net.ktnx.mobileledger.utils.SimpleDate
-import java.nio.charset.StandardCharsets
-import java.text.ParseException
 
 class LedgerTransaction {
     val comparator: Comparator<LedgerTransactionAccount> = Comparator { o1, o2 ->
@@ -42,6 +42,7 @@ class LedgerTransaction {
     val ledgerId: Long
     val accounts: MutableList<LedgerTransactionAccount>
     private var dbId: Long = 0
+
     @get:JvmName("getDateNullable")
     var date: SimpleDate? = null
         set(value) {
@@ -170,7 +171,8 @@ class LedgerTransaction {
             dataHash = sha.digestToHexString()
         } catch (e: Exception) {
             throw RuntimeException(
-                String.format("Unable to get instance of %s digest", DIGEST_TYPE), e
+                String.format("Unable to get instance of %s digest", DIGEST_TYPE),
+                e
             )
         }
     }

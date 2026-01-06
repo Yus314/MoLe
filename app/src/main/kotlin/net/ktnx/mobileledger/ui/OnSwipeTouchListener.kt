@@ -22,8 +22,8 @@ import android.view.GestureDetector
 import android.view.GestureDetector.SimpleOnGestureListener
 import android.view.MotionEvent
 import android.view.View
-import net.ktnx.mobileledger.utils.Logger
 import kotlin.math.abs
+import net.ktnx.mobileledger.utils.Logger
 
 abstract class OnSwipeTouchListener(ctx: Context) : View.OnTouchListener {
     @JvmField

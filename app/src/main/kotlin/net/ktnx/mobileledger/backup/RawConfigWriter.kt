@@ -18,13 +18,13 @@
 package net.ktnx.mobileledger.backup
 
 import android.util.JsonWriter
-import net.ktnx.mobileledger.db.DB
-import net.ktnx.mobileledger.json.API
-import net.ktnx.mobileledger.model.Data
 import java.io.BufferedWriter
 import java.io.IOException
 import java.io.OutputStream
 import java.io.OutputStreamWriter
+import net.ktnx.mobileledger.db.DB
+import net.ktnx.mobileledger.json.API
+import net.ktnx.mobileledger.model.Data
 
 class RawConfigWriter(outputStream: OutputStream) {
     private val w: JsonWriter = JsonWriter(BufferedWriter(OutputStreamWriter(outputStream))).apply {

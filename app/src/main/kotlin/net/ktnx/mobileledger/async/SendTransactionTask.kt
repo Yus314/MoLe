@@ -18,6 +18,13 @@
 package net.ktnx.mobileledger.async
 
 import android.util.Log
+import java.io.BufferedReader
+import java.io.IOException
+import java.io.InputStreamReader
+import java.net.HttpURLConnection
+import java.nio.charset.StandardCharsets
+import java.util.Locale
+import java.util.regex.Pattern
 import net.ktnx.mobileledger.db.Profile
 import net.ktnx.mobileledger.json.API
 import net.ktnx.mobileledger.json.ApiNotSupportedException
@@ -29,13 +36,6 @@ import net.ktnx.mobileledger.utils.Misc
 import net.ktnx.mobileledger.utils.NetworkUtil
 import net.ktnx.mobileledger.utils.SimpleDate
 import net.ktnx.mobileledger.utils.UrlEncodedFormData
-import java.io.BufferedReader
-import java.io.IOException
-import java.io.InputStreamReader
-import java.net.HttpURLConnection
-import java.nio.charset.StandardCharsets
-import java.util.Locale
-import java.util.regex.Pattern
 
 class SendTransactionTask(
     private val taskCallback: TaskCallback,

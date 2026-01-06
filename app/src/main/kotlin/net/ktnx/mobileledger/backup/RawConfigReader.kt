@@ -19,6 +19,10 @@ package net.ktnx.mobileledger.backup
 
 import android.util.JsonReader
 import android.util.JsonToken
+import java.io.BufferedReader
+import java.io.IOException
+import java.io.InputStream
+import java.io.InputStreamReader
 import net.ktnx.mobileledger.App
 import net.ktnx.mobileledger.db.Currency
 import net.ktnx.mobileledger.db.DB
@@ -28,10 +32,6 @@ import net.ktnx.mobileledger.db.TemplateHeader
 import net.ktnx.mobileledger.db.TemplateWithAccounts
 import net.ktnx.mobileledger.model.Data
 import net.ktnx.mobileledger.utils.Logger
-import java.io.BufferedReader
-import java.io.IOException
-import java.io.InputStream
-import java.io.InputStreamReader
 
 class RawConfigReader(inputStream: InputStream) {
     private val r: JsonReader = JsonReader(BufferedReader(InputStreamReader(inputStream)))

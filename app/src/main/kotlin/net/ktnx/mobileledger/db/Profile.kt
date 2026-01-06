@@ -22,9 +22,9 @@ import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.Transaction
+import java.util.UUID
 import net.ktnx.mobileledger.dao.BaseDAO
 import net.ktnx.mobileledger.utils.Misc
-import java.util.UUID
 
 @Entity(
     tableName = "profiles",

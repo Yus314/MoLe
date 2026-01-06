@@ -27,8 +27,8 @@ import android.text.style.URLSpan
 import android.widget.TextView
 import androidx.annotation.ArrayRes
 import androidx.annotation.StringRes
-import net.ktnx.mobileledger.R
 import java.util.regex.Pattern
+import net.ktnx.mobileledger.R
 
 object HelpDialog {
     private val MARKDOWN_LINK_PATTERN: Pattern = Pattern.compile("\\[([^\\[]+)]\\(([^)]*)\\)")

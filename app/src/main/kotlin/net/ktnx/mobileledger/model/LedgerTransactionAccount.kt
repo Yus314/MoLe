@@ -17,11 +17,11 @@
 
 package net.ktnx.mobileledger.model
 
-import net.ktnx.mobileledger.db.TransactionAccount
-import net.ktnx.mobileledger.utils.Misc
 import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.round
+import net.ktnx.mobileledger.db.TransactionAccount
+import net.ktnx.mobileledger.utils.Misc
 
 class LedgerTransactionAccount {
     var accountName: String = ""

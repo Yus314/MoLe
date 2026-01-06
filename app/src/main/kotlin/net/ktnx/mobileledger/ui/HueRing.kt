@@ -26,9 +26,6 @@ import android.graphics.SweepGradient
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
-import net.ktnx.mobileledger.utils.Colors
-import net.ktnx.mobileledger.utils.DimensionUtils
-import net.ktnx.mobileledger.utils.Logger
 import java.util.Locale
 import kotlin.math.PI
 import kotlin.math.atan2
@@ -36,6 +33,9 @@ import kotlin.math.cos
 import kotlin.math.hypot
 import kotlin.math.min
 import kotlin.math.sin
+import net.ktnx.mobileledger.utils.Colors
+import net.ktnx.mobileledger.utils.DimensionUtils
+import net.ktnx.mobileledger.utils.Logger
 
 class HueRing : View {
     private lateinit var ringPaint: Paint
@@ -53,6 +53,7 @@ class HueRing : View {
     private var centerR = 0f
     private val centerRect = RectF()
     private val ringRect = RectF()
+
     @Suppress("unused")
     private var markerOverflow = 0
     private var markerStrokeWidth = 0
@@ -86,13 +87,13 @@ class HueRing : View {
 
     private fun init(initialHueDegrees: Int) {
         val steps = intArrayOf(
-            Colors.getPrimaryColorForHue(0),      // red
-            Colors.getPrimaryColorForHue(60),     // yellow
-            Colors.getPrimaryColorForHue(120),    // green
-            Colors.getPrimaryColorForHue(180),    // cyan
-            Colors.getPrimaryColorForHue(240),    // blue
-            Colors.getPrimaryColorForHue(300),    // magenta
-            Colors.getPrimaryColorForHue(360)     // red, again
+            Colors.getPrimaryColorForHue(0), // red
+            Colors.getPrimaryColorForHue(60), // yellow
+            Colors.getPrimaryColorForHue(120), // green
+            Colors.getPrimaryColorForHue(180), // cyan
+            Colors.getPrimaryColorForHue(240), // blue
+            Colors.getPrimaryColorForHue(300), // magenta
+            Colors.getPrimaryColorForHue(360) // red, again
         )
         val rainbow = SweepGradient(0f, 0f, steps, null)
 
@@ -169,21 +170,30 @@ class HueRing : View {
     private fun drawMarker(canvas: Canvas, center: Float) {
         val leftRadians = Math.toRadians((-hueStepDegrees / 2f).toDouble()).toFloat()
         val rightRadians = Math.toRadians((hueStepDegrees / 2f).toDouble()).toFloat()
+
         @Suppress("UNUSED_VARIABLE")
         val sl = sin(leftRadians)
+
         @Suppress("UNUSED_VARIABLE")
         val sr = sin(rightRadians)
+
         @Suppress("UNUSED_VARIABLE")
         val cl = cos(leftRadians)
+
         @Suppress("UNUSED_VARIABLE")
         val cr = cos(rightRadians)
+
         @Suppress("UNUSED_VARIABLE")
         val innerEdge = innerR - 1.5f * markerStrokeWidth
         val outerEdge = outerR + 1.5f + markerStrokeWidth
         val p = Path()
         p.arcTo(
-            -outerEdge, -outerEdge, outerEdge, outerEdge,
-            hueStepDegrees / 2f, (-hueStepDegrees).toFloat(),
+            -outerEdge,
+            -outerEdge,
+            outerEdge,
+            outerEdge,
+            hueStepDegrees / 2f,
+            (-hueStepDegrees).toFloat(),
             false
         )
         canvas.save()
@@ -252,7 +262,10 @@ class HueRing : View {
                         String.format(
                             Locale.US,
                             "x=%1.3f, y=%1.3f, angle=%1.3f rad, hueDegrees=%1.3f",
-                            x, y, angleRad, hue
+                            x,
+                            y,
+                            angleRad,
+                            hue
                         )
                     )
                     setHue(hue)

@@ -20,6 +20,8 @@ package net.ktnx.mobileledger.ui.templates
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import java.util.Locale
+import java.util.concurrent.atomic.AtomicInteger
 import net.ktnx.mobileledger.BuildConfig
 import net.ktnx.mobileledger.dao.BaseDAO
 import net.ktnx.mobileledger.db.DB
@@ -27,8 +29,6 @@ import net.ktnx.mobileledger.db.TemplateAccount
 import net.ktnx.mobileledger.model.TemplateDetailsItem
 import net.ktnx.mobileledger.utils.Logger
 import net.ktnx.mobileledger.utils.Misc
-import java.util.Locale
-import java.util.concurrent.atomic.AtomicInteger
 
 class TemplateDetailsViewModel : ViewModel() {
 
@@ -212,9 +212,15 @@ class TemplateDetailsViewModel : ViewModel() {
                 headerDAO.updateSync(dbHeader)
             }
 
-            Logger.debug("pattern-db",
-                String.format(Locale.US, "Stored pattern header %d, item=%s", dbHeader.id,
-                    modelHeader))
+            Logger.debug(
+                "pattern-db",
+                String.format(
+                    Locale.US,
+                    "Stored pattern header %d, item=%s",
+                    dbHeader.id,
+                    modelHeader
+                )
+            )
 
             val savedPatternId = mPatternId ?: return@runAsync
             val taDAO = DB.get().getTemplateAccountDAO()
@@ -233,10 +239,18 @@ class TemplateDetailsViewModel : ViewModel() {
                     taDAO.updateSync(dbAccount)
                 }
 
-                Logger.debug("pattern-db", String.format(Locale.US,
+                Logger.debug(
+                    "pattern-db",
+                    String.format(
+                        Locale.US,
                     "Stored pattern account %d, account=%s, comment=%s, neg=%s, item=%s",
-                    dbAccount.id, dbAccount.accountName,
-                    dbAccount.accountComment, dbAccount.negateAmount, accRowItem))
+                    dbAccount.id,
+                        dbAccount.accountName,
+                    dbAccount.accountComment,
+                        dbAccount.negateAmount,
+                        accRowItem
+                    )
+                )
             }
 
             taDAO.finishSave(savedPatternId)
@@ -268,8 +282,10 @@ class TemplateDetailsViewModel : ViewModel() {
             Logger.debug("drag", "Before move:")
             for (i in 1 until newList.size) {
                 val item = newList[i]
-                Logger.debug("drag",
-                    String.format(Locale.US, "  %d: id %d, pos %d", i, item.id, item.position))
+                Logger.debug(
+                    "drag",
+                    String.format(Locale.US, "  %d: id %d, pos %d", i, item.id, item.position)
+                )
             }
         }
 
@@ -297,8 +313,10 @@ class TemplateDetailsViewModel : ViewModel() {
             Logger.debug("drag", "After move:")
             for (i in 1 until newList.size) {
                 val item2 = newList[i]
-                Logger.debug("drag",
-                    String.format(Locale.US, "  %d: id %d, pos %d", i, item2.id, item2.position))
+                Logger.debug(
+                    "drag",
+                    String.format(Locale.US, "  %d: id %d, pos %d", i, item2.id, item2.position)
+                )
             }
         }
 

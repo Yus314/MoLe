@@ -17,10 +17,10 @@
 
 package net.ktnx.mobileledger.utils
 
-import net.ktnx.mobileledger.db.Profile
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
+import net.ktnx.mobileledger.db.Profile
 
 object NetworkUtil {
     private const val THIRTY_SECONDS = 30000

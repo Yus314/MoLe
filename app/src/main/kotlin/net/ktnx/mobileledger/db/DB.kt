@@ -25,6 +25,12 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import java.io.BufferedReader
+import java.io.IOException
+import java.io.InputStreamReader
+import java.util.Locale
+import java.util.UUID
+import java.util.regex.Pattern
 import net.ktnx.mobileledger.App
 import net.ktnx.mobileledger.dao.AccountDAO
 import net.ktnx.mobileledger.dao.AccountValueDAO
@@ -36,12 +42,6 @@ import net.ktnx.mobileledger.dao.TemplateHeaderDAO
 import net.ktnx.mobileledger.dao.TransactionAccountDAO
 import net.ktnx.mobileledger.dao.TransactionDAO
 import net.ktnx.mobileledger.utils.Logger
-import java.io.BufferedReader
-import java.io.IOException
-import java.io.InputStreamReader
-import java.util.Locale
-import java.util.UUID
-import java.util.regex.Pattern
 
 @Database(
     version = DB.REVISION,
@@ -259,8 +259,11 @@ abstract class DB : RoomDatabase() {
                                 throw RuntimeException(
                                     String.format(
                                         "Error applying %s, line %d, statement: %s",
-                                        fileName, lineNo, sqlStatement
-                                    ), e
+                                        fileName,
+                                        lineNo,
+                                        sqlStatement
+                                    ),
+                                        e
                                 )
                             }
                         }
@@ -271,14 +274,17 @@ abstract class DB : RoomDatabase() {
                             String.format(
                                 "Error applying %s: EOF after continuation. Line %s, " +
                                         "Incomplete statement: %s",
-                                fileName, lineNo, sqlStatement
+                                fileName,
+                                lineNo,
+                                sqlStatement
                             )
                         )
                     }
                 }
             } catch (e: IOException) {
                 throw RuntimeException(
-                    String.format("Error opening raw resource for %s", fileName), e
+                    String.format("Error opening raw resource for %s", fileName),
+                    e
                 )
             }
         }

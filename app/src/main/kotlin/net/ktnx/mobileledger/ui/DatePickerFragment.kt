@@ -21,12 +21,12 @@ import android.app.Dialog
 import android.os.Bundle
 import android.widget.CalendarView
 import androidx.appcompat.app.AppCompatDialogFragment
-import net.ktnx.mobileledger.R
-import net.ktnx.mobileledger.model.FutureDates
-import net.ktnx.mobileledger.utils.SimpleDate
 import java.util.Calendar
 import java.util.GregorianCalendar
 import java.util.regex.Pattern
+import net.ktnx.mobileledger.R
+import net.ktnx.mobileledger.model.FutureDates
+import net.ktnx.mobileledger.utils.SimpleDate
 
 class DatePickerFragment : AppCompatDialogFragment(), CalendarView.OnDateChangeListener {
     private val presentDate: Calendar = GregorianCalendar.getInstance()
@@ -69,7 +69,7 @@ class DatePickerFragment : AppCompatDialogFragment(), CalendarView.OnDateChangeL
         if (m.matches()) {
             // Groups are guaranteed to exist when matches() returns true for these patterns
             year = m.group(1)?.toIntOrNull() ?: year
-            month = (m.group(2)?.toIntOrNull() ?: (month + 1)) - 1   // month is 0-based
+            month = (m.group(2)?.toIntOrNull() ?: (month + 1)) - 1 // month is 0-based
             day = m.group(3)?.toIntOrNull() ?: day
         } else {
             m = reMD.matcher(present)
@@ -118,8 +118,10 @@ class DatePickerFragment : AppCompatDialogFragment(), CalendarView.OnDateChangeL
     companion object {
         @JvmField
         val reYMD: Pattern = Pattern.compile("^\\s*(\\d+)\\d*/\\s*(\\d+)\\s*/\\s*(\\d+)\\s*$")
+
         @JvmField
         val reMD: Pattern = Pattern.compile("^\\s*(\\d+)\\s*/\\s*(\\d+)\\s*$")
+
         @JvmField
         val reD: Pattern = Pattern.compile("\\s*(\\d+)\\s*$")
     }

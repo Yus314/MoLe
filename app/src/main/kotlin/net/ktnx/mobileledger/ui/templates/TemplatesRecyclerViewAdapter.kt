@@ -31,7 +31,9 @@ class TemplatesRecyclerViewAdapter : RecyclerView.Adapter<BaseTemplateViewHolder
     private val listDiffer: AsyncListDiffer<BaseTemplateItem>
 
     init {
-        listDiffer = AsyncListDiffer(this, object : DiffUtil.ItemCallback<BaseTemplateItem>() {
+        listDiffer = AsyncListDiffer(
+            this,
+            object : DiffUtil.ItemCallback<BaseTemplateItem>() {
             override fun areItemsTheSame(
                 oldItem: BaseTemplateItem,
                 newItem: BaseTemplateItem
@@ -45,7 +47,8 @@ class TemplatesRecyclerViewAdapter : RecyclerView.Adapter<BaseTemplateViewHolder
             ): Boolean {
                 return oldItem == newItem
             }
-        })
+        }
+        )
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseTemplateViewHolder {

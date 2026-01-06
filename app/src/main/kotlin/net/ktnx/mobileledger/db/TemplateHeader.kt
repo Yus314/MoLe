@@ -21,8 +21,8 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import net.ktnx.mobileledger.utils.Misc
 import java.util.UUID
+import net.ktnx.mobileledger.utils.Misc
 
 @Entity(
     tableName = "templates",

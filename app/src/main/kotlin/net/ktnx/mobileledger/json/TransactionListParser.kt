@@ -17,10 +17,10 @@
 
 package net.ktnx.mobileledger.json
 
-import net.ktnx.mobileledger.model.LedgerTransaction
 import java.io.IOException
 import java.io.InputStream
 import java.text.ParseException
+import net.ktnx.mobileledger.model.LedgerTransaction
 
 abstract class TransactionListParser {
     @Throws(ParseException::class)

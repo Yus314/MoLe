@@ -18,12 +18,12 @@
 package net.ktnx.mobileledger.json.v1_14
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import java.text.ParseException
 import net.ktnx.mobileledger.json.ParsedLedgerTransaction as IParsedLedgerTransaction
 import net.ktnx.mobileledger.model.LedgerTransaction
 import net.ktnx.mobileledger.utils.Globals
 import net.ktnx.mobileledger.utils.Misc
 import net.ktnx.mobileledger.utils.SimpleDate
-import java.text.ParseException
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 open class ParsedLedgerTransaction : IParsedLedgerTransaction {

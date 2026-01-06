@@ -19,13 +19,15 @@ package net.ktnx.mobileledger.json.v1_14
 
 import com.fasterxml.jackson.databind.MappingIterator
 import com.fasterxml.jackson.databind.ObjectMapper
-import net.ktnx.mobileledger.json.TransactionListParser as BaseParser
-import net.ktnx.mobileledger.model.LedgerTransaction
 import java.io.IOException
 import java.io.InputStream
 import java.text.ParseException
+import net.ktnx.mobileledger.json.TransactionListParser as BaseParser
+import net.ktnx.mobileledger.model.LedgerTransaction
 
-class TransactionListParser @Throws(IOException::class) constructor(input: InputStream) : BaseParser() {
+class TransactionListParser
+@Throws(IOException::class)
+constructor(input: InputStream) : BaseParser() {
     private val iterator: MappingIterator<ParsedLedgerTransaction>
 
     init {

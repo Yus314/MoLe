@@ -21,6 +21,17 @@ import android.annotation.SuppressLint
 import android.os.OperationCanceledException
 import com.fasterxml.jackson.core.JsonParseException
 import com.fasterxml.jackson.databind.RuntimeJsonMappingException
+import java.io.BufferedReader
+import java.io.IOException
+import java.io.InputStreamReader
+import java.net.HttpURLConnection
+import java.net.MalformedURLException
+import java.net.URLDecoder
+import java.nio.charset.StandardCharsets
+import java.text.ParseException
+import java.util.Date
+import java.util.Locale
+import java.util.regex.Pattern
 import net.ktnx.mobileledger.db.Account
 import net.ktnx.mobileledger.db.AccountWithAmounts
 import net.ktnx.mobileledger.db.DB
@@ -39,17 +50,6 @@ import net.ktnx.mobileledger.model.LedgerTransactionAccount
 import net.ktnx.mobileledger.utils.Logger
 import net.ktnx.mobileledger.utils.NetworkUtil
 import net.ktnx.mobileledger.utils.SimpleDate
-import java.io.BufferedReader
-import java.io.IOException
-import java.io.InputStreamReader
-import java.net.HttpURLConnection
-import java.net.MalformedURLException
-import java.net.URLDecoder
-import java.nio.charset.StandardCharsets
-import java.text.ParseException
-import java.util.Date
-import java.util.Locale
-import java.util.regex.Pattern
 
 class RetrieveTransactionsTask(private val profile: Profile) : Thread() {
     private var expectedPostingsCount = -1
@@ -176,8 +176,15 @@ class RetrieveTransactionsTask(private val profile: Profile) : Thread() {
                             val currentAccount = requireNotNull(lastAccount) { "No current account" }
                             currentAccount.addAmount(floatVal, currency)
                             for (syn in syntheticAccounts) {
-                                L(String.format(Locale.ENGLISH, "propagating %s %1.2f to %s",
-                                    currency, floatVal, syn.name))
+                                L(
+                                    String.format(
+                                        Locale.ENGLISH,
+                                        "propagating %s %1.2f to %s",
+                                    currency,
+                                        floatVal,
+                                        syn.name
+                                    )
+                                )
                                 syn.addAmount(floatVal, currency)
                             }
                         }
@@ -194,8 +201,13 @@ class RetrieveTransactionsTask(private val profile: Profile) : Thread() {
                         if (m.find()) {
                             transactionId = requireNotNull(m.group(1)) { "Transaction ID match group is null" }.toInt()
                             state = ParserState.EXPECTING_TRANSACTION_DESCRIPTION
-                            L(String.format(Locale.ENGLISH,
-                                "found transaction %d → expecting description", transactionId))
+                            L(
+                                String.format(
+                                    Locale.ENGLISH,
+                                "found transaction %d → expecting description",
+                                    transactionId
+                                )
+                            )
                             progress.setProgress(++processedTransactionCount)
                             if (maxTransactionId < transactionId) {
                                 maxTransactionId = transactionId
@@ -217,7 +229,8 @@ class RetrieveTransactionsTask(private val profile: Profile) : Thread() {
                         if (m.find()) {
                             if (transactionId == 0) {
                                 throw TransactionParserException(
-                                    "Transaction Id is 0 while expecting description")
+                                    "Transaction Id is 0 while expecting description"
+                                )
                             }
 
                             var date = requireNotNull(m.group(1)) { "Date match group is null" }
@@ -229,12 +242,19 @@ class RetrieveTransactionsTask(private val profile: Profile) : Thread() {
                                 transaction = LedgerTransaction(transactionId.toLong(), date, m.group(2))
                             } catch (e: ParseException) {
                                 throw TransactionParserException(
-                                    String.format("Error parsing date '%s'", date))
+                                    String.format("Error parsing date '%s'", date)
+                                )
                             }
                             state = ParserState.EXPECTING_TRANSACTION_DETAILS
-                            L(String.format(Locale.ENGLISH,
+                            L(
+                                String.format(
+                                    Locale.ENGLISH,
                                 "transaction %d created for %s (%s) → expecting details",
-                                transactionId, date, m.group(2)))
+                                transactionId,
+                                    date,
+                                    m.group(2)
+                                )
+                            )
                         }
                     }
                     ParserState.EXPECTING_TRANSACTION_DETAILS -> {
@@ -245,18 +265,33 @@ class RetrieveTransactionsTask(private val profile: Profile) : Thread() {
                             transactions.add(transaction)
 
                             state = ParserState.EXPECTING_TRANSACTION
-                            L(String.format("transaction %s parsed → expecting transaction",
-                                currentTransaction.ledgerId))
+                            L(
+                                String.format(
+                                    "transaction %s parsed → expecting transaction",
+                                currentTransaction.ledgerId
+                                )
+                            )
                         } else {
                             val lta = parseTransactionAccountLine(line)
                             if (lta != null) {
                                 currentTransaction.addAccount(lta)
-                                L(String.format(Locale.ENGLISH, "%d: %s = %s",
-                                    currentTransaction.ledgerId, lta.accountName, lta.amount))
+                                L(
+                                    String.format(
+                                        Locale.ENGLISH,
+                                        "%d: %s = %s",
+                                    currentTransaction.ledgerId,
+                                        lta.accountName,
+                                        lta.amount
+                                    )
+                                )
                             } else {
                                 throw IllegalStateException(
-                                    String.format("Can't parse transaction %d details: %s",
-                                        transactionId, line))
+                                    String.format(
+                                        "Can't parse transaction %d details: %s",
+                                        transactionId,
+                                        line
+                                    )
+                                )
                             }
                         }
                     }
@@ -296,8 +331,10 @@ class RetrieveTransactionsTask(private val profile: Profile) : Thread() {
         return when {
             apiVersion == API.auto -> retrieveAccountListAnyVersion()
             apiVersion == API.html -> {
-                Logger.debug("json",
-                    "Declining using JSON API for /accounts with configured legacy API version")
+                Logger.debug(
+                    "json",
+                    "Declining using JSON API for /accounts with configured legacy API version"
+                )
                 null
             }
             else -> retrieveAccountListForVersion(apiVersion)
@@ -310,13 +347,25 @@ class RetrieveTransactionsTask(private val profile: Profile) : Thread() {
             try {
                 return retrieveAccountListForVersion(ver)
             } catch (e: JsonParseException) {
-                Logger.debug("json",
-                    String.format(Locale.US, "Error during account list retrieval using API %s",
-                        ver.description), e)
+                Logger.debug(
+                    "json",
+                    String.format(
+                        Locale.US,
+                        "Error during account list retrieval using API %s",
+                        ver.description
+                    ),
+                            e
+                )
             } catch (e: RuntimeJsonMappingException) {
-                Logger.debug("json",
-                    String.format(Locale.US, "Error during account list retrieval using API %s",
-                        ver.description), e)
+                Logger.debug(
+                    "json",
+                    String.format(
+                        Locale.US,
+                        "Error during account list retrieval using API %s",
+                        ver.description
+                    ),
+                            e
+                )
             }
         }
         throw ApiNotSupportedException()
@@ -351,9 +400,15 @@ class RetrieveTransactionsTask(private val profile: Profile) : Thread() {
             }
             throwIfCancelled()
 
-            Logger.warn("accounts",
-                String.format(Locale.US, "Got %d accounts using protocol %s", list.size,
-                    version.description))
+            Logger.warn(
+                "accounts",
+                String.format(
+                    Locale.US,
+                    "Got %d accounts using protocol %s",
+                    list.size,
+                    version.description
+                )
+            )
         }
 
         return list
@@ -365,8 +420,10 @@ class RetrieveTransactionsTask(private val profile: Profile) : Thread() {
         return when {
             apiVersion == API.auto -> retrieveTransactionListAnyVersion()
             apiVersion == API.html -> {
-                Logger.debug("json",
-                    "Declining using JSON API for /accounts with configured legacy API version")
+                Logger.debug(
+                    "json",
+                    "Declining using JSON API for /accounts with configured legacy API version"
+                )
                 null
             }
             else -> retrieveTransactionListForVersion(apiVersion)
@@ -379,9 +436,15 @@ class RetrieveTransactionsTask(private val profile: Profile) : Thread() {
             try {
                 return retrieveTransactionListForVersion(ver)
             } catch (e: Exception) {
-                Logger.debug("json", String.format(Locale.US,
+                Logger.debug(
+                    "json",
+                    String.format(
+                        Locale.US,
                     "Error during transaction list retrieval using API %s",
-                    ver.description), e)
+                    ver.description
+                    ),
+                        e
+                )
             }
         }
         throw ApiNotSupportedException()
@@ -423,16 +486,23 @@ class RetrieveTransactionsTask(private val profile: Profile) : Thread() {
 
             throwIfCancelled()
 
-            Logger.warn("transactions",
-                String.format(Locale.US, "Got %d transactions using protocol %s", trList.size,
-                    apiVersion.description))
+            Logger.warn(
+                "transactions",
+                String.format(
+                    Locale.US,
+                    "Got %d transactions using protocol %s",
+                    trList.size,
+                    apiVersion.description
+                )
+            )
         }
 
         // json interface returns transactions in file order and the rest of the machinery
         // expects them in reverse chronological order
         trList.sortWith { o1, o2 ->
             val res = (o2.getDateIfAny() ?: SimpleDate.today()).compareTo(
-                o1.getDateIfAny() ?: SimpleDate.today())
+                o1.getDateIfAny() ?: SimpleDate.today()
+            )
             if (res != 0) res else o2.ledgerId.compareTo(o1.ledgerId)
         }
         return trList
@@ -469,8 +539,11 @@ class RetrieveTransactionsTask(private val profile: Profile) : Thread() {
             finish(Result("Invalid server URL"))
         } catch (e: HTTPException) {
             e.printStackTrace()
-            finish(Result(
-                String.format("HTTP error %d: %s", e.responseCode, e.message)))
+            finish(
+                Result(
+                String.format("HTTP error %d: %s", e.responseCode, e.message)
+                )
+            )
         } catch (e: IOException) {
             e.printStackTrace()
             finish(Result(e.localizedMessage))
@@ -498,8 +571,11 @@ class RetrieveTransactionsTask(private val profile: Profile) : Thread() {
     }
 
     private enum class ParserState {
-        EXPECTING_ACCOUNT, EXPECTING_ACCOUNT_AMOUNT, EXPECTING_TRANSACTION,
-        EXPECTING_TRANSACTION_DESCRIPTION, EXPECTING_TRANSACTION_DETAILS
+        EXPECTING_ACCOUNT,
+        EXPECTING_ACCOUNT_AMOUNT,
+        EXPECTING_TRANSACTION,
+        EXPECTING_TRANSACTION_DESCRIPTION,
+        EXPECTING_TRANSACTION_DETAILS
     }
 
     enum class ProgressState { STARTING, RUNNING, FINISHED }
@@ -546,7 +622,8 @@ class RetrieveTransactionsTask(private val profile: Profile) : Thread() {
         private fun ensureState(wanted: ProgressState) {
             if (state != wanted) {
                 throw IllegalStateException(
-                    String.format("Bad state: %s, expected %s", state, wanted))
+                    String.format("Bad state: %s, expected %s", state, wanted)
+                )
             }
         }
 
@@ -623,8 +700,13 @@ class RetrieveTransactionsTask(private val profile: Profile) : Thread() {
             Logger.debug(TAG, "Transactions stored")
 
             DB.get().getOptionDAO()
-                .insertSync(Option(profile.id, Option.OPT_LAST_SCRAPE,
-                    Date().time.toString()))
+                .insertSync(
+                    Option(
+                        profile.id,
+                        Option.OPT_LAST_SCRAPE,
+                    Date().time.toString()
+                    )
+                )
         }
     }
 
@@ -632,11 +714,13 @@ class RetrieveTransactionsTask(private val profile: Profile) : Thread() {
         private const val MATCHING_TRANSACTIONS_LIMIT = 150
         private val reComment = Pattern.compile("^\\s*;")
         private val reTransactionStart = Pattern.compile(
-            "<tr class=\"title\" id=\"transaction-(\\d+)\"><td class=\"date\"[^\"]*>([\\d.-]+)</td>")
+            "<tr class=\"title\" id=\"transaction-(\\d+)\"><td class=\"date\"[^\"]*>([\\d.-]+)</td>"
+        )
         private val reTransactionDescription =
             Pattern.compile("<tr class=\"posting\" title=\"(\\S+)\\s(.+)")
         private val reTransactionDetails = Pattern.compile(
-            "^\\s+([!*]\\s+)?(\\S[\\S\\s]+\\S)\\s\\s+(?:([^\\d\\s+\\-]+)\\s*)?([-+]?\\d[\\d,.]*)(?:\\s*([^\\d\\s+\\-]+)\\s*$)?")
+            "^\\s+([!*]\\s+)?(\\S[\\S\\s]+\\S)\\s\\s+(?:([^\\d\\s+\\-]+)\\s*)?([-+]?\\d[\\d,.]*)(?:\\s*([^\\d\\s+\\-]+)\\s*$)?"
+        )
         private val reEnd = Pattern.compile("\\bid=\"addmodal\"")
         private val reDecimalPoint = Pattern.compile("\\.\\d\\d?$")
         private val reDecimalComma = Pattern.compile(",\\d\\d?$")
@@ -677,5 +761,6 @@ class RetrieveTransactionsTask(private val profile: Profile) : Thread() {
     private val reAccountName =
         Pattern.compile("/register\\?q=inacct%3A([a-zA-Z0-9%]+)\"")
     private val reAccountValue = Pattern.compile(
-        "<span class=\"[^\"]*\\bamount\\b[^\"]*\">\\s*([-+]?[\\d.,]+)(?:\\s+(\\S+))?</span>")
+        "<span class=\"[^\"]*\\bamount\\b[^\"]*\">\\s*([-+]?[\\d.,]+)(?:\\s+(\\S+))?</span>"
+    )
 }

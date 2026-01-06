@@ -21,6 +21,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
 import net.ktnx.mobileledger.dao.AccountDAO
 import net.ktnx.mobileledger.dao.AccountValueDAO
 import net.ktnx.mobileledger.dao.CurrencyDAO
@@ -30,7 +31,6 @@ import net.ktnx.mobileledger.dao.TemplateAccountDAO
 import net.ktnx.mobileledger.dao.TemplateHeaderDAO
 import net.ktnx.mobileledger.dao.TransactionDAO
 import net.ktnx.mobileledger.db.DB
-import javax.inject.Singleton
 
 /**
  * Hilt module providing database and DAO dependencies.

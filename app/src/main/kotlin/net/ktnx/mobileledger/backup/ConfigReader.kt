@@ -19,14 +19,16 @@ package net.ktnx.mobileledger.backup
 
 import android.content.Context
 import android.net.Uri
-import net.ktnx.mobileledger.db.DB
-import net.ktnx.mobileledger.model.Data
-import net.ktnx.mobileledger.utils.Misc
 import java.io.FileInputStream
 import java.io.FileNotFoundException
 import java.io.IOException
+import net.ktnx.mobileledger.db.DB
+import net.ktnx.mobileledger.model.Data
+import net.ktnx.mobileledger.utils.Misc
 
-class ConfigReader @Throws(FileNotFoundException::class) constructor(
+class ConfigReader
+@Throws(FileNotFoundException::class)
+constructor(
     context: Context,
     uri: Uri,
     onErrorListener: OnErrorListener?,

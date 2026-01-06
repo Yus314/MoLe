@@ -57,7 +57,8 @@ object Globals {
         val m = reLedgerDate.matcher(dateString)
         if (!m.matches()) {
             throw ParseException(
-                "'$dateString' does not match expected pattern '$reLedgerDate'", 0
+                "'$dateString' does not match expected pattern '$reLedgerDate'",
+                0
             )
         }
 

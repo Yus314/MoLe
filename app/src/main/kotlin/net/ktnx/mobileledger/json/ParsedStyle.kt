@@ -25,6 +25,7 @@ open class ParsedStyle {
     var asdecimalpoint: Char = '\u0000'
     var ascommodityside: Char = '\u0000'
     var digitgroups: Int = 0
+
     @get:JvmName("isAscommodityspaced")
     @JsonProperty("ascommodityspaced")
     var isAscommodityspaced: Boolean = false

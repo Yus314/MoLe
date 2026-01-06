@@ -21,11 +21,11 @@ import android.app.backup.BackupAgent
 import android.app.backup.BackupDataInput
 import android.app.backup.BackupDataOutput
 import android.os.ParcelFileDescriptor
-import net.ktnx.mobileledger.db.DB
-import net.ktnx.mobileledger.utils.Logger
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.IOException
+import net.ktnx.mobileledger.db.DB
+import net.ktnx.mobileledger.utils.Logger
 
 class MobileLedgerBackupAgent : BackupAgent() {
 
@@ -82,6 +82,7 @@ class MobileLedgerBackupAgent : BackupAgent() {
 
     companion object {
         private const val READ_BUF_LEN = 10
+
         @JvmField
         var SETTINGS_KEY = "settings"
     }

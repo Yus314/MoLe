@@ -30,6 +30,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import java.util.Locale
 import net.ktnx.mobileledger.R
 import net.ktnx.mobileledger.async.TransactionDateFinder
 import net.ktnx.mobileledger.databinding.TransactionListFragmentBinding
@@ -44,7 +45,6 @@ import net.ktnx.mobileledger.utils.Colors
 import net.ktnx.mobileledger.utils.Globals
 import net.ktnx.mobileledger.utils.Logger
 import net.ktnx.mobileledger.utils.SimpleDate
-import java.util.Locale
 
 @Suppress("DEPRECATION")
 class TransactionListFragment : MobileLedgerListFragment(), DatePickerFragment.DatePickedListener {

@@ -32,6 +32,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import java.util.regex.Pattern
 import net.ktnx.mobileledger.BuildConfig
 import net.ktnx.mobileledger.R
 import net.ktnx.mobileledger.async.DescriptionSelectedCallback
@@ -52,9 +53,9 @@ import net.ktnx.mobileledger.ui.activity.SplashActivity
 import net.ktnx.mobileledger.ui.templates.TemplatesActivity
 import net.ktnx.mobileledger.utils.Logger
 import net.ktnx.mobileledger.utils.Misc
-import java.util.regex.Pattern
 
-class NewTransactionActivity : ProfileThemedActivity(),
+class NewTransactionActivity :
+    ProfileThemedActivity(),
     TaskCallback,
     NewTransactionFragment.OnNewTransactionFragmentInteractionListener,
     QR.QRScanTrigger,
@@ -194,7 +195,8 @@ class NewTransactionActivity : ProfileThemedActivity(),
     fun dp2px(dp: Float): Int {
         return Math.round(
             TypedValue.applyDimension(
-                TypedValue.COMPLEX_UNIT_DIP, dp,
+                TypedValue.COMPLEX_UNIT_DIP,
+                dp,
                 resources.displayMetrics
             )
         )
@@ -273,8 +275,10 @@ class NewTransactionActivity : ProfileThemedActivity(),
                     Logger.debug(
                         "pattern",
                         String.format(
-                            "Pattern '%s' [%s] matches '%s'", ph.name,
-                            patternSource, text
+                            "Pattern '%s' [%s] matches '%s'",
+                            ph.name,
+                            patternSource,
+                            text
                         )
                     )
                     if (ph.isFallback) {

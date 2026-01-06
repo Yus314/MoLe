@@ -43,7 +43,8 @@ sealed class AccountListItem private constructor() {
     }
 
     enum class Type {
-        ACCOUNT, HEADER
+        ACCOUNT,
+        HEADER
     }
 
     class Account(val account: LedgerAccount) : AccountListItem() {

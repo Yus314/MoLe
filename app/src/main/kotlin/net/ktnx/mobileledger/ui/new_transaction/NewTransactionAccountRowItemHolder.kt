@@ -30,6 +30,7 @@ import android.widget.TextView
 import androidx.annotation.ColorInt
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.RecyclerView
+import java.text.ParseException
 import net.ktnx.mobileledger.R
 import net.ktnx.mobileledger.databinding.NewTransactionAccountRowBinding
 import net.ktnx.mobileledger.db.AccountWithAmountsAutocompleteAdapter
@@ -40,7 +41,6 @@ import net.ktnx.mobileledger.ui.TextViewClearHelper
 import net.ktnx.mobileledger.utils.DimensionUtils
 import net.ktnx.mobileledger.utils.Logger
 import net.ktnx.mobileledger.utils.Misc
-import java.text.ParseException
 
 internal class NewTransactionAccountRowItemHolder(
     private val b: NewTransactionAccountRowBinding,
@@ -257,7 +257,10 @@ internal class NewTransactionAccountRowItemHolder(
 
     private fun displayAmountValidity(valid: Boolean) {
         b.accountRowAccAmounts.setCompoundDrawablesRelativeWithIntrinsicBounds(
-            if (valid) 0 else R.drawable.ic_error_outline_black_24dp, 0, 0, 0
+            if (valid) 0 else R.drawable.ic_error_outline_black_24dp,
+            0,
+            0,
+            0
         )
         b.accountRowAccAmounts.minEms = if (valid) 4 else 5
     }
@@ -462,7 +465,8 @@ internal class NewTransactionAccountRowItemHolder(
                         "bind",
                         String.format(
                             "Setting account name from '%s' to '%s' (| @ %d)",
-                            presentAccountName, incomingAccountName,
+                            presentAccountName,
+                            incomingAccountName,
                             acc.accountNameCursorPosition
                         )
                     )

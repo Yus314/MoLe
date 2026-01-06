@@ -33,9 +33,9 @@ data class AmountStyle(
      * Position of the currency symbol relative to the amount
      */
     enum class Position {
-        BEFORE,  // Currency symbol before the amount (e.g., "$100")
-        AFTER,   // Currency symbol after the amount (e.g., "100円")
-        NONE     // No currency symbol
+        BEFORE, // Currency symbol before the amount (e.g., "$100")
+        AFTER, // Currency symbol after the amount (e.g., "100円")
+        NONE // No currency symbol
     }
 
     /**

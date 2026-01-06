@@ -17,8 +17,8 @@
 
 package net.ktnx.mobileledger.dao
 
-import net.ktnx.mobileledger.utils.Misc
 import java.util.concurrent.Executors
+import net.ktnx.mobileledger.utils.Misc
 
 abstract class BaseDAO<T> {
     abstract fun insertSync(item: T): Long
