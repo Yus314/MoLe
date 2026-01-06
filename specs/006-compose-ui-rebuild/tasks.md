@@ -73,9 +73,9 @@
 
 ### User Story 1 のクリーンアップ
 
-- [ ] T024 [US1] 検証後、app/src/main/kotlin/net/ktnx/mobileledger/ui/profiles/ProfileDetailFragment.kt を削除
-- [ ] T025 [US1] app/src/main/res/layout/ のactivity_profile_detail.xmlと関連レイアウトファイルを削除
-- [ ] T026 [US1] `nix run .#test` を実行して既存テストが通過することを確認
+- [X] T024 [US1] 検証後、app/src/main/kotlin/net/ktnx/mobileledger/ui/profiles/ProfileDetailFragment.kt を削除
+- [X] T025 [US1] app/src/main/res/layout/ のactivity_profile_detail.xmlと関連レイアウトファイルを削除
+- [X] T026 [US1] `nix run .#test` を実行して既存テストが通過することを確認
 
 **チェックポイント**: User Story 1 完了 - ProfileDetailActivityのCompose移行完了
 
