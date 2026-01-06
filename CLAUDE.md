@@ -8,6 +8,8 @@ Auto-generated from all feature plans. Last updated: 2026-01-06
 - Room Database (SQLite) with KSP 2.0.21-1.0.26 (004-kapt-ksp-migration)
 - Hilt 2.51.1 for Dependency Injection (005-hilt-di-setup)
 - AndroidX Lifecycle 2.4.1, Room 2.4.2, Navigation 2.4.2, Jackson 2.17.1, Material 1.5.0 (001-java-kotlin-migration)
+- Kotlin 2.0.21 / Java 8互換 (JVM target 1.8) (006-compose-ui-rebuild)
+- Room Database（既存、変更なし） (006-compose-ui-rebuild)
 
 ## Project Structure
 
@@ -180,10 +182,9 @@ class MyActivity : AppCompatActivity() {
 - 既存の `DB.get()` / `Data` 直接アクセスは動作するが、新規コードでは DI を使用
 
 ## Recent Changes
+- 006-compose-ui-rebuild: Added Kotlin 2.0.21 / Java 8互換 (JVM target 1.8)
 - ktlint-enforcement: Enabled most ktlint rules, auto-fixed 200+ files across 4 phases, permanently disabled 8 rules for JSON/API compatibility
 - 005-hilt-di-setup: Added Hilt 2.51.1 DI framework, migrated MainModel to constructor injection, created DatabaseModule and DataModule, added instrumentation test infrastructure with HiltTestRunner and TestDatabaseModule
-- 004-kapt-ksp-migration: Migrated annotation processing from KAPT to KSP 2.0.21-1.0.26
-- 003-kotlin-update: Upgraded Kotlin 1.9.25 → 2.0.21, Coroutines 1.7.3 → 1.9.0, applied `data object` modernization
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->
