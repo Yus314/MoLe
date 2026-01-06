@@ -87,3 +87,7 @@ account expenses:utilities
 ;   expenses:housing: 800.00 USD
 ;   expenses:utilities: 75.00 USD
 ;   income:salary: -6,000.00 USD
+
+2026-01-04 テスト
+    a         6500.00
+    b        -6500.00
