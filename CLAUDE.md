@@ -5,7 +5,7 @@ Auto-generated from all feature plans. Last updated: 2026-01-06
 ## Active Technologies
 - AGP 8.7.3 / Gradle 8.9 (002-agp-update)
 - Kotlin 2.0.21 / Coroutines 1.9.0 / Java 8 互換 (JVM target 1.8) (003-kotlin-update)
-- Room Database (SQLite) with kapt (002-agp-update)
+- Room Database (SQLite) with KSP 2.0.21-1.0.26 (004-kapt-ksp-migration)
 - AndroidX Lifecycle 2.4.1, Room 2.4.2, Navigation 2.4.2, Jackson 2.17.1, Material 1.5.0 (001-java-kotlin-migration)
 
 ## Project Structure
@@ -107,6 +107,7 @@ Kotlin 2.0.21 / Java 8 互換 (JVM target 1.8): Follow standard conventions
 - Java 互換性のため `@JvmStatic` / `@JvmField` を適切に使用
 
 ## Recent Changes
+- 004-kapt-ksp-migration: Migrated annotation processing from KAPT to KSP 2.0.21-1.0.26
 - 003-kotlin-update: Upgraded Kotlin 1.9.25 → 2.0.21, Coroutines 1.7.3 → 1.9.0, applied `data object` modernization
 - 002-agp-update: Upgraded AGP 8.0.2 → 8.7.3, Gradle 8.0 → 8.9
 - 001-java-kotlin-migration: Added Kotlin support + AndroidX Lifecycle 2.4.1, Room 2.4.2, Navigation 2.4.2, Jackson 2.17.1, Material 1.5.0
