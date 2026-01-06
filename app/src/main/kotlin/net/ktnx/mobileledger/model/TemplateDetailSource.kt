@@ -20,7 +20,7 @@ package net.ktnx.mobileledger.model
 import androidx.recyclerview.widget.DiffUtil
 import java.io.Serializable
 
-class TemplateDetailSource(
+data class TemplateDetailSource(
     var groupNumber: Short = 0,
     var matchedText: String = ""
 ) : Serializable {

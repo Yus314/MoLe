@@ -20,7 +20,7 @@ package net.ktnx.mobileledger.model
 import net.ktnx.mobileledger.db.TemplateHeader
 import java.util.regex.MatchResult
 
-class MatchedTemplate(
+data class MatchedTemplate(
     @JvmField val templateHead: TemplateHeader,
     @JvmField val matchResult: MatchResult
 )
