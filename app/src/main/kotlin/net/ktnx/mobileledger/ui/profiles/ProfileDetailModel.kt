@@ -41,7 +41,7 @@ import java.util.Locale
 import java.util.regex.Pattern
 
 class ProfileDetailModel : ViewModel() {
-    private val profileName = MutableLiveData<String>()
+    private val profileName = MutableLiveData<String?>()
     private val orderNo = MutableLiveData<Int>()
     private val postingPermitted = MutableLiveData(true)
     private val defaultCommodity = MutableLiveData<String?>(null)
@@ -76,7 +76,7 @@ class ProfileDetailModel : ViewModel() {
         setProfileName(newValue?.toString())
     }
 
-    fun observeProfileName(lfo: LifecycleOwner, o: Observer<String>) {
+    fun observeProfileName(lfo: LifecycleOwner, o: Observer<String?>) {
         profileName.observe(lfo, o)
     }
 
