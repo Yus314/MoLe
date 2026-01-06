@@ -37,7 +37,7 @@ sealed interface TransactionIdType {
     /**
      * Integer transaction ID type (Group A: v1_14 - v1_23)
      */
-    object IntType : TransactionIdType {
+    data object IntType : TransactionIdType {
         override val defaultValue: Int = 0
         override fun fromIndex(index: Int): Int = index
     }
@@ -45,7 +45,7 @@ sealed interface TransactionIdType {
     /**
      * String transaction ID type (Group B: v1_32 - v1_50)
      */
-    object StringType : TransactionIdType {
+    data object StringType : TransactionIdType {
         override val defaultValue: String = "1"
         override fun fromIndex(index: Int): String = index.toString()
     }
