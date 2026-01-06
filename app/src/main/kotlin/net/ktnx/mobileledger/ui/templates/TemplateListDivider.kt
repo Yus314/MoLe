@@ -25,10 +25,7 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.RecyclerView
 import kotlin.math.roundToInt
 
-internal class TemplateListDivider(
-    context: Context,
-    orientation: Int
-) : DividerItemDecoration(context, orientation) {
+internal class TemplateListDivider(context: Context, orientation: Int) : DividerItemDecoration(context, orientation) {
 
     private val mBounds = Rect()
     private var mOrientation: Int = orientation
@@ -128,12 +125,7 @@ internal class TemplateListDivider(
         canvas.restore()
     }
 
-    override fun getItemOffsets(
-        outRect: Rect,
-        child: View,
-        parent: RecyclerView,
-        state: RecyclerView.State
-    ) {
+    override fun getItemOffsets(outRect: Rect, child: View, parent: RecyclerView, state: RecyclerView.State) {
         val childAdapterPosition = parent.getChildAdapterPosition(child)
         val adapter = checkNotNull(parent.adapter) as TemplatesRecyclerViewAdapter
         val itemCount = adapter.itemCount

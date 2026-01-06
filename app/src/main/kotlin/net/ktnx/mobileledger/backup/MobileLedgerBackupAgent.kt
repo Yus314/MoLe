@@ -30,11 +30,7 @@ import net.ktnx.mobileledger.utils.Logger
 class MobileLedgerBackupAgent : BackupAgent() {
 
     @Throws(IOException::class)
-    override fun onBackup(
-        oldState: ParcelFileDescriptor,
-        data: BackupDataOutput,
-        newState: ParcelFileDescriptor
-    ) {
+    override fun onBackup(oldState: ParcelFileDescriptor, data: BackupDataOutput, newState: ParcelFileDescriptor) {
         Logger.debug("backup", "onBackup()")
         backupSettings(data)
         newState.close()
@@ -53,11 +49,7 @@ class MobileLedgerBackupAgent : BackupAgent() {
     }
 
     @Throws(IOException::class)
-    override fun onRestore(
-        data: BackupDataInput,
-        appVersionCode: Int,
-        newState: ParcelFileDescriptor
-    ) {
+    override fun onRestore(data: BackupDataInput, appVersionCode: Int, newState: ParcelFileDescriptor) {
         Logger.debug("restore", "Starting cloud restore")
         if (data.readNextHeader()) {
             val key = data.key

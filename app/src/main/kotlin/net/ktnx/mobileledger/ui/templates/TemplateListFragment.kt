@@ -76,11 +76,7 @@ class TemplateListFragment : Fragment() {
         else -> super.onOptionsItemSelected(item)
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         Logger.debug("flow", "PatternListFragment.onCreateView()")
         b = FragmentTemplateListBinding.inflate(inflater)
         val activity = requireActivity()

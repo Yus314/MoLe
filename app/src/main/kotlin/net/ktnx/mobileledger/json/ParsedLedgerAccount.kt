@@ -27,10 +27,7 @@ abstract class ParsedLedgerAccount {
 
     abstract fun getSimpleBalance(): List<SimpleBalance>
 
-    open fun toLedgerAccount(
-        task: RetrieveTransactionsTask,
-        map: HashMap<String, LedgerAccount>
-    ): LedgerAccount {
+    open fun toLedgerAccount(task: RetrieveTransactionsTask, map: HashMap<String, LedgerAccount>): LedgerAccount {
         task.addNumberOfPostings(anumpostings)
         val accName = aname
         val existing = map[accName]
@@ -81,11 +78,7 @@ abstract class ParsedLedgerAccount {
         return acc
     }
 
-    data class SimpleBalance(
-        var commodity: String,
-        var amount: Float,
-        var amountStyle: AmountStyle? = null
-    ) {
+    data class SimpleBalance(var commodity: String, var amount: Float, var amountStyle: AmountStyle? = null) {
         constructor(commodity: String, amount: Float) : this(commodity, amount, null)
     }
 }

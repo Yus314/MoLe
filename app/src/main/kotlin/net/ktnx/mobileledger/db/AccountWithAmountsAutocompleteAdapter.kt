@@ -30,10 +30,8 @@ import net.ktnx.mobileledger.model.Data
 import net.ktnx.mobileledger.utils.Logger
 import net.ktnx.mobileledger.utils.Misc
 
-class AccountWithAmountsAutocompleteAdapter(
-    context: Context,
-    profile: Profile
-) : ArrayAdapter<AccountWithAmounts>(context, R.layout.account_autocomplete_row) {
+class AccountWithAmountsAutocompleteAdapter(context: Context, profile: Profile) :
+    ArrayAdapter<AccountWithAmounts>(context, R.layout.account_autocomplete_row) {
 
     private val filter = AccountFilter()
     private val profileId: Long = profile.id

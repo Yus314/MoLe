@@ -222,11 +222,12 @@ class CurrencySelectorFragment :
         fun newInstance(): CurrencySelectorFragment = newInstance(DEFAULT_COLUMN_COUNT, DEFAULT_SHOW_PARAMS)
 
         @JvmStatic
-        fun newInstance(columnCount: Int, showParams: Boolean): CurrencySelectorFragment = CurrencySelectorFragment().apply {
-            arguments = Bundle().apply {
-                putInt(ARG_COLUMN_COUNT, columnCount)
-                putBoolean(ARG_SHOW_PARAMS, showParams)
+        fun newInstance(columnCount: Int, showParams: Boolean): CurrencySelectorFragment =
+            CurrencySelectorFragment().apply {
+                arguments = Bundle().apply {
+                    putInt(ARG_COLUMN_COUNT, columnCount)
+                    putBoolean(ARG_SHOW_PARAMS, showParams)
+                }
             }
-        }
     }
 }

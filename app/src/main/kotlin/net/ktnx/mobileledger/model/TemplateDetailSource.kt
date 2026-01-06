@@ -20,23 +20,16 @@ package net.ktnx.mobileledger.model
 import androidx.recyclerview.widget.DiffUtil
 import java.io.Serializable
 
-data class TemplateDetailSource(
-    var groupNumber: Short = 0,
-    var matchedText: String = ""
-) : Serializable {
+data class TemplateDetailSource(var groupNumber: Short = 0, var matchedText: String = "") : Serializable {
 
     companion object {
         @JvmField
         val DIFF_CALLBACK = object : DiffUtil.ItemCallback<TemplateDetailSource>() {
-            override fun areItemsTheSame(
-                oldItem: TemplateDetailSource,
-                newItem: TemplateDetailSource
-            ): Boolean = oldItem.groupNumber == newItem.groupNumber
+            override fun areItemsTheSame(oldItem: TemplateDetailSource, newItem: TemplateDetailSource): Boolean =
+                oldItem.groupNumber == newItem.groupNumber
 
-            override fun areContentsTheSame(
-                oldItem: TemplateDetailSource,
-                newItem: TemplateDetailSource
-            ): Boolean = oldItem.matchedText == newItem.matchedText
+            override fun areContentsTheSame(oldItem: TemplateDetailSource, newItem: TemplateDetailSource): Boolean =
+                oldItem.matchedText == newItem.matchedText
         }
     }
 }

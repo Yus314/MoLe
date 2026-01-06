@@ -27,10 +27,7 @@ import net.ktnx.mobileledger.ui.MainModel
 import net.ktnx.mobileledger.utils.Misc
 import net.ktnx.mobileledger.utils.SimpleDate
 
-class TransactionAccumulator(
-    private val boldAccountName: String?,
-    private val accumulateAccount: String?
-) {
+class TransactionAccumulator(private val boldAccountName: String?, private val accumulateAccount: String?) {
     private val list = ArrayList<TransactionListItem>()
     private val runningTotal = HashMap<String, BigDecimal>()
     private var earliestDate: SimpleDate? = null

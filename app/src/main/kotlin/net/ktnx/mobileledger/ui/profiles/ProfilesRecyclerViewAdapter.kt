@@ -63,10 +63,8 @@ class ProfilesRecyclerViewAdapter : RecyclerView.Adapter<ProfilesRecyclerViewAda
         )
 
         val cb = object : ItemTouchHelper.Callback() {
-            override fun getMovementFlags(
-                recyclerView: RecyclerView,
-                viewHolder: RecyclerView.ViewHolder
-            ): Int = makeMovementFlags(ItemTouchHelper.UP or ItemTouchHelper.DOWN, 0)
+            override fun getMovementFlags(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder): Int =
+                makeMovementFlags(ItemTouchHelper.UP or ItemTouchHelper.DOWN, 0)
 
             override fun onMove(
                 recyclerView: RecyclerView,

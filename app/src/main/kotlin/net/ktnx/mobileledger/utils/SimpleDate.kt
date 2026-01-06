@@ -21,11 +21,8 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
-data class SimpleDate(
-    @JvmField val year: Int,
-    @JvmField val month: Int,
-    @JvmField val day: Int
-) : Comparable<SimpleDate> {
+data class SimpleDate(@JvmField val year: Int, @JvmField val month: Int, @JvmField val day: Int) :
+    Comparable<SimpleDate> {
 
     fun toCalendar(): Calendar = Calendar.getInstance().apply {
         set(year, month - 1, day)

@@ -132,11 +132,7 @@ class ProfileDetailFragment : Fragment(R.layout.profile_detail) {
         })
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         binding = ProfileDetailBinding.inflate(inflater, container, false)
         return binding?.root
     }

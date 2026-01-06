@@ -207,12 +207,13 @@ abstract class DB : RoomDatabase() {
             }
         }
 
-        private fun multiVersionMigration(fromVersion: Int, toVersion: Int): Migration = object : Migration(fromVersion, toVersion) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                val fileName = String.format(Locale.US, "db_%d_%d", fromVersion, toVersion)
-                applyRevisionFile(db, fileName)
+        private fun multiVersionMigration(fromVersion: Int, toVersion: Int): Migration =
+            object : Migration(fromVersion, toVersion) {
+                override fun migrate(db: SupportSQLiteDatabase) {
+                    val fileName = String.format(Locale.US, "db_%d_%d", fromVersion, toVersion)
+                    applyRevisionFile(db, fileName)
+                }
             }
-        }
 
         @JvmStatic
         fun applyRevisionFile(db: SupportSQLiteDatabase, fileName: String) {

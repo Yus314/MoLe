@@ -63,11 +63,7 @@ class AccountSummaryFragment : MobileLedgerListFragment() {
         debug("flow", "AccountSummaryFragment.onAttach()")
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         debug("flow", "AccountSummaryFragment.onCreateView()")
         b = AccountSummaryFragmentBinding.inflate(inflater, container, false)
         return b?.root

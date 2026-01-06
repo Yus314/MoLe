@@ -34,15 +34,11 @@ class TemplatesRecyclerViewAdapter : RecyclerView.Adapter<BaseTemplateViewHolder
         listDiffer = AsyncListDiffer(
             this,
             object : DiffUtil.ItemCallback<BaseTemplateItem>() {
-                override fun areItemsTheSame(
-                    oldItem: BaseTemplateItem,
-                    newItem: BaseTemplateItem
-                ): Boolean = oldItem.id == newItem.id
+                override fun areItemsTheSame(oldItem: BaseTemplateItem, newItem: BaseTemplateItem): Boolean =
+                    oldItem.id == newItem.id
 
-                override fun areContentsTheSame(
-                    oldItem: BaseTemplateItem,
-                    newItem: BaseTemplateItem
-                ): Boolean = oldItem == newItem
+                override fun areContentsTheSame(oldItem: BaseTemplateItem, newItem: BaseTemplateItem): Boolean =
+                    oldItem == newItem
             }
         )
     }

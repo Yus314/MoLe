@@ -24,9 +24,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
  * Indicates where in the journal file the account was declared
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class ParsedDeclarationInfo(
-    var file: String? = null,
-    var line: Int = 0
-) {
+data class ParsedDeclarationInfo(var file: String? = null, var line: Int = 0) {
     override fun toString(): String = String.format("%s:%d", file ?: "unknown", line)
 }

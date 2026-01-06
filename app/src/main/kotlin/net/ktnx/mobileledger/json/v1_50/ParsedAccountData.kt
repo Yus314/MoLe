@@ -49,10 +49,7 @@ class ParsedAccountData {
     /**
      * Represents a single period entry: [date, balanceData]
      */
-    data class PeriodEntry(
-        var date: String? = null,
-        var balanceData: ParsedBalanceData? = null
-    )
+    data class PeriodEntry(var date: String? = null, var balanceData: ParsedBalanceData? = null)
 
     /**
      * Custom deserializer for pdperiods which is a heterogeneous array:

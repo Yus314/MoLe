@@ -30,7 +30,8 @@ import net.ktnx.mobileledger.R
  * [RecyclerView.Adapter] that can display a Currency and makes a call to the
  * specified [OnCurrencySelectedListener].
  */
-class CurrencySelectorRecyclerViewAdapter : ListAdapter<String, CurrencySelectorRecyclerViewAdapter.ViewHolder>(DIFF_CALLBACK) {
+class CurrencySelectorRecyclerViewAdapter :
+    ListAdapter<String, CurrencySelectorRecyclerViewAdapter.ViewHolder>(DIFF_CALLBACK) {
 
     private var currencySelectedListener: OnCurrencySelectedListener? = null
     private var currencyLongClickListener: OnCurrencyLongClickListener? = null

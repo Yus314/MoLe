@@ -91,7 +91,10 @@ abstract class TransactionDAO : BaseDAO<Transaction>() {
             ":description AND t_a.account_name LIKE '%'||:accountTerm||'%' ORDER BY year desc, " +
             "month desc, day desc, tr.ledger_id desc LIMIT 1"
     )
-    abstract fun getFirstByDescriptionHavingAccountSync(description: String, accountTerm: String): TransactionWithAccounts?
+    abstract fun getFirstByDescriptionHavingAccountSync(
+        description: String,
+        accountTerm: String
+    ): TransactionWithAccounts?
 
     @Query("SELECT * from transactions WHERE profile_id = :profileId")
     abstract fun getAllForProfileUnorderedSync(profileId: Long): List<Transaction>
@@ -114,7 +117,10 @@ abstract class TransactionDAO : BaseDAO<Transaction>() {
             ".account_name LIKE :accountName||'%' AND ta.amount <> 0 AND tr.profile_id = " +
             ":profileId ORDER BY tr.year asc, tr.month asc, tr.day asc, tr.ledger_id asc"
     )
-    abstract fun getAllWithAccountsFiltered(profileId: Long, accountName: String?): LiveData<List<TransactionWithAccounts>>
+    abstract fun getAllWithAccountsFiltered(
+        profileId: Long,
+        accountName: String?
+    ): LiveData<List<TransactionWithAccounts>>
 
     @Query("DELETE FROM transactions WHERE profile_id = :profileId AND generation <> :currentGeneration")
     abstract fun purgeOldTransactionsSync(profileId: Long, currentGeneration: Long): Int

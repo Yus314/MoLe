@@ -79,11 +79,7 @@ class TemplateDetailsFragment : Fragment() {
         setHasOptionsMenu(patternId != null)
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val activity = requireActivity()
         if (activity !is InteractionListener) {
             throw IllegalStateException(

@@ -40,10 +40,7 @@ class TransactionListAdapter : RecyclerView.Adapter<TransactionRowHolderBase>() 
         listDiffer = AsyncListDiffer(
             this,
             object : DiffUtil.ItemCallback<TransactionListItem>() {
-                override fun areItemsTheSame(
-                    oldItem: TransactionListItem,
-                    newItem: TransactionListItem
-                ): Boolean {
+                override fun areItemsTheSame(oldItem: TransactionListItem, newItem: TransactionListItem): Boolean {
                     if (oldItem.type != newItem.type) {
                         return false
                     }
@@ -59,23 +56,21 @@ class TransactionListAdapter : RecyclerView.Adapter<TransactionRowHolderBase>() 
                     }
                 }
 
-                override fun areContentsTheSame(
-                    oldItem: TransactionListItem,
-                    newItem: TransactionListItem
-                ): Boolean = when (oldItem.type) {
-                    TransactionListItem.Type.DELIMITER ->
-                        oldItem.isMonthShown == newItem.isMonthShown
+                override fun areContentsTheSame(oldItem: TransactionListItem, newItem: TransactionListItem): Boolean =
+                    when (oldItem.type) {
+                        TransactionListItem.Type.DELIMITER ->
+                            oldItem.isMonthShown == newItem.isMonthShown
 
-                    TransactionListItem.Type.TRANSACTION ->
-                        oldItem.getTransaction() == newItem.getTransaction() &&
-                            Misc.equalStrings(oldItem.boldAccountName, newItem.boldAccountName) &&
-                            Misc.equalStrings(oldItem.runningTotal, newItem.runningTotal)
+                        TransactionListItem.Type.TRANSACTION ->
+                            oldItem.getTransaction() == newItem.getTransaction() &&
+                                Misc.equalStrings(oldItem.boldAccountName, newItem.boldAccountName) &&
+                                Misc.equalStrings(oldItem.runningTotal, newItem.runningTotal)
 
-                    TransactionListItem.Type.HEADER ->
-                        // headers don't differ in their contents. they observe the last update
-                        // date and react to its changes
-                        true
-                }
+                        TransactionListItem.Type.HEADER ->
+                            // headers don't differ in their contents. they observe the last update
+                            // date and react to its changes
+                            true
+                    }
             }
         )
     }

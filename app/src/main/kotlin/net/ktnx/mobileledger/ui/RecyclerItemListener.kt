@@ -24,11 +24,7 @@ import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.OnItemTouchListener
 
-class RecyclerItemListener(
-    ctx: Context,
-    rv: RecyclerView,
-    listener: RecyclerTouchListener
-) : OnItemTouchListener {
+class RecyclerItemListener(ctx: Context, rv: RecyclerView, listener: RecyclerTouchListener) : OnItemTouchListener {
 
     private val gd: GestureDetector = GestureDetector(
         ctx,

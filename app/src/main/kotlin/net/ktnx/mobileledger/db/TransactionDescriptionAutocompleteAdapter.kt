@@ -23,9 +23,8 @@ import android.widget.Filter
 import net.ktnx.mobileledger.dao.TransactionDAO
 import net.ktnx.mobileledger.utils.Logger
 
-class TransactionDescriptionAutocompleteAdapter(
-    context: Context
-) : ArrayAdapter<String>(context, android.R.layout.simple_dropdown_item_1line, ArrayList()) {
+class TransactionDescriptionAutocompleteAdapter(context: Context) :
+    ArrayAdapter<String>(context, android.R.layout.simple_dropdown_item_1line, ArrayList()) {
 
     private val filter = TransactionFilter()
     private val dao: TransactionDAO = DB.get().getTransactionDAO()

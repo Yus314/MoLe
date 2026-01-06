@@ -86,7 +86,8 @@ class AccountSummaryAdapter : RecyclerView.Adapter<AccountSummaryAdapter.RowHold
                     return oldItem.toAccount().account.id == newItem.toAccount().account.id
                 }
 
-                override fun areContentsTheSame(oldItem: AccountListItem, newItem: AccountListItem): Boolean = oldItem.sameContent(newItem)
+                override fun areContentsTheSame(oldItem: AccountListItem, newItem: AccountListItem): Boolean =
+                    oldItem.sameContent(newItem)
             }
         )
     }
