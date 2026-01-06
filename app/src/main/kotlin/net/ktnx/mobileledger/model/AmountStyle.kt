@@ -23,7 +23,7 @@ import net.ktnx.mobileledger.utils.Misc
  * Represents the display style for currency amounts.
  * Holds information about currency symbol position, spacing, decimal precision, and decimal mark.
  */
-class AmountStyle(
+data class AmountStyle(
     val commodityPosition: Position,
     val isCommoditySpaced: Boolean,
     val precision: Int,

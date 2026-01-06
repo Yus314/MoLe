@@ -76,27 +76,18 @@ class ParsedLedgerTransaction : IParsedLedgerTransaction {
     companion object {
         @JvmStatic
         fun fromLedgerTransaction(tr: LedgerTransaction): ParsedLedgerTransaction {
-            val result = ParsedLedgerTransaction()
-            result.tcomment = Misc.nullIsEmpty(tr.comment)
-            result.tprecedingcomment = ""
-
-            val postings = mutableListOf<ParsedPosting>()
-            for (acc in tr.accounts) {
-                if (acc.accountName.isNotEmpty()) {
-                    postings.add(ParsedPosting.fromLedgerAccount(acc))
-                }
+            return ParsedLedgerTransaction().apply {
+                tcomment = Misc.nullIsEmpty(tr.comment)
+                tprecedingcomment = ""
+                tpostings = tr.accounts
+                    .filter { it.accountName.isNotEmpty() }
+                    .map { ParsedPosting.fromLedgerAccount(it) }
+                    .toMutableList()
+                tdate = Globals.formatIsoDate(tr.getDateIfAny() ?: SimpleDate.today())
+                tdate2 = null
+                tindex = 1
+                tdescription = tr.description
             }
-
-            result.tpostings = postings
-            var transactionDate = tr.getDateIfAny()
-            if (transactionDate == null) {
-                transactionDate = SimpleDate.today()
-            }
-            result.tdate = Globals.formatIsoDate(transactionDate)
-            result.tdate2 = null
-            result.tindex = 1
-            result.tdescription = tr.description
-            return result
         }
     }
 }

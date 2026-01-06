@@ -60,31 +60,27 @@ class ParsedPosting : BasePosting() {
     companion object {
         @JvmStatic
         fun fromLedgerAccount(acc: LedgerTransactionAccount): ParsedPosting {
-            val result = ParsedPosting()
-            result.paccount = acc.accountName
-            result.pcomment = acc.comment ?: ""
-
-            val amounts = mutableListOf<ParsedAmount>()
-            val amt = ParsedAmount()
-            amt.acommodity = acc.currency ?: ""
-            amt.aismultiplier = false
-            val qty = ParsedQuantity()
-            qty.decimalPlaces = 2
-            qty.decimalMantissa = Math.round(acc.amount * 100).toLong()
-            amt.aquantity = qty
-            val style = ParsedStyle()
-            style.ascommodityside = getCommoditySide()
-            style.isAscommodityspaced = getCommoditySpaced()
-            style.asprecision = 2
-            style.asdecimalmark = "."
-            style.asrounding = "NoRounding"
-            amt.astyle = style
-            if (acc.currency != null) {
-                amt.acommodity = acc.currency
+            return ParsedPosting().apply {
+                paccount = acc.accountName
+                pcomment = acc.comment ?: ""
+                pamount = mutableListOf(
+                    ParsedAmount().apply {
+                        acommodity = acc.currency ?: ""
+                        aismultiplier = false
+                        aquantity = ParsedQuantity().apply {
+                            decimalPlaces = 2
+                            decimalMantissa = Math.round(acc.amount * 100).toLong()
+                        }
+                        astyle = ParsedStyle().apply {
+                            ascommodityside = getCommoditySide()
+                            isAscommodityspaced = getCommoditySpaced()
+                            asprecision = 2
+                            asdecimalmark = "."
+                            asrounding = "NoRounding"
+                        }
+                    }
+                )
             }
-            amounts.add(amt)
-            result.pamount = amounts
-            return result
         }
     }
 }
