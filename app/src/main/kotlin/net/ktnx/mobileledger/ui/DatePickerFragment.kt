@@ -67,18 +67,19 @@ class DatePickerFragment : AppCompatDialogFragment(), CalendarView.OnDateChangeL
 
         var m = reYMD.matcher(present)
         if (m.matches()) {
-            year = m.group(1)!!.toInt()
-            month = m.group(2)!!.toInt() - 1   // month is 0-based
-            day = m.group(3)!!.toInt()
+            // Groups are guaranteed to exist when matches() returns true for these patterns
+            year = m.group(1)?.toIntOrNull() ?: year
+            month = (m.group(2)?.toIntOrNull() ?: (month + 1)) - 1   // month is 0-based
+            day = m.group(3)?.toIntOrNull() ?: day
         } else {
             m = reMD.matcher(present)
             if (m.matches()) {
-                month = m.group(1)!!.toInt() - 1
-                day = m.group(2)!!.toInt()
+                month = (m.group(1)?.toIntOrNull() ?: (month + 1)) - 1
+                day = m.group(2)?.toIntOrNull() ?: day
             } else {
                 m = reD.matcher(present)
                 if (m.matches()) {
-                    day = m.group(1)!!.toInt()
+                    day = m.group(1)?.toIntOrNull() ?: day
                 }
             }
         }

@@ -38,7 +38,8 @@ class ConfigReader @Throws(FileNotFoundException::class) constructor(
     override fun getStreamMode(): String = "r"
 
     override fun initStream() {
-        r = RawConfigReader(FileInputStream(pfd!!.fileDescriptor))
+        val fd = pfd?.fileDescriptor ?: throw IllegalStateException("File descriptor not available")
+        r = RawConfigReader(FileInputStream(fd))
     }
 
     @Throws(IOException::class)

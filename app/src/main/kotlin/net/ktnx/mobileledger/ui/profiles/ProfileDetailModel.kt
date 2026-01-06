@@ -360,11 +360,12 @@ class ProfileDetailModel : ViewModel() {
                 val version = reader.readLine()
                 val m = versionPattern.matcher(version)
                 if (m.matches()) {
-                    val major = m.group(1)!!.toInt()
-                    val minor = m.group(2)!!.toInt()
+                    // Groups are guaranteed to exist when matches() returns true
+                    val major = m.group(1)?.toIntOrNull() ?: return null
+                    val minor = m.group(2)?.toIntOrNull() ?: return null
                     val patchText = m.group(3)
                     val hasPatch = patchText != null
-                    val patch = if (hasPatch) patchText!!.toInt() else 0
+                    val patch = if (hasPatch) patchText?.toIntOrNull() ?: 0 else 0
 
                     return if (hasPatch) HledgerVersion(major, minor, patch)
                     else HledgerVersion(major, minor)

@@ -90,7 +90,7 @@ class ProfileDetailFragment : Fragment(R.layout.profile_detail) {
         builder.setTitle(model.getProfileName())
         builder.setMessage(R.string.remove_profile_dialog_message)
         builder.setPositiveButton(R.string.Remove) { _, _ ->
-            val profileId = model.getProfileId().value!!
+            val profileId = model.getProfileId().value ?: return@setPositiveButton
             debug("profiles", String.format("[fragment] removing profile %s", profileId))
             val dao = DB.get().getProfileDAO()
             dao.getById(profileId).observe(viewLifecycleOwner) { profile ->
@@ -112,9 +112,10 @@ class ProfileDetailFragment : Fragment(R.layout.profile_detail) {
 
     private fun onWipeDataMenuClicked(): Boolean {
         // this is a development option, so no confirmation
+        val profileId = getModel().getProfileId().value ?: return false
         DB.get()
             .getProfileDAO()
-            .getById(getModel().getProfileId().value!!)
+            .getById(profileId)
             .observe(viewLifecycleOwner) { profile ->
                 profile?.wipeAllData()
             }

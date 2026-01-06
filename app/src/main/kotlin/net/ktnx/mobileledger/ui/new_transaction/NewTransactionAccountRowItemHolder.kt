@@ -112,12 +112,14 @@ internal class NewTransactionAccountRowItemHolder(
 
         val activity = b.root.context as NewTransactionActivity
 
-        b.accountRowAccName.setAdapter(
-            AccountWithAmountsAutocompleteAdapter(
-                b.root.context,
-                mProfile!!
+        mProfile?.let { profile ->
+            b.accountRowAccName.setAdapter(
+                AccountWithAmountsAutocompleteAdapter(
+                    b.root.context,
+                    profile
+                )
             )
-        )
+        }
         b.accountRowAccName.setOnItemClickListener { _, _, position, _ ->
             adapter.noteFocusIsOnAmount(position)
         }

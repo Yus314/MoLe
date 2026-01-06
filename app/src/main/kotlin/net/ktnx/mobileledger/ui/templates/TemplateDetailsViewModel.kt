@@ -149,8 +149,9 @@ class TemplateDetailsViewModel : ViewModel() {
             return items
         }
 
+        val patternId = mPatternId ?: return items
         val db = DB.get()
-        val dbList = db.getTemplateDAO().getTemplateWithAccounts(mPatternId!!)
+        val dbList = db.getTemplateDAO().getTemplateWithAccounts(patternId)
         dbList.observeForever(object : androidx.lifecycle.Observer<net.ktnx.mobileledger.db.TemplateWithAccounts> {
             override fun onChanged(src: net.ktnx.mobileledger.db.TemplateWithAccounts) {
                 val l = ArrayList<TemplateDetailsItem>()
@@ -191,7 +192,7 @@ class TemplateDetailsViewModel : ViewModel() {
         val list = requireNotNull(items.value)
 
         BaseDAO.runAsync {
-            val newPattern = mPatternId == null || mPatternId!! <= 0
+            val newPattern = mPatternId == null || (mPatternId ?: 0) <= 0
 
             val modelHeader = list[0].asHeaderItem()
 
@@ -215,13 +216,14 @@ class TemplateDetailsViewModel : ViewModel() {
                 String.format(Locale.US, "Stored pattern header %d, item=%s", dbHeader.id,
                     modelHeader))
 
+            val savedPatternId = mPatternId ?: return@runAsync
             val taDAO = DB.get().getTemplateAccountDAO()
-            taDAO.prepareForSave(mPatternId!!)
+            taDAO.prepareForSave(savedPatternId)
 
             for (i in 1 until list.size) {
                 val accRowItem = list[i].asAccountRowItem()
                 val dbAccount = accRowItem.toDBO(dbHeader.id)
-                dbAccount.templateId = mPatternId!!
+                dbAccount.templateId = savedPatternId
                 dbAccount.position = i.toLong()
 
                 if (dbAccount.id < 0) {
@@ -237,7 +239,7 @@ class TemplateDetailsViewModel : ViewModel() {
                     dbAccount.accountComment, dbAccount.negateAmount, accRowItem))
             }
 
-            taDAO.finishSave(mPatternId!!)
+            taDAO.finishSave(savedPatternId)
         }
     }
 
