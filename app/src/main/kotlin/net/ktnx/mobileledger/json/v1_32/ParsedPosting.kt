@@ -61,23 +61,23 @@ class ParsedPosting : BasePosting() {
     companion object {
         @JvmStatic
         fun fromLedgerAccount(acc: LedgerTransactionAccount): ParsedPosting = ParsedPosting().apply {
-                paccount = acc.accountName
-                pcomment = acc.comment ?: ""
-                pamount = mutableListOf(
-                    ParsedAmount().apply {
-                        acommodity = acc.currency ?: ""
-                        aismultiplier = false
-                        aquantity = ParsedQuantity().apply {
-                            decimalPlaces = 2
-                            decimalMantissa = Math.round(acc.amount * 100).toLong()
-                        }
-                        astyle = ParsedStyle().apply {
-                            ascommodityside = getCommoditySide()
-                            isAscommodityspaced = getCommoditySpaced()
-                            StyleConfigurer.DecimalMarkString.configureStyle(this, 2)
-                        }
+            paccount = acc.accountName
+            pcomment = acc.comment ?: ""
+            pamount = mutableListOf(
+                ParsedAmount().apply {
+                    acommodity = acc.currency ?: ""
+                    aismultiplier = false
+                    aquantity = ParsedQuantity().apply {
+                        decimalPlaces = 2
+                        decimalMantissa = Math.round(acc.amount * 100).toLong()
                     }
-                )
-            }
+                    astyle = ParsedStyle().apply {
+                        ascommodityside = getCommoditySide()
+                        isAscommodityspaced = getCommoditySpaced()
+                        StyleConfigurer.DecimalMarkString.configureStyle(this, 2)
+                    }
+                }
+            )
+        }
     }
 }

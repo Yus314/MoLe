@@ -53,13 +53,13 @@ class TemplateDetailsFragment : Fragment() {
 
     @Deprecated("Deprecated in Java")
     override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
-            R.id.delete_template -> {
-                signalDeleteTemplateInteraction()
-                true
-            }
-
-            else -> super.onOptionsItemSelected(item)
+        R.id.delete_template -> {
+            signalDeleteTemplateInteraction()
+            true
         }
+
+        else -> super.onOptionsItemSelected(item)
+    }
 
     private fun signalDeleteTemplateInteraction() {
         patternId?.let { id ->
@@ -132,12 +132,12 @@ class TemplateDetailsFragment : Fragment() {
 
         @JvmStatic
         fun newInstance(columnCount: Int, patternId: Int): TemplateDetailsFragment = TemplateDetailsFragment().apply {
-                arguments = Bundle().apply {
-                    putInt(ARG_COLUMN_COUNT, columnCount)
-                    if (patternId > 0) {
-                        putInt(ARG_TEMPLATE_ID, patternId)
-                    }
+            arguments = Bundle().apply {
+                putInt(ARG_COLUMN_COUNT, columnCount)
+                if (patternId > 0) {
+                    putInt(ARG_TEMPLATE_ID, patternId)
                 }
             }
+        }
     }
 }

@@ -64,17 +64,17 @@ class TemplateListFragment : Fragment() {
     @Suppress("DEPRECATION")
     @Deprecated("Deprecated in Java")
     override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
-            R.id.menu_item_template_list_help -> {
-                HelpDialog.show(
-                    requireContext(),
-                    R.string.template_list_help_title,
-                    R.array.template_list_help_text
-                )
-                true
-            }
-
-            else -> super.onOptionsItemSelected(item)
+        R.id.menu_item_template_list_help -> {
+            HelpDialog.show(
+                requireContext(),
+                R.string.template_list_help_title,
+                R.array.template_list_help_text
+            )
+            true
         }
+
+        else -> super.onOptionsItemSelected(item)
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,

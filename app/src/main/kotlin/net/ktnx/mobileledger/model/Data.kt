@@ -127,8 +127,8 @@ object Data {
         Logger.debug(
             "locale",
             String.format(
-            "Discovering currency symbol position for locale %s (currency is %s; symbol is %s)",
-            locale.toString(),
+                "Discovering currency symbol position for locale %s (currency is %s; symbol is %s)",
+                locale.toString(),
                 currency?.toString() ?: "<none>",
                 symbol
             )

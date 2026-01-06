@@ -148,16 +148,16 @@ abstract class TemplateDetailsItem protected constructor(val type: Type) {
         }
 
         override fun toString(): String = when {
-                literalValue -> value?.toString() ?: "<null>"
-                matchGroup > 0 -> "grp:$matchGroup"
-                else -> "<null>"
-            }
+            literalValue -> value?.toString() ?: "<null>"
+            matchGroup > 0 -> "grp:$matchGroup"
+            else -> "<null>"
+        }
 
         fun isEmpty(): Boolean = if (literalValue) {
-                value == null || Misc.emptyIsNull(value.toString()) == null
-            } else {
-                matchGroup > 0
-            }
+            value == null || Misc.emptyIsNull(value.toString()) == null
+        } else {
+            matchGroup > 0
+        }
 
         companion object {
             @JvmStatic
@@ -252,8 +252,8 @@ abstract class TemplateDetailsItem protected constructor(val type: Type) {
                 return false
             }
             return amount == o.amount && accountName == o.accountName &&
-                    position == o.position && accountComment == o.accountComment &&
-                    isNegateAmount == o.isNegateAmount
+                position == o.position && accountComment == o.accountComment &&
+                isNegateAmount == o.isNegateAmount
         }
 
         fun switchToLiteralAmount() = amount.switchToLiteral()
@@ -425,9 +425,9 @@ abstract class TemplateDetailsItem protected constructor(val type: Type) {
             if (transactionComment != o.transactionComment) return true
 
             return Misc.equalStrings(name, o.name) && Misc.equalStrings(pattern, o.pattern) &&
-                    Misc.equalStrings(testText, o.testText) &&
-                    Misc.equalStrings(patternError, o.patternError) &&
-                    Objects.equals(testMatch, o.testMatch) && isFallback == o.isFallback
+                Misc.equalStrings(testText, o.testText) &&
+                Misc.equalStrings(patternError, o.patternError) &&
+                Objects.equals(testMatch, o.testMatch) && isFallback == o.isFallback
         }
 
         fun getMatchGroupText(group: Int): String {
@@ -562,14 +562,14 @@ abstract class TemplateDetailsItem protected constructor(val type: Type) {
         }
 
         override fun toString(): String = super.toString() +
-                    String.format(
-                        " name[%s] pat[%s] test[%s] tran[%s] com[%s]",
-                        name,
-                        pattern,
-                        testText,
-                        transactionDescription,
-                        transactionComment
-                    )
+            String.format(
+                " name[%s] pat[%s] test[%s] tran[%s] com[%s]",
+                name,
+                pattern,
+                testText,
+                transactionDescription,
+                transactionComment
+            )
 
         companion object {
             private fun capturedSpan() = StyleSpan(Typeface.BOLD)
@@ -596,68 +596,68 @@ abstract class TemplateDetailsItem protected constructor(val type: Type) {
 
         @JvmStatic
         fun fromRoomObject(p: TemplateBase): TemplateDetailsItem = when (p) {
-                is TemplateHeader -> {
-                    val header = createHeader()
-                    header.id = p.id
-                    header.name = p.name
-                    header.pattern = p.regularExpression
-                    header.testText = p.testText ?: ""
+            is TemplateHeader -> {
+                val header = createHeader()
+                header.id = p.id
+                header.name = p.name
+                header.pattern = p.regularExpression
+                header.testText = p.testText ?: ""
 
-                    p.transactionDescriptionMatchGroup?.let { group ->
-                        header.setTransactionDescriptionMatchGroup(group)
-                    } ?: header.setTransactionDescription(p.transactionDescription)
+                p.transactionDescriptionMatchGroup?.let { group ->
+                    header.setTransactionDescriptionMatchGroup(group)
+                } ?: header.setTransactionDescription(p.transactionDescription)
 
-                    p.transactionCommentMatchGroup?.let { group ->
-                        header.setTransactionCommentMatchGroup(group)
-                    } ?: header.setTransactionComment(p.transactionComment)
+                p.transactionCommentMatchGroup?.let { group ->
+                    header.setTransactionCommentMatchGroup(group)
+                } ?: header.setTransactionComment(p.transactionComment)
 
-                    p.dateDayMatchGroup?.let { group ->
-                        header.setDateDayMatchGroup(group)
-                    } ?: header.setDateDay(p.dateDay)
+                p.dateDayMatchGroup?.let { group ->
+                    header.setDateDayMatchGroup(group)
+                } ?: header.setDateDay(p.dateDay)
 
-                    p.dateMonthMatchGroup?.let { group ->
-                        header.setDateMonthMatchGroup(group)
-                    } ?: header.setDateMonth(p.dateMonth)
+                p.dateMonthMatchGroup?.let { group ->
+                    header.setDateMonthMatchGroup(group)
+                } ?: header.setDateMonth(p.dateMonth)
 
-                    p.dateYearMatchGroup?.let { group ->
-                        header.setDateYearMatchGroup(group)
-                    } ?: header.setDateYear(p.dateYear)
+                p.dateYearMatchGroup?.let { group ->
+                    header.setDateYearMatchGroup(group)
+                } ?: header.setDateYear(p.dateYear)
 
-                    header.isFallback = p.isFallback
+                header.isFallback = p.isFallback
 
-                    header
-                }
-
-                is TemplateAccount -> {
-                    val acc = createAccountRow()
-                    acc.id = p.id
-                    acc.position = p.position
-
-                    p.accountNameMatchGroup?.let { group ->
-                        acc.setAccountNameMatchGroup(group)
-                    } ?: acc.setAccountName(Misc.nullIsEmpty(p.accountName))
-
-                    p.accountCommentMatchGroup?.let { group ->
-                        acc.setAccountCommentMatchGroup(group)
-                    } ?: acc.setAccountComment(Misc.nullIsEmpty(p.accountComment))
-
-                    p.currencyMatchGroup?.let { group ->
-                        acc.setCurrencyMatchGroup(group)
-                    } ?: acc.setCurrency(p.getCurrencyObject())
-
-                    val amountMatchGroup = p.amountMatchGroup
-                    if (amountMatchGroup != null && amountMatchGroup > 0) {
-                        acc.setAmountMatchGroup(amountMatchGroup)
-                        val negateAmount = p.negateAmount
-                        acc.isNegateAmount = negateAmount != null && negateAmount
-                    } else {
-                        acc.setAmount(p.amount)
-                    }
-
-                    acc
-                }
-
-                else -> throw IllegalStateException("Unexpected item class ${p.javaClass}")
+                header
             }
+
+            is TemplateAccount -> {
+                val acc = createAccountRow()
+                acc.id = p.id
+                acc.position = p.position
+
+                p.accountNameMatchGroup?.let { group ->
+                    acc.setAccountNameMatchGroup(group)
+                } ?: acc.setAccountName(Misc.nullIsEmpty(p.accountName))
+
+                p.accountCommentMatchGroup?.let { group ->
+                    acc.setAccountCommentMatchGroup(group)
+                } ?: acc.setAccountComment(Misc.nullIsEmpty(p.accountComment))
+
+                p.currencyMatchGroup?.let { group ->
+                    acc.setCurrencyMatchGroup(group)
+                } ?: acc.setCurrency(p.getCurrencyObject())
+
+                val amountMatchGroup = p.amountMatchGroup
+                if (amountMatchGroup != null && amountMatchGroup > 0) {
+                    acc.setAmountMatchGroup(amountMatchGroup)
+                    val negateAmount = p.negateAmount
+                    acc.isNegateAmount = negateAmount != null && negateAmount
+                } else {
+                    acc.setAmount(p.amount)
+                }
+
+                acc
+            }
+
+            else -> throw IllegalStateException("Unexpected item class ${p.javaClass}")
+        }
     }
 }

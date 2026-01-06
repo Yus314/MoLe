@@ -65,10 +65,10 @@ class HledgerVersion {
         if (other !is HledgerVersion) return false
 
         return isPre_1_20_1 == other.isPre_1_20_1 &&
-                major == other.major &&
-                minor == other.minor &&
-                patch == other.patch &&
-                hasPatch == other.hasPatch
+            major == other.major &&
+            minor == other.minor &&
+            patch == other.patch &&
+            hasPatch == other.hasPatch
     }
 
     override fun hashCode(): Int {
@@ -81,12 +81,12 @@ class HledgerVersion {
     }
 
     override fun toString(): String = if (isPre_1_20_1) {
-            "(before 1.20)"
-        } else if (hasPatch) {
-            String.format(Locale.ROOT, "%d.%d.%d", major, minor, patch)
-        } else {
-            String.format(Locale.ROOT, "%d.%d", major, minor)
-        }
+        "(before 1.20)"
+    } else if (hasPatch) {
+        String.format(Locale.ROOT, "%d.%d.%d", major, minor, patch)
+    } else {
+        String.format(Locale.ROOT, "%d.%d", major, minor)
+    }
 
     fun atLeast(major: Int, minor: Int): Boolean = (this.major == major && this.minor >= minor) || this.major > major
 

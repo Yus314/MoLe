@@ -339,16 +339,16 @@ class ProfileDetailFragment : Fragment(R.layout.profile_detail) {
     }
 
     private fun futureDatesSettingFromMenuItemId(itemId: Int): FutureDates = when (itemId) {
-            R.id.menu_future_dates_7 -> FutureDates.OneWeek
-            R.id.menu_future_dates_14 -> FutureDates.TwoWeeks
-            R.id.menu_future_dates_30 -> FutureDates.OneMonth
-            R.id.menu_future_dates_60 -> FutureDates.TwoMonths
-            R.id.menu_future_dates_90 -> FutureDates.ThreeMonths
-            R.id.menu_future_dates_180 -> FutureDates.SixMonths
-            R.id.menu_future_dates_365 -> FutureDates.OneYear
-            R.id.menu_future_dates_all -> FutureDates.All
-            else -> FutureDates.None
-        }
+        R.id.menu_future_dates_7 -> FutureDates.OneWeek
+        R.id.menu_future_dates_14 -> FutureDates.TwoWeeks
+        R.id.menu_future_dates_30 -> FutureDates.OneMonth
+        R.id.menu_future_dates_60 -> FutureDates.TwoMonths
+        R.id.menu_future_dates_90 -> FutureDates.ThreeMonths
+        R.id.menu_future_dates_180 -> FutureDates.SixMonths
+        R.id.menu_future_dates_365 -> FutureDates.OneYear
+        R.id.menu_future_dates_all -> FutureDates.All
+        else -> FutureDates.None
+    }
 
     private fun getModel(): ProfileDetailModel = ViewModelProvider(requireActivity())[ProfileDetailModel::class.java]
 

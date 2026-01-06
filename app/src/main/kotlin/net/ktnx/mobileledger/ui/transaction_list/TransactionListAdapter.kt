@@ -40,43 +40,43 @@ class TransactionListAdapter : RecyclerView.Adapter<TransactionRowHolderBase>() 
         listDiffer = AsyncListDiffer(
             this,
             object : DiffUtil.ItemCallback<TransactionListItem>() {
-            override fun areItemsTheSame(
-                oldItem: TransactionListItem,
-                newItem: TransactionListItem
-            ): Boolean {
-                if (oldItem.type != newItem.type) {
-                    return false
+                override fun areItemsTheSame(
+                    oldItem: TransactionListItem,
+                    newItem: TransactionListItem
+                ): Boolean {
+                    if (oldItem.type != newItem.type) {
+                        return false
+                    }
+                    return when (oldItem.type) {
+                        TransactionListItem.Type.DELIMITER ->
+                            oldItem.date == newItem.date
+
+                        TransactionListItem.Type.TRANSACTION ->
+                            oldItem.getTransaction().ledgerId == newItem.getTransaction().ledgerId
+
+                        TransactionListItem.Type.HEADER ->
+                            true // there can be only one header
+                    }
                 }
-                return when (oldItem.type) {
-                    TransactionListItem.Type.DELIMITER ->
-                        oldItem.date == newItem.date
 
-                    TransactionListItem.Type.TRANSACTION ->
-                        oldItem.getTransaction().ledgerId == newItem.getTransaction().ledgerId
-
-                    TransactionListItem.Type.HEADER ->
-                        true // there can be only one header
-                }
-            }
-
-            override fun areContentsTheSame(
-                oldItem: TransactionListItem,
-                newItem: TransactionListItem
-            ): Boolean = when (oldItem.type) {
+                override fun areContentsTheSame(
+                    oldItem: TransactionListItem,
+                    newItem: TransactionListItem
+                ): Boolean = when (oldItem.type) {
                     TransactionListItem.Type.DELIMITER ->
                         oldItem.isMonthShown == newItem.isMonthShown
 
                     TransactionListItem.Type.TRANSACTION ->
                         oldItem.getTransaction() == newItem.getTransaction() &&
-                                Misc.equalStrings(oldItem.boldAccountName, newItem.boldAccountName) &&
-                                Misc.equalStrings(oldItem.runningTotal, newItem.runningTotal)
+                            Misc.equalStrings(oldItem.boldAccountName, newItem.boldAccountName) &&
+                            Misc.equalStrings(oldItem.runningTotal, newItem.runningTotal)
 
                     TransactionListItem.Type.HEADER ->
                         // headers don't differ in their contents. they observe the last update
                         // date and react to its changes
                         true
                 }
-        }
+            }
         )
     }
 

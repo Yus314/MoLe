@@ -66,16 +66,16 @@ open class ParsedLedgerTransaction : IParsedLedgerTransaction {
     companion object {
         @JvmStatic
         fun fromLedgerTransaction(tr: LedgerTransaction): ParsedLedgerTransaction = ParsedLedgerTransaction().apply {
-                tcomment = Misc.nullIsEmpty(tr.comment)
-                tprecedingcomment = ""
-                tpostings = tr.accounts
-                    .filter { it.accountName.isNotEmpty() }
-                    .map { ParsedPosting.fromLedgerAccount(it) }
-                    .toMutableList()
-                tdate = Globals.formatIsoDate(tr.getDateIfAny() ?: SimpleDate.today())
-                tdate2 = null
-                tindex = 1
-                tdescription = tr.description
-            }
+            tcomment = Misc.nullIsEmpty(tr.comment)
+            tprecedingcomment = ""
+            tpostings = tr.accounts
+                .filter { it.accountName.isNotEmpty() }
+                .map { ParsedPosting.fromLedgerAccount(it) }
+                .toMutableList()
+            tdate = Globals.formatIsoDate(tr.getDateIfAny() ?: SimpleDate.today())
+            tdate2 = null
+            tindex = 1
+            tdescription = tr.description
+        }
     }
 }

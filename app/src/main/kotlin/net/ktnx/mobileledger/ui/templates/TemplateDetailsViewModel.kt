@@ -245,10 +245,10 @@ class TemplateDetailsViewModel : ViewModel() {
                     "pattern-db",
                     String.format(
                         Locale.US,
-                    "Stored pattern account %d, account=%s, comment=%s, neg=%s, item=%s",
-                    dbAccount.id,
+                        "Stored pattern account %d, account=%s, comment=%s, neg=%s, item=%s",
+                        dbAccount.id,
                         dbAccount.accountName,
-                    dbAccount.accountComment,
+                        dbAccount.accountComment,
                         dbAccount.negateAmount,
                         accRowItem
                     )

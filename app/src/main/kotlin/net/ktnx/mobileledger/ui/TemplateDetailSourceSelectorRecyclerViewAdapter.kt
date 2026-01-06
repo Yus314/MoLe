@@ -74,7 +74,7 @@ class TemplateDetailSourceSelectorRecyclerViewAdapter :
         }
 
         override fun toString(): String = super.toString() + " " + b.groupNumber.text + ": '" +
-                    b.matchedText.text + "'"
+            b.matchedText.text + "'"
 
         fun bindTo(item: TemplateDetailSource) {
             mItem = item

@@ -27,6 +27,6 @@ class UrlEncodedFormData {
     }
 
     override fun toString(): String = pairs.joinToString("&") { (key, value) ->
-            "${URLEncoder.encode(key, "UTF-8")}=${URLEncoder.encode(value, "UTF-8")}"
-        }
+        "${URLEncoder.encode(key, "UTF-8")}=${URLEncoder.encode(value, "UTF-8")}"
+    }
 }

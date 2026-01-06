@@ -26,7 +26,6 @@ open class ParsedPosting {
         protected fun getCommoditySpaced(): Boolean = Data.currencyGap.value ?: false
 
         @JvmStatic
-        protected fun getCommoditySide(): Char =
-            if (Data.currencySymbolPosition.value == Currency.Position.after) 'R' else 'L'
+        protected fun getCommoditySide(): Char = if (Data.currencySymbolPosition.value == Currency.Position.after) 'R' else 'L'
     }
 }

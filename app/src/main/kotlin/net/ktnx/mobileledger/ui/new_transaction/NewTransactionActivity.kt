@@ -193,12 +193,12 @@ class NewTransactionActivity :
     }
 
     fun dp2px(dp: Float): Int = Math.round(
-            TypedValue.applyDimension(
-                TypedValue.COMPLEX_UNIT_DIP,
-                dp,
-                resources.displayMetrics
-            )
+        TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP,
+            dp,
+            resources.displayMetrics
         )
+    )
 
     override fun onTransactionSaveDone(error: String?, arg: Any?) {
         val bundle = Bundle()
@@ -319,16 +319,16 @@ class NewTransactionActivity :
             override fun getColumnNames(): Array<String> = arrayOf("_id", templateNameColumn)
 
             override fun getString(column: Int): String = if (column == 0) {
-                    position.toString()
-                } else {
-                    matchingTemplates[position].templateHead.name ?: ""
-                }
+                position.toString()
+            } else {
+                matchingTemplates[position].templateHead.name ?: ""
+            }
 
             override fun getShort(column: Int): Short = if (column == 0) {
-                    position.toShort()
-                } else {
-                    -1
-                }
+                position.toShort()
+            } else {
+                -1
+            }
 
             override fun getInt(column: Int): Int = getShort(column).toInt()
 

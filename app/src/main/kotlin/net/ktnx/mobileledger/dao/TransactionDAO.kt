@@ -69,27 +69,27 @@ abstract class TransactionDAO : BaseDAO<Transaction>() {
 
     @Query(
         "SELECT DISTINCT description, CASE WHEN description_uc LIKE :term||'%' THEN 1 " +
-           "               WHEN description_uc LIKE '%:'||:term||'%' THEN 2 " +
-           "               WHEN description_uc LIKE '% '||:term||'%' THEN 3 " +
-           "               ELSE 9 END AS ordering FROM transactions " +
-           "WHERE description_uc LIKE '%'||:term||'%' ORDER BY ordering, description_uc, rowid "
+            "               WHEN description_uc LIKE '%:'||:term||'%' THEN 2 " +
+            "               WHEN description_uc LIKE '% '||:term||'%' THEN 3 " +
+            "               ELSE 9 END AS ordering FROM transactions " +
+            "WHERE description_uc LIKE '%'||:term||'%' ORDER BY ordering, description_uc, rowid "
     )
     abstract fun lookupDescriptionSync(term: String): List<DescriptionContainer>
 
     @androidx.room.Transaction
     @Query(
         "SELECT * from transactions WHERE description = :description ORDER BY year desc, month" +
-           " desc, day desc LIMIT 1"
+            " desc, day desc LIMIT 1"
     )
     abstract fun getFirstByDescriptionSync(description: String): TransactionWithAccounts?
 
     @androidx.room.Transaction
     @Query(
         "SELECT tr.id, tr.profile_id, tr.ledger_id, tr.description, tr.description_uc, tr" +
-           ".data_hash, tr.comment, tr.year, tr.month, tr.day, tr.generation from transactions tr" +
-           " JOIN transaction_accounts t_a ON t_a.transaction_id = tr.id WHERE tr.description = " +
-           ":description AND t_a.account_name LIKE '%'||:accountTerm||'%' ORDER BY year desc, " +
-           "month desc, day desc, tr.ledger_id desc LIMIT 1"
+            ".data_hash, tr.comment, tr.year, tr.month, tr.day, tr.generation from transactions tr" +
+            " JOIN transaction_accounts t_a ON t_a.transaction_id = tr.id WHERE tr.description = " +
+            ":description AND t_a.account_name LIKE '%'||:accountTerm||'%' ORDER BY year desc, " +
+            "month desc, day desc, tr.ledger_id desc LIMIT 1"
     )
     abstract fun getFirstByDescriptionHavingAccountSync(description: String, accountTerm: String): TransactionWithAccounts?
 
@@ -102,17 +102,17 @@ abstract class TransactionDAO : BaseDAO<Transaction>() {
     @androidx.room.Transaction
     @Query(
         "SELECT * FROM transactions WHERE profile_id = :profileId ORDER BY year " +
-           " asc, month asc, day asc, ledger_id asc"
+            " asc, month asc, day asc, ledger_id asc"
     )
     abstract fun getAllWithAccounts(profileId: Long): LiveData<List<TransactionWithAccounts>>
 
     @androidx.room.Transaction
     @Query(
         "SELECT distinct(tr.id), tr.ledger_id, tr.profile_id, tr.data_hash, tr.year, tr.month," +
-           " tr.day, tr.description, tr.description_uc, tr.comment, tr.generation FROM " +
-           "transactions tr JOIN transaction_accounts ta ON ta.transaction_id=tr.id WHERE ta" +
-           ".account_name LIKE :accountName||'%' AND ta.amount <> 0 AND tr.profile_id = " +
-           ":profileId ORDER BY tr.year asc, tr.month asc, tr.day asc, tr.ledger_id asc"
+            " tr.day, tr.description, tr.description_uc, tr.comment, tr.generation FROM " +
+            "transactions tr JOIN transaction_accounts ta ON ta.transaction_id=tr.id WHERE ta" +
+            ".account_name LIKE :accountName||'%' AND ta.amount <> 0 AND tr.profile_id = " +
+            ":profileId ORDER BY tr.year asc, tr.month asc, tr.day asc, tr.ledger_id asc"
     )
     abstract fun getAllWithAccountsFiltered(profileId: Long, accountName: String?): LiveData<List<TransactionWithAccounts>>
 
@@ -121,8 +121,8 @@ abstract class TransactionDAO : BaseDAO<Transaction>() {
 
     @Query(
         "DELETE FROM transaction_accounts WHERE EXISTS (SELECT 1 FROM transactions tr WHERE tr" +
-           ".id=transaction_accounts.transaction_id AND tr.profile_id=:profileId) AND generation " +
-           "<> :currentGeneration"
+            ".id=transaction_accounts.transaction_id AND tr.profile_id=:profileId) AND generation " +
+            "<> :currentGeneration"
     )
     abstract fun purgeOldTransactionAccountsSync(profileId: Long, currentGeneration: Long): Int
 

@@ -73,7 +73,7 @@ class HueRing : View {
     }
 
     constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int, defStyleRes: Int) :
-            super(context, attrs, defStyleAttr, defStyleRes) {
+        super(context, attrs, defStyleAttr, defStyleRes) {
         init(Colors.DEFAULT_HUE_DEG)
     }
 

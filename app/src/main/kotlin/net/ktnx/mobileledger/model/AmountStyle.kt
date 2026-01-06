@@ -136,11 +136,11 @@ data class AmountStyle(
          * Helper method to determine currency position from side character
          */
         private fun determinePosition(side: Char, currency: String?): Position = when {
-                currency.isNullOrEmpty() -> Position.NONE
-                side == 'L' -> Position.BEFORE
-                side == 'R' -> Position.AFTER
-                else -> Position.NONE
-            }
+            currency.isNullOrEmpty() -> Position.NONE
+            side == 'L' -> Position.BEFORE
+            side == 'R' -> Position.AFTER
+            else -> Position.NONE
+        }
 
         /**
          * Gets the default AmountStyle based on global settings

@@ -60,7 +60,7 @@ class LedgerTransaction {
 
     @Throws(ParseException::class)
     constructor(ledgerId: Long, dateString: String, description: String?) :
-            this(ledgerId, Globals.parseLedgerDate(dateString), description)
+        this(ledgerId, Globals.parseLedgerDate(dateString), description)
 
     constructor(dbo: TransactionWithAccounts) : this(dbo.transaction.ledgerId, dbo.transaction.profileId) {
         dbId = dbo.transaction.id
@@ -85,13 +85,13 @@ class LedgerTransaction {
     }
 
     constructor(ledgerId: Long, date: SimpleDate?, description: String?) :
-            this(ledgerId, date, description, requireNotNull(Data.getProfile()) { "No profile selected" })
+        this(ledgerId, date, description, requireNotNull(Data.getProfile()) { "No profile selected" })
 
     constructor(date: SimpleDate?, description: String?) :
-            this(0, date, description)
+        this(0, date, description)
 
     constructor(ledgerId: Int) :
-            this(ledgerId.toLong(), null as SimpleDate?, null)
+        this(ledgerId.toLong(), null as SimpleDate?, null)
 
     constructor(ledgerId: Long, profileId: Long) {
         this.profile = profileId

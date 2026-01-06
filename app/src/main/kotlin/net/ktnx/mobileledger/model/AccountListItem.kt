@@ -51,10 +51,10 @@ sealed class AccountListItem private constructor() {
         override fun sameContent(other: AccountListItem): Boolean {
             if (other !is Account) return false
             return other.account.hasSubAccounts == account.hasSubAccounts &&
-                    other.account.amountsExpanded == account.amountsExpanded &&
-                    other.account.isExpanded == account.isExpanded &&
-                    other.account.level == account.level &&
-                    other.account.getAmountsString() == account.getAmountsString()
+                other.account.amountsExpanded == account.amountsExpanded &&
+                other.account.isExpanded == account.isExpanded &&
+                other.account.level == account.level &&
+                other.account.getAmountsString() == account.getAmountsString()
         }
 
         fun allAmountsAreZero(): Boolean = account.allAmountsAreZero()

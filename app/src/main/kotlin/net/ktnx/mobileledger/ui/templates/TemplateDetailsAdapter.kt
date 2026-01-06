@@ -62,20 +62,20 @@ internal class TemplateDetailsAdapter(
         differ = AsyncListDiffer(
             this,
             object : DiffUtil.ItemCallback<TemplateDetailsItem>() {
-            override fun areItemsTheSame(
-                oldItem: TemplateDetailsItem,
-                newItem: TemplateDetailsItem
-            ): Boolean {
-                if (oldItem.type != newItem.type) return false
-                if (oldItem.type == TemplateDetailsItem.Type.HEADER) return true
-                // the rest is comparing two account row items
-                return oldItem.asAccountRowItem().id == newItem.asAccountRowItem().id
-            }
+                override fun areItemsTheSame(
+                    oldItem: TemplateDetailsItem,
+                    newItem: TemplateDetailsItem
+                ): Boolean {
+                    if (oldItem.type != newItem.type) return false
+                    if (oldItem.type == TemplateDetailsItem.Type.HEADER) return true
+                    // the rest is comparing two account row items
+                    return oldItem.asAccountRowItem().id == newItem.asAccountRowItem().id
+                }
 
-            override fun areContentsTheSame(
-                oldItem: TemplateDetailsItem,
-                newItem: TemplateDetailsItem
-            ): Boolean = if (oldItem.type == TemplateDetailsItem.Type.HEADER) {
+                override fun areContentsTheSame(
+                    oldItem: TemplateDetailsItem,
+                    newItem: TemplateDetailsItem
+                ): Boolean = if (oldItem.type == TemplateDetailsItem.Type.HEADER) {
                     val oldHeader = oldItem.asHeaderItem()
                     val newHeader = newItem.asHeaderItem()
                     oldHeader.equalContents(newHeader)
@@ -84,7 +84,7 @@ internal class TemplateDetailsAdapter(
                     val newAcc = newItem.asAccountRowItem()
                     oldAcc.equalContents(newAcc)
                 }
-        }
+            }
         )
 
         itemTouchHelper = ItemTouchHelper(object : ItemTouchHelper.Callback() {

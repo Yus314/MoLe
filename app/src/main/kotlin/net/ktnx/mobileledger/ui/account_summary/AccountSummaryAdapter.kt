@@ -48,46 +48,46 @@ class AccountSummaryAdapter : RecyclerView.Adapter<AccountSummaryAdapter.RowHold
         listDiffer = AsyncListDiffer(
             this,
             object : DiffUtil.ItemCallback<AccountListItem>() {
-            override fun getChangePayload(oldItem: AccountListItem, newItem: AccountListItem): Any? {
-                val changes = Change()
+                override fun getChangePayload(oldItem: AccountListItem, newItem: AccountListItem): Any? {
+                    val changes = Change()
 
-                val oldAcc = oldItem.toAccount().account
-                val newAcc = newItem.toAccount().account
+                    val oldAcc = oldItem.toAccount().account
+                    val newAcc = newItem.toAccount().account
 
-                if (!Misc.equalStrings(oldAcc.name, newAcc.name)) {
-                    changes.add(Change.NAME)
+                    if (!Misc.equalStrings(oldAcc.name, newAcc.name)) {
+                        changes.add(Change.NAME)
+                    }
+
+                    if (oldAcc.level != newAcc.level) {
+                        changes.add(Change.LEVEL)
+                    }
+
+                    if (oldAcc.isExpanded != newAcc.isExpanded) {
+                        changes.add(Change.EXPANDED)
+                    }
+
+                    if (oldAcc.amountsExpanded() != newAcc.amountsExpanded()) {
+                        changes.add(Change.EXPANDED_AMOUNTS)
+                    }
+
+                    if (oldAcc.getAmountsString() != newAcc.getAmountsString()) {
+                        changes.add(Change.AMOUNTS)
+                    }
+
+                    return changes.toPayload()
                 }
 
-                if (oldAcc.level != newAcc.level) {
-                    changes.add(Change.LEVEL)
+                override fun areItemsTheSame(oldItem: AccountListItem, newItem: AccountListItem): Boolean {
+                    val oldType = oldItem.type
+                    val newType = newItem.type
+                    if (oldType != newType) return false
+                    if (oldType == AccountListItem.Type.HEADER) return true
+
+                    return oldItem.toAccount().account.id == newItem.toAccount().account.id
                 }
 
-                if (oldAcc.isExpanded != newAcc.isExpanded) {
-                    changes.add(Change.EXPANDED)
-                }
-
-                if (oldAcc.amountsExpanded() != newAcc.amountsExpanded()) {
-                    changes.add(Change.EXPANDED_AMOUNTS)
-                }
-
-                if (oldAcc.getAmountsString() != newAcc.getAmountsString()) {
-                    changes.add(Change.AMOUNTS)
-                }
-
-                return changes.toPayload()
+                override fun areContentsTheSame(oldItem: AccountListItem, newItem: AccountListItem): Boolean = oldItem.sameContent(newItem)
             }
-
-            override fun areItemsTheSame(oldItem: AccountListItem, newItem: AccountListItem): Boolean {
-                val oldType = oldItem.type
-                val newType = newItem.type
-                if (oldType != newType) return false
-                if (oldType == AccountListItem.Type.HEADER) return true
-
-                return oldItem.toAccount().account.id == newItem.toAccount().account.id
-            }
-
-            override fun areContentsTheSame(oldItem: AccountListItem, newItem: AccountListItem): Boolean = oldItem.sameContent(newItem)
-        }
         )
     }
 
@@ -206,8 +206,8 @@ class AccountSummaryAdapter : RecyclerView.Adapter<AccountSummaryAdapter.RowHold
         }
 
         private fun getAccount(): LedgerAccount = listDiffer.currentList[bindingAdapterPosition]
-                .toAccount()
-                .account
+            .toAccount()
+            .account
 
         private fun toggleAmountsExpanded() {
             val account = getAccount()

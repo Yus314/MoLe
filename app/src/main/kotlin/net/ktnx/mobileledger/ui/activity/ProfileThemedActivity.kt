@@ -60,7 +60,7 @@ open class ProfileThemedActivity : CrashReportingActivity() {
             Logger.debug(
                 TAG,
                 "setupProfileColors(): theme already set up, supposedly the activity will be " +
-                "recreated"
+                    "recreated"
             )
             return
         }
@@ -138,7 +138,7 @@ open class ProfileThemedActivity : CrashReportingActivity() {
                 String.format(
                     Locale.ROOT,
                     "Profile %d not found. Trying any other",
-                profileId
+                    profileId
                 )
             )
 

@@ -47,16 +47,16 @@ internal class NewTransactionItemsAdapter(
         differ = AsyncListDiffer(
             this,
             object : DiffUtil.ItemCallback<NewTransactionModel.Item>() {
-            override fun areItemsTheSame(
-                oldItem: NewTransactionModel.Item,
-                newItem: NewTransactionModel.Item
-            ): Boolean = oldItem.id == newItem.id
+                override fun areItemsTheSame(
+                    oldItem: NewTransactionModel.Item,
+                    newItem: NewTransactionModel.Item
+                ): Boolean = oldItem.id == newItem.id
 
-            override fun areContentsTheSame(
-                oldItem: NewTransactionModel.Item,
-                newItem: NewTransactionModel.Item
-            ): Boolean = oldItem.equalContents(newItem)
-        }
+                override fun areContentsTheSame(
+                    oldItem: NewTransactionModel.Item,
+                    newItem: NewTransactionModel.Item
+                ): Boolean = oldItem.equalContents(newItem)
+            }
         )
 
         touchHelper = ItemTouchHelper(object : ItemTouchHelper.Callback() {
@@ -82,14 +82,14 @@ internal class NewTransactionItemsAdapter(
                 val adapterPosition = viewHolder.bindingAdapterPosition
                 if (adapterPosition > 0) {
                     flags = flags or
-                            makeFlag(
-                                ItemTouchHelper.ACTION_STATE_DRAG,
-                                ItemTouchHelper.UP or ItemTouchHelper.DOWN
-                            ) or
-                            makeFlag(
-                                ItemTouchHelper.ACTION_STATE_SWIPE,
-                                ItemTouchHelper.START or ItemTouchHelper.END
-                            )
+                        makeFlag(
+                            ItemTouchHelper.ACTION_STATE_DRAG,
+                            ItemTouchHelper.UP or ItemTouchHelper.DOWN
+                        ) or
+                        makeFlag(
+                            ItemTouchHelper.ACTION_STATE_SWIPE,
+                            ItemTouchHelper.START or ItemTouchHelper.END
+                        )
                 }
                 return flags
             }
@@ -114,10 +114,10 @@ internal class NewTransactionItemsAdapter(
     }
 
     override fun getItemViewType(position: Int): Int = when (val type = differ.currentList[position].type) {
-            ItemType.generalData -> ITEM_VIEW_TYPE_HEADER
-            ItemType.transactionRow -> ITEM_VIEW_TYPE_ACCOUNT
-            else -> throw RuntimeException("Can't handle $type")
-        }
+        ItemType.generalData -> ITEM_VIEW_TYPE_HEADER
+        ItemType.transactionRow -> ITEM_VIEW_TYPE_ACCOUNT
+        else -> throw RuntimeException("Can't handle $type")
+    }
 
     override fun getItemId(position: Int): Long = differ.currentList[position].id.toLong()
 
@@ -126,36 +126,36 @@ internal class NewTransactionItemsAdapter(
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NewTransactionItemViewHolder = when (viewType) {
-            ITEM_VIEW_TYPE_HEADER -> {
-                val headerBinding = NewTransactionHeaderRowBinding.inflate(
-                    LayoutInflater.from(parent.context),
-                    parent,
-                    false
-                )
-                val headerHolder = NewTransactionHeaderItemHolder(headerBinding, this)
-                Logger.debug(
-                    "new-trans",
-                    "Creating new Header ViewHolder ${Integer.toHexString(headerHolder.hashCode())}"
-                )
-                headerHolder
-            }
-
-            ITEM_VIEW_TYPE_ACCOUNT -> {
-                val accBinding = NewTransactionAccountRowBinding.inflate(
-                    LayoutInflater.from(parent.context),
-                    parent,
-                    false
-                )
-                val accHolder = NewTransactionAccountRowItemHolder(accBinding, this)
-                Logger.debug(
-                    "new-trans",
-                    "Creating new AccountRow ViewHolder ${Integer.toHexString(accHolder.hashCode())}"
-                )
-                accHolder
-            }
-
-            else -> throw RuntimeException("Can't handle view type $viewType")
+        ITEM_VIEW_TYPE_HEADER -> {
+            val headerBinding = NewTransactionHeaderRowBinding.inflate(
+                LayoutInflater.from(parent.context),
+                parent,
+                false
+            )
+            val headerHolder = NewTransactionHeaderItemHolder(headerBinding, this)
+            Logger.debug(
+                "new-trans",
+                "Creating new Header ViewHolder ${Integer.toHexString(headerHolder.hashCode())}"
+            )
+            headerHolder
         }
+
+        ITEM_VIEW_TYPE_ACCOUNT -> {
+            val accBinding = NewTransactionAccountRowBinding.inflate(
+                LayoutInflater.from(parent.context),
+                parent,
+                false
+            )
+            val accHolder = NewTransactionAccountRowItemHolder(accBinding, this)
+            Logger.debug(
+                "new-trans",
+                "Creating new AccountRow ViewHolder ${Integer.toHexString(accHolder.hashCode())}"
+            )
+            accHolder
+        }
+
+        else -> throw RuntimeException("Can't handle view type $viewType")
+    }
 
     override fun onBindViewHolder(holder: NewTransactionItemViewHolder, position: Int) {
         Logger.debug(
