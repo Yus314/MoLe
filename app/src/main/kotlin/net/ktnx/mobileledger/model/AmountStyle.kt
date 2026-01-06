@@ -110,10 +110,7 @@ data class AmountStyle(
          * Creates an AmountStyle from hledger's ParsedStyle JSON object (base/old versions)
          */
         @JvmStatic
-        fun fromParsedStyle(
-            parsedStyle: net.ktnx.mobileledger.json.ParsedStyle?,
-            currency: String?
-        ): AmountStyle? {
+        fun fromParsedStyle(parsedStyle: net.ktnx.mobileledger.json.ParsedStyle?, currency: String?): AmountStyle? {
             if (parsedStyle == null) return null
 
             val position = determinePosition(parsedStyle.ascommodityside, currency)

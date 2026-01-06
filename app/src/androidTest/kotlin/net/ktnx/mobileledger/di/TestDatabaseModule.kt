@@ -54,9 +54,10 @@ object TestDatabaseModule {
 
     @Provides
     @Singleton
-    fun provideInMemoryDatabase(@ApplicationContext context: Context): DB = Room.inMemoryDatabaseBuilder(context, DB::class.java)
-        .allowMainThreadQueries() // Allow queries on main thread for simpler tests
-        .build()
+    fun provideInMemoryDatabase(@ApplicationContext context: Context): DB =
+        Room.inMemoryDatabaseBuilder(context, DB::class.java)
+            .allowMainThreadQueries() // Allow queries on main thread for simpler tests
+            .build()
 
     @Provides
     fun provideProfileDAO(db: DB): ProfileDAO = db.getProfileDAO()

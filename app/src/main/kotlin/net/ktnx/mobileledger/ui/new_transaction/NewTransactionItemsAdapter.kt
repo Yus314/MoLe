@@ -30,10 +30,8 @@ import net.ktnx.mobileledger.databinding.NewTransactionHeaderRowBinding
 import net.ktnx.mobileledger.db.Profile
 import net.ktnx.mobileledger.utils.Logger
 
-internal class NewTransactionItemsAdapter(
-    @JvmField val model: NewTransactionModel,
-    profile: Profile
-) : RecyclerView.Adapter<NewTransactionItemViewHolder>() {
+internal class NewTransactionItemsAdapter(@JvmField val model: NewTransactionModel, profile: Profile) :
+    RecyclerView.Adapter<NewTransactionItemViewHolder>() {
 
     private val touchHelper: ItemTouchHelper
     private val differ: AsyncListDiffer<NewTransactionModel.Item>
@@ -73,10 +71,7 @@ internal class NewTransactionItemsAdapter(
                 return super.canDropOver(recyclerView, current, target)
             }
 
-            override fun getMovementFlags(
-                recyclerView: RecyclerView,
-                viewHolder: RecyclerView.ViewHolder
-            ): Int {
+            override fun getMovementFlags(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder): Int {
                 var flags = makeFlag(ItemTouchHelper.ACTION_STATE_IDLE, ItemTouchHelper.END)
                 // the top (date and description) and the bottom (padding) items are always there
                 val adapterPosition = viewHolder.bindingAdapterPosition

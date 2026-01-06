@@ -982,10 +982,7 @@ class NewTransactionModel : ViewModel() {
         return true
     }
 
-    class FocusInfo(
-        @JvmField val position: Int,
-        @JvmField val element: FocusedElement?
-    )
+    class FocusInfo(@JvmField val position: Int, @JvmField val element: FocusedElement?)
 
     abstract class Item {
         var id: Int = 0

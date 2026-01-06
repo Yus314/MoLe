@@ -28,9 +28,8 @@ import net.ktnx.mobileledger.model.TransactionListItem
 import net.ktnx.mobileledger.utils.DimensionUtils
 import net.ktnx.mobileledger.utils.Globals
 
-internal class TransactionListDelimiterRowHolder(
-    private val b: TransactionDelimiterBinding
-) : TransactionRowHolderBase(b.root) {
+internal class TransactionListDelimiterRowHolder(private val b: TransactionDelimiterBinding) :
+    TransactionRowHolderBase(b.root) {
 
     fun bind(item: TransactionListItem) {
         val date = item.date

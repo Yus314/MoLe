@@ -22,10 +22,7 @@ import net.ktnx.mobileledger.db.Account
 import net.ktnx.mobileledger.db.AccountValue
 import net.ktnx.mobileledger.db.AccountWithAmounts
 
-class LedgerAccount(
-    name: String,
-    private val parent: LedgerAccount?
-) {
+class LedgerAccount(name: String, private val parent: LedgerAccount?) {
     private var dbId: Long = 0
     private var profileId: Long = 0
     var name: String = name
@@ -177,7 +174,8 @@ class LedgerAccount(
         }
 
         @JvmStatic
-        fun isParentOf(possibleParent: String, accountName: String): Boolean = accountName.startsWith("$possibleParent:")
+        fun isParentOf(possibleParent: String, accountName: String): Boolean =
+            accountName.startsWith("$possibleParent:")
 
         @JvmStatic
         fun fromDBO(input: AccountWithAmounts, parent: LedgerAccount?): LedgerAccount {

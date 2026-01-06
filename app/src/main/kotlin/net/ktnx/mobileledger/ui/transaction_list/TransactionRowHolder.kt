@@ -31,9 +31,7 @@ import net.ktnx.mobileledger.model.TransactionListItem
 import net.ktnx.mobileledger.utils.Colors
 import net.ktnx.mobileledger.utils.Misc
 
-internal class TransactionRowHolder(
-    private val b: TransactionListRowBinding
-) : TransactionRowHolderBase(b.root) {
+internal class TransactionRowHolder(private val b: TransactionListRowBinding) : TransactionRowHolderBase(b.root) {
 
     var lastType: TransactionListItem.Type? = null
 

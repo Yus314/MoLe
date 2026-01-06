@@ -25,9 +25,7 @@ import net.ktnx.mobileledger.json.AccountListParser as BaseParser
 
 class AccountListParser
 @Throws(IOException::class)
-constructor(
-    input: InputStream
-) : BaseParser() {
+constructor(input: InputStream) : BaseParser() {
     override val apiVersion: API = API.v1_14
 
     init {

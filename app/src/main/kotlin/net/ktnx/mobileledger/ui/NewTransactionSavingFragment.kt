@@ -28,9 +28,6 @@ import net.ktnx.mobileledger.R
  * A simple [Fragment] subclass.
  */
 class NewTransactionSavingFragment : Fragment() {
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? = inflater.inflate(R.layout.fragment_new_transaction_saving, container, false)
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? =
+        inflater.inflate(R.layout.fragment_new_transaction_saving, container, false)
 }

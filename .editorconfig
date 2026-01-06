@@ -15,14 +15,11 @@ max_line_length = 120
 # ktlint specific settings
 ktlint_code_style = android_studio
 
-# Phase 4: 手動修正が必要
+# 永久無効化（JSON互換性・プロジェクト慣習のため）
 ktlint_standard_filename = disabled
 ktlint_standard_property-naming = disabled
 ktlint_standard_backing-property-naming = disabled
 ktlint_standard_function-naming = disabled
-ktlint_standard_max-line-length = disabled
-
-# Phase 5: 永久無効化（プロジェクト慣習のため）
 ktlint_standard_no-wildcard-imports = disabled
 ktlint_standard_package-name = disabled
 ktlint_standard_enum-entry-name-case = disabled

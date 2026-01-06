@@ -49,9 +49,8 @@ import net.ktnx.mobileledger.ui.TemplateDetailSourceSelectorFragment
 import net.ktnx.mobileledger.utils.Logger
 import net.ktnx.mobileledger.utils.Misc
 
-internal class TemplateDetailsAdapter(
-    private val mModel: TemplateDetailsViewModel
-) : RecyclerView.Adapter<TemplateDetailsAdapter.ViewHolder>() {
+internal class TemplateDetailsAdapter(private val mModel: TemplateDetailsViewModel) :
+    RecyclerView.Adapter<TemplateDetailsAdapter.ViewHolder>() {
 
     private val differ: AsyncListDiffer<TemplateDetailsItem>
     private val itemTouchHelper: ItemTouchHelper
@@ -62,28 +61,23 @@ internal class TemplateDetailsAdapter(
         differ = AsyncListDiffer(
             this,
             object : DiffUtil.ItemCallback<TemplateDetailsItem>() {
-                override fun areItemsTheSame(
-                    oldItem: TemplateDetailsItem,
-                    newItem: TemplateDetailsItem
-                ): Boolean {
+                override fun areItemsTheSame(oldItem: TemplateDetailsItem, newItem: TemplateDetailsItem): Boolean {
                     if (oldItem.type != newItem.type) return false
                     if (oldItem.type == TemplateDetailsItem.Type.HEADER) return true
                     // the rest is comparing two account row items
                     return oldItem.asAccountRowItem().id == newItem.asAccountRowItem().id
                 }
 
-                override fun areContentsTheSame(
-                    oldItem: TemplateDetailsItem,
-                    newItem: TemplateDetailsItem
-                ): Boolean = if (oldItem.type == TemplateDetailsItem.Type.HEADER) {
-                    val oldHeader = oldItem.asHeaderItem()
-                    val newHeader = newItem.asHeaderItem()
-                    oldHeader.equalContents(newHeader)
-                } else {
-                    val oldAcc = oldItem.asAccountRowItem()
-                    val newAcc = newItem.asAccountRowItem()
-                    oldAcc.equalContents(newAcc)
-                }
+                override fun areContentsTheSame(oldItem: TemplateDetailsItem, newItem: TemplateDetailsItem): Boolean =
+                    if (oldItem.type == TemplateDetailsItem.Type.HEADER) {
+                        val oldHeader = oldItem.asHeaderItem()
+                        val newHeader = newItem.asHeaderItem()
+                        oldHeader.equalContents(newHeader)
+                    } else {
+                        val oldAcc = oldItem.asAccountRowItem()
+                        val newAcc = newItem.asAccountRowItem()
+                        oldAcc.equalContents(newAcc)
+                    }
             }
         )
 
@@ -132,10 +126,7 @@ internal class TemplateDetailsAdapter(
                 return super.canDropOver(recyclerView, current, target)
             }
 
-            override fun getMovementFlags(
-                recyclerView: RecyclerView,
-                viewHolder: RecyclerView.ViewHolder
-            ): Int {
+            override fun getMovementFlags(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder): Int {
                 var flags = 0
                 // the top item (transaction params) is always there
                 val adapterPosition = viewHolder.bindingAdapterPosition
@@ -292,9 +283,7 @@ internal class TemplateDetailsAdapter(
         }
     }
 
-    inner class Header(
-        private val b: TemplateDetailsHeaderBinding
-    ) : BaseItem(b.root) {
+    inner class Header(private val b: TemplateDetailsHeaderBinding) : BaseItem(b.root) {
 
         init {
             val templateNameWatcher = object : TextWatcher {
@@ -605,9 +594,7 @@ internal class TemplateDetailsAdapter(
         }
     }
 
-    inner class AccountRow(
-        private val b: TemplateDetailsAccountBinding
-    ) : BaseItem(b.root) {
+    inner class AccountRow(private val b: TemplateDetailsAccountBinding) : BaseItem(b.root) {
 
         init {
             val accountNameWatcher = object : TextWatcher {
@@ -888,7 +875,8 @@ internal class TemplateDetailsAdapter(
             }
         }
 
-        private fun getItem(): TemplateDetailsItem.AccountRow = differ.currentList[bindingAdapterPosition].asAccountRowItem()
+        private fun getItem(): TemplateDetailsItem.AccountRow =
+            differ.currentList[bindingAdapterPosition].asAccountRowItem()
 
         private fun selectAccountRowDetailSource(v: View, detail: AccDetail) {
             val accRow = getItem()

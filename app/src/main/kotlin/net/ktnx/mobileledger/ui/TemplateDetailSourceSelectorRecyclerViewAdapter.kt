@@ -64,9 +64,8 @@ class TemplateDetailSourceSelectorRecyclerViewAdapter :
         sourceSelectedListener?.onSourceSelected(true, -1)
     }
 
-    inner class ViewHolder(
-        private val b: FragmentTemplateDetailSourceSelectorBinding
-    ) : RecyclerView.ViewHolder(b.root) {
+    inner class ViewHolder(private val b: FragmentTemplateDetailSourceSelectorBinding) :
+        RecyclerView.ViewHolder(b.root) {
         private var mItem: TemplateDetailSource? = null
 
         init {

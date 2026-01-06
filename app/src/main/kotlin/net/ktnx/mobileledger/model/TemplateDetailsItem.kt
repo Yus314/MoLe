@@ -161,16 +161,20 @@ abstract class TemplateDetailsItem protected constructor(val type: Type) {
 
         companion object {
             @JvmStatic
-            fun withLiteralInt(initialValue: Int?): PossiblyMatchedValue<Int> = PossiblyMatchedValue<Int>().apply { setValue(initialValue) }
+            fun withLiteralInt(initialValue: Int?): PossiblyMatchedValue<Int> =
+                PossiblyMatchedValue<Int>().apply { setValue(initialValue) }
 
             @JvmStatic
-            fun withLiteralFloat(initialValue: Float?): PossiblyMatchedValue<Float> = PossiblyMatchedValue<Float>().apply { setValue(initialValue) }
+            fun withLiteralFloat(initialValue: Float?): PossiblyMatchedValue<Float> =
+                PossiblyMatchedValue<Float>().apply { setValue(initialValue) }
 
             @JvmStatic
-            fun withLiteralShort(initialValue: Short?): PossiblyMatchedValue<Short> = PossiblyMatchedValue<Short>().apply { setValue(initialValue) }
+            fun withLiteralShort(initialValue: Short?): PossiblyMatchedValue<Short> =
+                PossiblyMatchedValue<Short>().apply { setValue(initialValue) }
 
             @JvmStatic
-            fun withLiteralString(initialValue: String?): PossiblyMatchedValue<String> = PossiblyMatchedValue<String>().apply { setValue(initialValue) }
+            fun withLiteralString(initialValue: String?): PossiblyMatchedValue<String> =
+                PossiblyMatchedValue<String>().apply { setValue(initialValue) }
         }
     }
 

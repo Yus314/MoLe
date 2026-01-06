@@ -43,7 +43,8 @@ class App : Application() {
 
     private fun getAuthPassword(): String = profileModel?.getAuthPassword() ?: Data.getProfile()?.authPassword ?: ""
 
-    private fun getAuthEnabled(): Boolean = profileModel?.getUseAuthentication() ?: Data.getProfile()?.isAuthEnabled() ?: false
+    private fun getAuthEnabled(): Boolean =
+        profileModel?.getUseAuthentication() ?: Data.getProfile()?.isAuthEnabled() ?: false
 
     override fun onCreate() {
         Logger.debug("flow", "App onCreate()")

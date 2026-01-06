@@ -21,9 +21,8 @@ import net.ktnx.mobileledger.databinding.LastUpdateLayoutBinding
 import net.ktnx.mobileledger.model.Data
 import net.ktnx.mobileledger.ui.activity.MainActivity
 
-internal class TransactionListLastUpdateRowHolder(
-    private val b: LastUpdateLayoutBinding
-) : TransactionRowHolderBase(b.root) {
+internal class TransactionListLastUpdateRowHolder(private val b: LastUpdateLayoutBinding) :
+    TransactionRowHolderBase(b.root) {
 
     fun setLastUpdateText(text: String) {
         b.lastUpdateText.text = text

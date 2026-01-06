@@ -23,11 +23,7 @@ import android.os.Bundle
 import net.ktnx.mobileledger.R
 import net.ktnx.mobileledger.utils.Colors
 
-class HueRingDialog(
-    context: Context,
-    private val initialHue: Int,
-    private val currentHue: Int
-) : Dialog(context) {
+class HueRingDialog(context: Context, private val initialHue: Int, private val currentHue: Int) : Dialog(context) {
 
     private lateinit var hueRing: HueRing
     private var listener: HueSelectedListener? = null

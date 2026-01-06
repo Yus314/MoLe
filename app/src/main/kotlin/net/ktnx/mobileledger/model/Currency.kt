@@ -19,12 +19,7 @@ package net.ktnx.mobileledger.model
 
 import net.ktnx.mobileledger.utils.Misc
 
-class Currency(
-    val id: Int,
-    var name: String?,
-    var position: Position = Position.after,
-    var hasGap: Boolean = true
-) {
+class Currency(val id: Int, var name: String?, var position: Position = Position.after, var hasGap: Boolean = true) {
     constructor(id: Int, name: String?) : this(id, name, Position.after, true)
 
     enum class Position {

@@ -27,9 +27,7 @@ import net.ktnx.mobileledger.model.LedgerTransaction
 
 class TransactionListParser
 @Throws(IOException::class)
-constructor(
-    input: InputStream
-) : BaseParser() {
+constructor(input: InputStream) : BaseParser() {
     private val iterator: MappingIterator<ParsedLedgerTransaction>
 
     init {
@@ -39,5 +37,6 @@ constructor(
     }
 
     @Throws(ParseException::class)
-    override fun nextTransaction(): LedgerTransaction? = if (iterator.hasNext()) iterator.next().asLedgerTransaction() else null
+    override fun nextTransaction(): LedgerTransaction? =
+        if (iterator.hasNext()) iterator.next().asLedgerTransaction() else null
 }

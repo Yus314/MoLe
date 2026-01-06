@@ -24,10 +24,7 @@ import net.ktnx.mobileledger.ui.MainModel
 import net.ktnx.mobileledger.utils.Logger
 import net.ktnx.mobileledger.utils.SimpleDate
 
-class TransactionDateFinder(
-    private val model: MainModel,
-    private val date: SimpleDate
-) : Thread() {
+class TransactionDateFinder(private val model: MainModel, private val date: SimpleDate) : Thread() {
 
     override fun run() {
         Logger.debug(

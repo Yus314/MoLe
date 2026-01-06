@@ -17,7 +17,4 @@
 
 package net.ktnx.mobileledger.err
 
-class HTTPException(
-    val responseCode: Int,
-    responseMessage: String
-) : Exception(responseMessage)
+class HTTPException(val responseCode: Int, responseMessage: String) : Exception(responseMessage)

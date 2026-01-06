@@ -62,11 +62,7 @@ class TransactionListFragment :
         setHasOptionsMenu(true)
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         _binding = TransactionListFragmentBinding.inflate(inflater, container, false)
         return b?.root
     }

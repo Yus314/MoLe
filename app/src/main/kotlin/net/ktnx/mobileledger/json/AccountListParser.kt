@@ -29,10 +29,7 @@ abstract class AccountListParser {
 
     abstract val apiVersion: API
 
-    open fun nextAccount(
-        task: RetrieveTransactionsTask,
-        map: HashMap<String, LedgerAccount>
-    ): LedgerAccount? {
+    open fun nextAccount(task: RetrieveTransactionsTask, map: HashMap<String, LedgerAccount>): LedgerAccount? {
         if (!iterator.hasNext()) return null
 
         val next = iterator.next().toLedgerAccount(task, map)

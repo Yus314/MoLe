@@ -35,12 +35,7 @@ abstract class OnSwipeTouchListener(ctx: Context) : View.OnTouchListener {
             return false
         }
 
-        override fun onFling(
-            e1: MotionEvent?,
-            e2: MotionEvent,
-            velocityX: Float,
-            velocityY: Float
-        ): Boolean {
+        override fun onFling(e1: MotionEvent?, e2: MotionEvent, velocityX: Float, velocityY: Float): Boolean {
             var result = false
 
             Logger.debug("sw-l", "onFling")

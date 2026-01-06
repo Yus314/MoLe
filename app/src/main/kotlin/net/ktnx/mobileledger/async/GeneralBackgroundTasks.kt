@@ -40,12 +40,7 @@ object GeneralBackgroundTasks {
     }
 
     @JvmStatic
-    fun run(
-        runnable: Runnable,
-        onSuccess: Runnable?,
-        onError: ErrorCallback?,
-        onDone: Runnable?
-    ) {
+    fun run(runnable: Runnable, onSuccess: Runnable?, onError: ErrorCallback?, onDone: Runnable?) {
         runner.execute {
             try {
                 runnable.run()

@@ -32,9 +32,7 @@ import net.ktnx.mobileledger.utils.Logger
 import net.ktnx.mobileledger.utils.SimpleDate
 
 @HiltViewModel
-class MainModel @Inject constructor(
-    private val data: Data
-) : ViewModel() {
+class MainModel @Inject constructor(private val data: Data) : ViewModel() {
     @JvmField
     val foundTransactionItemIndex = MutableLiveData<Int?>(null)
 
