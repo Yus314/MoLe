@@ -238,11 +238,14 @@
 
 ### Null Safety Improvements
 
-- [ ] T088 [P] [US2] Review and fix `!!` operators in `app/src/main/kotlin/net/ktnox/mobileledger/model/` - replace with safe calls or require()
-- [ ] T089 [P] [US2] Review and fix `!!` operators in `app/src/main/kotlin/net/ktnox/mobileledger/db/`
-- [ ] T090 [P] [US2] Review and fix `!!` operators in `app/src/main/kotlin/net/ktnox/mobileledger/dao/`
-- [ ] T091 [P] [US2] Review and fix `!!` operators in `app/src/main/kotlin/net/ktnox/mobileledger/json/`
-- [ ] T092 [P] [US2] Review and fix `!!` operators in `app/src/main/kotlin/net/ktnox/mobileledger/ui/`
+- [X] T088 [P] [US2] Review and fix `!!` operators in `app/src/main/kotlin/net/ktnx/mobileledger/model/` - replaced with requireNotNull(), checkNotNull(), safe calls ✅
+- [X] T089 [P] [US2] Review and fix `!!` operators in `app/src/main/kotlin/net/ktnx/mobileledger/db/` - replaced with checkNotNull() ✅
+- [X] T090 [P] [US2] Review and fix `!!` operators in `app/src/main/kotlin/net/ktnx/mobileledger/dao/` - no `!!` operators present ✅
+- [X] T091 [P] [US2] Review and fix `!!` operators in `app/src/main/kotlin/net/ktnx/mobileledger/json/` - no `!!` operators present ✅
+- [X] T091a [P] [US2] Review and fix `!!` operators in `app/src/main/kotlin/net/ktnx/mobileledger/utils/` - replaced with getValue(), safe calls ✅
+- [X] T091b [P] [US2] Review and fix `!!` operators in `app/src/main/kotlin/net/ktnx/mobileledger/async/` - replaced with requireNotNull() ✅
+- [ ] T092 [P] [US2] Review and fix `!!` operators in `app/src/main/kotlin/net/ktnx/mobileledger/ui/` (61 remaining across 14 files)
+- [ ] T092a [P] [US2] Review and fix `!!` operators in `app/src/main/kotlin/net/ktnx/mobileledger/backup/` (6 remaining across 3 files)
 
 ### data class Optimization
 
