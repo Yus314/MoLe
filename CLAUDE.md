@@ -115,14 +115,23 @@ pre-commit run detekt         # detekt のみ実行
 
 ### 設定ファイル
 
-- `.editorconfig`: ktlint のルール設定（多くのルールは既存コードとの互換性のため無効化）
+- `.editorconfig`: ktlint のルール設定
 - `detekt.yml`: detekt の設定（maxIssues: -1 で警告のみ、エラーにしない）
 
-### 段階的な lint 適用
+### ktlint ルール状況
 
-既存コードには多くのスタイル違反があるため、現時点ではほとんどのルールを無効化しています。
-新規コードを書く際は、できる限りベストプラクティスに従ってください。
-将来的に `.editorconfig` と `detekt.yml` のルールを段階的に有効化していきます。
+ほとんどのルールが有効化されています。以下のルールのみ永久無効化:
+
+| ルール | 無効化理由 |
+|--------|-----------|
+| `filename` | Abstract* プレフィックスは意図的 |
+| `property-naming` | JSON フィールド名との互換性（ptransaction_ 等）|
+| `backing-property-naming` | 特殊なパターンの許容 |
+| `function-naming` | 特殊な関数名の許容 |
+| `no-wildcard-imports` | Android Studio デフォルト動作 |
+| `package-name` | API バージョンサフィックス（v1_14 等）|
+| `enum-entry-name-case` | JSON シリアライズ互換性 |
+| `kdoc` | KDoc スタイル強制なし |
 
 ## Code Style
 
@@ -171,6 +180,7 @@ class MyActivity : AppCompatActivity() {
 - 既存の `DB.get()` / `Data` 直接アクセスは動作するが、新規コードでは DI を使用
 
 ## Recent Changes
+- ktlint-enforcement: Enabled most ktlint rules, auto-fixed 200+ files across 4 phases, permanently disabled 8 rules for JSON/API compatibility
 - 005-hilt-di-setup: Added Hilt 2.51.1 DI framework, migrated MainModel to constructor injection, created DatabaseModule and DataModule, added instrumentation test infrastructure with HiltTestRunner and TestDatabaseModule
 - 004-kapt-ksp-migration: Migrated annotation processing from KAPT to KSP 2.0.21-1.0.26
 - 003-kotlin-update: Upgraded Kotlin 1.9.25 → 2.0.21, Coroutines 1.7.3 → 1.9.0, applied `data object` modernization
