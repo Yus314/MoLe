@@ -287,12 +287,12 @@
 
 ### Create Common Package
 
-- [ ] T106 [P] [US3] Create `app/src/main/kotlin/net/ktnox/mobileledger/json/common/PostingFieldDelegate.kt`
-- [ ] T107 [P] [US3] Create `app/src/main/kotlin/net/ktnox/mobileledger/json/common/TransactionFieldDelegate.kt`
-- [ ] T108 [P] [US3] Create `app/src/main/kotlin/net/ktnox/mobileledger/json/common/StyleConfigurer.kt` (sealed interface)
-- [ ] T109 [P] [US3] Create `app/src/main/kotlin/net/ktnox/mobileledger/json/common/TransactionIdType.kt` (sealed interface)
-- [ ] T110 [P] [US3] Create `app/src/main/kotlin/net/ktnox/mobileledger/json/common/BalanceExtractor.kt` (interface)
-- [ ] T111 [P] [US3] Create `app/src/main/kotlin/net/ktnox/mobileledger/json/common/ObjectMapperProvider.kt` (object with KotlinModule)
+- [ ] T106 [P] [US3] Create `app/src/main/kotlin/net/ktnx/mobileledger/json/common/PostingFieldDelegate.kt`
+- [ ] T107 [P] [US3] Create `app/src/main/kotlin/net/ktnx/mobileledger/json/common/TransactionFieldDelegate.kt`
+- [X] T108 [P] [US3] Create `app/src/main/kotlin/net/ktnx/mobileledger/json/common/StyleConfigurer.kt` (sealed interface) ✅
+- [ ] T109 [P] [US3] Create `app/src/main/kotlin/net/ktnx/mobileledger/json/common/TransactionIdType.kt` (sealed interface)
+- [ ] T110 [P] [US3] Create `app/src/main/kotlin/net/ktnx/mobileledger/json/common/BalanceExtractor.kt` (interface)
+- [X] T111 [P] [US3] Create `app/src/main/kotlin/net/ktnx/mobileledger/json/common/ObjectMapperProvider.kt` (object with KotlinModule) ✅
 
 ### Create Abstract Base Classes
 
