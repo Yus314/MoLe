@@ -44,13 +44,16 @@ class TransactionListAdapter : RecyclerView.Adapter<TransactionRowHolderBase>() 
                 oldItem: TransactionListItem,
                 newItem: TransactionListItem
             ): Boolean {
-                if (oldItem.type != newItem.type)
+                if (oldItem.type != newItem.type) {
                     return false
+                }
                 return when (oldItem.type) {
                     TransactionListItem.Type.DELIMITER ->
                         oldItem.date == newItem.date
+
                     TransactionListItem.Type.TRANSACTION ->
                         oldItem.getTransaction().ledgerId == newItem.getTransaction().ledgerId
+
                     TransactionListItem.Type.HEADER ->
                         true // there can be only one header
                 }
@@ -59,20 +62,20 @@ class TransactionListAdapter : RecyclerView.Adapter<TransactionRowHolderBase>() 
             override fun areContentsTheSame(
                 oldItem: TransactionListItem,
                 newItem: TransactionListItem
-            ): Boolean {
-                return when (oldItem.type) {
+            ): Boolean = when (oldItem.type) {
                     TransactionListItem.Type.DELIMITER ->
                         oldItem.isMonthShown == newItem.isMonthShown
+
                     TransactionListItem.Type.TRANSACTION ->
                         oldItem.getTransaction() == newItem.getTransaction() &&
                                 Misc.equalStrings(oldItem.boldAccountName, newItem.boldAccountName) &&
                                 Misc.equalStrings(oldItem.runningTotal, newItem.runningTotal)
+
                     TransactionListItem.Type.HEADER ->
                         // headers don't differ in their contents. they observe the last update
                         // date and react to its changes
                         true
                 }
-            }
         }
         )
     }
@@ -86,9 +89,7 @@ class TransactionListAdapter : RecyclerView.Adapter<TransactionRowHolderBase>() 
         }
     }
 
-    override fun getItemViewType(position: Int): Int {
-        return listDiffer.currentList[position].type.ordinal
-    }
+    override fun getItemViewType(position: Int): Int = listDiffer.currentList[position].type.ordinal
 
     override fun onBindViewHolder(holder: TransactionRowHolderBase, position: Int) {
         val item = listDiffer.currentList.getOrNull(position)
@@ -97,16 +98,19 @@ class TransactionListAdapter : RecyclerView.Adapter<TransactionRowHolderBase>() 
         // the view will disappear when the notifications reaches the model, so by simply omitting
         // the out-of-range get() call nothing bad happens - just a to-be-deleted view remains
         // a bit longer
-        if (item == null)
+        if (item == null) {
             return
+        }
 
         val newType = item.type
 
         when (newType) {
             TransactionListItem.Type.TRANSACTION ->
                 holder.asTransaction().bind(item, item.boldAccountName)
+
             TransactionListItem.Type.DELIMITER ->
                 holder.asDelimiter().bind(item)
+
             TransactionListItem.Type.HEADER ->
                 holder.asHeader().bind()
         }
@@ -120,10 +124,12 @@ class TransactionListAdapter : RecyclerView.Adapter<TransactionRowHolderBase>() 
                 TransactionRowHolder(
                     TransactionListRowBinding.inflate(inflater, parent, false)
                 )
+
             TransactionListItem.Type.DELIMITER ->
                 TransactionListDelimiterRowHolder(
                     TransactionDelimiterBinding.inflate(inflater, parent, false)
                 )
+
             TransactionListItem.Type.HEADER ->
                 TransactionListLastUpdateRowHolder(
                     LastUpdateLayoutBinding.inflate(inflater, parent, false)
@@ -131,9 +137,7 @@ class TransactionListAdapter : RecyclerView.Adapter<TransactionRowHolderBase>() 
         }
     }
 
-    override fun getItemCount(): Int {
-        return listDiffer.currentList.size
-    }
+    override fun getItemCount(): Int = listDiffer.currentList.size
 
     fun setTransactions(newList: List<TransactionListItem>) {
         Logger.debug(

@@ -73,9 +73,7 @@ class AccountSummaryFragment : MobileLedgerListFragment() {
         return b?.root
     }
 
-    override fun getRefreshLayout(): SwipeRefreshLayout? {
-        return b?.accountSwipeRefreshLayout
-    }
+    override fun getRefreshLayout(): SwipeRefreshLayout? = b?.accountSwipeRefreshLayout
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         debug("flow", "AccountSummaryFragment.onActivityCreated()")

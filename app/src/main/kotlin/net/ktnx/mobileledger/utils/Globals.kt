@@ -102,12 +102,8 @@ object Globals {
     }
 
     @JvmStatic
-    fun formatLedgerDate(date: SimpleDate): String {
-        return dateFormatter.get()?.format(date.toDate()) ?: ""
-    }
+    fun formatLedgerDate(date: SimpleDate): String = dateFormatter.get()?.format(date.toDate()) ?: ""
 
     @JvmStatic
-    fun formatIsoDate(date: SimpleDate): String {
-        return isoDateFormatter.get()?.format(date.toDate()) ?: ""
-    }
+    fun formatIsoDate(date: SimpleDate): String = isoDateFormatter.get()?.format(date.toDate()) ?: ""
 }

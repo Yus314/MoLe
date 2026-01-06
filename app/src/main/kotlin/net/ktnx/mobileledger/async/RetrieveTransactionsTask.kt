@@ -149,6 +149,7 @@ class RetrieveTransactionsTask(private val profile: Profile) : Thread() {
                             L("→ expecting account amount")
                         }
                     }
+
                     ParserState.EXPECTING_ACCOUNT_AMOUNT -> {
                         val m = reAccountValue.matcher(line)
                         var matchFound = false
@@ -195,6 +196,7 @@ class RetrieveTransactionsTask(private val profile: Profile) : Thread() {
                             L("→ expecting account")
                         }
                     }
+
                     ParserState.EXPECTING_TRANSACTION -> {
                         if (line.isNotEmpty() && line[0] == ' ') continue
                         val m = reTransactionStart.matcher(line)
@@ -223,6 +225,7 @@ class RetrieveTransactionsTask(private val profile: Profile) : Thread() {
                             break@lines
                         }
                     }
+
                     ParserState.EXPECTING_TRANSACTION_DESCRIPTION -> {
                         if (line.isNotEmpty() && line[0] == ' ') continue
                         val m = reTransactionDescription.matcher(line)
@@ -257,6 +260,7 @@ class RetrieveTransactionsTask(private val profile: Profile) : Thread() {
                             )
                         }
                     }
+
                     ParserState.EXPECTING_TRANSACTION_DETAILS -> {
                         val currentTransaction = requireNotNull(transaction) { "Transaction is null" }
                         if (line.isEmpty()) {
@@ -330,6 +334,7 @@ class RetrieveTransactionsTask(private val profile: Profile) : Thread() {
         val apiVersion = API.valueOf(profile.apiVersion)
         return when {
             apiVersion == API.auto -> retrieveAccountListAnyVersion()
+
             apiVersion == API.html -> {
                 Logger.debug(
                     "json",
@@ -337,6 +342,7 @@ class RetrieveTransactionsTask(private val profile: Profile) : Thread() {
                 )
                 null
             }
+
             else -> retrieveAccountListForVersion(apiVersion)
         }
     }
@@ -419,6 +425,7 @@ class RetrieveTransactionsTask(private val profile: Profile) : Thread() {
         val apiVersion = API.valueOf(profile.apiVersion)
         return when {
             apiVersion == API.auto -> retrieveTransactionListAnyVersion()
+
             apiVersion == API.html -> {
                 Logger.debug(
                     "json",
@@ -426,6 +433,7 @@ class RetrieveTransactionsTask(private val profile: Profile) : Thread() {
                 )
                 null
             }
+
             else -> retrieveTransactionListForVersion(apiVersion)
         }
     }
@@ -632,12 +640,10 @@ class RetrieveTransactionsTask(private val profile: Profile) : Thread() {
             fun indeterminate(): Progress = Progress()
 
             @JvmStatic
-            fun finished(error: String?): Progress {
-                return Progress().apply {
+            fun finished(error: String?): Progress = Progress().apply {
                     state = ProgressState.FINISHED
                     this.error = error
                 }
-            }
         }
     }
 
@@ -741,7 +747,9 @@ class RetrieveTransactionsTask(private val profile: Profile) : Thread() {
                         if (!currencyPost.isNullOrEmpty()) return null
                         currencyPre
                     }
+
                     !currencyPost.isNullOrEmpty() -> currencyPost
+
                     else -> null
                 }
 

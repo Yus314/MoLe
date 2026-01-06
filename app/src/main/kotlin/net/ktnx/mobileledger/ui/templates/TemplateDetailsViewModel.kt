@@ -93,6 +93,7 @@ class TemplateDetailsViewModel : ViewModel() {
                     }
                     hasEmptyItem = true
                 }
+
                 else -> {
                     accRow.position = newList.size.toLong()
                     newList.add(accRow)
@@ -126,6 +127,7 @@ class TemplateDetailsViewModel : ViewModel() {
                     items.setValue(newList)
                 }
             }
+
             else -> Logger.debug(TAG, "No changes, ignoring new list")
         }
     }
@@ -266,8 +268,10 @@ class TemplateDetailsViewModel : ViewModel() {
             when (item) {
                 is TemplateDetailsItem.Header ->
                     result.add(TemplateDetailsItem.Header(item.asHeaderItem()))
+
                 is TemplateDetailsItem.AccountRow ->
                     result.add(TemplateDetailsItem.AccountRow(item.asAccountRowItem()))
+
                 else -> throw RuntimeException("Unexpected item $item")
             }
         }

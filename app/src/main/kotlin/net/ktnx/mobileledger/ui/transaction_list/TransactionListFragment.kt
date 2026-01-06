@@ -47,7 +47,9 @@ import net.ktnx.mobileledger.utils.Logger
 import net.ktnx.mobileledger.utils.SimpleDate
 
 @Suppress("DEPRECATION")
-class TransactionListFragment : MobileLedgerListFragment(), DatePickerFragment.DatePickedListener {
+class TransactionListFragment :
+    MobileLedgerListFragment(),
+    DatePickerFragment.DatePickedListener {
     private var menuTransactionListFilter: MenuItem? = null
     private var menuGoToDate: MenuItem? = null
     private lateinit var model: MainModel
@@ -103,9 +105,7 @@ class TransactionListFragment : MobileLedgerListFragment(), DatePickerFragment.D
         Logger.debug("flow", "TransactionListFragment.onPause()")
     }
 
-    override fun getRefreshLayout(): SwipeRefreshLayout? {
-        return b?.transactionSwipe
-    }
+    override fun getRefreshLayout(): SwipeRefreshLayout? = b?.transactionSwipe
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         Logger.debug("flow", "TransactionListFragment.onActivityCreated called")

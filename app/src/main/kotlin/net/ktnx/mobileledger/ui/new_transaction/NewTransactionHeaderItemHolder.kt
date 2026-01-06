@@ -43,7 +43,8 @@ import net.ktnx.mobileledger.utils.SimpleDate
 internal class NewTransactionHeaderItemHolder(
     private val b: NewTransactionHeaderRowBinding,
     adapter: NewTransactionItemsAdapter
-) : NewTransactionItemViewHolder(b.root), DatePickerFragment.DatePickedListener {
+) : NewTransactionItemViewHolder(b.root),
+    DatePickerFragment.DatePickedListener {
 
     private var ignoreFocusChanges = false
     private var decimalSeparator: String = ""
@@ -159,6 +160,7 @@ internal class NewTransactionHeaderItemHolder(
                     b.transactionComment.visibility = View.VISIBLE
                     b.transactionComment.requestFocus()
                 }
+
                 FocusedElement.Description -> {
                     val focused = b.newTransactionDescription.requestFocus()
                     // tvDescription.dismissDropDown();
@@ -166,6 +168,7 @@ internal class NewTransactionHeaderItemHolder(
                         Misc.showSoftKeyboard(b.root.context as NewTransactionActivity)
                     }
                 }
+
                 else -> { /* no-op */ }
             }
         } finally {
@@ -336,8 +339,11 @@ internal class NewTransactionHeaderItemHolder(
             if (focusedView === editText) Typeface.NORMAL else Typeface.ITALIC
         )
         editText.visibility =
-            if (focusedView !== editText && TextUtils.isEmpty(comment)) View.INVISIBLE
-            else View.VISIBLE
+            if (focusedView !== editText && TextUtils.isEmpty(comment)) {
+                View.INVISIBLE
+            } else {
+                View.VISIBLE
+            }
     }
 
     override fun onDatePicked(year: Int, month: Int, day: Int) {

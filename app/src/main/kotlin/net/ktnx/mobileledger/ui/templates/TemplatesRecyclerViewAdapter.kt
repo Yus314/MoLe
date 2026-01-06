@@ -37,16 +37,12 @@ class TemplatesRecyclerViewAdapter : RecyclerView.Adapter<BaseTemplateViewHolder
             override fun areItemsTheSame(
                 oldItem: BaseTemplateItem,
                 newItem: BaseTemplateItem
-            ): Boolean {
-                return oldItem.id == newItem.id
-            }
+            ): Boolean = oldItem.id == newItem.id
 
             override fun areContentsTheSame(
                 oldItem: BaseTemplateItem,
                 newItem: BaseTemplateItem
-            ): Boolean {
-                return oldItem == newItem
-            }
+            ): Boolean = oldItem == newItem
         }
         )
     }
@@ -58,10 +54,12 @@ class TemplatesRecyclerViewAdapter : RecyclerView.Adapter<BaseTemplateViewHolder
                 val binding = TemplateListTemplateItemBinding.inflate(inflater, parent, false)
                 BaseTemplateViewHolder.TemplateViewHolder(binding)
             }
+
             ITEM_TYPE_DIVIDER -> {
                 val binding = TemplatesFallbackDividerBinding.inflate(inflater, parent, false)
                 BaseTemplateViewHolder.TemplateDividerViewHolder(binding)
             }
+
             else -> throw RuntimeException("Can't handle $viewType")
         }
     }
@@ -70,17 +68,13 @@ class TemplatesRecyclerViewAdapter : RecyclerView.Adapter<BaseTemplateViewHolder
         holder.bindToItem(listDiffer.currentList[position])
     }
 
-    override fun getItemViewType(position: Int): Int {
-        return when (val item = getItem(position)) {
+    override fun getItemViewType(position: Int): Int = when (val item = getItem(position)) {
             is TemplateItem -> ITEM_TYPE_TEMPLATE
             is TemplateDivider -> ITEM_TYPE_DIVIDER
             else -> throw RuntimeException("Can't handle $item")
         }
-    }
 
-    override fun getItemCount(): Int {
-        return listDiffer.currentList.size
-    }
+    override fun getItemCount(): Int = listDiffer.currentList.size
 
     fun setTemplates(newList: List<TemplateHeader>) {
         val itemList = mutableListOf<BaseTemplateItem>()
@@ -97,9 +91,7 @@ class TemplatesRecyclerViewAdapter : RecyclerView.Adapter<BaseTemplateViewHolder
         listDiffer.submitList(itemList)
     }
 
-    fun getItem(position: Int): BaseTemplateItem {
-        return listDiffer.currentList[position]
-    }
+    fun getItem(position: Int): BaseTemplateItem = listDiffer.currentList[position]
 
     sealed class BaseTemplateItem {
         abstract val id: Long

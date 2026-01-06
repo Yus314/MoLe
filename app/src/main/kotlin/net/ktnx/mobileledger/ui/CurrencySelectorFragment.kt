@@ -120,8 +120,11 @@ class CurrencySelectorFragment :
                         net.ktnx.mobileledger.db.Currency(
                         0,
                         tvNewCurrName.text.toString(),
-                        if (rgPosition.checkedRadioButtonId == R.id.currency_position_left)
-                            "before" else "after",
+                        if (rgPosition.checkedRadioButtonId == R.id.currency_position_left) {
+                            "before"
+                        } else {
+                            "after"
+                        },
                         gap.isChecked
                     )
                     )
@@ -216,18 +219,14 @@ class CurrencySelectorFragment :
 
         @JvmStatic
         @Suppress("unused")
-        fun newInstance(): CurrencySelectorFragment {
-            return newInstance(DEFAULT_COLUMN_COUNT, DEFAULT_SHOW_PARAMS)
-        }
+        fun newInstance(): CurrencySelectorFragment = newInstance(DEFAULT_COLUMN_COUNT, DEFAULT_SHOW_PARAMS)
 
         @JvmStatic
-        fun newInstance(columnCount: Int, showParams: Boolean): CurrencySelectorFragment {
-            return CurrencySelectorFragment().apply {
+        fun newInstance(columnCount: Int, showParams: Boolean): CurrencySelectorFragment = CurrencySelectorFragment().apply {
                 arguments = Bundle().apply {
                     putInt(ARG_COLUMN_COUNT, columnCount)
                     putBoolean(ARG_SHOW_PARAMS, showParams)
                 }
             }
-        }
     }
 }

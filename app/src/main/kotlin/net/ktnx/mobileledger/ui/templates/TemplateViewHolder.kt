@@ -27,15 +27,13 @@ import net.ktnx.mobileledger.databinding.TemplatesFallbackDividerBinding
 abstract class BaseTemplateViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
     abstract fun bindToItem(item: TemplatesRecyclerViewAdapter.BaseTemplateItem)
 
-    class TemplateDividerViewHolder(binding: TemplatesFallbackDividerBinding) :
-        BaseTemplateViewHolder(binding.root) {
+    class TemplateDividerViewHolder(binding: TemplatesFallbackDividerBinding) : BaseTemplateViewHolder(binding.root) {
         override fun bindToItem(item: TemplatesRecyclerViewAdapter.BaseTemplateItem) {
             // nothing
         }
     }
 
-    class TemplateViewHolder(private val b: TemplateListTemplateItemBinding) :
-        BaseTemplateViewHolder(b.root) {
+    class TemplateViewHolder(private val b: TemplateListTemplateItemBinding) : BaseTemplateViewHolder(b.root) {
         override fun bindToItem(baseItem: TemplatesRecyclerViewAdapter.BaseTemplateItem) {
             val item = (baseItem as TemplatesRecyclerViewAdapter.TemplateItem).template
             b.templateName.text = item.name
@@ -49,9 +47,15 @@ abstract class BaseTemplateViewHolder(itemView: View) : RecyclerView.ViewHolder(
                 builder.setTitle(templateName)
                 builder.setItems(R.array.templates_ctx_menu) { dialog, which ->
                     when (which) {
-                        0 -> activity.onEditTemplate(item.id) // edit
-                        1 -> activity.onDuplicateTemplate(item.id) // duplicate
-                        2 -> activity.onDeleteTemplate(item.id) // delete
+                        0 -> activity.onEditTemplate(item.id)
+
+                        // edit
+                        1 -> activity.onDuplicateTemplate(item.id)
+
+                        // duplicate
+                        2 -> activity.onDeleteTemplate(item.id)
+
+                        // delete
                         else -> throw RuntimeException("Unknown menu item id ($which)")
                     }
                     dialog.dismiss()

@@ -149,15 +149,16 @@ internal class TemplateListDivider(
         adapter: TemplatesRecyclerViewAdapter,
         childAdapterPosition: Int,
         itemCount: Int
-    ): Boolean {
-        return when {
+    ): Boolean = when {
             childAdapterPosition == RecyclerView.NO_POSITION -> true
+
             adapter.getItemViewType(childAdapterPosition) ==
                 TemplatesRecyclerViewAdapter.ITEM_TYPE_DIVIDER -> true
+
             childAdapterPosition + 1 < itemCount &&
                 adapter.getItemViewType(childAdapterPosition + 1) ==
                 TemplatesRecyclerViewAdapter.ITEM_TYPE_DIVIDER -> true
+
             else -> false
         }
-    }
 }

@@ -41,9 +41,7 @@ import net.ktnx.mobileledger.utils.Logger
 class ProfileDetailActivity : CrashReportingActivity() {
     private var mFragment: ProfileDetailFragment? = null
 
-    private fun getModel(): ProfileDetailModel {
-        return ViewModelProvider(this)[ProfileDetailModel::class.java]
-    }
+    private fun getModel(): ProfileDetailModel = ViewModelProvider(this)[ProfileDetailModel::class.java]
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val id = intent.getLongExtra(ProfileDetailFragment.ARG_ITEM_ID, -1)

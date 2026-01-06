@@ -80,19 +80,15 @@ class HledgerVersion {
         return result
     }
 
-    override fun toString(): String {
-        return if (isPre_1_20_1) {
+    override fun toString(): String = if (isPre_1_20_1) {
             "(before 1.20)"
         } else if (hasPatch) {
             String.format(Locale.ROOT, "%d.%d.%d", major, minor, patch)
         } else {
             String.format(Locale.ROOT, "%d.%d", major, minor)
         }
-    }
 
-    fun atLeast(major: Int, minor: Int): Boolean {
-        return (this.major == major && this.minor >= minor) || this.major > major
-    }
+    fun atLeast(major: Int, minor: Int): Boolean = (this.major == major && this.minor >= minor) || this.major > major
 
     fun getSuitableApiVersion(): API? {
         if (isPre_1_20_1) return null

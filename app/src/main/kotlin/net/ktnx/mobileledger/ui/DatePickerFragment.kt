@@ -28,7 +28,9 @@ import net.ktnx.mobileledger.R
 import net.ktnx.mobileledger.model.FutureDates
 import net.ktnx.mobileledger.utils.SimpleDate
 
-class DatePickerFragment : AppCompatDialogFragment(), CalendarView.OnDateChangeListener {
+class DatePickerFragment :
+    AppCompatDialogFragment(),
+    CalendarView.OnDateChangeListener {
     private val presentDate: Calendar = GregorianCalendar.getInstance()
     private var onDatePickedListener: DatePickedListener? = null
     private var minDate: Long = 0

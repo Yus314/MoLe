@@ -24,7 +24,9 @@ import java.security.NoSuchAlgorithmException
 
 class Digest
 @Throws(NoSuchAlgorithmException::class)
-constructor(type: String) {
+constructor(
+    type: String
+) {
     private val digest: MessageDigest = MessageDigest.getInstance(type)
 
     fun update(input: Byte) {

@@ -93,11 +93,9 @@ abstract class DB : RoomDatabase() {
         private var instance: DB? = null
 
         @JvmStatic
-        fun get(): DB {
-            return instance ?: synchronized(DB::class.java) {
+        fun get(): DB = instance ?: synchronized(DB::class.java) {
                 instance ?: buildDatabase().also { instance = it }
             }
-        }
 
         private fun buildDatabase(): DB {
             val builder = Room.databaseBuilder(App.instance, DB::class.java, DB_NAME)
@@ -175,8 +173,7 @@ abstract class DB : RoomDatabase() {
             }
         }
 
-        private fun singleVersionMigration(toVersion: Int): Migration {
-            return object : Migration(toVersion - 1, toVersion) {
+        private fun singleVersionMigration(toVersion: Int): Migration = object : Migration(toVersion - 1, toVersion) {
                 override fun migrate(db: SupportSQLiteDatabase) {
                     val fileName = String.format(Locale.US, "db_%d", toVersion)
                     applyRevisionFile(db, fileName)
@@ -209,16 +206,13 @@ abstract class DB : RoomDatabase() {
                     }
                 }
             }
-        }
 
-        private fun multiVersionMigration(fromVersion: Int, toVersion: Int): Migration {
-            return object : Migration(fromVersion, toVersion) {
+        private fun multiVersionMigration(fromVersion: Int, toVersion: Int): Migration = object : Migration(fromVersion, toVersion) {
                 override fun migrate(db: SupportSQLiteDatabase) {
                     val fileName = String.format(Locale.US, "db_%d_%d", fromVersion, toVersion)
                     applyRevisionFile(db, fileName)
                 }
             }
-        }
 
         @JvmStatic
         fun applyRevisionFile(db: SupportSQLiteDatabase, fileName: String) {

@@ -50,16 +50,12 @@ internal class NewTransactionItemsAdapter(
             override fun areItemsTheSame(
                 oldItem: NewTransactionModel.Item,
                 newItem: NewTransactionModel.Item
-            ): Boolean {
-                return oldItem.id == newItem.id
-            }
+            ): Boolean = oldItem.id == newItem.id
 
             override fun areContentsTheSame(
                 oldItem: NewTransactionModel.Item,
                 newItem: NewTransactionModel.Item
-            ): Boolean {
-                return oldItem.equalContents(newItem)
-            }
+            ): Boolean = oldItem.equalContents(newItem)
         }
         )
 
@@ -117,24 +113,19 @@ internal class NewTransactionItemsAdapter(
         })
     }
 
-    override fun getItemViewType(position: Int): Int {
-        return when (val type = differ.currentList[position].type) {
+    override fun getItemViewType(position: Int): Int = when (val type = differ.currentList[position].type) {
             ItemType.generalData -> ITEM_VIEW_TYPE_HEADER
             ItemType.transactionRow -> ITEM_VIEW_TYPE_ACCOUNT
             else -> throw RuntimeException("Can't handle $type")
         }
-    }
 
-    override fun getItemId(position: Int): Long {
-        return differ.currentList[position].id.toLong()
-    }
+    override fun getItemId(position: Int): Long = differ.currentList[position].id.toLong()
 
     fun setProfile(profile: Profile) {
         mProfile = profile
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NewTransactionItemViewHolder {
-        return when (viewType) {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NewTransactionItemViewHolder = when (viewType) {
             ITEM_VIEW_TYPE_HEADER -> {
                 val headerBinding = NewTransactionHeaderRowBinding.inflate(
                     LayoutInflater.from(parent.context),
@@ -148,6 +139,7 @@ internal class NewTransactionItemsAdapter(
                 )
                 headerHolder
             }
+
             ITEM_VIEW_TYPE_ACCOUNT -> {
                 val accBinding = NewTransactionAccountRowBinding.inflate(
                     LayoutInflater.from(parent.context),
@@ -161,9 +153,9 @@ internal class NewTransactionItemsAdapter(
                 )
                 accHolder
             }
+
             else -> throw RuntimeException("Can't handle view type $viewType")
         }
-    }
 
     override fun onBindViewHolder(holder: NewTransactionItemViewHolder, position: Int) {
         Logger.debug(
@@ -240,9 +232,7 @@ internal class NewTransactionItemsAdapter(
         differ.submitList(newList)
     }
 
-    fun getItem(position: Int): NewTransactionModel.Item {
-        return differ.currentList[position]
-    }
+    fun getItem(position: Int): NewTransactionModel.Item = differ.currentList[position]
 
     companion object {
         private const val ITEM_VIEW_TYPE_HEADER = 1

@@ -67,6 +67,7 @@ class TemplatesActivity :
                     b.toolbar.title = getString(R.string.title_activity_templates)
                     b.fab.setImageResource(R.drawable.ic_add_white_24dp)
                 }
+
                 else -> {
                     b.fab.setImageResource(R.drawable.ic_save_white_24dp)
                 }

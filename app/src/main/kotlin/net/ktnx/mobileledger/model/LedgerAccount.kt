@@ -79,9 +79,7 @@ class LedgerAccount(
         level = split.size - 1
     }
 
-    fun isParentOf(potentialChild: LedgerAccount): Boolean {
-        return potentialChild.name.startsWith("$name:")
-    }
+    fun isParentOf(potentialChild: LedgerAccount): Boolean = potentialChild.name.startsWith("$name:")
 
     @JvmOverloads
     fun addAmount(amount: Float, currency: String = "", amountStyle: AmountStyle? = null) {
@@ -119,9 +117,7 @@ class LedgerAccount(
         amounts?.forEach { it.propagateToAccount(acc) }
     }
 
-    fun allAmountsAreZero(): Boolean {
-        return amounts?.all { it.amount == 0f } ?: true
-    }
+    fun allAmountsAreZero(): Boolean = amounts?.all { it.amount == 0f } ?: true
 
     fun getAmounts(): List<LedgerAmount>? = amounts
 
@@ -181,9 +177,7 @@ class LedgerAccount(
         }
 
         @JvmStatic
-        fun isParentOf(possibleParent: String, accountName: String): Boolean {
-            return accountName.startsWith("$possibleParent:")
-        }
+        fun isParentOf(possibleParent: String, accountName: String): Boolean = accountName.startsWith("$possibleParent:")
 
         @JvmStatic
         fun fromDBO(input: AccountWithAmounts, parent: LedgerAccount?): LedgerAccount {

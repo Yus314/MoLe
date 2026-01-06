@@ -60,8 +60,7 @@ class ParsedPosting : BasePosting() {
 
     companion object {
         @JvmStatic
-        fun fromLedgerAccount(acc: LedgerTransactionAccount): ParsedPosting {
-            return ParsedPosting().apply {
+        fun fromLedgerAccount(acc: LedgerTransactionAccount): ParsedPosting = ParsedPosting().apply {
                 paccount = acc.accountName
                 pcomment = acc.comment ?: ""
                 pamount = mutableListOf(
@@ -80,6 +79,5 @@ class ParsedPosting : BasePosting() {
                     }
                 )
             }
-        }
     }
 }

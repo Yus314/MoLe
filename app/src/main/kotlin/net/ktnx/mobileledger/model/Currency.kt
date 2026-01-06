@@ -36,13 +36,11 @@ class Currency(
 
     companion object {
         @JvmStatic
-        fun equal(left: Currency?, right: Currency?): Boolean {
-            return if (left == null) {
+        fun equal(left: Currency?, right: Currency?): Boolean = if (left == null) {
                 right == null
             } else {
                 left == right
             }
-        }
 
         @JvmStatic
         fun equal(left: Currency?, right: String?): Boolean {

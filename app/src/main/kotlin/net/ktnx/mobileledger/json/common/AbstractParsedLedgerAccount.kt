@@ -39,11 +39,9 @@ object AccountHelper {
         commodity: String,
         amount: Float,
         amountStyle: AmountStyle?
-    ): net.ktnx.mobileledger.json.ParsedLedgerAccount.SimpleBalance {
-        return net.ktnx.mobileledger.json.ParsedLedgerAccount.SimpleBalance(
+    ): net.ktnx.mobileledger.json.ParsedLedgerAccount.SimpleBalance = net.ktnx.mobileledger.json.ParsedLedgerAccount.SimpleBalance(
             commodity,
             amount,
             amountStyle
         )
-    }
 }

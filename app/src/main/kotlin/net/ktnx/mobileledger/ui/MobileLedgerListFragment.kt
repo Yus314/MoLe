@@ -29,9 +29,7 @@ abstract class MobileLedgerListFragment : Fragment() {
 
     abstract fun getRefreshLayout(): SwipeRefreshLayout?
 
-    fun getMainActivity(): MainActivity {
-        return requireActivity() as MainActivity
-    }
+    fun getMainActivity(): MainActivity = requireActivity() as MainActivity
 
     protected open fun themeChanged(counter: Int?) {
         getRefreshLayout()?.setColorSchemeColors(*Colors.getSwipeCircleColors())

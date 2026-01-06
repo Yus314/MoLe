@@ -37,21 +37,13 @@ import net.ktnx.mobileledger.utils.Logger
 class App : Application() {
     private var monthNamesPrepared = false
 
-    private fun getAuthURL(): String {
-        return profileModel?.getUrl() ?: Data.getProfile()?.url ?: ""
-    }
+    private fun getAuthURL(): String = profileModel?.getUrl() ?: Data.getProfile()?.url ?: ""
 
-    private fun getAuthUserName(): String {
-        return profileModel?.getAuthUserName() ?: Data.getProfile()?.authUser ?: ""
-    }
+    private fun getAuthUserName(): String = profileModel?.getAuthUserName() ?: Data.getProfile()?.authUser ?: ""
 
-    private fun getAuthPassword(): String {
-        return profileModel?.getAuthPassword() ?: Data.getProfile()?.authPassword ?: ""
-    }
+    private fun getAuthPassword(): String = profileModel?.getAuthPassword() ?: Data.getProfile()?.authPassword ?: ""
 
-    private fun getAuthEnabled(): Boolean {
-        return profileModel?.getUseAuthentication() ?: Data.getProfile()?.isAuthEnabled() ?: false
-    }
+    private fun getAuthEnabled(): Boolean = profileModel?.getUseAuthentication() ?: Data.getProfile()?.isAuthEnabled() ?: false
 
     override fun onCreate() {
         Logger.debug("flow", "App onCreate()")

@@ -73,10 +73,8 @@ class TemplateDetailSourceSelectorRecyclerViewAdapter :
             b.root.setOnClickListener { mItem?.let { notifySourceSelected(it) } }
         }
 
-        override fun toString(): String {
-            return super.toString() + " " + b.groupNumber.text + ": '" +
+        override fun toString(): String = super.toString() + " " + b.groupNumber.text + ": '" +
                     b.matchedText.text + "'"
-        }
 
         fun bindTo(item: TemplateDetailSource) {
             mItem = item
