@@ -8,9 +8,13 @@
       url = "github:tadfisher/android-nixpkgs";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    pre-commit-hooks = {
+      url = "github:cachix/pre-commit-hooks.nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = { self, nixpkgs, flake-utils, android-nixpkgs }:
+  outputs = { self, nixpkgs, flake-utils, android-nixpkgs, pre-commit-hooks }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs {
@@ -335,6 +339,57 @@
           echo "================================================="
         '';
 
+        # Pre-commit hooks 設定
+        pre-commit-check = pre-commit-hooks.lib.${system}.run {
+          src = ./.;
+          hooks = {
+            # Kotlin コードスタイルチェック（チェックのみ、修正しない）
+            ktlint = {
+              enable = true;
+              name = "ktlint";
+              description = "Kotlin linter and formatter";
+              entry = "${pkgs.ktlint}/bin/ktlint --editorconfig=.editorconfig";
+              files = "\\.kts?$";
+              language = "system";
+              types = [ "file" ];
+            };
+
+            # Kotlin 静的解析
+            detekt = {
+              enable = true;
+              name = "detekt";
+              description = "Kotlin static code analysis";
+              entry = "${pkgs.writeShellScript "detekt-wrapper" ''
+                # detekt expects comma-separated list of files
+                files=$(echo "$@" | tr ' ' ',')
+                if [ -n "$files" ]; then
+                  ${pkgs.detekt}/bin/detekt --config detekt.yml --build-upon-default-config --input "$files"
+                fi
+              ''}";
+              files = "\\.kts?$";
+              language = "system";
+              pass_filenames = true;
+              types = [ "file" ];
+            };
+          };
+        };
+
+        # Android Lint スクリプト（CI用、コミット時は重いため別途実行）
+        lintScript = pkgs.writeShellScriptBin "lint-mole" ''
+          set -e
+          echo "================================================="
+          echo "Running ${appName} Android Lint (v${version})"
+          echo "================================================="
+
+          ${runInFhs ''
+            ${makeLocalProperties}
+            ./gradlew --no-daemon lintDebug
+          ''}
+
+          echo ""
+          echo "Lint complete! Check app/build/reports/lint-results-debug.html for details."
+        '';
+
       in
       {
         # パッケージ定義
@@ -390,19 +445,37 @@
               description = "Full verification workflow: test → build → install";
             };
           };
+          lint = {
+            type = "app";
+            program = "${lintScript}/bin/lint-mole";
+            meta = {
+              description = "Run Android Lint checks via Gradle";
+            };
+          };
         };
+
+        # Checks (現時点では pre-commit は devShell でのみ使用)
+        # 既存コードの lint 対応が完了したら、以下を有効化:
+        # checks = {
+        #   pre-commit-check = pre-commit-check;
+        # };
 
         # FHS環境でのビルド用シェル (推奨)
         devShells.fhs = fhsEnv;
 
         # 通常のNix環境（開発ツールのみ、ビルドは不可）
         devShells.default = pkgs.mkShell {
+          inherit (pre-commit-check) shellHook;
+
           buildInputs = [
             # Java Development Kit
             javaVersion
 
             # Android SDK
             android-sdk
+
+            # Pre-commit
+            pkgs.pre-commit
           ] ++ (with pkgs; [
             # Git for version control
             git
@@ -412,35 +485,35 @@
             gnused
             findutils
             coreutils
+
+            # Lint tools
+            ktlint
+            detekt
           ]);
 
-          shellHook = ''
-            ${commonEnvVars}
+          # shellHook は pre-commit-check から継承されるため、
+          # 追加のメッセージは MOTD スタイルで表示
+          MOTD = ''
+            =================================================
+            ${appName} Development Environment
+            Version: ${version}
+            =================================================
 
-            echo "================================================="
-            echo "${appName} Development Environment"
-            echo "Version: ${version}"
-            echo "================================================="
-            echo ""
-            echo "Java version:"
-            java -version 2>&1 | head -1
-            echo ""
-            echo "Environment:"
-            echo "  JAVA_HOME: $JAVA_HOME"
-            echo "  ANDROID_HOME: $ANDROID_HOME"
-            echo ""
-            echo "Android SDK:"
-            echo "  Build Tools: ${androidVersions.buildTools}"
-            echo "  Platform: ${androidVersions.platform} (Android 14)"
-            echo "  Target SDK: ${androidVersions.targetSdk}"
-            echo ""
-            echo "⚠️  WARNING: ビルドにはFHS環境が必要です"
-            echo ""
-            echo "ビルドするには以下を使用してください:"
-            echo "  nix develop .#fhs"
-            echo ""
-            echo "このシェルは開発ツール（git等）のみ利用可能です。"
-            echo "================================================="
+            Pre-commit hooks: ENABLED
+              - ktlint (Kotlin style)
+              - detekt (Kotlin static analysis)
+
+            Commands:
+              pre-commit run --all-files  # 全ファイルに lint 実行
+              pre-commit run ktlint       # ktlint のみ実行
+              nix run .#lint              # Android Lint (CI用)
+              nix flake check             # CI 用チェック
+
+            Build commands:
+              nix develop .#fhs           # FHS ビルド環境
+              nix run .#build             # デバッグ APK ビルド
+              nix run .#test              # テスト実行
+            =================================================
           '';
         };
       }

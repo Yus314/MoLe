@@ -1,0 +1,105 @@
+# Detekt configuration for MoLe Android project
+# https://detekt.dev/docs/introduction/configurations
+
+build:
+  maxIssues: -1  # 既存コードの段階的な改善のため、一時的に制限を無効化
+  excludeCorrectable: false
+
+config:
+  validation: true
+  warningsAsErrors: false
+
+processors:
+  active: true
+
+console-reports:
+  active: true
+
+output-reports:
+  active: true
+
+complexity:
+  active: true
+  CyclomaticComplexMethod:
+    active: true
+    threshold: 15
+  LongMethod:
+    active: true
+    threshold: 60
+  LongParameterList:
+    active: true
+    functionThreshold: 6
+    constructorThreshold: 7
+  NestedBlockDepth:
+    active: true
+    threshold: 4
+  TooManyFunctions:
+    active: true
+    thresholdInFiles: 20
+    thresholdInClasses: 20
+    thresholdInInterfaces: 20
+    thresholdInObjects: 20
+    thresholdInEnums: 20
+
+coroutines:
+  active: true
+  GlobalCoroutineUsage:
+    active: true
+  SuspendFunWithCoroutineScopeReceiver:
+    active: true
+
+empty-blocks:
+  active: true
+
+exceptions:
+  active: true
+  NotImplementedDeclaration:
+    active: true
+  SwallowedException:
+    active: true
+  TooGenericExceptionCaught:
+    active: false  # Android では広範な例外キャッチが一般的
+
+naming:
+  active: true
+  FunctionNaming:
+    active: true
+    ignoreAnnotated:
+      - 'Composable'
+      - 'Test'
+  VariableNaming:
+    active: true
+    variablePattern: '[a-z][A-Za-z0-9]*'
+    privateVariablePattern: '_?[a-z][A-Za-z0-9]*'
+
+performance:
+  active: true
+  SpreadOperator:
+    active: false  # Android では許容
+
+potential-bugs:
+  active: true
+  UnsafeCallOnNullableType:
+    active: true
+  UselessPostfixExpression:
+    active: true
+
+style:
+  active: true
+  ForbiddenComment:
+    active: false  # TODO/FIXME コメントを許可
+  MagicNumber:
+    active: false  # Android UI では数値リテラルが頻出
+  MaxLineLength:
+    active: true
+    maxLineLength: 120
+    excludeCommentStatements: true
+  ReturnCount:
+    active: true
+    max: 3
+    excludeGuardClauses: true
+  UnusedPrivateMember:
+    active: true
+    allowedNames: '(_|ignored|expected|serialVersionUID)'
+  WildcardImport:
+    active: false  # Android Studio のデフォルト動作を許容
