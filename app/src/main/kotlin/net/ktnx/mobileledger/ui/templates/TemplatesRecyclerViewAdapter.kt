@@ -107,7 +107,7 @@ class TemplatesRecyclerViewAdapter : RecyclerView.Adapter<BaseTemplateViewHolder
             get() = template.id
     }
 
-    object TemplateDivider : BaseTemplateItem() {
+    data object TemplateDivider : BaseTemplateItem() {
         override val id: Long
             get() = -1L
     }
