@@ -41,11 +41,11 @@ class LockHolder : AutoCloseable {
     }
 
     fun downgrade() {
-        if (rLock == null) throw IllegalStateException("no locks are held")
+        check(rLock != null) { "no locks are held" }
 
-        if (wLock == null) return
-
-        wLock!!.unlock()
-        wLock = null
+        wLock?.let {
+            it.unlock()
+            wLock = null
+        }
     }
 }

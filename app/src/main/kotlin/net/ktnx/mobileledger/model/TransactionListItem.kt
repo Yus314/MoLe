@@ -53,17 +53,15 @@ class TransactionListItem {
     val date: SimpleDate
         get() {
             _date?.let { return it }
-            if (type != Type.TRANSACTION)
-                throw IllegalStateException("Only transaction items have a date")
-            return transaction!!.requireDate()
+            check(type == Type.TRANSACTION) { "Only transaction items have a date" }
+            return checkNotNull(transaction) { "Transaction is null" }.requireDate()
         }
 
     fun getTransaction(): LedgerTransaction {
-        if (type != Type.TRANSACTION)
-            throw IllegalStateException(
-                String.format("Item type is not %s, but %s", Type.TRANSACTION, type)
-            )
-        return transaction!!
+        check(type == Type.TRANSACTION) {
+            "Item type is not ${Type.TRANSACTION}, but $type"
+        }
+        return checkNotNull(transaction) { "Transaction is null" }
     }
 
     enum class Type {
