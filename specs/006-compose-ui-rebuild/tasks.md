@@ -89,28 +89,28 @@
 
 ### User Story 2 の実装
 
-- [ ] T027 [P] [US2] app/src/main/kotlin/net/ktnx/mobileledger/ui/templates/TemplateListUiState.kt にデータクラスを作成
-- [ ] T028 [P] [US2] app/src/main/kotlin/net/ktnx/mobileledger/ui/templates/TemplateDetailUiState.kt にデータクラスを作成
-- [ ] T029 [US2] app/src/main/kotlin/net/ktnx/mobileledger/ui/templates/TemplateListViewModel.kt にStateFlowを使用したViewModelを作成
-- [ ] T030 [US2] app/src/main/kotlin/net/ktnx/mobileledger/ui/templates/TemplateDetailViewModel.kt にStateFlowを使用したViewModelを作成
-- [ ] T031 [US2] app/src/main/kotlin/net/ktnx/mobileledger/ui/templates/TemplateListScreen.kt にLazyColumnを使用した画面を作成
+- [X] T027 [P] [US2] app/src/main/kotlin/net/ktnx/mobileledger/ui/templates/TemplateListUiState.kt にデータクラスを作成
+- [X] T028 [P] [US2] app/src/main/kotlin/net/ktnx/mobileledger/ui/templates/TemplateDetailUiState.kt にデータクラスを作成
+- [X] T029 [US2] app/src/main/kotlin/net/ktnx/mobileledger/ui/templates/TemplateListViewModelCompose.kt にStateFlowを使用したViewModelを作成
+- [X] T030 [US2] app/src/main/kotlin/net/ktnx/mobileledger/ui/templates/TemplateDetailViewModelCompose.kt にStateFlowを使用したViewModelを作成
+- [X] T031 [US2] app/src/main/kotlin/net/ktnx/mobileledger/ui/templates/TemplateListScreen.kt にLazyColumnを使用した画面を作成
 - [ ] T031a [US2] TemplateListScreen で1000件以上のテンプレートデータでスクロールパフォーマンスを確認（SC-003: 60fps維持）
-- [ ] T032 [US2] app/src/main/kotlin/net/ktnx/mobileledger/ui/templates/TemplateDetailScreen.kt にフォームフィールド付き画面を作成
-- [ ] T033 [US2] app/src/main/kotlin/net/ktnx/mobileledger/ui/templates/TemplatesNavigation.kt にCompose Navigationを作成
-- [ ] T034 [US2] TemplateListScreen.kt にFABとスライド遷移アニメーションを実装
-- [ ] T035 [US2] TemplateListScreen.kt に長押し削除と確認ダイアログを実装
-- [ ] T036 [US2] app/src/main/kotlin/net/ktnx/mobileledger/ui/activity/TemplatesActivity.kt をsetContentとMoLeThemeを使用するよう更新
-- [ ] T037 [US2] `nix run .#verify` を実行してデバイスでテスト
+- [X] T032 [US2] app/src/main/kotlin/net/ktnx/mobileledger/ui/templates/TemplateDetailScreen.kt にフォームフィールド付き画面を作成
+- [X] T033 [US2] app/src/main/kotlin/net/ktnx/mobileledger/ui/templates/TemplatesNavigation.kt にCompose Navigationを作成
+- [X] T034 [US2] TemplateListScreen.kt にFABとスライド遷移アニメーションを実装
+- [X] T035 [US2] TemplateListScreen.kt に長押し削除と確認ダイアログを実装
+- [X] T036 [US2] app/src/main/kotlin/net/ktnx/mobileledger/ui/templates/TemplatesActivity.kt をsetContentとMoLeThemeを使用するよう更新
+- [X] T037 [US2] `nix run .#verify` を実行してデバイスでテスト
 
 ### User Story 2 のクリーンアップ
 
-- [ ] T038 [US2] 検証後、app/src/main/kotlin/net/ktnx/mobileledger/ui/templates/TemplateListFragment.kt を削除
-- [ ] T039 [US2] 検証後、app/src/main/kotlin/net/ktnx/mobileledger/ui/templates/TemplateDetailsFragment.kt を削除
-- [ ] T040 [US2] app/src/main/res/layout/ のfragment_template_list.xmlと関連レイアウトファイルを削除
-- [ ] T041 [US2] app/src/main/res/navigation/ のtemplate_list_navigation.xml を削除
-- [ ] T042 [US2] `nix run .#test` を実行して既存テストが通過することを確認
+- [X] T038 [US2] 検証後、app/src/main/kotlin/net/ktnx/mobileledger/ui/templates/TemplateListFragment.kt を削除
+- [X] T039 [US2] 検証後、app/src/main/kotlin/net/ktnx/mobileledger/ui/templates/TemplateDetailsFragment.kt を削除
+- [X] T040 [US2] app/src/main/res/layout/ のfragment_template_list.xmlと関連レイアウトファイルを削除
+- [X] T041 [US2] app/src/main/res/navigation/ のtemplate_list_navigation.xml を削除
+- [X] T042 [US2] `nix run .#test` を実行して既存テストが通過することを確認
 
-**チェックポイント**: User Story 2 完了 - TemplatesActivityのCompose移行完了
+**チェックポイント**: User Story 2 完了 - TemplatesActivityのCompose移行完了 ✓
 
 ---
 
