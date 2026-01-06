@@ -30,8 +30,7 @@ import net.ktnx.mobileledger.R
  * [RecyclerView.Adapter] that can display a Currency and makes a call to the
  * specified [OnCurrencySelectedListener].
  */
-class CurrencySelectorRecyclerViewAdapter :
-    ListAdapter<String, CurrencySelectorRecyclerViewAdapter.ViewHolder>(DIFF_CALLBACK) {
+class CurrencySelectorRecyclerViewAdapter : ListAdapter<String, CurrencySelectorRecyclerViewAdapter.ViewHolder>(DIFF_CALLBACK) {
 
     private var currencySelectedListener: OnCurrencySelectedListener? = null
     private var currencyLongClickListener: OnCurrencyLongClickListener? = null
@@ -82,9 +81,7 @@ class CurrencySelectorRecyclerViewAdapter :
             }
         }
 
-        override fun toString(): String {
-            return super.toString() + " '" + mNameView.text + "'"
-        }
+        override fun toString(): String = super.toString() + " '" + mNameView.text + "'"
 
         fun bindTo(item: String) {
             mItem = item
@@ -94,13 +91,9 @@ class CurrencySelectorRecyclerViewAdapter :
 
     companion object {
         private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<String>() {
-            override fun areItemsTheSame(oldItem: String, newItem: String): Boolean {
-                return oldItem == newItem
-            }
+            override fun areItemsTheSame(oldItem: String, newItem: String): Boolean = oldItem == newItem
 
-            override fun areContentsTheSame(oldItem: String, newItem: String): Boolean {
-                return true
-            }
+            override fun areContentsTheSame(oldItem: String, newItem: String): Boolean = true
         }
     }
 }

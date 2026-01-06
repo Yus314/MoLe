@@ -44,9 +44,7 @@ class ParsedAccountData {
      * Get the balance data from the first period entry.
      * In typical usage, there's usually one period entry with date "0000-01-01".
      */
-    fun getFirstPeriodBalance(): ParsedBalanceData? {
-        return pdperiods?.firstOrNull()?.balanceData
-    }
+    fun getFirstPeriodBalance(): ParsedBalanceData? = pdperiods?.firstOrNull()?.balanceData
 
     /**
      * Represents a single period entry: [date, balanceData]

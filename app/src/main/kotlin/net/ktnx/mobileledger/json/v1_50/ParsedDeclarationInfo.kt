@@ -28,7 +28,5 @@ data class ParsedDeclarationInfo(
     var file: String? = null,
     var line: Int = 0
 ) {
-    override fun toString(): String {
-        return String.format("%s:%d", file ?: "unknown", line)
-    }
+    override fun toString(): String = String.format("%s:%d", file ?: "unknown", line)
 }

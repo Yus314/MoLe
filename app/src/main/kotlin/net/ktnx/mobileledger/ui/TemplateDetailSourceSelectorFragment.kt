@@ -39,7 +39,9 @@ import net.ktnx.mobileledger.utils.Misc
  * Activities containing this fragment MUST implement the [OnSourceSelectedListener]
  * interface.
  */
-class TemplateDetailSourceSelectorFragment : AppCompatDialogFragment(), OnSourceSelectedListener {
+class TemplateDetailSourceSelectorFragment :
+    AppCompatDialogFragment(),
+    OnSourceSelectedListener {
 
     private var mColumnCount = DEFAULT_COLUMN_COUNT
     private var mSources: ArrayList<TemplateDetailSource>? = null
@@ -155,23 +157,19 @@ class TemplateDetailSourceSelectorFragment : AppCompatDialogFragment(), OnSource
 
         @JvmStatic
         @Suppress("unused")
-        fun newInstance(): TemplateDetailSourceSelectorFragment {
-            return newInstance(DEFAULT_COLUMN_COUNT, null, null)
-        }
+        fun newInstance(): TemplateDetailSourceSelectorFragment = newInstance(DEFAULT_COLUMN_COUNT, null, null)
 
         @JvmStatic
         fun newInstance(
             columnCount: Int,
             pattern: String?,
             testText: String?
-        ): TemplateDetailSourceSelectorFragment {
-            return TemplateDetailSourceSelectorFragment().apply {
+        ): TemplateDetailSourceSelectorFragment = TemplateDetailSourceSelectorFragment().apply {
                 arguments = Bundle().apply {
                     putInt(ARG_COLUMN_COUNT, columnCount)
                     pattern?.let { putString(ARG_PATTERN, it) }
                     testText?.let { putString(ARG_TEST_TEXT, it) }
                 }
             }
-        }
     }
 }

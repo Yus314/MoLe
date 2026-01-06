@@ -192,15 +192,13 @@ class NewTransactionActivity :
         return true
     }
 
-    fun dp2px(dp: Float): Int {
-        return Math.round(
+    fun dp2px(dp: Float): Int = Math.round(
             TypedValue.applyDimension(
                 TypedValue.COMPLEX_UNIT_DIP,
                 dp,
                 resources.displayMetrics
             )
         )
-    }
 
     override fun onTransactionSaveDone(error: String?, arg: Any?) {
         val bundle = Bundle()
@@ -320,21 +318,17 @@ class NewTransactionActivity :
 
             override fun getColumnNames(): Array<String> = arrayOf("_id", templateNameColumn)
 
-            override fun getString(column: Int): String {
-                return if (column == 0) {
+            override fun getString(column: Int): String = if (column == 0) {
                     position.toString()
                 } else {
                     matchingTemplates[position].templateHead.name ?: ""
                 }
-            }
 
-            override fun getShort(column: Int): Short {
-                return if (column == 0) {
+            override fun getShort(column: Int): Short = if (column == 0) {
                     position.toShort()
                 } else {
                     -1
                 }
-            }
 
             override fun getInt(column: Int): Int = getShort(column).toInt()
 
@@ -400,9 +394,7 @@ class NewTransactionActivity :
         onTransactionSave(tr)
     }
 
-    override fun getContext(): Context {
-        return this
-    }
+    override fun getContext(): Context = this
 
     override fun showManagedFab() {
         if (model.isSubmittable().value == true) {

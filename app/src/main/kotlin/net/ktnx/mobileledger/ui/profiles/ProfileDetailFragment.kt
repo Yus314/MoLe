@@ -232,9 +232,11 @@ class ProfileDetailFragment : Fragment(R.layout.profile_detail) {
                     ver == null -> b.detectedServerVersionText.setText(
                         R.string.server_version_unknown_label
                     )
+
                     ver.isPre_1_20_1 -> b.detectedServerVersionText.setText(
                         R.string.detected_server_pre_1_20_1
                     )
+
                     else -> b.detectedServerVersionText.text = ver.toString()
                 }
             }
@@ -336,8 +338,7 @@ class ProfileDetailFragment : Fragment(R.layout.profile_detail) {
         menu.show()
     }
 
-    private fun futureDatesSettingFromMenuItemId(itemId: Int): FutureDates {
-        return when (itemId) {
+    private fun futureDatesSettingFromMenuItemId(itemId: Int): FutureDates = when (itemId) {
             R.id.menu_future_dates_7 -> FutureDates.OneWeek
             R.id.menu_future_dates_14 -> FutureDates.TwoWeeks
             R.id.menu_future_dates_30 -> FutureDates.OneMonth
@@ -348,11 +349,8 @@ class ProfileDetailFragment : Fragment(R.layout.profile_detail) {
             R.id.menu_future_dates_all -> FutureDates.All
             else -> FutureDates.None
         }
-    }
 
-    private fun getModel(): ProfileDetailModel {
-        return ViewModelProvider(requireActivity())[ProfileDetailModel::class.java]
-    }
+    private fun getModel(): ProfileDetailModel = ViewModelProvider(requireActivity())[ProfileDetailModel::class.java]
 
     private fun onSaveFabClicked() {
         if (!checkValidity()) return

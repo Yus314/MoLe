@@ -75,8 +75,7 @@ internal class TemplateDetailsAdapter(
             override fun areContentsTheSame(
                 oldItem: TemplateDetailsItem,
                 newItem: TemplateDetailsItem
-            ): Boolean {
-                return if (oldItem.type == TemplateDetailsItem.Type.HEADER) {
+            ): Boolean = if (oldItem.type == TemplateDetailsItem.Type.HEADER) {
                     val oldHeader = oldItem.asHeaderItem()
                     val newHeader = newItem.asHeaderItem()
                     oldHeader.equalContents(newHeader)
@@ -85,7 +84,6 @@ internal class TemplateDetailsAdapter(
                     val newAcc = newItem.asAccountRowItem()
                     oldAcc.equalContents(newAcc)
                 }
-            }
         }
         )
 
@@ -210,9 +208,7 @@ internal class TemplateDetailsAdapter(
         return accRow.id ?: 0
     }
 
-    override fun getItemViewType(position: Int): Int {
-        return differ.currentList[position].type.toInt()
-    }
+    override fun getItemViewType(position: Int): Int = differ.currentList[position].type.toInt()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val inflater = LayoutInflater.from(parent.context)
@@ -220,9 +216,11 @@ internal class TemplateDetailsAdapter(
             TemplateDetailsItem.TYPE.header -> Header(
                 TemplateDetailsHeaderBinding.inflate(inflater, parent, false)
             )
+
             TemplateDetailsItem.TYPE.accountItem -> AccountRow(
                 TemplateDetailsAccountBinding.inflate(inflater, parent, false)
             )
+
             else -> throw IllegalStateException("Unsupported view type $viewType")
         }
     }
@@ -261,9 +259,7 @@ internal class TemplateDetailsAdapter(
         }
     }
 
-    protected fun getHeader(): TemplateDetailsItem.Header {
-        return differ.currentList[0].asHeaderItem()
-    }
+    protected fun getHeader(): TemplateDetailsItem.Header = differ.currentList[0].asHeaderItem()
 
     private enum class HeaderDetail {
         DESCRIPTION,
@@ -388,8 +384,11 @@ internal class TemplateDetailsAdapter(
 
                 getItem().isFallback = isChecked
                 b.templateIsFallbackText.setText(
-                    if (isChecked) R.string.template_is_fallback_yes
-                    else R.string.template_is_fallback_no
+                    if (isChecked) {
+                        R.string.template_is_fallback_yes
+                    } else {
+                        R.string.template_is_fallback_no
+                    }
                 )
             }
 
@@ -566,8 +565,11 @@ internal class TemplateDetailsAdapter(
 
                 b.templateIsFallbackSwitch.isChecked = header.isFallback
                 b.templateIsFallbackText.setText(
-                    if (header.isFallback) R.string.template_is_fallback_yes
-                    else R.string.template_is_fallback_no
+                    if (header.isFallback) {
+                        R.string.template_is_fallback_yes
+                    } else {
+                        R.string.template_is_fallback_no
+                    }
                 )
 
                 checkPatternError(header)
@@ -697,8 +699,11 @@ internal class TemplateDetailsAdapter(
 
                 getItem().isNegateAmount = isChecked
                 b.templateDetailsNegateAmountText.setText(
-                    if (isChecked) R.string.template_account_change_amount_sign
-                    else R.string.template_account_keep_amount_sign
+                    if (isChecked) {
+                        R.string.template_account_change_amount_sign
+                    } else {
+                        R.string.template_account_keep_amount_sign
+                    }
                 )
             }
 
@@ -778,8 +783,11 @@ internal class TemplateDetailsAdapter(
                     b.templateDetailsAccountAmount.visibility = View.VISIBLE
                     val amt = accRow.getAmount()
                     b.templateDetailsAccountAmount.setText(
-                        if (amt == null) null
-                        else String.format(Data.locale.value, "%,4.2f", accRow.getAmount())
+                        if (amt == null) {
+                            null
+                        } else {
+                            String.format(Data.locale.value, "%,4.2f", accRow.getAmount())
+                        }
                     )
                     b.negateAmountSwitch.visibility = View.GONE
                     b.templateDetailsNegateAmountLabel.visibility = View.GONE
@@ -795,8 +803,11 @@ internal class TemplateDetailsAdapter(
                     b.negateAmountSwitch.visibility = View.VISIBLE
                     b.negateAmountSwitch.isChecked = accRow.isNegateAmount
                     b.templateDetailsNegateAmountText.setText(
-                        if (accRow.isNegateAmount) R.string.template_account_change_amount_sign
-                        else R.string.template_account_keep_amount_sign
+                        if (accRow.isNegateAmount) {
+                            R.string.template_account_change_amount_sign
+                        } else {
+                            R.string.template_account_keep_amount_sign
+                        }
                     )
                     b.templateDetailsNegateAmountLabel.visibility = View.VISIBLE
                     b.templateDetailsNegateAmountText.visibility = View.VISIBLE
@@ -877,9 +888,7 @@ internal class TemplateDetailsAdapter(
             }
         }
 
-        private fun getItem(): TemplateDetailsItem.AccountRow {
-            return differ.currentList[bindingAdapterPosition].asAccountRowItem()
-        }
+        private fun getItem(): TemplateDetailsItem.AccountRow = differ.currentList[bindingAdapterPosition].asAccountRowItem()
 
         private fun selectAccountRowDetailSource(v: View, detail: AccDetail) {
             val accRow = getItem()

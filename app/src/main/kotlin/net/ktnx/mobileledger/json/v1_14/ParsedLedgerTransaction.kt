@@ -65,8 +65,7 @@ open class ParsedLedgerTransaction : IParsedLedgerTransaction {
 
     companion object {
         @JvmStatic
-        fun fromLedgerTransaction(tr: LedgerTransaction): ParsedLedgerTransaction {
-            return ParsedLedgerTransaction().apply {
+        fun fromLedgerTransaction(tr: LedgerTransaction): ParsedLedgerTransaction = ParsedLedgerTransaction().apply {
                 tcomment = Misc.nullIsEmpty(tr.comment)
                 tprecedingcomment = ""
                 tpostings = tr.accounts
@@ -78,6 +77,5 @@ open class ParsedLedgerTransaction : IParsedLedgerTransaction {
                 tindex = 1
                 tdescription = tr.description
             }
-        }
     }
 }

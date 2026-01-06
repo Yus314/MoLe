@@ -52,15 +52,14 @@ class TemplateDetailsFragment : Fragment() {
     }
 
     @Deprecated("Deprecated in Java")
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
+    override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
             R.id.delete_template -> {
                 signalDeleteTemplateInteraction()
                 true
             }
+
             else -> super.onOptionsItemSelected(item)
         }
-    }
 
     private fun signalDeleteTemplateInteraction() {
         patternId?.let { id ->
@@ -132,8 +131,7 @@ class TemplateDetailsFragment : Fragment() {
         private const val ARG_COLUMN_COUNT = "column-count"
 
         @JvmStatic
-        fun newInstance(columnCount: Int, patternId: Int): TemplateDetailsFragment {
-            return TemplateDetailsFragment().apply {
+        fun newInstance(columnCount: Int, patternId: Int): TemplateDetailsFragment = TemplateDetailsFragment().apply {
                 arguments = Bundle().apply {
                     putInt(ARG_COLUMN_COUNT, columnCount)
                     if (patternId > 0) {
@@ -141,6 +139,5 @@ class TemplateDetailsFragment : Fragment() {
                     }
                 }
             }
-        }
     }
 }

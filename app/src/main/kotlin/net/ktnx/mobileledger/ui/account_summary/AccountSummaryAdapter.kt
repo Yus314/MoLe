@@ -86,9 +86,7 @@ class AccountSummaryAdapter : RecyclerView.Adapter<AccountSummaryAdapter.RowHold
                 return oldItem.toAccount().account.id == newItem.toAccount().account.id
             }
 
-            override fun areContentsTheSame(oldItem: AccountListItem, newItem: AccountListItem): Boolean {
-                return oldItem.sameContent(newItem)
-            }
+            override fun areContentsTheSame(oldItem: AccountListItem, newItem: AccountListItem): Boolean = oldItem.sameContent(newItem)
         }
         )
     }
@@ -117,20 +115,18 @@ class AccountSummaryAdapter : RecyclerView.Adapter<AccountSummaryAdapter.RowHold
             ITEM_TYPE_HEADER -> HeaderRowHolder(
                 AccountListSummaryRowBinding.inflate(inflater, parent, false)
             )
+
             ITEM_TYPE_ACCOUNT -> AccountRowHolder(
                 AccountListRowBinding.inflate(inflater, parent, false)
             )
+
             else -> throw IllegalStateException("Unexpected value: $viewType")
         }
     }
 
-    override fun getItemCount(): Int {
-        return listDiffer.currentList.size
-    }
+    override fun getItemCount(): Int = listDiffer.currentList.size
 
-    override fun getItemViewType(position: Int): Int {
-        return if (position == 0) ITEM_TYPE_HEADER else ITEM_TYPE_ACCOUNT
-    }
+    override fun getItemViewType(position: Int): Int = if (position == 0) ITEM_TYPE_HEADER else ITEM_TYPE_ACCOUNT
 
     fun setAccounts(newList: List<AccountListItem>) {
         Misc.onMainThread { listDiffer.submitList(newList) }
@@ -145,13 +141,9 @@ class AccountSummaryAdapter : RecyclerView.Adapter<AccountSummaryAdapter.RowHold
             value = value or change.value
         }
 
-        fun toPayload(): Change? {
-            return if (value == 0) null else this
-        }
+        fun toPayload(): Change? = if (value == 0) null else this
 
-        fun has(bits: Int): Boolean {
-            return value == 0 || (value and bits) == bits
-        }
+        fun has(bits: Int): Boolean = value == 0 || (value and bits) == bits
 
         companion object {
             const val NAME = 1
@@ -213,11 +205,9 @@ class AccountSummaryAdapter : RecyclerView.Adapter<AccountSummaryAdapter.RowHold
             }
         }
 
-        private fun getAccount(): LedgerAccount {
-            return listDiffer.currentList[bindingAdapterPosition]
+        private fun getAccount(): LedgerAccount = listDiffer.currentList[bindingAdapterPosition]
                 .toAccount()
                 .account
-        }
 
         private fun toggleAmountsExpanded() {
             val account = getAccount()

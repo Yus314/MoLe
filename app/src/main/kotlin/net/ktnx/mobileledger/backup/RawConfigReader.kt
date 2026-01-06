@@ -111,20 +111,35 @@ class RawConfigReader(inputStream: InputStream) {
             }
             when (item) {
                 ConfigIO.Keys.UUID -> t.uuid = r.nextString()
+
                 ConfigIO.Keys.NAME -> t.name = r.nextString()
+
                 ConfigIO.Keys.REGEX -> t.regularExpression = r.nextString()
+
                 ConfigIO.Keys.TEST_TEXT -> t.testText = r.nextString()
+
                 ConfigIO.Keys.DATE_YEAR -> t.dateYear = r.nextInt()
+
                 ConfigIO.Keys.DATE_YEAR_GROUP -> t.dateYearMatchGroup = r.nextInt()
+
                 ConfigIO.Keys.DATE_MONTH -> t.dateMonth = r.nextInt()
+
                 ConfigIO.Keys.DATE_MONTH_GROUP -> t.dateMonthMatchGroup = r.nextInt()
+
                 ConfigIO.Keys.DATE_DAY -> t.dateDay = r.nextInt()
+
                 ConfigIO.Keys.DATE_DAY_GROUP -> t.dateDayMatchGroup = r.nextInt()
+
                 ConfigIO.Keys.TRANSACTION -> t.transactionDescription = r.nextString()
+
                 ConfigIO.Keys.TRANSACTION_GROUP -> t.transactionDescriptionMatchGroup = r.nextInt()
+
                 ConfigIO.Keys.COMMENT -> t.transactionComment = r.nextString()
+
                 ConfigIO.Keys.COMMENT_GROUP -> t.transactionCommentMatchGroup = r.nextInt()
+
                 ConfigIO.Keys.IS_FALLBACK -> t.isFallback = r.nextBoolean()
+
                 ConfigIO.Keys.ACCOUNTS -> {
                     r.beginArray()
                     while (r.peek() == JsonToken.BEGIN_OBJECT) {
@@ -132,6 +147,7 @@ class RawConfigReader(inputStream: InputStream) {
                     }
                     r.endArray()
                 }
+
                 else -> throw RuntimeException("Unknown template header item: $item")
             }
         }

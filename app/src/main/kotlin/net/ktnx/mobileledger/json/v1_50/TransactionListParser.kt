@@ -34,7 +34,5 @@ class TransactionListParser(input: InputStream) : BaseParser() {
     }
 
     @Throws(ParseException::class)
-    override fun nextTransaction(): LedgerTransaction? {
-        return if (iterator.hasNext()) iterator.next().asLedgerTransaction() else null
-    }
+    override fun nextTransaction(): LedgerTransaction? = if (iterator.hasNext()) iterator.next().asLedgerTransaction() else null
 }

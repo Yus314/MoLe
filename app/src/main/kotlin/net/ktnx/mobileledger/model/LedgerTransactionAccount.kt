@@ -54,8 +54,9 @@ class LedgerTransactionAccount {
 
     val amount: Float
         get() {
-            if (!isAmountSet)
+            if (!isAmountSet) {
                 throw IllegalStateException("Account amount is not set")
+            }
             return _amount
         }
 

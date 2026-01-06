@@ -22,15 +22,9 @@ import androidx.recyclerview.widget.RecyclerView
 
 open class TransactionRowHolderBase(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
-    internal fun asHeader(): TransactionListLastUpdateRowHolder {
-        return this as TransactionListLastUpdateRowHolder
-    }
+    internal fun asHeader(): TransactionListLastUpdateRowHolder = this as TransactionListLastUpdateRowHolder
 
-    internal fun asTransaction(): TransactionRowHolder {
-        return this as TransactionRowHolder
-    }
+    internal fun asTransaction(): TransactionRowHolder = this as TransactionRowHolder
 
-    internal fun asDelimiter(): TransactionListDelimiterRowHolder {
-        return this as TransactionListDelimiterRowHolder
-    }
+    internal fun asDelimiter(): TransactionListDelimiterRowHolder = this as TransactionListDelimiterRowHolder
 }

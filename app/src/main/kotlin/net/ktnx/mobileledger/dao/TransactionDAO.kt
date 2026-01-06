@@ -278,8 +278,6 @@ abstract class TransactionDAO : BaseDAO<Transaction>() {
 
     companion object {
         @JvmStatic
-        fun unbox(list: List<DescriptionContainer>): List<String> {
-            return list.mapNotNull { it.description }
-        }
+        fun unbox(list: List<DescriptionContainer>): List<String> = list.mapNotNull { it.description }
     }
 }

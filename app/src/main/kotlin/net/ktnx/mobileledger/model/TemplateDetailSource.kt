@@ -31,16 +31,12 @@ data class TemplateDetailSource(
             override fun areItemsTheSame(
                 oldItem: TemplateDetailSource,
                 newItem: TemplateDetailSource
-            ): Boolean {
-                return oldItem.groupNumber == newItem.groupNumber
-            }
+            ): Boolean = oldItem.groupNumber == newItem.groupNumber
 
             override fun areContentsTheSame(
                 oldItem: TemplateDetailSource,
                 newItem: TemplateDetailSource
-            ): Boolean {
-                return oldItem.matchedText == newItem.matchedText
-            }
+            ): Boolean = oldItem.matchedText == newItem.matchedText
         }
     }
 }

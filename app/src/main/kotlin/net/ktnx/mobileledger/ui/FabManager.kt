@@ -134,6 +134,7 @@ class FabManager(private val fab: FloatingActionButton) {
                         MotionEvent.ACTION_DOWN -> {
                             absoluteAnchor = e.rawY
                         }
+
                         MotionEvent.ACTION_MOVE -> {
                             if (absoluteAnchor < 0) return false
 

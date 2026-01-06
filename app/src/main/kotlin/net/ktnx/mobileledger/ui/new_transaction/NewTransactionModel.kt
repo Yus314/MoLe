@@ -157,9 +157,7 @@ class NewTransactionModel : ViewModel() {
         return copy
     }
 
-    private fun shallowCopyList(): MutableList<Item> {
-        return ArrayList(items.value ?: emptyList())
-    }
+    private fun shallowCopyList(): MutableList<Item> = ArrayList(items.value ?: emptyList())
 
     internal fun getShowComments(): LiveData<Boolean> = showComments
 
@@ -320,11 +318,9 @@ class NewTransactionModel : ViewModel() {
             }
     }
 
-    private fun extractCurrencyFromMatches(m: MatchResult, group: Int?, literal: Currency?): String {
-        return Misc.nullIsEmpty(
+    private fun extractCurrencyFromMatches(m: MatchResult, group: Int?, literal: Currency?): String = Misc.nullIsEmpty(
             extractStringFromMatches(m, group, literal?.name ?: "")
         )
-    }
 
     private fun extractIntFromMatches(m: MatchResult, group: Int?, literal: Int?): Int {
         if (literal != null) return literal
@@ -732,10 +728,12 @@ class NewTransactionModel : ViewModel() {
                         "submittable",
                         "Transaction not submittable: no account names"
                     )
+
                     accounts == 1 -> Logger.debug(
                         "submittable",
                         "Transaction not submittable: only one account name"
                     )
+
                     else -> Logger.debug(
                         "submittable",
                         String.format(
@@ -1041,13 +1039,11 @@ class NewTransactionModel : ViewModel() {
             private var idDispenser = 0
 
             @JvmStatic
-            fun from(origin: Item): Item {
-                return when (origin) {
+            fun from(origin: Item): Item = when (origin) {
                     is TransactionHead -> TransactionHead(origin)
                     is TransactionAccount -> TransactionAccount(origin)
                     else -> throw RuntimeException("Don't know how to handle $origin")
                 }
-            }
 
             @JvmStatic
             internal fun resetIdDispenser() {
@@ -1131,14 +1127,12 @@ class NewTransactionModel : ViewModel() {
         override val type: ItemType
             get() = ItemType.generalData
 
-        fun asLedgerTransaction(): LedgerTransaction {
-            return LedgerTransaction(
+        fun asLedgerTransaction(): LedgerTransaction = LedgerTransaction(
                 0,
                 date ?: SimpleDate.today(),
                 description,
                 requireNotNull(Data.getProfile()) { "Profile must be set before creating a transaction" }
             )
-        }
 
         fun equalContents(other: TransactionHead?): Boolean {
             if (other == null) return false
@@ -1261,10 +1255,8 @@ class NewTransactionModel : ViewModel() {
         val isAmountHintSet: Boolean
             get() = amountHintIsSet
 
-        fun isEmpty(): Boolean {
-            return !isAmountSet && Misc.emptyIsNull(accountName) == null &&
+        fun isEmpty(): Boolean = !isAmountSet && Misc.emptyIsNull(accountName) == null &&
                     Misc.emptyIsNull(comment) == null
-        }
 
         @SuppressLint("DefaultLocale")
         override fun toString(): String {
@@ -1306,17 +1298,23 @@ class NewTransactionModel : ViewModel() {
             var equal = Misc.equalStrings(accountName, other.accountName)
             equal = equal && Misc.equalStrings(comment, other.comment) &&
                     (
-                        if (isAmountSet) other.isAmountSet && isAmountValid == other.isAmountValid &&
+                        if (isAmountSet) {
+                            other.isAmountSet && isAmountValid == other.isAmountValid &&
                             Misc.equalStrings(amountText, other.amountText)
-                    else !other.isAmountSet
+                        } else {
+                            !other.isAmountSet
+                        }
                     )
 
             // compare amount hint only if there is no amount
             if (!isAmountSet) {
                 equal = equal && (
-                    if (amountHintIsSet) other.amountHintIsSet &&
+                    if (amountHintIsSet) {
+                        other.amountHintIsSet &&
                         Misc.equalStrings(amountHint, other.amountHint)
-                else !other.amountHintIsSet
+                    } else {
+                        !other.amountHintIsSet
+                    }
                 )
             }
             equal = equal && Misc.equalStrings(currency, other.currency) && isLast == other.isLast

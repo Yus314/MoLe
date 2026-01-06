@@ -143,12 +143,14 @@ object Data {
                 val canary = formatted[symbol.length]
                 currencyGap.value = canary != '1'
             }
+
             formatted.endsWith(symbol) -> {
                 currencySymbolPosition.value = Currency.Position.after
                 // is the currency symbol directly preceded by the last formatted digit?
                 val canary = formatted[formatted.length - symbol.length - 1]
                 currencyGap.value = canary != '6'
             }
+
             else -> currencySymbolPosition.value = Currency.Position.none
         }
 
@@ -173,9 +175,7 @@ object Data {
     }
 
     @JvmStatic
-    fun formatNumber(number: Float): String {
-        return numberFormatter?.format(number) ?: number.toString()
-    }
+    fun formatNumber(number: Float): String = numberFormatter?.format(number) ?: number.toString()
 
     @JvmStatic
     fun observeProfile(lifecycleOwner: LifecycleOwner, observer: Observer<Profile?>) {
@@ -192,8 +192,9 @@ object Data {
     fun parseNumber(str: String): Float {
         val pos = ParsePosition(0)
         val parsed = numberFormatter?.parse(str)
-        if (parsed == null || pos.errorIndex > -1)
+        if (parsed == null || pos.errorIndex > -1) {
             throw ParseException("Error parsing '$str'", pos.errorIndex)
+        }
 
         return parsed.toFloat()
     }

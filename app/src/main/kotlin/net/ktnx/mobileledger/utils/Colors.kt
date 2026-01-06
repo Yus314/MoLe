@@ -147,19 +147,13 @@ object Colors {
     }
 
     @JvmStatic
-    fun getColorStateList(): ColorStateList {
-        return getColorStateList(profileThemeId)
-    }
+    fun getColorStateList(): ColorStateList = getColorStateList(profileThemeId)
 
     @JvmStatic
-    fun getColorStateList(hue: Int): ColorStateList {
-        return ColorStateList(EMPTY_STATES, getSwipeCircleColors(hue))
-    }
+    fun getColorStateList(hue: Int): ColorStateList = ColorStateList(EMPTY_STATES, getSwipeCircleColors(hue))
 
     @JvmStatic
-    fun getSwipeCircleColors(): IntArray {
-        return getSwipeCircleColors(profileThemeId)
-    }
+    fun getSwipeCircleColors(): IntArray = getSwipeCircleColors(profileThemeId)
 
     @JvmStatic
     fun getSwipeCircleColors(hue: Int): IntArray {

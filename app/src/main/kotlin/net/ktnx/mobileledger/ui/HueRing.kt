@@ -234,9 +234,7 @@ class HueRing : View {
         centerRect.set(-centerR, -centerR, centerR, centerR)
     }
 
-    override fun performClick(): Boolean {
-        return super.performClick()
-    }
+    override fun performClick(): Boolean = super.performClick()
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
         when (event.action) {
@@ -271,6 +269,7 @@ class HueRing : View {
                     setHue(hue)
                 }
             }
+
             MotionEvent.ACTION_UP -> {
                 performClick()
             }

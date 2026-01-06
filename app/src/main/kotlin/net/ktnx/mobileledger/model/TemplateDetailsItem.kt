@@ -51,22 +51,25 @@ abstract class TemplateDetailsItem protected constructor(val type: Type) {
     }
 
     private fun ensureType(type: Type) {
-        if (this.type != type)
+        if (this.type != type) {
             throw IllegalStateException(
                 String.format("Type is %s, but %s is required", this.type, type)
             )
+        }
     }
 
     protected fun ensureTrue(flag: Boolean) {
-        if (!flag)
+        if (!flag) {
             throw IllegalStateException(
                 "Literal value requested, but it is matched via a pattern group"
             )
+        }
     }
 
     protected fun ensureFalse(flag: Boolean) {
-        if (flag)
+        if (flag) {
             throw IllegalStateException("Matching group requested, but the value is a literal")
+        }
     }
 
     abstract fun getProblem(r: Resources, patternGroupCount: Int): String?
@@ -98,8 +101,9 @@ abstract class TemplateDetailsItem protected constructor(val type: Type) {
         }
 
         fun getValue(): T? {
-            if (!literalValue)
+            if (!literalValue) {
                 throw IllegalStateException("Value is not literal")
+            }
             return value
         }
 
@@ -111,8 +115,9 @@ abstract class TemplateDetailsItem protected constructor(val type: Type) {
         fun hasLiteralValue(): Boolean = literalValue
 
         fun getMatchGroup(): Int {
-            if (literalValue)
+            if (literalValue) {
                 throw IllegalStateException("Value is literal")
+            }
             return matchGroup
         }
 
@@ -142,42 +147,30 @@ abstract class TemplateDetailsItem protected constructor(val type: Type) {
             literalValue = true
         }
 
-        override fun toString(): String {
-            return when {
+        override fun toString(): String = when {
                 literalValue -> value?.toString() ?: "<null>"
                 matchGroup > 0 -> "grp:$matchGroup"
                 else -> "<null>"
             }
-        }
 
-        fun isEmpty(): Boolean {
-            return if (literalValue) {
+        fun isEmpty(): Boolean = if (literalValue) {
                 value == null || Misc.emptyIsNull(value.toString()) == null
             } else {
                 matchGroup > 0
             }
-        }
 
         companion object {
             @JvmStatic
-            fun withLiteralInt(initialValue: Int?): PossiblyMatchedValue<Int> {
-                return PossiblyMatchedValue<Int>().apply { setValue(initialValue) }
-            }
+            fun withLiteralInt(initialValue: Int?): PossiblyMatchedValue<Int> = PossiblyMatchedValue<Int>().apply { setValue(initialValue) }
 
             @JvmStatic
-            fun withLiteralFloat(initialValue: Float?): PossiblyMatchedValue<Float> {
-                return PossiblyMatchedValue<Float>().apply { setValue(initialValue) }
-            }
+            fun withLiteralFloat(initialValue: Float?): PossiblyMatchedValue<Float> = PossiblyMatchedValue<Float>().apply { setValue(initialValue) }
 
             @JvmStatic
-            fun withLiteralShort(initialValue: Short?): PossiblyMatchedValue<Short> {
-                return PossiblyMatchedValue<Short>().apply { setValue(initialValue) }
-            }
+            fun withLiteralShort(initialValue: Short?): PossiblyMatchedValue<Short> = PossiblyMatchedValue<Short>().apply { setValue(initialValue) }
 
             @JvmStatic
-            fun withLiteralString(initialValue: String?): PossiblyMatchedValue<String> {
-                return PossiblyMatchedValue<String>().apply { setValue(initialValue) }
-            }
+            fun withLiteralString(initialValue: String?): PossiblyMatchedValue<String> = PossiblyMatchedValue<String>().apply { setValue(initialValue) }
         }
     }
 
@@ -229,12 +222,14 @@ abstract class TemplateDetailsItem protected constructor(val type: Type) {
         fun setAmount(amount: Float?) = this.amount.setValue(amount)
 
         override fun getProblem(r: Resources, patternGroupCount: Int): String? {
-            if (Misc.emptyIsNull(accountName.getValue()) == null)
+            if (Misc.emptyIsNull(accountName.getValue()) == null) {
                 return r.getString(R.string.account_name_is_empty)
+            }
             if (!amount.hasLiteralValue() &&
                 (amount.getMatchGroup() < 1 || amount.getMatchGroup() > patternGroupCount)
-            )
+            ) {
                 return r.getString(R.string.invalid_matching_group_number)
+            }
             return null
         }
 
@@ -269,15 +264,17 @@ abstract class TemplateDetailsItem protected constructor(val type: Type) {
         fun toDBO(patternId: Long): TemplateAccount {
             val result = TemplateAccount(id ?: 0, patternId, position)
 
-            if (accountName.hasLiteralValue())
+            if (accountName.hasLiteralValue()) {
                 result.accountName = accountName.getValue()
-            else
+            } else {
                 result.accountNameMatchGroup = accountName.getMatchGroup()
+            }
 
-            if (accountComment.hasLiteralValue())
+            if (accountComment.hasLiteralValue()) {
                 result.accountComment = accountComment.getValue()
-            else
+            } else {
                 result.accountCommentMatchGroup = accountComment.getMatchGroup()
+            }
 
             if (amount.hasLiteralValue()) {
                 result.amount = amount.getValue()
@@ -297,9 +294,7 @@ abstract class TemplateDetailsItem protected constructor(val type: Type) {
             return result
         }
 
-        fun isEmpty(): Boolean {
-            return accountName.isEmpty() && accountComment.isEmpty() && amount.isEmpty()
-        }
+        fun isEmpty(): Boolean = accountName.isEmpty() && accountComment.isEmpty() && amount.isEmpty()
     }
 
     class Header : TemplateDetailsItem {
@@ -394,25 +389,30 @@ abstract class TemplateDetailsItem protected constructor(val type: Type) {
         fun hasLiteralTransactionComment(): Boolean = transactionComment.hasLiteralValue()
 
         override fun getProblem(r: Resources, patternGroupCount: Int): String? {
-            if (patternError != null)
+            if (patternError != null) {
                 return r.getString(R.string.pattern_has_errors) + ": " + patternError
-            if (Misc.emptyIsNull(pattern) == null)
+            }
+            if (Misc.emptyIsNull(pattern) == null) {
                 return r.getString(R.string.pattern_is_empty)
+            }
 
             if (!dateYear.hasLiteralValue() && compiledPattern != null &&
                 (dateDay.getMatchGroup() < 1 || dateDay.getMatchGroup() > patternGroupCount)
-            )
+            ) {
                 return r.getString(R.string.invalid_matching_group_number)
+            }
 
             if (!dateMonth.hasLiteralValue() && compiledPattern != null &&
                 (dateMonth.getMatchGroup() < 1 || dateMonth.getMatchGroup() > patternGroupCount)
-            )
+            ) {
                 return r.getString(R.string.invalid_matching_group_number)
+            }
 
             if (!dateDay.hasLiteralValue() && compiledPattern != null &&
                 (dateDay.getMatchGroup() < 1 || dateDay.getMatchGroup() > patternGroupCount)
-            )
+            ) {
                 return r.getString(R.string.invalid_matching_group_number)
+            }
 
             return null
         }
@@ -434,8 +434,9 @@ abstract class TemplateDetailsItem protected constructor(val type: Type) {
             val pattern = compiledPattern
             if (pattern != null && testText.isNotEmpty()) {
                 val m = pattern.matcher(testText)
-                if (m.matches())
+                if (m.matches()) {
                     return m.group(group) ?: "ø"
+                }
             }
             return "ø"
         }
@@ -455,33 +456,39 @@ abstract class TemplateDetailsItem protected constructor(val type: Type) {
         fun toDBO(): TemplateHeader {
             val result = TemplateHeader(id ?: 0, name, pattern)
 
-            if (Misc.emptyIsNull(testText) != null)
+            if (Misc.emptyIsNull(testText) != null) {
                 result.testText = testText
+            }
 
-            if (transactionDescription.hasLiteralValue())
+            if (transactionDescription.hasLiteralValue()) {
                 result.transactionDescription = transactionDescription.getValue()
-            else
+            } else {
                 result.transactionDescriptionMatchGroup = transactionDescription.getMatchGroup()
+            }
 
-            if (transactionComment.hasLiteralValue())
+            if (transactionComment.hasLiteralValue()) {
                 result.transactionComment = transactionComment.getValue()
-            else
+            } else {
                 result.transactionCommentMatchGroup = transactionComment.getMatchGroup()
+            }
 
-            if (dateYear.hasLiteralValue())
+            if (dateYear.hasLiteralValue()) {
                 result.dateYear = dateYear.getValue()
-            else
+            } else {
                 result.dateYearMatchGroup = dateYear.getMatchGroup()
+            }
 
-            if (dateMonth.hasLiteralValue())
+            if (dateMonth.hasLiteralValue()) {
                 result.dateMonth = dateMonth.getValue()
-            else
+            } else {
                 result.dateMonthMatchGroup = dateMonth.getMatchGroup()
+            }
 
-            if (dateDay.hasLiteralValue())
+            if (dateDay.hasLiteralValue()) {
                 result.dateDay = dateDay.getValue()
-            else
+            } else {
                 result.dateDayMatchGroup = dateDay.getMatchGroup()
+            }
 
             result.isFallback = isFallback
 
@@ -499,20 +506,22 @@ abstract class TemplateDetailsItem protected constructor(val type: Type) {
                         val ss = SpannableString(testText)
                         val m = compiledPat.matcher(testText)
                         if (m.find()) {
-                            if (m.start() > 0)
+                            if (m.start() > 0) {
                                 ss.setSpan(
                                     notMatchedSpan(),
                                     0,
                                     m.start(),
                                     Spanned.SPAN_INCLUSIVE_INCLUSIVE
                                 )
-                            if (m.end() < testText.length - 1)
+                            }
+                            if (m.end() < testText.length - 1) {
                                 ss.setSpan(
                                     notMatchedSpan(),
                                     m.end(),
                                     testText.length,
                                     Spanned.SPAN_INCLUSIVE_INCLUSIVE
                                 )
+                            }
 
                             ss.setSpan(
                                 matchedSpan(),
@@ -552,8 +561,7 @@ abstract class TemplateDetailsItem protected constructor(val type: Type) {
             }
         }
 
-        override fun toString(): String {
-            return super.toString() +
+        override fun toString(): String = super.toString() +
                     String.format(
                         " name[%s] pat[%s] test[%s] tran[%s] com[%s]",
                         name,
@@ -562,7 +570,6 @@ abstract class TemplateDetailsItem protected constructor(val type: Type) {
                         transactionDescription,
                         transactionComment
                     )
-        }
 
         companion object {
             private fun capturedSpan() = StyleSpan(Typeface.BOLD)
@@ -588,8 +595,7 @@ abstract class TemplateDetailsItem protected constructor(val type: Type) {
         fun createAccountRow(): AccountRow = AccountRow()
 
         @JvmStatic
-        fun fromRoomObject(p: TemplateBase): TemplateDetailsItem {
-            return when (p) {
+        fun fromRoomObject(p: TemplateBase): TemplateDetailsItem = when (p) {
                 is TemplateHeader -> {
                     val header = createHeader()
                     header.id = p.id
@@ -621,6 +627,7 @@ abstract class TemplateDetailsItem protected constructor(val type: Type) {
 
                     header
                 }
+
                 is TemplateAccount -> {
                     val acc = createAccountRow()
                     acc.id = p.id
@@ -649,8 +656,8 @@ abstract class TemplateDetailsItem protected constructor(val type: Type) {
 
                     acc
                 }
+
                 else -> throw IllegalStateException("Unexpected item class ${p.javaClass}")
             }
-        }
     }
 }

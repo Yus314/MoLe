@@ -15,16 +15,6 @@ max_line_length = 120
 # ktlint specific settings
 ktlint_code_style = android_studio
 
-# Phase 2: 中リスク（違反数 6-20）- 後で有効化
-ktlint_standard_parameter-list-wrapping = disabled
-ktlint_standard_blank-line-between-when-conditions = disabled
-ktlint_standard_class-signature = disabled
-ktlint_standard_function-expression-body = disabled
-ktlint_standard_paren-spacing = disabled
-ktlint_standard_multiline-if-else = disabled
-ktlint_standard_chain-method-continuation = disabled
-ktlint_standard_trailing-comma-on-call-site = disabled
-
 # Phase 3: 高リスク（違反数 20+）- 別ブランチで対応
 ktlint_standard_multiline-expression-wrapping = disabled
 ktlint_standard_indent = disabled

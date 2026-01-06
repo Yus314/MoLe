@@ -106,9 +106,7 @@ class LedgerTransaction {
     fun getDateIfAny(): SimpleDate? = date
 
     @JvmName("getDate")
-    fun requireDate(): SimpleDate {
-        return date ?: throw IllegalStateException("Transaction has no date")
-    }
+    fun requireDate(): SimpleDate = date ?: throw IllegalStateException("Transaction has no date")
 
     fun addAccount(item: LedgerTransactionAccount) {
         accounts.add(item)
@@ -196,9 +194,7 @@ class LedgerTransaction {
         return (other as LedgerTransaction).getDataHash() == getDataHash()
     }
 
-    override fun hashCode(): Int {
-        return getDataHash().hashCode()
-    }
+    override fun hashCode(): Int = getDataHash().hashCode()
 
     fun hasAccountNamedLike(name: String): Boolean {
         val upperName = name.uppercase()

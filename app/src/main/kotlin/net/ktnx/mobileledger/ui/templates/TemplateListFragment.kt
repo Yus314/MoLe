@@ -63,8 +63,7 @@ class TemplateListFragment : Fragment() {
 
     @Suppress("DEPRECATION")
     @Deprecated("Deprecated in Java")
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
+    override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
             R.id.menu_item_template_list_help -> {
                 HelpDialog.show(
                     requireContext(),
@@ -73,9 +72,9 @@ class TemplateListFragment : Fragment() {
                 )
                 true
             }
+
             else -> super.onOptionsItemSelected(item)
         }
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater,

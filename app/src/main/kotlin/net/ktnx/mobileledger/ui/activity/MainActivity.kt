@@ -77,7 +77,9 @@ import net.ktnx.mobileledger.utils.Misc
  *  */
 
 @AndroidEntryPoint
-class MainActivity : ProfileThemedActivity(), FabManager.FabHandler {
+class MainActivity :
+    ProfileThemedActivity(),
+    FabManager.FabHandler {
     private var converterThread: ConverterThread? = null
     private var mSectionsPagerAdapter: SectionsPagerAdapter? = null
     private var mProfileListAdapter: ProfilesRecyclerViewAdapter? = null
@@ -736,9 +738,7 @@ class MainActivity : ProfileThemedActivity(), FabManager.FabHandler {
         }
     }
 
-    override fun getContext(): Context {
-        return this
-    }
+    override fun getContext(): Context = this
 
     override fun showManagedFab() {
         fabShouldShow()
@@ -748,8 +748,7 @@ class MainActivity : ProfileThemedActivity(), FabManager.FabHandler {
         fabManager.hideFab()
     }
 
-    class SectionsPagerAdapter(fragmentActivity: FragmentActivity) :
-        FragmentStateAdapter(fragmentActivity) {
+    class SectionsPagerAdapter(fragmentActivity: FragmentActivity) : FragmentStateAdapter(fragmentActivity) {
 
         override fun createFragment(position: Int): Fragment {
             Logger.debug(TAG, String.format(Locale.ENGLISH, "Switching to fragment %d", position))

@@ -97,6 +97,7 @@ class SendTransactionTask(
             http.errorStream?.use { resp ->
                 when (responseCode) {
                     200, 201 -> { /* success */ }
+
                     400, 405 -> {
                         val reader = BufferedReader(InputStreamReader(resp))
                         val errorLines = StringBuilder()
@@ -112,6 +113,7 @@ class SendTransactionTask(
                         }
                         throw ApiNotSupportedException(errorLines.toString())
                     }
+
                     else -> {
                         val reader = BufferedReader(InputStreamReader(resp))
                         val line = reader.readLine()
@@ -164,7 +166,9 @@ class SendTransactionTask(
             http.inputStream.use { resp ->
                 Logger.debug("update_accounts", http.responseCode.toString())
                 when (http.responseCode) {
-                    303 -> return true // everything is fine
+                    303 -> return true
+
+                    // everything is fine
                     200 -> {
                         // get the new cookie
                         val reSessionCookie = Pattern.compile("_SESSION=([^;]+);.*")
@@ -200,6 +204,7 @@ class SendTransactionTask(
                         }
                         throw IOException("Can't find _token string")
                     }
+
                     else -> throw IOException(String.format("Error response code %d", http.responseCode))
                 }
             }
@@ -230,8 +235,11 @@ class SendTransactionTask(
                         legacySendOkWithRetry()
                     }
                 }
+
                 API.html -> legacySendOkWithRetry()
+
                 API.v1_14, API.v1_15, API.v1_19_1, API.v1_23 -> sendOK(profileApiVersion)
+
                 else -> throw IllegalStateException("Unexpected API version: $profileApiVersion")
             }
         } catch (e: Exception) {

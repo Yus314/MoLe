@@ -27,7 +27,9 @@ import net.ktnx.mobileledger.model.LedgerTransaction
 
 class TransactionListParser
 @Throws(IOException::class)
-constructor(input: InputStream) : BaseParser() {
+constructor(
+    input: InputStream
+) : BaseParser() {
     private val iterator: MappingIterator<ParsedLedgerTransaction>
 
     init {

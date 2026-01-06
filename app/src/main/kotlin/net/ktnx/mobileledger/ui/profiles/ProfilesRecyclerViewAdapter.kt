@@ -56,13 +56,9 @@ class ProfilesRecyclerViewAdapter : RecyclerView.Adapter<ProfilesRecyclerViewAda
         listDiffer = AsyncListDiffer(
             this,
             object : DiffUtil.ItemCallback<Profile>() {
-            override fun areItemsTheSame(oldItem: Profile, newItem: Profile): Boolean {
-                return oldItem.id == newItem.id
-            }
+            override fun areItemsTheSame(oldItem: Profile, newItem: Profile): Boolean = oldItem.id == newItem.id
 
-            override fun areContentsTheSame(oldItem: Profile, newItem: Profile): Boolean {
-                return oldItem == newItem
-            }
+            override fun areContentsTheSame(oldItem: Profile, newItem: Profile): Boolean = oldItem == newItem
         }
         )
 
@@ -70,9 +66,7 @@ class ProfilesRecyclerViewAdapter : RecyclerView.Adapter<ProfilesRecyclerViewAda
             override fun getMovementFlags(
                 recyclerView: RecyclerView,
                 viewHolder: RecyclerView.ViewHolder
-            ): Int {
-                return makeMovementFlags(ItemTouchHelper.UP or ItemTouchHelper.DOWN, 0)
-            }
+            ): Int = makeMovementFlags(ItemTouchHelper.UP or ItemTouchHelper.DOWN, 0)
 
             override fun onMove(
                 recyclerView: RecyclerView,
@@ -97,9 +91,7 @@ class ProfilesRecyclerViewAdapter : RecyclerView.Adapter<ProfilesRecyclerViewAda
         rearrangeHelper = ItemTouchHelper(cb)
     }
 
-    override fun getItemId(position: Int): Long {
-        return listDiffer.currentList[position].id
-    }
+    override fun getItemId(position: Int): Long = listDiffer.currentList[position].id
 
     fun setProfileList(list: List<Profile>) {
         listDiffer.submitList(list)
@@ -123,9 +115,7 @@ class ProfilesRecyclerViewAdapter : RecyclerView.Adapter<ProfilesRecyclerViewAda
         }
     }
 
-    fun editingProfiles(): Boolean {
-        return editingProfiles.value ?: false
-    }
+    fun editingProfiles(): Boolean = editingProfiles.value ?: false
 
     fun startEditingProfiles() {
         if (editingProfiles()) return
@@ -203,9 +193,7 @@ class ProfilesRecyclerViewAdapter : RecyclerView.Adapter<ProfilesRecyclerViewAda
         }
     }
 
-    override fun getItemCount(): Int {
-        return listDiffer.currentList.size
-    }
+    override fun getItemCount(): Int = listDiffer.currentList.size
 
     @SuppressLint("ClickableViewAccessibility")
     inner class ProfileListViewHolder(view: View) : RecyclerView.ViewHolder(view) {

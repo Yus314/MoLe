@@ -71,14 +71,12 @@ class TransactionListItem {
 
         companion object {
             @JvmStatic
-            fun valueOf(i: Int): Type {
-                return when (i) {
+            fun valueOf(i: Int): Type = when (i) {
                     TRANSACTION.ordinal -> TRANSACTION
                     DELIMITER.ordinal -> DELIMITER
                     HEADER.ordinal -> HEADER
                     else -> throw IllegalStateException("Unexpected value: $i")
                 }
-            }
         }
     }
 }

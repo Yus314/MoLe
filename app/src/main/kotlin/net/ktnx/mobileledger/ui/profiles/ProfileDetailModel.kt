@@ -341,7 +341,9 @@ class ProfileDetailModel : ViewModel() {
                 )
                 when (http.responseCode) {
                     200 -> { /* continue */ }
+
                     404 -> return HledgerVersion(true)
+
                     else -> {
                         Logger.debug(
                             "profile",
@@ -367,8 +369,11 @@ class ProfileDetailModel : ViewModel() {
                     val hasPatch = patchText != null
                     val patch = if (hasPatch) patchText?.toIntOrNull() ?: 0 else 0
 
-                    return if (hasPatch) HledgerVersion(major, minor, patch)
-                    else HledgerVersion(major, minor)
+                    return if (hasPatch) {
+                        HledgerVersion(major, minor, patch)
+                    } else {
+                        HledgerVersion(major, minor)
+                    }
                 } else {
                     Logger.debug("profile", String.format("Unrecognised version string '%s'", version))
                     return null

@@ -190,8 +190,6 @@ abstract class AccountDAO : BaseDAO<Account>() {
 
     companion object {
         @JvmStatic
-        fun unbox(list: List<AccountNameContainer>): List<String> {
-            return list.mapNotNull { it.name }
-        }
+        fun unbox(list: List<AccountNameContainer>): List<String> = list.mapNotNull { it.name }
     }
 }

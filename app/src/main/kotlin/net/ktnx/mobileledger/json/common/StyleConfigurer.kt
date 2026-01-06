@@ -41,6 +41,7 @@ sealed interface StyleConfigurer {
                     style.asprecision = precision
                     style.asdecimalpoint = '.'
                 }
+
                 is net.ktnx.mobileledger.json.v1_15.ParsedStyle -> {
                     style.asprecision = precision
                     style.asdecimalpoint = '.'
@@ -88,11 +89,13 @@ sealed interface StyleConfigurer {
                     style.asdecimalmark = "."
                     style.asrounding = "NoRounding"
                 }
+
                 is net.ktnx.mobileledger.json.v1_40.ParsedStyle -> {
                     style.asprecision = precision
                     style.asdecimalmark = "."
                     style.asrounding = "NoRounding"
                 }
+
                 is net.ktnx.mobileledger.json.v1_50.ParsedStyle -> {
                     style.asprecision = precision
                     style.asdecimalmark = "."

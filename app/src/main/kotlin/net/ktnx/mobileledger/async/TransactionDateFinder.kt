@@ -65,7 +65,9 @@ class TransactionDateFinder(
                 aType == TransactionListItem.Type.DELIMITER -> {
                     if (bType == TransactionListItem.Type.DELIMITER) 0 else -1
                 }
+
                 bType == TransactionListItem.Type.DELIMITER -> +1
+
                 else -> 0
             }
         }

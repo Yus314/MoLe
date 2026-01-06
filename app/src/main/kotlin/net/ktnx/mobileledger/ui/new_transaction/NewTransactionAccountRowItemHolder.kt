@@ -219,10 +219,12 @@ internal class NewTransactionAccountRowItemHolder(
             val acc = item.toTransactionAccount()
             when (focusInfo.element) {
                 FocusedElement.Amount -> b.accountRowAccAmounts.requestFocus()
+
                 FocusedElement.Comment -> {
                     b.comment.visibility = View.VISIBLE
                     b.comment.requestFocus()
                 }
+
                 FocusedElement.Account -> {
                     val focused = b.accountRowAccName.requestFocus()
                     // b.accountRowAccName.dismissDropDown()
@@ -230,6 +232,7 @@ internal class NewTransactionAccountRowItemHolder(
                         Misc.showSoftKeyboard(b.root.context as NewTransactionActivity)
                     }
                 }
+
                 else -> { /* ignore other focus elements */ }
             }
         } finally {
