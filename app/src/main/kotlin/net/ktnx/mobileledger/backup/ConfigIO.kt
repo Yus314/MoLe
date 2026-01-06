@@ -21,11 +21,13 @@ import android.content.Context
 import android.net.Uri
 import android.os.ParcelFileDescriptor
 import android.util.Log
-import net.ktnx.mobileledger.utils.Misc
 import java.io.FileNotFoundException
 import java.io.IOException
+import net.ktnx.mobileledger.utils.Misc
 
-abstract class ConfigIO @Throws(FileNotFoundException::class) constructor(
+abstract class ConfigIO
+@Throws(FileNotFoundException::class)
+constructor(
     context: Context,
     uri: Uri,
     protected val onErrorListener: OnErrorListener?

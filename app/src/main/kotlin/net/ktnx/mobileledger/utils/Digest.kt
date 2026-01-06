@@ -22,7 +22,9 @@ import java.security.DigestException
 import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
 
-class Digest @Throws(NoSuchAlgorithmException::class) constructor(type: String) {
+class Digest
+@Throws(NoSuchAlgorithmException::class)
+constructor(type: String) {
     private val digest: MessageDigest = MessageDigest.getInstance(type)
 
     fun update(input: Byte) {

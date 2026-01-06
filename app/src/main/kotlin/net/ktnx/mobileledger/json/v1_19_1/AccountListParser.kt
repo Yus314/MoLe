@@ -18,9 +18,9 @@
 package net.ktnx.mobileledger.json.v1_19_1
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import java.io.InputStream
 import net.ktnx.mobileledger.json.API
 import net.ktnx.mobileledger.json.AccountListParser as BaseParser
-import java.io.InputStream
 
 class AccountListParser(input: InputStream) : BaseParser() {
     override val apiVersion: API = API.v1_19_1

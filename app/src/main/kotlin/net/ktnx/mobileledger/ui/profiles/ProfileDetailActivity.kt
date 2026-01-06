@@ -23,6 +23,7 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import androidx.lifecycle.ViewModelProvider
+import java.util.Locale
 import net.ktnx.mobileledger.R
 import net.ktnx.mobileledger.db.DB
 import net.ktnx.mobileledger.db.Profile
@@ -30,7 +31,6 @@ import net.ktnx.mobileledger.model.Data
 import net.ktnx.mobileledger.ui.activity.CrashReportingActivity
 import net.ktnx.mobileledger.utils.Colors
 import net.ktnx.mobileledger.utils.Logger
-import java.util.Locale
 
 /**
  * An activity representing a single Profile detail screen. This

@@ -57,7 +57,9 @@ internal class TemplateListDivider(
             left = parent.paddingLeft
             right = parent.width - parent.paddingRight
             canvas.clipRect(
-                left, parent.paddingTop, right,
+                left,
+                parent.paddingTop,
+                right,
                 parent.height - parent.paddingBottom
             )
         } else {
@@ -96,8 +98,10 @@ internal class TemplateListDivider(
             top = parent.paddingTop
             bottom = parent.height - parent.paddingBottom
             canvas.clipRect(
-                parent.paddingLeft, top,
-                parent.width - parent.paddingRight, bottom
+                parent.paddingLeft,
+                top,
+                parent.width - parent.paddingRight,
+                bottom
             )
         } else {
             top = 0

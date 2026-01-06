@@ -21,10 +21,10 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import java.util.Locale
 import net.ktnx.mobileledger.R
 import net.ktnx.mobileledger.db.DB
 import net.ktnx.mobileledger.utils.Logger
-import java.util.Locale
 
 class SplashActivity : CrashReportingActivity() {
     private var startupTime: Long = 0
@@ -76,9 +76,14 @@ class SplashActivity : CrashReportingActivity() {
             startMainActivity()
         } else {
             val delay = KEEP_ACTIVE_FOR_MS - (now - startupTime)
-            Logger.debug("splash",
-                String.format(Locale.ROOT, "Scheduling main activity start in %d milliseconds",
-                    delay))
+            Logger.debug(
+                "splash",
+                String.format(
+                    Locale.ROOT,
+                    "Scheduling main activity start in %d milliseconds",
+                    delay
+                )
+            )
             Handler(Looper.getMainLooper()).postDelayed({ startMainActivity() }, delay)
         }
     }
@@ -87,8 +92,10 @@ class SplashActivity : CrashReportingActivity() {
         if (running) {
             Logger.debug("splash", "still running, launching main activity")
             val intent = Intent(this, MainActivity::class.java).apply {
-                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NO_USER_ACTION or
-                        Intent.FLAG_ACTIVITY_NEW_TASK)
+                addFlags(
+                    Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NO_USER_ACTION or
+                        Intent.FLAG_ACTIVITY_NEW_TASK
+                )
             }
             startActivity(intent)
             @Suppress("DEPRECATION")

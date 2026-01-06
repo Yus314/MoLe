@@ -17,8 +17,8 @@
 
 package net.ktnx.mobileledger.model
 
-import net.ktnx.mobileledger.json.API
 import java.util.Locale
+import net.ktnx.mobileledger.json.API
 
 class HledgerVersion {
     val major: Int

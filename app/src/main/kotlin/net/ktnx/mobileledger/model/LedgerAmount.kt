@@ -17,11 +17,11 @@
 
 package net.ktnx.mobileledger.model
 
-import net.ktnx.mobileledger.db.Account
-import net.ktnx.mobileledger.db.AccountValue
 import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.round
+import net.ktnx.mobileledger.db.Account
+import net.ktnx.mobileledger.db.AccountValue
 
 class LedgerAmount @JvmOverloads constructor(
     val amount: Float,

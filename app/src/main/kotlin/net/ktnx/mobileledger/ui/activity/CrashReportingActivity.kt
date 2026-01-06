@@ -22,10 +22,10 @@ import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
-import net.ktnx.mobileledger.ui.CrashReportDialogFragment
-import net.ktnx.mobileledger.utils.Logger.debug
 import java.io.PrintWriter
 import java.io.StringWriter
+import net.ktnx.mobileledger.ui.CrashReportDialogFragment
+import net.ktnx.mobileledger.utils.Logger.debug
 
 abstract class CrashReportingActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -49,8 +49,11 @@ abstract class CrashReportingActivity : AppCompatActivity() {
                 oh.printStackTrace(pw)
                 pw.print("\n")
             }
-            pw.format("OS version: %s; API level %d\n\n", Build.VERSION.RELEASE,
-                Build.VERSION.SDK_INT)
+            pw.format(
+                "OS version: %s; API level %d\n\n",
+                Build.VERSION.RELEASE,
+                Build.VERSION.SDK_INT
+            )
             e.printStackTrace(pw)
 
             Log.e(null, sw.toString())

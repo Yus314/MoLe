@@ -21,11 +21,6 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
-import net.ktnx.mobileledger.async.RetrieveTransactionsTask
-import net.ktnx.mobileledger.db.DB
-import net.ktnx.mobileledger.db.Profile
-import net.ktnx.mobileledger.utils.Logger
-import net.ktnx.mobileledger.utils.Locker
 import java.text.DecimalFormatSymbols
 import java.text.NumberFormat
 import java.text.ParseException
@@ -33,6 +28,11 @@ import java.text.ParsePosition
 import java.util.Date
 import java.util.Locale
 import java.util.concurrent.atomic.AtomicInteger
+import net.ktnx.mobileledger.async.RetrieveTransactionsTask
+import net.ktnx.mobileledger.db.DB
+import net.ktnx.mobileledger.db.Profile
+import net.ktnx.mobileledger.utils.Locker
+import net.ktnx.mobileledger.utils.Logger
 
 object Data {
     @JvmField
@@ -92,16 +92,20 @@ object Data {
     @JvmStatic
     fun backgroundTaskStarted() {
         val cnt = backgroundTaskCount.incrementAndGet()
-        Logger.debug("data",
-            String.format(Locale.ENGLISH, "background task count is %d after incrementing", cnt))
+        Logger.debug(
+            "data",
+            String.format(Locale.ENGLISH, "background task count is %d after incrementing", cnt)
+        )
         backgroundTasksRunning.postValue(cnt > 0)
     }
 
     @JvmStatic
     fun backgroundTaskFinished() {
         val cnt = backgroundTaskCount.decrementAndGet()
-        Logger.debug("data",
-            String.format(Locale.ENGLISH, "background task count is %d after decrementing", cnt))
+        Logger.debug(
+            "data",
+            String.format(Locale.ENGLISH, "background task count is %d after decrementing", cnt)
+        )
         backgroundTasksRunning.postValue(cnt > 0)
     }
 
@@ -120,9 +124,15 @@ object Data {
         val formatter = NumberFormat.getCurrencyInstance(locale)
         val currency = formatter.currency
         val symbol = currency?.symbol ?: ""
-        Logger.debug("locale", String.format(
+        Logger.debug(
+            "locale",
+            String.format(
             "Discovering currency symbol position for locale %s (currency is %s; symbol is %s)",
-            locale.toString(), currency?.toString() ?: "<none>", symbol))
+            locale.toString(),
+                currency?.toString() ?: "<none>",
+                symbol
+            )
+        )
         val formatted = formatter.format(1234.56f)
         Logger.debug("locale", String.format("1234.56 formats as '%s'", formatted))
 

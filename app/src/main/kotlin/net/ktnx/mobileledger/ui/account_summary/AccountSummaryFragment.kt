@@ -88,7 +88,7 @@ class AccountSummaryFragment : MobileLedgerListFragment() {
         }
 
         summaryAdapter = AccountSummaryAdapter()
-        modelAdapter = null  // Use summaryAdapter instead
+        modelAdapter = null // Use summaryAdapter instead
         val mainActivity = getMainActivity()
 
         val llm = LinearLayoutManager(mainActivity)

@@ -28,6 +28,8 @@ import android.widget.ListAdapter
 import android.widget.TextView
 import androidx.annotation.ColorInt
 import androidx.recyclerview.widget.RecyclerView
+import java.text.DecimalFormatSymbols
+import java.text.ParseException
 import net.ktnx.mobileledger.R
 import net.ktnx.mobileledger.databinding.NewTransactionHeaderRowBinding
 import net.ktnx.mobileledger.db.TransactionDescriptionAutocompleteAdapter
@@ -37,8 +39,6 @@ import net.ktnx.mobileledger.ui.DatePickerFragment
 import net.ktnx.mobileledger.utils.Logger
 import net.ktnx.mobileledger.utils.Misc
 import net.ktnx.mobileledger.utils.SimpleDate
-import java.text.DecimalFormatSymbols
-import java.text.ParseException
 
 internal class NewTransactionHeaderItemHolder(
     private val b: NewTransactionHeaderRowBinding,

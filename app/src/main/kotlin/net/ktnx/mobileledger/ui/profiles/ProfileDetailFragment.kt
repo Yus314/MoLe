@@ -34,6 +34,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.textfield.TextInputLayout
+import java.net.MalformedURLException
+import java.net.URL
 import net.ktnx.mobileledger.BuildConfig
 import net.ktnx.mobileledger.R
 import net.ktnx.mobileledger.dao.BaseDAO
@@ -48,8 +50,6 @@ import net.ktnx.mobileledger.ui.HueRingDialog
 import net.ktnx.mobileledger.utils.Colors
 import net.ktnx.mobileledger.utils.Logger.debug
 import net.ktnx.mobileledger.utils.Misc
-import java.net.MalformedURLException
-import java.net.URL
 
 /**
  * A fragment representing a single Profile detail screen.
@@ -176,7 +176,8 @@ class ProfileDetailFragment : Fragment(R.layout.profile_detail) {
 
             b.defaultCommodityLayout.setOnClickListener { v ->
                 val cpf = CurrencySelectorFragment.newInstance(
-                    CurrencySelectorFragment.DEFAULT_COLUMN_COUNT, false
+                    CurrencySelectorFragment.DEFAULT_COLUMN_COUNT,
+                    false
                 )
                 cpf.setOnCurrencySelectedListener { currency -> model.setDefaultCommodity(currency) }
                 val activity = v.context as AppCompatActivity

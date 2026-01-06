@@ -28,15 +28,15 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
+import java.io.IOException
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import net.ktnx.mobileledger.backup.ConfigIO
 import net.ktnx.mobileledger.backup.ConfigReader
 import net.ktnx.mobileledger.backup.ConfigWriter
 import net.ktnx.mobileledger.databinding.FragmentBackupsBinding
 import net.ktnx.mobileledger.model.Data
-import java.io.IOException
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 class BackupsActivity : AppCompatActivity() {
     private lateinit var b: FragmentBackupsBinding

@@ -23,6 +23,12 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
+import java.io.BufferedReader
+import java.io.IOException
+import java.io.InputStreamReader
+import java.net.HttpURLConnection
+import java.util.Locale
+import java.util.regex.Pattern
 import net.ktnx.mobileledger.App
 import net.ktnx.mobileledger.db.Profile
 import net.ktnx.mobileledger.db.Profile.Companion.NO_PROFILE_ID
@@ -33,12 +39,6 @@ import net.ktnx.mobileledger.utils.Colors
 import net.ktnx.mobileledger.utils.Logger
 import net.ktnx.mobileledger.utils.Misc
 import net.ktnx.mobileledger.utils.NetworkUtil
-import java.io.BufferedReader
-import java.io.IOException
-import java.io.InputStreamReader
-import java.net.HttpURLConnection
-import java.util.Locale
-import java.util.regex.Pattern
 
 class ProfileDetailModel : ViewModel() {
     private val profileName = MutableLiveData<String?>()

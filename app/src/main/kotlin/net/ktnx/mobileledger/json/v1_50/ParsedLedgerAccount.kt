@@ -31,8 +31,8 @@ import net.ktnx.mobileledger.model.AmountStyle
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 class ParsedLedgerAccount : BaseAccount() {
-    var adeclarationinfo: ParsedDeclarationInfo? = null  // Added in hledger-web v1.32
-    var adata: ParsedAccountData? = null  // Added in hledger-web v1.50
+    var adeclarationinfo: ParsedDeclarationInfo? = null // Added in hledger-web v1.32
+    var adata: ParsedAccountData? = null // Added in hledger-web v1.50
 
     /**
      * Get the number of postings for this account from the new structure.

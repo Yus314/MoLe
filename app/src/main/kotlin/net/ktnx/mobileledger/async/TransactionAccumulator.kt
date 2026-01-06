@@ -17,6 +17,8 @@
 
 package net.ktnx.mobileledger.async
 
+import java.math.BigDecimal
+import java.math.RoundingMode
 import net.ktnx.mobileledger.model.Data
 import net.ktnx.mobileledger.model.LedgerAccount
 import net.ktnx.mobileledger.model.LedgerTransaction
@@ -24,8 +26,6 @@ import net.ktnx.mobileledger.model.TransactionListItem
 import net.ktnx.mobileledger.ui.MainModel
 import net.ktnx.mobileledger.utils.Misc
 import net.ktnx.mobileledger.utils.SimpleDate
-import java.math.BigDecimal
-import java.math.RoundingMode
 
 class TransactionAccumulator(
     private val boldAccountName: String?,

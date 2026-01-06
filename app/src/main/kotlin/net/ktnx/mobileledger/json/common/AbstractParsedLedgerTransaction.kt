@@ -17,11 +17,11 @@
 
 package net.ktnx.mobileledger.json.common
 
+import java.text.ParseException
 import net.ktnx.mobileledger.model.LedgerTransaction
 import net.ktnx.mobileledger.utils.Globals
 import net.ktnx.mobileledger.utils.Misc
 import net.ktnx.mobileledger.utils.SimpleDate
-import java.text.ParseException
 
 /**
  * Utility object providing common functionality for ParsedLedgerTransaction implementations.

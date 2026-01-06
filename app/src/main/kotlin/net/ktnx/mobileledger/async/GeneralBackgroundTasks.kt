@@ -17,8 +17,8 @@
 
 package net.ktnx.mobileledger.async
 
-import net.ktnx.mobileledger.utils.Misc
 import java.util.concurrent.Executors
+import net.ktnx.mobileledger.utils.Misc
 
 /**
  * Suitable for short tasks, not involving network communication

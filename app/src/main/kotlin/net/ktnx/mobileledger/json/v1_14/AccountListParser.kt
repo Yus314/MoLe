@@ -18,12 +18,14 @@
 package net.ktnx.mobileledger.json.v1_14
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import net.ktnx.mobileledger.json.AccountListParser as BaseParser
-import net.ktnx.mobileledger.json.API
 import java.io.IOException
 import java.io.InputStream
+import net.ktnx.mobileledger.json.API
+import net.ktnx.mobileledger.json.AccountListParser as BaseParser
 
-class AccountListParser @Throws(IOException::class) constructor(input: InputStream) : BaseParser() {
+class AccountListParser
+@Throws(IOException::class)
+constructor(input: InputStream) : BaseParser() {
     override val apiVersion: API = API.v1_14
 
     init {

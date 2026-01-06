@@ -63,17 +63,21 @@ abstract class AccountDAO : BaseDAO<Account>() {
     @Query("DELETE FROM accounts")
     abstract fun deleteAllSync()
 
-    @Query("SELECT * FROM accounts WHERE profile_id=:profileId AND IIF(:includeZeroBalances=1, 1," +
+    @Query(
+        "SELECT * FROM accounts WHERE profile_id=:profileId AND IIF(:includeZeroBalances=1, 1," +
            " (EXISTS(SELECT 1 FROM account_values av WHERE av.account_id=accounts.id AND av.value" +
            " <> 0) OR EXISTS(SELECT 1 FROM accounts a WHERE a.parent_name = accounts.name))) " +
-           "ORDER BY name")
+           "ORDER BY name"
+    )
     abstract fun getAll(profileId: Long, includeZeroBalances: Boolean): LiveData<List<Account>>
 
     @Transaction
-    @Query("SELECT * FROM accounts WHERE profile_id = :profileId AND IIF(:includeZeroBalances=1, " +
+    @Query(
+        "SELECT * FROM accounts WHERE profile_id = :profileId AND IIF(:includeZeroBalances=1, " +
            "1, (EXISTS(SELECT 1 FROM account_values av WHERE av.account_id=accounts.id AND av" +
            ".value <> 0) OR EXISTS(SELECT 1 FROM accounts a WHERE a.parent_name = accounts.name))" +
-           ") ORDER BY name")
+           ") ORDER BY name"
+    )
     abstract fun getAllWithAmounts(profileId: Long, includeZeroBalances: Boolean): LiveData<List<AccountWithAmounts>>
 
     @Query("SELECT * FROM accounts WHERE id=:id")
@@ -89,43 +93,53 @@ abstract class AccountDAO : BaseDAO<Account>() {
     @Query("SELECT * FROM accounts WHERE profile_id = :profileId AND name = :accountName")
     abstract fun getByNameWithAmounts(profileId: Long, accountName: String): LiveData<AccountWithAmounts>
 
-    @Query("SELECT name, CASE WHEN name_upper LIKE :term||'%' THEN 1 " +
+    @Query(
+        "SELECT name, CASE WHEN name_upper LIKE :term||'%' THEN 1 " +
            "               WHEN name_upper LIKE '%:'||:term||'%' THEN 2 " +
            "               WHEN name_upper LIKE '% '||:term||'%' THEN 3 " +
            "               ELSE 9 END AS ordering " + "FROM accounts " +
            "WHERE profile_id=:profileId AND name_upper LIKE '%'||:term||'%' " +
-           "ORDER BY ordering, name_upper, rowid ")
+           "ORDER BY ordering, name_upper, rowid "
+    )
     abstract fun lookupNamesInProfileByName(profileId: Long, term: String): LiveData<List<AccountNameContainer>>
 
-    @Query("SELECT name, CASE WHEN name_upper LIKE :term||'%' THEN 1 " +
+    @Query(
+        "SELECT name, CASE WHEN name_upper LIKE :term||'%' THEN 1 " +
            "               WHEN name_upper LIKE '%:'||:term||'%' THEN 2 " +
            "               WHEN name_upper LIKE '% '||:term||'%' THEN 3 " +
            "               ELSE 9 END AS ordering " + "FROM accounts " +
            "WHERE profile_id=:profileId AND name_upper LIKE '%'||:term||'%' " +
-           "ORDER BY ordering, name_upper, rowid ")
+           "ORDER BY ordering, name_upper, rowid "
+    )
     abstract fun lookupNamesInProfileByNameSync(profileId: Long, term: String): List<AccountNameContainer>
 
     @Transaction
-    @Query("SELECT * FROM accounts " +
+    @Query(
+        "SELECT * FROM accounts " +
            "WHERE profile_id=:profileId AND name_upper LIKE '%'||:term||'%' " +
            "ORDER BY  CASE WHEN name_upper LIKE :term||'%' THEN 1 " +
            "               WHEN name_upper LIKE '%:'||:term||'%' THEN 2 " +
            "               WHEN name_upper LIKE '% '||:term||'%' THEN 3 " +
-           "               ELSE 9 END, name_upper, rowid ")
+           "               ELSE 9 END, name_upper, rowid "
+    )
     abstract fun lookupWithAmountsInProfileByNameSync(profileId: Long, term: String): List<AccountWithAmounts>
 
-    @Query("SELECT DISTINCT name, CASE WHEN name_upper LIKE :term||'%' THEN 1 " +
+    @Query(
+        "SELECT DISTINCT name, CASE WHEN name_upper LIKE :term||'%' THEN 1 " +
            "               WHEN name_upper LIKE '%:'||:term||'%' THEN 2 " +
            "               WHEN name_upper LIKE '% '||:term||'%' THEN 3 " +
            "               ELSE 9 END AS ordering " + "FROM accounts " +
-           "WHERE name_upper LIKE '%'||:term||'%' " + "ORDER BY ordering, name_upper, rowid ")
+           "WHERE name_upper LIKE '%'||:term||'%' " + "ORDER BY ordering, name_upper, rowid "
+    )
     abstract fun lookupNamesByName(term: String): LiveData<List<AccountNameContainer>>
 
-    @Query("SELECT DISTINCT name, CASE WHEN name_upper LIKE :term||'%' THEN 1 " +
+    @Query(
+        "SELECT DISTINCT name, CASE WHEN name_upper LIKE :term||'%' THEN 1 " +
            "               WHEN name_upper LIKE '%:'||:term||'%' THEN 2 " +
            "               WHEN name_upper LIKE '% '||:term||'%' THEN 3 " +
            "               ELSE 9 END AS ordering " + "FROM accounts " +
-           "WHERE name_upper LIKE '%'||:term||'%' " + "ORDER BY ordering, name_upper, rowid ")
+           "WHERE name_upper LIKE '%'||:term||'%' " + "ORDER BY ordering, name_upper, rowid "
+    )
     abstract fun lookupNamesByNameSync(term: String): List<AccountNameContainer>
 
     @Query("SELECT * FROM accounts WHERE profile_id = :profileId")
@@ -142,9 +156,11 @@ abstract class AccountDAO : BaseDAO<Account>() {
     @Query("DELETE FROM accounts WHERE profile_id = :profileId AND generation <> :currentGeneration")
     abstract fun purgeOldAccountsSync(profileId: Long, currentGeneration: Long)
 
-    @Query("DELETE FROM account_values WHERE EXISTS (SELECT 1 FROM accounts a WHERE a" +
+    @Query(
+        "DELETE FROM account_values WHERE EXISTS (SELECT 1 FROM accounts a WHERE a" +
            ".id=account_values.account_id AND a.profile_id=:profileId) AND generation <> " +
-           ":currentGeneration")
+           ":currentGeneration"
+    )
     abstract fun purgeOldAccountValuesSync(profileId: Long, currentGeneration: Long)
 
     @Transaction

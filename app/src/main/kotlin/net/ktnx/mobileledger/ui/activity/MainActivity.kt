@@ -47,6 +47,8 @@ import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
+import java.util.Date
+import java.util.Locale
 import net.ktnx.mobileledger.BackupsActivity
 import net.ktnx.mobileledger.R
 import net.ktnx.mobileledger.async.RetrieveTransactionsTask
@@ -69,8 +71,6 @@ import net.ktnx.mobileledger.ui.transaction_list.TransactionListFragment
 import net.ktnx.mobileledger.utils.Colors
 import net.ktnx.mobileledger.utils.Logger
 import net.ktnx.mobileledger.utils.Misc
-import java.util.Date
-import java.util.Locale
 
 /*
  * TODO: reports
@@ -153,8 +153,11 @@ class MainActivity : ProfileThemedActivity(), FabManager.FabHandler {
 
         if (barDrawerToggle == null) {
             barDrawerToggle = ActionBarDrawerToggle(
-                this, b.drawerLayout, b.toolbar,
-                R.string.navigation_drawer_open, R.string.navigation_drawer_close
+                this,
+                b.drawerLayout,
+                b.toolbar,
+                R.string.navigation_drawer_open,
+                R.string.navigation_drawer_close
             ).also { b.drawerLayout.addDrawerListener(it) }
         }
         barDrawerToggle?.syncState()
@@ -328,10 +331,12 @@ class MainActivity : ProfileThemedActivity(), FabManager.FabHandler {
                 Logger.debug("db::", "WEB data never fetched. scheduling a fetch")
             } else {
                 Logger.debug(
-                    "db", String.format(
+                    "db",
+                        String.format(
                         Locale.ENGLISH,
                         "WEB data last fetched at %1.3f and now is %1.3f. re-fetching",
-                        lastUpdate / 1000f, now / 1000f
+                        lastUpdate / 1000f,
+                            now / 1000f
                     )
                 )
             }
@@ -424,7 +429,9 @@ class MainActivity : ProfileThemedActivity(), FabManager.FabHandler {
             Logger.debug(
                 "profiles",
                 String.format(
-                    Locale.ENGLISH, "profile theme %d → %d", Colors.profileThemeId,
+                    Locale.ENGLISH,
+                    "profile theme %d → %d",
+                    Colors.profileThemeId,
                     newProfileTheme
                 )
             )
@@ -459,8 +466,10 @@ class MainActivity : ProfileThemedActivity(), FabManager.FabHandler {
 
         if (sameProfileId && newProfile != null) {
             Logger.debug(
-                TAG, String.format(
-                    Locale.ROOT, "Short-cut profile 'changed' to %d",
+                TAG,
+                    String.format(
+                    Locale.ROOT,
+                        "Short-cut profile 'changed' to %d",
                     newProfile.id
                 )
             )
@@ -490,7 +499,8 @@ class MainActivity : ProfileThemedActivity(), FabManager.FabHandler {
             Logger.debug(
                 TAG,
                 String.format(
-                    Locale.ROOT, "got transaction list from DB (%d transactions)",
+                    Locale.ROOT,
+                    "got transaction list from DB (%d transactions)",
                     list.size
                 )
             )
@@ -574,8 +584,10 @@ class MainActivity : ProfileThemedActivity(), FabManager.FabHandler {
                 mBackMeansToAccountList = false
             } else {
                 Logger.debug(
-                    TAG, String.format(
-                        Locale.ENGLISH, "manager stack: %d",
+                    TAG,
+                        String.format(
+                        Locale.ENGLISH,
+                            "manager stack: %d",
                         supportFragmentManager.backStackEntryCount
                     )
                 )
@@ -598,7 +610,8 @@ class MainActivity : ProfileThemedActivity(), FabManager.FabHandler {
                         lastUpdate = opt.value?.toLong() ?: 0L
                     } catch (ex: NumberFormatException) {
                         Logger.debug(
-                            TAG, String.format("Error parsing '%s' as long", opt.value),
+                            TAG,
+                            String.format("Error parsing '%s' as long", opt.value),
                             ex
                         )
                     }

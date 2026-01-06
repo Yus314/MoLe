@@ -17,12 +17,12 @@
 
 package net.ktnx.mobileledger.async
 
+import java.util.Collections
+import java.util.Locale
 import net.ktnx.mobileledger.model.TransactionListItem
 import net.ktnx.mobileledger.ui.MainModel
 import net.ktnx.mobileledger.utils.Logger
 import net.ktnx.mobileledger.utils.SimpleDate
-import java.util.Collections
-import java.util.Locale
 
 class TransactionDateFinder(
     private val model: MainModel,

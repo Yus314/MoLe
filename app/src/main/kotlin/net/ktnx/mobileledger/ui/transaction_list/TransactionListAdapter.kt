@@ -22,13 +22,13 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.AsyncListDiffer
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import java.util.Locale
 import net.ktnx.mobileledger.databinding.LastUpdateLayoutBinding
 import net.ktnx.mobileledger.databinding.TransactionDelimiterBinding
 import net.ktnx.mobileledger.databinding.TransactionListRowBinding
 import net.ktnx.mobileledger.model.TransactionListItem
 import net.ktnx.mobileledger.utils.Logger
 import net.ktnx.mobileledger.utils.Misc
-import java.util.Locale
 
 class TransactionListAdapter : RecyclerView.Adapter<TransactionRowHolderBase>() {
 
@@ -37,7 +37,9 @@ class TransactionListAdapter : RecyclerView.Adapter<TransactionRowHolderBase>() 
     init {
         setHasStableIds(true)
 
-        listDiffer = AsyncListDiffer(this, object : DiffUtil.ItemCallback<TransactionListItem>() {
+        listDiffer = AsyncListDiffer(
+            this,
+            object : DiffUtil.ItemCallback<TransactionListItem>() {
             override fun areItemsTheSame(
                 oldItem: TransactionListItem,
                 newItem: TransactionListItem
@@ -71,7 +73,8 @@ class TransactionListAdapter : RecyclerView.Adapter<TransactionRowHolderBase>() 
                         true
                 }
             }
-        })
+        }
+        )
     }
 
     override fun getItemId(position: Int): Long {

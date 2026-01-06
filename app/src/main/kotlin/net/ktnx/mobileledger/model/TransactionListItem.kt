@@ -65,7 +65,9 @@ class TransactionListItem {
     }
 
     enum class Type {
-        TRANSACTION, DELIMITER, HEADER;
+        TRANSACTION,
+        DELIMITER,
+        HEADER;
 
         companion object {
             @JvmStatic

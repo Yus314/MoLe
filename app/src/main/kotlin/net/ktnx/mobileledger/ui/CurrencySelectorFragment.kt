@@ -40,8 +40,10 @@ import net.ktnx.mobileledger.utils.Misc
  * Activities containing this fragment MUST implement the [OnCurrencySelectedListener]
  * interface.
  */
-class CurrencySelectorFragment : AppCompatDialogFragment(),
-    OnCurrencySelectedListener, OnCurrencyLongClickListener {
+class CurrencySelectorFragment :
+    AppCompatDialogFragment(),
+    OnCurrencySelectedListener,
+    OnCurrencyLongClickListener {
 
     private var mColumnCount = DEFAULT_COLUMN_COUNT
     private var model: CurrencySelectorModel? = null
@@ -114,13 +116,15 @@ class CurrencySelectorFragment : AppCompatDialogFragment(),
             if (currName.isNotEmpty()) {
                 DB.get()
                     .getCurrencyDAO()
-                    .insert(net.ktnx.mobileledger.db.Currency(
+                    .insert(
+                        net.ktnx.mobileledger.db.Currency(
                         0,
                         tvNewCurrName.text.toString(),
                         if (rgPosition.checkedRadioButtonId == R.id.currency_position_left)
                             "before" else "after",
                         gap.isChecked
-                    ))
+                    )
+                    )
             }
 
             tvNewCurrName.visibility = View.GONE

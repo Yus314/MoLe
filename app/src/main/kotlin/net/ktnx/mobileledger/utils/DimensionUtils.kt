@@ -25,7 +25,8 @@ object DimensionUtils {
     @JvmStatic
     fun dp2px(context: Context, dp: Float): Int {
         return TypedValue.applyDimension(
-            TypedValue.COMPLEX_UNIT_DIP, dp,
+            TypedValue.COMPLEX_UNIT_DIP,
+            dp,
             context.resources.displayMetrics
         ).roundToInt()
     }
@@ -33,7 +34,8 @@ object DimensionUtils {
     @JvmStatic
     fun sp2px(context: Context, sp: Float): Int {
         return TypedValue.applyDimension(
-            TypedValue.COMPLEX_UNIT_SP, sp,
+            TypedValue.COMPLEX_UNIT_SP,
+            sp,
             context.resources.displayMetrics
         ).roundToInt()
     }

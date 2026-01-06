@@ -25,6 +25,12 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
+import java.text.ParseException
+import java.util.Calendar
+import java.util.GregorianCalendar
+import java.util.Locale
+import java.util.concurrent.atomic.AtomicInteger
+import java.util.regex.MatchResult
 import net.ktnx.mobileledger.BuildConfig
 import net.ktnx.mobileledger.db.Currency
 import net.ktnx.mobileledger.db.DB
@@ -39,19 +45,18 @@ import net.ktnx.mobileledger.utils.Globals
 import net.ktnx.mobileledger.utils.Logger
 import net.ktnx.mobileledger.utils.Misc
 import net.ktnx.mobileledger.utils.SimpleDate
-import java.text.ParseException
-import java.util.Calendar
-import java.util.GregorianCalendar
-import java.util.Locale
-import java.util.concurrent.atomic.AtomicInteger
-import java.util.regex.MatchResult
 
 enum class ItemType {
-    generalData, transactionRow
+    generalData,
+    transactionRow
 }
 
 enum class FocusedElement {
-    Account, Comment, Amount, Description, TransactionComment
+    Account,
+    Comment,
+    Amount,
+    Description,
+    TransactionComment
 }
 
 class NewTransactionModel : ViewModel() {
@@ -209,13 +214,19 @@ class NewTransactionModel : ViewModel() {
 
         run {
             val day = extractIntFromMatches(
-                matchResult, templateHead.dateDayMatchGroup, templateHead.dateDay
+                matchResult,
+                templateHead.dateDayMatchGroup,
+                templateHead.dateDay
             )
             val month = extractIntFromMatches(
-                matchResult, templateHead.dateMonthMatchGroup, templateHead.dateMonth
+                matchResult,
+                templateHead.dateMonthMatchGroup,
+                templateHead.dateMonth
             )
             val year = extractIntFromMatches(
-                matchResult, templateHead.dateYearMatchGroup, templateHead.dateYear
+                matchResult,
+                templateHead.dateYearMatchGroup,
+                templateHead.dateYear
             )
 
             if (year > 0 || month > 0 || day > 0) {
@@ -271,13 +282,19 @@ class NewTransactionModel : ViewModel() {
                 val accountsInInitialState = accountsInInitialState()
                 for (acc in entry.accounts) {
                     val accountName = extractStringFromMatches(
-                        matchResult, acc.accountNameMatchGroup, acc.accountName
+                        matchResult,
+                        acc.accountNameMatchGroup,
+                        acc.accountName
                     )
                     val accountComment = extractStringFromMatches(
-                        matchResult, acc.accountCommentMatchGroup, acc.accountComment
+                        matchResult,
+                        acc.accountCommentMatchGroup,
+                        acc.accountComment
                     )
                     var amount = extractFloatFromMatches(
-                        matchResult, acc.amountMatchGroup, acc.amount
+                        matchResult,
+                        acc.amountMatchGroup,
+                        acc.amount
                     )
                     val negateAmount = acc.negateAmount
                     if (amount != null && negateAmount == true) {
@@ -290,7 +307,9 @@ class NewTransactionModel : ViewModel() {
                         accRow.setAmount(amount)
                     }
                     accRow.currency = extractCurrencyFromMatches(
-                        matchResult, acc.currencyMatchGroup, acc.getCurrencyObject()
+                        matchResult,
+                    acc.currencyMatchGroup,
+                    acc.getCurrencyObject()
                     )
 
                     newItems.add(accRow)
@@ -487,7 +506,9 @@ class NewTransactionModel : ViewModel() {
                             String.format(
                                 Locale.US,
                                 "Should not happen: approved transaction has %d accounts " +
-                                        "without amounts for currency '%s'", accounts.size, currency
+                                        "without amounts for currency '%s'",
+                                            accounts.size,
+                                currency
                             )
                         )
                     }
@@ -502,7 +523,9 @@ class NewTransactionModel : ViewModel() {
                             String.format(
                                 Locale.US,
                                 "Should not happen: approved transaction has %d accounts for " +
-                                        "currency %s", accounts.size, currency
+                                        "currency %s",
+                                            accounts.size,
+                                currency
                             )
                         )
                     }
@@ -624,7 +647,8 @@ class NewTransactionModel : ViewModel() {
                 String.format(
                     "Before submittable checks (%s)",
                     if (workingWithLiveList) "LIVE LIST" else "custom list"
-                ), workingList
+                ),
+                    workingList
             )
         }
 
@@ -663,9 +687,12 @@ class NewTransactionModel : ViewModel() {
                     if (item.isAmountSet) {
                         // 2) each amount has account name
                         Logger.debug(
-                            "submittable", String.format(
+                            "submittable",
+                                String.format(
                                 "Transaction not submittable: row %d has no account name, but" +
-                                        " has" + " amount %1.2f", i + 1, item.amount
+                                        " has" + " amount %1.2f",
+                                            i + 1,
+                                    item.amount
                             )
                         )
                         submittable = false
@@ -734,8 +761,11 @@ class NewTransactionModel : ViewModel() {
                                 Logger.debug(
                                     "submittable",
                                     String.format(
-                                        Locale.US, "Resetting hint of %d:'%s' [%s]",
-                                        i, Misc.nullIsEmpty(acc.accountName), balCurrency
+                                        Locale.US,
+                                        "Resetting hint of %d:'%s' [%s]",
+                                        i,
+                                        Misc.nullIsEmpty(acc.accountName),
+                                        balCurrency
                                     )
                                 )
                             }
@@ -756,14 +786,17 @@ class NewTransactionModel : ViewModel() {
                         if (BuildConfig.DEBUG) {
                             if (balanceReceiversCount == 0) {
                                 Logger.debug(
-                                    "submittable", String.format(
+                                    "submittable",
+                                        String.format(
                                         "Transaction not submittable [curr:%s]: non-zero balance " +
-                                                "with no empty amounts with accounts", balCurrency
+                                                "with no empty amounts with accounts",
+                                                    balCurrency
                                     )
                                 )
                             } else {
                                 Logger.debug(
-                                    "submittable", String.format(
+                                    "submittable",
+                                        String.format(
                                         "Transaction not submittable [curr:%s]: non-zero balance " +
                                                 "with multiple empty amounts with accounts",
                                         balCurrency
@@ -797,8 +830,10 @@ class NewTransactionModel : ViewModel() {
                                 Logger.debug(
                                     "submittable",
                                     String.format(
-                                        "Setting amount hint of {%s} to %s [%s]", acc,
-                                        hint, balCurrency
+                                        "Setting amount hint of {%s} to %s [%s]",
+                                        acc,
+                                        hint,
+                                        balCurrency
                                     )
                                 )
                                 acc.amountHint = hint
@@ -810,7 +845,8 @@ class NewTransactionModel : ViewModel() {
                                     "submittable",
                                     String.format(
                                         "Resetting hint of '%s' [%s]",
-                                        Misc.nullIsEmpty(acc.accountName), balCurrency
+                                        Misc.nullIsEmpty(acc.accountName),
+                                        balCurrency
                                     )
                                 )
                             }
@@ -841,7 +877,8 @@ class NewTransactionModel : ViewModel() {
                             "submittable",
                             String.format(
                                 "Adding new item with %s for currency %s",
-                                newAcc.amountHint, balCurrency
+                                newAcc.amountHint,
+                                balCurrency
                             )
                         )
                         (workingList as MutableList<Item>).add(newAcc)
@@ -1019,7 +1056,7 @@ class NewTransactionModel : ViewModel() {
         }
     }
 
-    //==========================================================================================
+    // ==========================================================================================
 
     class TransactionHead : Item {
         var date: SimpleDate? = null
@@ -1180,9 +1217,11 @@ class NewTransactionModel : ViewModel() {
                     isAmountValid = true
                 } catch (e: NumberFormatException) {
                     Logger.debug(
-                        "new-trans", String.format(
+                        "new-trans",
+                            String.format(
                             "assuming amount is not set due to number format exception. " +
-                                    "input was '%s'", amtText
+                                    "input was '%s'",
+                                        amtText
                         )
                     )
                     if (isAmountValid) { // it was valid and now it's not
@@ -1266,15 +1305,19 @@ class NewTransactionModel : ViewModel() {
 
             var equal = Misc.equalStrings(accountName, other.accountName)
             equal = equal && Misc.equalStrings(comment, other.comment) &&
-                    (if (isAmountSet) other.isAmountSet && isAmountValid == other.isAmountValid &&
+                    (
+                        if (isAmountSet) other.isAmountSet && isAmountValid == other.isAmountValid &&
                             Misc.equalStrings(amountText, other.amountText)
-                    else !other.isAmountSet)
+                    else !other.isAmountSet
+                    )
 
             // compare amount hint only if there is no amount
             if (!isAmountSet) {
-                equal = equal && (if (amountHintIsSet) other.amountHintIsSet &&
+                equal = equal && (
+                    if (amountHintIsSet) other.amountHintIsSet &&
                         Misc.equalStrings(amountHint, other.amountHint)
-                else !other.amountHintIsSet)
+                else !other.amountHintIsSet
+                )
             }
             equal = equal && Misc.equalStrings(currency, other.currency) && isLast == other.isLast
 

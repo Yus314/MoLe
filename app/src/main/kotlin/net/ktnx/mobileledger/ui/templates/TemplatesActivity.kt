@@ -35,7 +35,8 @@ import net.ktnx.mobileledger.ui.QR
 import net.ktnx.mobileledger.ui.activity.CrashReportingActivity
 import net.ktnx.mobileledger.utils.Logger
 
-class TemplatesActivity : CrashReportingActivity(),
+class TemplatesActivity :
+    CrashReportingActivity(),
     TemplateListFragment.OnTemplateListFragmentInteractionListener,
     TemplateDetailsFragment.InteractionListener,
     QR.QRScanResultReceiver,

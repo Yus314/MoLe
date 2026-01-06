@@ -23,12 +23,11 @@ import android.content.res.Resources
 import android.util.TypedValue
 import androidx.annotation.ColorInt
 import androidx.lifecycle.MutableLiveData
+import java.util.Locale
 import net.ktnx.mobileledger.BuildConfig
 import net.ktnx.mobileledger.R
 import net.ktnx.mobileledger.db.Profile
 import net.ktnx.mobileledger.ui.HueRing
-
-import java.util.Locale
 
 object Colors {
     const val DEFAULT_HUE_DEG = 261
@@ -136,7 +135,7 @@ object Colors {
             }
         }
 
-        return themeIDs[themeIndex + 1]    // 0 is the default theme
+        return themeIDs[themeIndex + 1] // 0 is the default theme
     }
 
     @JvmStatic
@@ -212,9 +211,9 @@ object Colors {
                 }
 
                 val interval = if (h > lastHue) {
-                    h - lastHue     // 10 -> 20 is a step of 10
+                    h - lastHue // 10 -> 20 is a step of 10
                 } else {
-                    h + (360 - lastHue)    // 350 -> 20 is a step of 30
+                    h + (360 - lastHue) // 350 -> 20 is a step of 30
                 }
 
                 if (interval > largestInterval) {
@@ -234,14 +233,16 @@ object Colors {
             Logger.debug(
                 "profiles",
                 String.format(
-                    Locale.US, "Choosing the middle colour between %d and %d",
-                    chosenIntervalStart, chosenIntervalStart + largestInterval
+                    Locale.US,
+                    "Choosing the middle colour between %d and %d",
+                    chosenIntervalStart,
+                    chosenIntervalStart + largestInterval
                 )
             )
 
             var adjustedInterval = largestInterval
             if (adjustedInterval % 2 != 0) {
-                adjustedInterval++    // round up the middle point
+                adjustedInterval++ // round up the middle point
             }
 
             chosenHue = (chosenIntervalStart + (adjustedInterval / 2)) % 360
@@ -253,7 +254,7 @@ object Colors {
             if (mod > HueRing.hueStepDegrees / 2) {
                 finalHue += (HueRing.hueStepDegrees - mod) // 13 += (5-3) = 15
             } else {
-                finalHue -= mod       // 12 -= 2 = 10
+                finalHue -= mod // 12 -= 2 = 10
             }
         }
 

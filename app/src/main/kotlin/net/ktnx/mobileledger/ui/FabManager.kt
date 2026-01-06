@@ -106,7 +106,9 @@ class FabManager(private val fab: FloatingActionButton) {
         fun hideManagedFab()
     }
 
-    class ScrollFabHandler @SuppressLint("ClickableViewAccessibility") constructor(
+    class ScrollFabHandler
+    @SuppressLint("ClickableViewAccessibility")
+    constructor(
         private val fabHandler: FabHandler,
         recyclerView: RecyclerView
     ) {

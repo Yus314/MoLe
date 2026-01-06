@@ -24,6 +24,7 @@ import dagger.Provides
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import dagger.hilt.testing.TestInstallIn
+import javax.inject.Singleton
 import net.ktnx.mobileledger.dao.AccountDAO
 import net.ktnx.mobileledger.dao.AccountValueDAO
 import net.ktnx.mobileledger.dao.CurrencyDAO
@@ -33,7 +34,6 @@ import net.ktnx.mobileledger.dao.TemplateAccountDAO
 import net.ktnx.mobileledger.dao.TemplateHeaderDAO
 import net.ktnx.mobileledger.dao.TransactionDAO
 import net.ktnx.mobileledger.db.DB
-import javax.inject.Singleton
 
 /**
  * Test module that replaces DatabaseModule for instrumentation tests.
@@ -56,7 +56,7 @@ object TestDatabaseModule {
     @Singleton
     fun provideInMemoryDatabase(@ApplicationContext context: Context): DB {
         return Room.inMemoryDatabaseBuilder(context, DB::class.java)
-            .allowMainThreadQueries()  // Allow queries on main thread for simpler tests
+            .allowMainThreadQueries() // Allow queries on main thread for simpler tests
             .build()
     }
 

@@ -26,6 +26,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.AsyncListDiffer
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import java.util.Locale
 import net.ktnx.mobileledger.R
 import net.ktnx.mobileledger.dao.BaseDAO
 import net.ktnx.mobileledger.databinding.AccountListRowBinding
@@ -37,7 +38,6 @@ import net.ktnx.mobileledger.ui.activity.MainActivity
 import net.ktnx.mobileledger.utils.Logger
 import net.ktnx.mobileledger.utils.Logger.debug
 import net.ktnx.mobileledger.utils.Misc
-import java.util.Locale
 
 class AccountSummaryAdapter : RecyclerView.Adapter<AccountSummaryAdapter.RowHolder>() {
     private val listDiffer: AsyncListDiffer<AccountListItem>
@@ -45,7 +45,9 @@ class AccountSummaryAdapter : RecyclerView.Adapter<AccountSummaryAdapter.RowHold
     init {
         setHasStableIds(true)
 
-        listDiffer = AsyncListDiffer(this, object : DiffUtil.ItemCallback<AccountListItem>() {
+        listDiffer = AsyncListDiffer(
+            this,
+            object : DiffUtil.ItemCallback<AccountListItem>() {
             override fun getChangePayload(oldItem: AccountListItem, newItem: AccountListItem): Any? {
                 val changes = Change()
 
@@ -87,7 +89,8 @@ class AccountSummaryAdapter : RecyclerView.Adapter<AccountSummaryAdapter.RowHold
             override fun areContentsTheSame(oldItem: AccountListItem, newItem: AccountListItem): Boolean {
                 return oldItem.sameContent(newItem)
             }
-        })
+        }
+        )
     }
 
     override fun getItemId(position: Int): Long {
@@ -197,7 +200,10 @@ class AccountSummaryAdapter : RecyclerView.Adapter<AccountSummaryAdapter.RowHold
                 Logger.debug(
                     "accounts",
                     String.format(
-                        Locale.ROOT, "%s (%d) → %s", account.name, dbo.id,
+                        Locale.ROOT,
+                        "%s (%d) → %s",
+                        account.name,
+                        dbo.id,
                         if (dbo.expanded) "expanded" else "collapsed"
                     )
                 )

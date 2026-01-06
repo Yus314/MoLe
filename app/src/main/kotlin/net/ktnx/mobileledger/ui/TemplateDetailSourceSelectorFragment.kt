@@ -26,12 +26,12 @@ import androidx.appcompat.app.AppCompatDialogFragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
+import java.util.regex.Pattern
 import net.ktnx.mobileledger.R
 import net.ktnx.mobileledger.databinding.FragmentTemplateDetailSourceSelectorListBinding
 import net.ktnx.mobileledger.model.TemplateDetailSource
 import net.ktnx.mobileledger.utils.Logger
 import net.ktnx.mobileledger.utils.Misc
-import java.util.regex.Pattern
 
 /**
  * A fragment representing a list of Items.
@@ -45,6 +45,7 @@ class TemplateDetailSourceSelectorFragment : AppCompatDialogFragment(), OnSource
     private var mSources: ArrayList<TemplateDetailSource>? = null
     private var model: TemplateDetailSourceSelectorModel? = null
     private var onSourceSelectedListener: OnSourceSelectedListener? = null
+
     @StringRes
     private var mPatternProblem: Int = 0
 
@@ -65,9 +66,14 @@ class TemplateDetailSourceSelectorFragment : AppCompatDialogFragment(), OnSource
                     val pattern = Pattern.compile(patternText)
                     // testText is guaranteed non-null here (checked by Misc.emptyIsNull above)
                     val matcher = pattern.matcher(testText)
-                    Logger.debug("templates",
-                        String.format("Trying to match pattern '%s' against text '%s'",
-                            patternText, testText))
+                    Logger.debug(
+                        "templates",
+                        String.format(
+                            "Trying to match pattern '%s' against text '%s'",
+                            patternText,
+                            testText
+                        )
+                    )
                     if (matcher.find()) {
                         if (matcher.groupCount() >= 0) {
                             val list = ArrayList<TemplateDetailSource>()
@@ -90,7 +96,8 @@ class TemplateDetailSourceSelectorFragment : AppCompatDialogFragment(), OnSource
         val context = requireContext()
         val csd = Dialog(context)
         val b = FragmentTemplateDetailSourceSelectorListBinding.inflate(
-            LayoutInflater.from(context))
+            LayoutInflater.from(context)
+        )
         csd.setContentView(b.root)
         csd.setTitle(R.string.choose_template_detail_source_label)
 

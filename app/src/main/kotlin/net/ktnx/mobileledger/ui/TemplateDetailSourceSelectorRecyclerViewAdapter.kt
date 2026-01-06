@@ -37,7 +37,9 @@ class TemplateDetailSourceSelectorRecyclerViewAdapter :
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val b = FragmentTemplateDetailSourceSelectorBinding.inflate(
-            LayoutInflater.from(parent.context), parent, false
+            LayoutInflater.from(parent.context),
+            parent,
+            false
         )
         return ViewHolder(b)
     }

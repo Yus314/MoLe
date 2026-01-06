@@ -25,16 +25,16 @@ import android.text.Spanned
 import android.text.style.ForegroundColorSpan
 import android.text.style.StyleSpan
 import android.text.style.UnderlineSpan
+import java.util.Locale
+import java.util.Objects
+import java.util.regex.Pattern
+import java.util.regex.PatternSyntaxException
 import net.ktnx.mobileledger.R
 import net.ktnx.mobileledger.db.TemplateAccount
 import net.ktnx.mobileledger.db.TemplateBase
 import net.ktnx.mobileledger.db.TemplateHeader
 import net.ktnx.mobileledger.utils.Logger
 import net.ktnx.mobileledger.utils.Misc
-import java.util.Locale
-import java.util.Objects
-import java.util.regex.Pattern
-import java.util.regex.PatternSyntaxException
 
 abstract class TemplateDetailsItem protected constructor(val type: Type) {
     var id: Long? = null
@@ -232,7 +232,8 @@ abstract class TemplateDetailsItem protected constructor(val type: Type) {
             if (Misc.emptyIsNull(accountName.getValue()) == null)
                 return r.getString(R.string.account_name_is_empty)
             if (!amount.hasLiteralValue() &&
-                (amount.getMatchGroup() < 1 || amount.getMatchGroup() > patternGroupCount))
+                (amount.getMatchGroup() < 1 || amount.getMatchGroup() > patternGroupCount)
+            )
                 return r.getString(R.string.invalid_matching_group_number)
             return null
         }
@@ -242,9 +243,17 @@ abstract class TemplateDetailsItem protected constructor(val type: Type) {
 
         fun equalContents(o: AccountRow): Boolean {
             if (position != o.position) {
-                Logger.debug("cmpAcc",
-                    String.format(Locale.US, "[%d] != [%d]: pos %d != pos %d",
-                        id, o.id, position, o.position))
+                Logger.debug(
+                    "cmpAcc",
+                    String.format(
+                        Locale.US,
+                        "[%d] != [%d]: pos %d != pos %d",
+                        id,
+                        o.id,
+                        position,
+                        o.position
+                    )
+                )
                 return false
             }
             return amount == o.amount && accountName == o.accountName &&
@@ -305,8 +314,12 @@ abstract class TemplateDetailsItem protected constructor(val type: Type) {
                     compiledPattern = null
                     testMatch = SpannableString(testText).also { ss ->
                         if (testText.isNotEmpty()) {
-                            ss.setSpan(notMatchedSpan(), 0, testText.length - 1,
-                                Spanned.SPAN_INCLUSIVE_INCLUSIVE)
+                            ss.setSpan(
+                                notMatchedSpan(),
+                                0,
+                                testText.length - 1,
+                                Spanned.SPAN_INCLUSIVE_INCLUSIVE
+                            )
                         }
                     }
                 }
@@ -387,15 +400,18 @@ abstract class TemplateDetailsItem protected constructor(val type: Type) {
                 return r.getString(R.string.pattern_is_empty)
 
             if (!dateYear.hasLiteralValue() && compiledPattern != null &&
-                (dateDay.getMatchGroup() < 1 || dateDay.getMatchGroup() > patternGroupCount))
+                (dateDay.getMatchGroup() < 1 || dateDay.getMatchGroup() > patternGroupCount)
+            )
                 return r.getString(R.string.invalid_matching_group_number)
 
             if (!dateMonth.hasLiteralValue() && compiledPattern != null &&
-                (dateMonth.getMatchGroup() < 1 || dateMonth.getMatchGroup() > patternGroupCount))
+                (dateMonth.getMatchGroup() < 1 || dateMonth.getMatchGroup() > patternGroupCount)
+            )
                 return r.getString(R.string.invalid_matching_group_number)
 
             if (!dateDay.hasLiteralValue() && compiledPattern != null &&
-                (dateDay.getMatchGroup() < 1 || dateDay.getMatchGroup() > patternGroupCount))
+                (dateDay.getMatchGroup() < 1 || dateDay.getMatchGroup() > patternGroupCount)
+            )
                 return r.getString(R.string.invalid_matching_group_number)
 
             return null
@@ -484,25 +500,45 @@ abstract class TemplateDetailsItem protected constructor(val type: Type) {
                         val m = compiledPat.matcher(testText)
                         if (m.find()) {
                             if (m.start() > 0)
-                                ss.setSpan(notMatchedSpan(), 0, m.start(),
-                                    Spanned.SPAN_INCLUSIVE_INCLUSIVE)
+                                ss.setSpan(
+                                    notMatchedSpan(),
+                                    0,
+                                    m.start(),
+                                    Spanned.SPAN_INCLUSIVE_INCLUSIVE
+                                )
                             if (m.end() < testText.length - 1)
-                                ss.setSpan(notMatchedSpan(), m.end(), testText.length,
-                                    Spanned.SPAN_INCLUSIVE_INCLUSIVE)
+                                ss.setSpan(
+                                    notMatchedSpan(),
+                                    m.end(),
+                                    testText.length,
+                                    Spanned.SPAN_INCLUSIVE_INCLUSIVE
+                                )
 
-                            ss.setSpan(matchedSpan(), m.start(0), m.end(0),
-                                Spanned.SPAN_INCLUSIVE_INCLUSIVE)
+                            ss.setSpan(
+                                matchedSpan(),
+                                m.start(0),
+                                m.end(0),
+                                Spanned.SPAN_INCLUSIVE_INCLUSIVE
+                            )
 
                             if (m.groupCount() > 0) {
                                 for (g in 1..m.groupCount()) {
-                                    ss.setSpan(capturedSpan(), m.start(g), m.end(g),
-                                        Spanned.SPAN_INCLUSIVE_INCLUSIVE)
+                                    ss.setSpan(
+                                        capturedSpan(),
+                                        m.start(g),
+                                        m.end(g),
+                                        Spanned.SPAN_INCLUSIVE_INCLUSIVE
+                                    )
                                 }
                             }
                         } else {
                             patternError = "Pattern does not match"
-                            ss.setSpan(ForegroundColorSpan(Color.GRAY), 0,
-                                testText.length - 1, Spanned.SPAN_INCLUSIVE_INCLUSIVE)
+                            ss.setSpan(
+                                ForegroundColorSpan(Color.GRAY),
+                                0,
+                                testText.length - 1,
+                                Spanned.SPAN_INCLUSIVE_INCLUSIVE
+                            )
                         }
 
                         testMatch = ss
@@ -518,8 +554,14 @@ abstract class TemplateDetailsItem protected constructor(val type: Type) {
 
         override fun toString(): String {
             return super.toString() +
-                    String.format(" name[%s] pat[%s] test[%s] tran[%s] com[%s]",
-                        name, pattern, testText, transactionDescription, transactionComment)
+                    String.format(
+                        " name[%s] pat[%s] test[%s] tran[%s] com[%s]",
+                        name,
+                        pattern,
+                        testText,
+                        transactionDescription,
+                        transactionComment
+                    )
         }
 
         companion object {

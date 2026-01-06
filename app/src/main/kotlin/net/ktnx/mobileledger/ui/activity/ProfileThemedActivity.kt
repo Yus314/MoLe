@@ -19,6 +19,7 @@ package net.ktnx.mobileledger.ui.activity
 
 import android.annotation.SuppressLint
 import android.os.Bundle
+import java.util.Locale
 import net.ktnx.mobileledger.App
 import net.ktnx.mobileledger.dao.BaseDAO
 import net.ktnx.mobileledger.db.DB
@@ -26,7 +27,6 @@ import net.ktnx.mobileledger.db.Profile
 import net.ktnx.mobileledger.model.Data
 import net.ktnx.mobileledger.utils.Colors
 import net.ktnx.mobileledger.utils.Logger
-import java.util.Locale
 
 @SuppressLint("Registered")
 open class ProfileThemedActivity : CrashReportingActivity() {
@@ -37,22 +37,31 @@ open class ProfileThemedActivity : CrashReportingActivity() {
 
     protected fun setupProfileColors(newHue: Int) {
         if (themeSetUp && newHue == mThemeHue) {
-            Logger.debug(TAG,
-                String.format(Locale.ROOT, "Ignore request to set theme to the same value (%d)",
-                    newHue))
+            Logger.debug(
+                TAG,
+                String.format(
+                    Locale.ROOT,
+                    "Ignore request to set theme to the same value (%d)",
+                    newHue
+                )
+            )
             return
         }
 
-        Logger.debug(TAG,
-            String.format(Locale.ROOT, "Changing theme from %d to %d", mThemeHue, newHue))
+        Logger.debug(
+            TAG,
+            String.format(Locale.ROOT, "Changing theme from %d to %d", mThemeHue, newHue)
+        )
 
         mThemeHue = newHue
         Colors.setupTheme(this, mThemeHue)
 
         if (themeSetUp) {
-            Logger.debug(TAG,
+            Logger.debug(
+                TAG,
                 "setupProfileColors(): theme already set up, supposedly the activity will be " +
-                "recreated")
+                "recreated"
+            )
             return
         }
         themeSetUp = true
@@ -79,9 +88,14 @@ open class ProfileThemedActivity : CrashReportingActivity() {
             val hue = profile.theme
 
             if (hue != mThemeHue) {
-                Logger.debug(TAG,
-                    String.format(Locale.US, "profile observer calling setupProfileColors(%d)",
-                        hue))
+                Logger.debug(
+                    TAG,
+                    String.format(
+                        Locale.US,
+                        "profile observer calling setupProfileColors(%d)",
+                        hue
+                    )
+                )
                 setupProfileColors(hue)
             }
         }
@@ -100,8 +114,10 @@ open class ProfileThemedActivity : CrashReportingActivity() {
             mThemeHue = Colors.DEFAULT_HUE_DEG
         }
 
-        Logger.debug(TAG,
-            String.format(Locale.US, "initProfile() calling setupProfileColors(%d)", hue))
+        Logger.debug(
+            TAG,
+            String.format(Locale.US, "initProfile() calling setupProfileColors(%d)", hue)
+        )
         setupProfileColors(hue)
 
         initProfile(profileId)
@@ -117,8 +133,14 @@ open class ProfileThemedActivity : CrashReportingActivity() {
         var profile = dao.getByIdSync(profileId)
 
         if (profile == null) {
-            Logger.debug(TAG, String.format(Locale.ROOT, "Profile %d not found. Trying any other",
-                profileId))
+            Logger.debug(
+                TAG,
+                String.format(
+                    Locale.ROOT,
+                    "Profile %d not found. Trying any other",
+                profileId
+                )
+            )
 
             profile = dao.getAnySync()
         }

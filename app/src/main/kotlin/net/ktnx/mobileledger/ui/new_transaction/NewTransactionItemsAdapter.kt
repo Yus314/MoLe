@@ -23,12 +23,12 @@ import androidx.recyclerview.widget.AsyncListDiffer
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
+import java.util.Locale
+import java.util.Objects
 import net.ktnx.mobileledger.databinding.NewTransactionAccountRowBinding
 import net.ktnx.mobileledger.databinding.NewTransactionHeaderRowBinding
 import net.ktnx.mobileledger.db.Profile
 import net.ktnx.mobileledger.utils.Logger
-import java.util.Locale
-import java.util.Objects
 
 internal class NewTransactionItemsAdapter(
     @JvmField val model: NewTransactionModel,
@@ -44,7 +44,9 @@ internal class NewTransactionItemsAdapter(
     init {
         setHasStableIds(true)
 
-        differ = AsyncListDiffer(this, object : DiffUtil.ItemCallback<NewTransactionModel.Item>() {
+        differ = AsyncListDiffer(
+            this,
+            object : DiffUtil.ItemCallback<NewTransactionModel.Item>() {
             override fun areItemsTheSame(
                 oldItem: NewTransactionModel.Item,
                 newItem: NewTransactionModel.Item
@@ -58,7 +60,8 @@ internal class NewTransactionItemsAdapter(
             ): Boolean {
                 return oldItem.equalContents(newItem)
             }
-        })
+        }
+        )
 
         touchHelper = ItemTouchHelper(object : ItemTouchHelper.Callback() {
             override fun isLongPressDragEnabled(): Boolean = true
@@ -134,7 +137,9 @@ internal class NewTransactionItemsAdapter(
         return when (viewType) {
             ITEM_VIEW_TYPE_HEADER -> {
                 val headerBinding = NewTransactionHeaderRowBinding.inflate(
-                    LayoutInflater.from(parent.context), parent, false
+                    LayoutInflater.from(parent.context),
+                    parent,
+                    false
                 )
                 val headerHolder = NewTransactionHeaderItemHolder(headerBinding, this)
                 Logger.debug(
@@ -145,7 +150,9 @@ internal class NewTransactionItemsAdapter(
             }
             ITEM_VIEW_TYPE_ACCOUNT -> {
                 val accBinding = NewTransactionAccountRowBinding.inflate(
-                    LayoutInflater.from(parent.context), parent, false
+                    LayoutInflater.from(parent.context),
+                    parent,
+                    false
                 )
                 val accHolder = NewTransactionAccountRowItemHolder(accBinding, this)
                 Logger.debug(

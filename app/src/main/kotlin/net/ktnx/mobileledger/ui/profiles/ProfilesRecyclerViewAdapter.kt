@@ -33,13 +33,13 @@ import androidx.recyclerview.widget.AsyncListDiffer
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
+import java.util.Collections
 import net.ktnx.mobileledger.R
 import net.ktnx.mobileledger.db.DB
 import net.ktnx.mobileledger.db.Profile
 import net.ktnx.mobileledger.model.Data
 import net.ktnx.mobileledger.utils.Colors
 import net.ktnx.mobileledger.utils.Logger.debug
-import java.util.Collections
 
 class ProfilesRecyclerViewAdapter : RecyclerView.Adapter<ProfilesRecyclerViewAdapter.ProfileListViewHolder>() {
     @JvmField
@@ -53,7 +53,9 @@ class ProfilesRecyclerViewAdapter : RecyclerView.Adapter<ProfilesRecyclerViewAda
         debug("flow", "ProfilesRecyclerViewAdapter.new()")
 
         setHasStableIds(true)
-        listDiffer = AsyncListDiffer(this, object : DiffUtil.ItemCallback<Profile>() {
+        listDiffer = AsyncListDiffer(
+            this,
+            object : DiffUtil.ItemCallback<Profile>() {
             override fun areItemsTheSame(oldItem: Profile, newItem: Profile): Boolean {
                 return oldItem.id == newItem.id
             }
@@ -61,7 +63,8 @@ class ProfilesRecyclerViewAdapter : RecyclerView.Adapter<ProfilesRecyclerViewAda
             override fun areContentsTheSame(oldItem: Profile, newItem: Profile): Boolean {
                 return oldItem == newItem
             }
-        })
+        }
+        )
 
         val cb = object : ItemTouchHelper.Callback() {
             override fun getMovementFlags(

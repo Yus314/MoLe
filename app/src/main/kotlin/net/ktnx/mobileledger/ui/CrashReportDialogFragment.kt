@@ -53,8 +53,12 @@ class CrashReportDialogFragment : DialogFragment() {
                     putExtra(Intent.EXTRA_TEXT, mCrashReportText)
                     type = "message/rfc822"
                 }
-                startActivity(Intent.createChooser(email,
-                    resources.getString(R.string.send_crash_via)))
+                startActivity(
+                    Intent.createChooser(
+                        email,
+                    resources.getString(R.string.send_crash_via)
+                    )
+                )
             }
             .setNegativeButton(R.string.btn_not_now) { _, _ ->
                 dialog?.cancel()
