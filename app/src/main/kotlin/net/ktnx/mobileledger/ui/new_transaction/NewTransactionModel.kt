@@ -62,7 +62,7 @@ class NewTransactionModel : ViewModel() {
     private val simulateSave: MutableLiveData<Boolean> = InertMutableLiveData(false)
     private val busyCounter = AtomicInteger(0)
     private val busyFlag: MutableLiveData<Boolean> = InertMutableLiveData(false)
-    private val profileObserver = Observer<Profile> { profile ->
+    private val profileObserver = Observer<Profile?> { profile ->
         if (profile != null) {
             showCurrency.postValue(profile.showCommodityByDefault)
             showComments.postValue(profile.showCommentsByDefault)

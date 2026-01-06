@@ -73,7 +73,7 @@ object Data {
 
     const val decimalDot = "."
 
-    private val profile = MutableLiveData<Profile>()
+    private val profile = MutableLiveData<Profile?>()
     private val backgroundTaskCount = AtomicInteger(0)
     private val profilesLocker = Locker()
     private var numberFormatter: NumberFormat? = null
@@ -168,7 +168,7 @@ object Data {
     }
 
     @JvmStatic
-    fun observeProfile(lifecycleOwner: LifecycleOwner, observer: Observer<Profile>) {
+    fun observeProfile(lifecycleOwner: LifecycleOwner, observer: Observer<Profile?>) {
         profile.observe(lifecycleOwner, observer)
     }
 
