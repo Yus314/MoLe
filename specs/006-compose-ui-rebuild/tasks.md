@@ -60,16 +60,16 @@
 
 ### User Story 1 の実装
 
-- [ ] T014 [US1] app/src/main/kotlin/net/ktnx/mobileledger/ui/components/HueRing.kt にCanvas APIを使用したHueRingカスタムComposableを作成
-- [ ] T015 [US1] app/src/main/kotlin/net/ktnx/mobileledger/ui/profile/ProfileDetailUiState.kt にデータクラスを作成
-- [ ] T016 [US1] app/src/main/kotlin/net/ktnx/mobileledger/ui/profile/ProfileDetailViewModel.kt にStateFlowを使用したViewModelを作成
-- [ ] T017 [US1] app/src/main/kotlin/net/ktnx/mobileledger/ui/profile/ProfileDetailScreen.kt にメインComposableを作成
-- [ ] T018 [US1] ProfileDetailScreen.kt にフォームフィールド（名前、URL、認証）を追加
-- [ ] T019 [US1] ProfileDetailScreen.kt にテーマカラー選択用HueRing統合を追加
-- [ ] T020 [US1] ProfileDetailViewModel.kt にローディング状態付き接続テスト機能を実装
-- [ ] T021 [US1] ProfileDetailScreen.kt に未保存変更確認ダイアログを追加
-- [ ] T022 [US1] app/src/main/kotlin/net/ktnx/mobileledger/ui/activity/ProfileDetailActivity.kt をsetContentとMoLeThemeを使用するよう更新
-- [ ] T023 [US1] `nix run .#verify` を実行してデバイスでテスト
+- [X] T014 [US1] app/src/main/kotlin/net/ktnx/mobileledger/ui/components/HueRing.kt にCanvas APIを使用したHueRingカスタムComposableを作成
+- [X] T015 [US1] app/src/main/kotlin/net/ktnx/mobileledger/ui/profile/ProfileDetailUiState.kt にデータクラスを作成
+- [X] T016 [US1] app/src/main/kotlin/net/ktnx/mobileledger/ui/profile/ProfileDetailViewModel.kt にStateFlowを使用したViewModelを作成
+- [X] T017 [US1] app/src/main/kotlin/net/ktnx/mobileledger/ui/profile/ProfileDetailScreen.kt にメインComposableを作成
+- [X] T018 [US1] ProfileDetailScreen.kt にフォームフィールド（名前、URL、認証）を追加
+- [X] T019 [US1] ProfileDetailScreen.kt にテーマカラー選択用HueRing統合を追加
+- [X] T020 [US1] ProfileDetailViewModel.kt にローディング状態付き接続テスト機能を実装
+- [X] T021 [US1] ProfileDetailScreen.kt に未保存変更確認ダイアログを追加
+- [X] T022 [US1] app/src/main/kotlin/net/ktnox/mobileledger/ui/profiles/ProfileDetailActivity.kt をsetContentとMoLeThemeを使用するよう更新
+- [X] T023 [US1] `nix run .#verify` を実行してデバイスでテスト
 
 ### User Story 1 のクリーンアップ
 
