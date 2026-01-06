@@ -19,6 +19,7 @@ package net.ktnx.mobileledger.json.v1_32
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import net.ktnx.mobileledger.json.ParsedPosting as BasePosting
+import net.ktnx.mobileledger.json.common.StyleConfigurer
 import net.ktnx.mobileledger.model.AmountStyle
 import net.ktnx.mobileledger.model.LedgerTransactionAccount
 
@@ -74,9 +75,7 @@ class ParsedPosting : BasePosting() {
                         astyle = ParsedStyle().apply {
                             ascommodityside = getCommoditySide()
                             isAscommodityspaced = getCommoditySpaced()
-                            asprecision = 2
-                            asdecimalmark = "."
-                            asrounding = "NoRounding"
+                            StyleConfigurer.DecimalMarkString.configureStyle(this, 2)
                         }
                     }
                 )

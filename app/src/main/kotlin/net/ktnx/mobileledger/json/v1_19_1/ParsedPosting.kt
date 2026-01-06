@@ -19,6 +19,7 @@ package net.ktnx.mobileledger.json.v1_19_1
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import net.ktnx.mobileledger.json.ParsedPosting as BasePosting
+import net.ktnx.mobileledger.json.common.StyleConfigurer
 import net.ktnx.mobileledger.model.LedgerTransactionAccount
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -65,8 +66,7 @@ class ParsedPosting : BasePosting() {
                         astyle = ParsedStyle().apply {
                             ascommodityside = getCommoditySide()
                             isAscommodityspaced = getCommoditySpaced()
-                            asprecision = ParsedPrecision(2)
-                            asdecimalpoint = '.'
+                            StyleConfigurer.DecimalPointCharWithParsedPrecision.configureStyle(this, 2)
                         }
                     }
                 )
