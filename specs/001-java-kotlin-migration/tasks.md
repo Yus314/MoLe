@@ -193,14 +193,22 @@
 - Phase 12: transaction_list package (TransactionListAdapter, TransactionListFragment, TransactionRowHolder, TransactionRowHolderBase, TransactionListDelimiterRowHolder, TransactionListLastUpdateRowHolder)
 
 **Remaining**:
-- Phase 13: new_transaction package (7 files)
-- Phase 14: MainActivity
+- Phase 14: MainActivity (1 file)
+
+**Completed in Phase 13** (new_transaction package - 7 files):
+- NewTransactionActivity.kt ✅
+- NewTransactionFragment.kt ✅
+- NewTransactionModel.kt ✅
+- NewTransactionItemsAdapter.kt ✅
+- NewTransactionItemViewHolder.kt ✅
+- NewTransactionHeaderItemHolder.kt ✅
+- NewTransactionAccountRowItemHolder.kt ✅
 
 - [X] T076 [P] [US1] Convert ViewModel classes in `app/src/main/java/net/ktnx/mobileledger/ui/` to Kotlin
-- [X] T077 [P] [US1] Convert Fragment classes in `app/src/main/java/net/ktnx/mobileledger/ui/` to Kotlin (partial - templates, profiles, account_summary done)
-- [X] T078 [P] [US1] Convert Activity classes in `app/src/main/java/net/ktnx/mobileledger/ui/` to Kotlin (partial - templates, profiles done)
-- [X] T079 [P] [US1] Convert adapter classes in `app/src/main/java/net/ktnx/mobileledger/ui/` to Kotlin (partial - templates, profiles, account_summary done)
-- [ ] T080 [US1] Convert remaining UI files to `app/src/main/kotlin/net/ktnx/mobileledger/ui/` - **IN PROGRESS**
+- [X] T077 [P] [US1] Convert Fragment classes in `app/src/main/java/net/ktnx/mobileledger/ui/` to Kotlin
+- [X] T078 [P] [US1] Convert Activity classes in `app/src/main/java/net/ktnx/mobileledger/ui/` to Kotlin (partial - MainActivity remaining)
+- [X] T079 [P] [US1] Convert adapter classes in `app/src/main/java/net/ktnx/mobileledger/ui/` to Kotlin
+- [ ] T080 [US1] Convert MainActivity.java to Kotlin - **REMAINING**
 
 ### Root Level Conversion
 

@@ -272,21 +272,21 @@
 - Fragment
 - Activity
 
-- [ ] U092 Convert `new_transaction/NewTransactionModel.java` → `ui/new_transaction/NewTransactionModel.kt`
+- [X] U092 Convert `new_transaction/NewTransactionModel.java` → `ui/new_transaction/NewTransactionModel.kt`
   - Complex state management - careful with LiveData access patterns
-- [ ] U093 Verify build: `nix run .#build`
-- [ ] U094 Convert `new_transaction/NewTransactionItemViewHolder.java` → `ui/new_transaction/NewTransactionItemViewHolder.kt`
-- [ ] U095 Verify build: `nix run .#build`
-- [ ] U096 [P] Convert `new_transaction/NewTransactionHeaderItemHolder.java` → `ui/new_transaction/NewTransactionHeaderItemHolder.kt`
-- [ ] U097 [P] Convert `new_transaction/NewTransactionAccountRowItemHolder.java` → `ui/new_transaction/NewTransactionAccountRowItemHolder.kt`
-- [ ] U098 Verify build: `nix run .#build`
-- [ ] U099 Convert `new_transaction/NewTransactionItemsAdapter.java` → `ui/new_transaction/NewTransactionItemsAdapter.kt`
-- [ ] U100 Verify build: `nix run .#build`
-- [ ] U101 Convert `new_transaction/NewTransactionFragment.java` → `ui/new_transaction/NewTransactionFragment.kt`
-- [ ] U102 Verify build: `nix run .#build`
-- [ ] U103 Convert `new_transaction/NewTransactionActivity.java` → `ui/new_transaction/NewTransactionActivity.kt`
-- [ ] U104 Verify build: `nix run .#build`
-- [ ] U105 Delete converted Java files after verification
+- [X] U093 Verify build: `nix run .#build`
+- [X] U094 Convert `new_transaction/NewTransactionItemViewHolder.java` → `ui/new_transaction/NewTransactionItemViewHolder.kt`
+- [X] U095 Verify build: `nix run .#build`
+- [X] U096 [P] Convert `new_transaction/NewTransactionHeaderItemHolder.java` → `ui/new_transaction/NewTransactionHeaderItemHolder.kt`
+- [X] U097 [P] Convert `new_transaction/NewTransactionAccountRowItemHolder.java` → `ui/new_transaction/NewTransactionAccountRowItemHolder.kt`
+- [X] U098 Verify build: `nix run .#build`
+- [X] U099 Convert `new_transaction/NewTransactionItemsAdapter.java` → `ui/new_transaction/NewTransactionItemsAdapter.kt`
+- [X] U100 Verify build: `nix run .#build`
+- [X] U101 Convert `new_transaction/NewTransactionFragment.java` → `ui/new_transaction/NewTransactionFragment.kt`
+- [X] U102 Verify build: `nix run .#build`
+- [X] U103 Convert `new_transaction/NewTransactionActivity.java` → `ui/new_transaction/NewTransactionActivity.kt`
+- [X] U104 Verify build: `nix run .#build`
+- [X] U105 Delete converted Java files after verification
 
 **Checkpoint**: New transaction feature converted ✅
 
