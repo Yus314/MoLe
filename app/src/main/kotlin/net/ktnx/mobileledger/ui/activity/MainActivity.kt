@@ -153,8 +153,7 @@ class MainActivity : ProfileThemedActivity(), FabManager.FabHandler {
             barDrawerToggle = ActionBarDrawerToggle(
                 this, b.drawerLayout, b.toolbar,
                 R.string.navigation_drawer_open, R.string.navigation_drawer_close
-            )
-            b.drawerLayout.addDrawerListener(barDrawerToggle!!)
+            ).also { b.drawerLayout.addDrawerListener(it) }
         }
         barDrawerToggle?.syncState()
 
@@ -189,8 +188,7 @@ class MainActivity : ProfileThemedActivity(), FabManager.FabHandler {
 
                     super.onPageSelected(position)
                 }
-            }
-            b.mainPager.registerOnPageChangeCallback(pageChangeCallback!!)
+            }.also { b.mainPager.registerOnPageChangeCallback(it) }
         }
 
         mCurrentPage = 0
@@ -284,8 +282,7 @@ class MainActivity : ProfileThemedActivity(), FabManager.FabHandler {
                     Data.drawerOpen.value = true
                     fabManager.hideFab()
                 }
-            }
-            b.drawerLayout.addDrawerListener(drawerListener!!)
+            }.also { b.drawerLayout.addDrawerListener(it) }
         }
 
         Data.drawerOpen.observe(this) { open ->
@@ -413,15 +410,14 @@ class MainActivity : ProfileThemedActivity(), FabManager.FabHandler {
             if (this.profile == newProfile) return
         }
 
-        val haveProfile = newProfile != null
-
-        if (haveProfile) {
-            setTitle(newProfile!!.name)
+        if (newProfile != null) {
+            setTitle(newProfile.name)
         } else {
             setTitle(R.string.app_name)
         }
 
-        val newProfileTheme = if (haveProfile) newProfile!!.theme else Colors.DEFAULT_HUE_DEG
+        val newProfileTheme = newProfile?.theme ?: Colors.DEFAULT_HUE_DEG
+        val haveProfile = newProfile != null
         if (newProfileTheme != Colors.profileThemeId) {
             Logger.debug(
                 "profiles",
@@ -437,8 +433,7 @@ class MainActivity : ProfileThemedActivity(), FabManager.FabHandler {
             return
         }
 
-        val sameProfileId = newProfile != null && this.profile != null &&
-                this.profile!!.id == newProfile.id
+        val sameProfileId = newProfile != null && this.profile?.id == newProfile.id
 
         this.profile = newProfile
 
@@ -447,14 +442,12 @@ class MainActivity : ProfileThemedActivity(), FabManager.FabHandler {
 
         mProfileListAdapter?.notifyDataSetChanged()
 
-        if (haveProfile) {
-            if (newProfile!!.canPost()) {
-                b.toolbar.subtitle = null
-                b.btnAddTransaction.show()
-            } else {
-                b.toolbar.setSubtitle(R.string.profile_subtitle_read_only)
-                b.btnAddTransaction.hide()
-            }
+        if (newProfile != null && newProfile.canPost()) {
+            b.toolbar.subtitle = null
+            b.btnAddTransaction.show()
+        } else if (newProfile != null) {
+            b.toolbar.setSubtitle(R.string.profile_subtitle_read_only)
+            b.btnAddTransaction.hide()
         } else {
             b.toolbar.subtitle = null
             b.btnAddTransaction.hide()
@@ -462,11 +455,11 @@ class MainActivity : ProfileThemedActivity(), FabManager.FabHandler {
 
         updateLastUpdateTextFromDB()
 
-        if (sameProfileId) {
+        if (sameProfileId && newProfile != null) {
             Logger.debug(
                 TAG, String.format(
                     Locale.ROOT, "Short-cut profile 'changed' to %d",
-                    newProfile!!.id
+                    newProfile.id
                 )
             )
             return
@@ -480,14 +473,15 @@ class MainActivity : ProfileThemedActivity(), FabManager.FabHandler {
 
     private fun onAccountFilterChanged(accFilter: String?) {
         Logger.debug(TAG, "account filter changed, reloading transactions")
-        var transactions: LiveData<List<TransactionWithAccounts>> =
-            MutableLiveData(ArrayList())
-        if (profile != null) {
-            transactions = if (accFilter.isNullOrEmpty()) {
-                DB.get().getTransactionDAO().getAllWithAccounts(profile!!.id)
+        val currentProfile = profile
+        val transactions: LiveData<List<TransactionWithAccounts>> = if (currentProfile != null) {
+            if (accFilter.isNullOrEmpty()) {
+                DB.get().getTransactionDAO().getAllWithAccounts(currentProfile.id)
             } else {
-                DB.get().getTransactionDAO().getAllWithAccountsFiltered(profile!!.id, accFilter)
+                DB.get().getTransactionDAO().getAllWithAccountsFiltered(currentProfile.id, accFilter)
             }
+        } else {
+            MutableLiveData(ArrayList())
         }
 
         transactions.observe(this) { list ->
@@ -518,9 +512,10 @@ class MainActivity : ProfileThemedActivity(), FabManager.FabHandler {
     }
 
     fun fabNewTransactionClicked(view: View) {
+        val currentProfile = profile ?: return
         val intent = Intent(this, NewTransactionActivity::class.java)
-        intent.putExtra(ProfileThemedActivity.PARAM_PROFILE_ID, profile!!.id)
-        intent.putExtra(ProfileThemedActivity.PARAM_THEME, profile!!.theme)
+        intent.putExtra(ProfileThemedActivity.PARAM_PROFILE_ID, currentProfile.id)
+        intent.putExtra(ProfileThemedActivity.PARAM_THEME, currentProfile.theme)
         startActivity(intent)
         @Suppress("DEPRECATION")
         overridePendingTransition(R.anim.slide_in_up, R.anim.dummy)
@@ -589,11 +584,11 @@ class MainActivity : ProfileThemedActivity(), FabManager.FabHandler {
     }
 
     fun updateLastUpdateTextFromDB() {
-        if (profile == null) return
+        val currentProfile = profile ?: return
 
         DB.get()
             .getOptionDAO()
-            .load(profile!!.id, Option.OPT_LAST_SCRAPE)
+            .load(currentProfile.id, Option.OPT_LAST_SCRAPE)
             .observe(this) { opt: Option? ->
                 var lastUpdate = 0L
                 if (opt != null) {
@@ -625,18 +620,19 @@ class MainActivity : ProfileThemedActivity(), FabManager.FabHandler {
         val accountCount = Data.lastUpdateAccountCount.value
         val transactionCount = Data.lastUpdateTransactionCount.value
         val lastUpdate = Data.lastUpdateDate.value
+        val locale = Data.locale.value ?: Locale.getDefault()
         if (lastUpdate == null) {
             Data.lastTransactionsUpdateText.value = "----"
             Data.lastAccountsUpdateText.value = "----"
         } else {
             Data.lastTransactionsUpdateText.value = String.format(
-                Data.locale.value!!,
+                locale,
                 templateForTransactions,
                 transactionCount ?: 0,
                 DateUtils.formatDateTime(this, lastUpdate.time, formatFlags)
             )
             Data.lastAccountsUpdateText.value = String.format(
-                Data.locale.value!!,
+                locale,
                 templateForAccounts,
                 accountCount ?: 0,
                 DateUtils.formatDateTime(this, lastUpdate.time, formatFlags)
@@ -720,7 +716,7 @@ class MainActivity : ProfileThemedActivity(), FabManager.FabHandler {
     }
 
     fun fabShouldShow() {
-        if (profile != null && profile!!.canPost() && !b.drawerLayout.isOpen) {
+        if (profile?.canPost() == true && !b.drawerLayout.isOpen) {
             fabManager.showFab()
         }
     }
