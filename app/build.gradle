@@ -19,6 +19,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.hilt)
 }
 
 // Load keystore properties for release signing
@@ -37,7 +38,7 @@ android {
         vectorDrawables.useSupportLibrary true
         versionCode 59
         versionName '0.22.1'
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner "net.ktnx.mobileledger.HiltTestRunner"
     }
     signingConfigs {
         release {
@@ -132,10 +133,20 @@ dependencies {
     // Annotations
     implementation libs.jetbrains.annotations
 
+    // Hilt Dependency Injection
+    implementation libs.hilt.android
+    ksp libs.hilt.compiler
+
     // Testing
     testImplementation libs.junit
+    testImplementation libs.mockk
+    testImplementation libs.hilt.android.testing
+    kspTest libs.hilt.compiler
     androidTestImplementation libs.androidx.test.runner
+    androidTestImplementation libs.androidx.test.ext.junit
     androidTestImplementation libs.androidx.test.espresso.core
+    androidTestImplementation libs.hilt.android.testing
+    kspAndroidTest libs.hilt.compiler
 }
 
 allprojects {

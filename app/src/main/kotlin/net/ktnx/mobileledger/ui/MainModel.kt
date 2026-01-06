@@ -20,6 +20,7 @@ package net.ktnx.mobileledger.ui
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import dagger.hilt.android.lifecycle.HiltViewModel
 import net.ktnx.mobileledger.async.RetrieveTransactionsTask
 import net.ktnx.mobileledger.async.TransactionAccumulator
 import net.ktnx.mobileledger.model.Data
@@ -28,8 +29,12 @@ import net.ktnx.mobileledger.model.TransactionListItem
 import net.ktnx.mobileledger.utils.Logger
 import net.ktnx.mobileledger.utils.SimpleDate
 import java.util.Locale
+import javax.inject.Inject
 
-class MainModel : ViewModel() {
+@HiltViewModel
+class MainModel @Inject constructor(
+    private val data: Data
+) : ViewModel() {
     @JvmField
     val foundTransactionItemIndex = MutableLiveData<Int?>(null)
 
@@ -54,7 +59,7 @@ class MainModel : ViewModel() {
 
     fun setDisplayedTransactions(list: List<TransactionListItem>, transactionCount: Int) {
         _displayedTransactions.postValue(list)
-        Data.lastUpdateTransactionCount.postValue(transactionCount)
+        data.lastUpdateTransactionCount.postValue(transactionCount)
     }
 
     fun getShowZeroBalanceAccounts(): MutableLiveData<Boolean> = _showZeroBalanceAccounts
@@ -67,7 +72,7 @@ class MainModel : ViewModel() {
             Logger.debug("db", "Ignoring request for transaction retrieval - already active")
             return
         }
-        val profile = Data.getProfile()
+        val profile = data.getProfile()
         checkNotNull(profile)
 
         retrieveTransactionsTask = RetrieveTransactionsTask(profile)
@@ -81,7 +86,7 @@ class MainModel : ViewModel() {
         if (retrieveTransactionsTask != null) {
             retrieveTransactionsTask?.interrupt()
         } else {
-            Data.backgroundTaskProgress.value = null
+            data.backgroundTaskProgress.value = null
         }
     }
 
