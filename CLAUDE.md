@@ -38,6 +38,7 @@ specs/
 | `nix run .#install` | ビルド → 実機インストール |
 | `nix run .#verify` | **フルワークフロー（テスト → ビルド → インストール）** |
 | `nix run .#buildRelease` | リリース APK ビルド（署名必要）|
+| `nix run .#lint` | Android Lint チェック（CI 用）|
 
 ### 開発シェル
 
@@ -94,6 +95,34 @@ nix run .#verify
 ```bash
 adb logcat | grep -E "(MoLe|mobileledger)"
 ```
+
+## Pre-commit Hooks
+
+開発環境（`nix develop`）に入ると、pre-commit フックが自動的にインストールされます。
+
+### 有効なフック
+
+- **ktlint**: Kotlin コードスタイルチェック
+- **detekt**: Kotlin 静的解析
+
+### 手動実行
+
+```bash
+pre-commit run --all-files    # 全ファイルをチェック
+pre-commit run ktlint         # ktlint のみ実行
+pre-commit run detekt         # detekt のみ実行
+```
+
+### 設定ファイル
+
+- `.editorconfig`: ktlint のルール設定（多くのルールは既存コードとの互換性のため無効化）
+- `detekt.yml`: detekt の設定（maxIssues: -1 で警告のみ、エラーにしない）
+
+### 段階的な lint 適用
+
+既存コードには多くのスタイル違反があるため、現時点ではほとんどのルールを無効化しています。
+新規コードを書く際は、できる限りベストプラクティスに従ってください。
+将来的に `.editorconfig` と `detekt.yml` のルールを段階的に有効化していきます。
 
 ## Code Style
 
