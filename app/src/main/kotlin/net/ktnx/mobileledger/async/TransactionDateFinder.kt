@@ -34,7 +34,7 @@ class TransactionDateFinder(
             "go-to-date",
             String.format(Locale.US, "Looking for date %04d-%02d-%02d", date.year, date.month, date.day)
         )
-        val transactions = requireNotNull(model.displayedTransactions.value)
+        val transactions = requireNotNull(model.getDisplayedTransactions().value)
         val transactionCount = transactions.size
         Logger.debug(
             "go-to-date",
