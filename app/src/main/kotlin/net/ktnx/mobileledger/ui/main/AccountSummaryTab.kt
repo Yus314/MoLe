@@ -34,6 +34,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -194,7 +195,16 @@ private fun AccountSummaryRow(
     onToggleAmountsExpanded: () -> Unit,
     onClick: () -> Unit
 ) {
-    val indentPadding = remember(account.level) { (account.level * 16).dp }
+    // For leaf nodes, align text with parent's text position (no spacer needed)
+    // Parent text starts at: 8 + parentLevel*16 + 32 (IconButton)
+    // Leaf text should start at same position: 8 + level*16 + 16 (without spacer)
+    val indentPadding = remember(account.level, account.hasSubAccounts) {
+        if (account.hasSubAccounts) {
+            (account.level * 16).dp
+        } else {
+            (account.level * 16 + 16).dp
+        }
+    }
 
     // Arrow rotation animation
     val rotation by animateFloatAsState(
@@ -206,11 +216,13 @@ private fun AccountSummaryRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .heightIn(min = 64.dp)
             .clickable(onClick = onClick)
             .padding(start = 8.dp + indentPadding, end = 8.dp, top = 8.dp, bottom = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Expand/collapse indicator for accounts with sub-accounts
+        // Leaf nodes have no spacer - their text aligns with parent's text
         if (account.hasSubAccounts) {
             IconButton(
                 onClick = onToggleExpanded,
@@ -223,8 +235,6 @@ private fun AccountSummaryRow(
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-        } else {
-            Spacer(modifier = Modifier.width(32.dp))
         }
 
         // Account name
