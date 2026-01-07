@@ -39,6 +39,8 @@
     <string name="new_transaction_date_hint">today</string>
     <string name="new_transaction_description_hint">Description</string>
     <string name="account_summary_title">Accounts</string>
+    <string name="title_latest_transactions">Transactions</string>
+    <string name="menu_refresh">Refresh</string>
     <string name="action_reset_new_transaction_activity_title">Reset</string>
     <string name="title_profile_details">Profile Details</string>
     <string name="profiles">Profiles</string>

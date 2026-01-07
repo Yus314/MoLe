@@ -80,6 +80,15 @@ abstract class AccountDAO : BaseDAO<Account>() {
     )
     abstract fun getAllWithAmounts(profileId: Long, includeZeroBalances: Boolean): LiveData<List<AccountWithAmounts>>
 
+    @Transaction
+    @Query(
+        "SELECT * FROM accounts WHERE profile_id = :profileId AND IIF(:includeZeroBalances=1, " +
+            "1, (EXISTS(SELECT 1 FROM account_values av WHERE av.account_id=accounts.id AND av" +
+            ".value <> 0) OR EXISTS(SELECT 1 FROM accounts a WHERE a.parent_name = accounts.name))" +
+            ") ORDER BY name"
+    )
+    abstract fun getAllWithAmountsSync(profileId: Long, includeZeroBalances: Boolean): List<AccountWithAmounts>
+
     @Query("SELECT * FROM accounts WHERE id=:id")
     abstract fun getByIdSync(id: Long): Account?
 

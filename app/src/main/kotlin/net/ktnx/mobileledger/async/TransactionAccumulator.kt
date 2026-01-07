@@ -109,4 +109,42 @@ class TransactionAccumulator(private val boldAccountName: String?, private val a
         model.firstTransactionDate = earliestDate
         model.lastTransactionDate = latestDate
     }
+
+    /**
+     * Get the accumulated list of transaction items.
+     * This method finalizes the list by adding the last date delimiter if needed.
+     * Use this method instead of publishResults when you need direct access to the items.
+     */
+    fun getItems(): List<TransactionListItem> {
+        lastDate?.let { last ->
+            val today = SimpleDate.today()
+            if (last != today) {
+                val showMonth = today.month != last.month || today.year != last.year
+                // Only add if not already present
+                val hasDelimiter = list.any { item ->
+                    item.type == TransactionListItem.Type.DELIMITER &&
+                        item.date == last
+                }
+                if (!hasDelimiter) {
+                    list.add(1, TransactionListItem(last, showMonth))
+                }
+            }
+        }
+        return list.toList()
+    }
+
+    /**
+     * Get the earliest transaction date.
+     */
+    fun getEarliestDate(): SimpleDate? = earliestDate
+
+    /**
+     * Get the latest transaction date.
+     */
+    fun getLatestDate(): SimpleDate? = latestDate
+
+    /**
+     * Get the total transaction count.
+     */
+    fun getTransactionCount(): Int = transactionCount
 }

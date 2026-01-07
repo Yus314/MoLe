@@ -122,20 +122,20 @@
 
 ### User Story 3 の実装
 
-- [ ] T043 [P] [US3] app/src/main/kotlin/net/ktnx/mobileledger/ui/main/MainUiState.kt にデータクラスを作成
-- [ ] T044 [P] [US3] app/src/main/kotlin/net/ktnx/mobileledger/ui/main/AccountSummaryUiState.kt にデータクラスを作成
-- [ ] T045 [P] [US3] app/src/main/kotlin/net/ktnx/mobileledger/ui/main/TransactionListUiState.kt にデータクラスを作成
-- [ ] T046 [US3] app/src/main/kotlin/net/ktnx/mobileledger/ui/main/MainViewModel.kt にStateFlowを使用したViewModel（MainModelから移行）を作成
-- [ ] T047 [US3] app/src/main/kotlin/net/ktnx/mobileledger/ui/main/NavigationDrawer.kt にプロファイルリスト付きドロワーを作成
-- [ ] T048 [US3] app/src/main/kotlin/net/ktnx/mobileledger/ui/main/AccountSummaryTab.kt にLazyColumnとkey最適化を使用したタブを作成
-- [ ] T049 [US3] app/src/main/kotlin/net/ktnx/mobileledger/ui/main/TransactionListTab.kt にLazyColumnとグループヘッダーを使用したタブを作成
+- [X] T043 [P] [US3] app/src/main/kotlin/net/ktnx/mobileledger/ui/main/MainUiState.kt にデータクラスを作成
+- [X] T044 [P] [US3] app/src/main/kotlin/net/ktnx/mobileledger/ui/main/AccountSummaryUiState.kt にデータクラスを作成
+- [X] T045 [P] [US3] app/src/main/kotlin/net/ktnx/mobileledger/ui/main/TransactionListUiState.kt にデータクラスを作成
+- [X] T046 [US3] app/src/main/kotlin/net/ktnx/mobileledger/ui/main/MainViewModel.kt にStateFlowを使用したViewModel（MainModelから移行）を作成
+- [X] T047 [US3] app/src/main/kotlin/net/ktnx/mobileledger/ui/main/NavigationDrawer.kt にプロファイルリスト付きドロワーを作成
+- [X] T048 [US3] app/src/main/kotlin/net/ktnx/mobileledger/ui/main/AccountSummaryTab.kt にLazyColumnとkey最適化を使用したタブを作成
+- [X] T049 [US3] app/src/main/kotlin/net/ktnx/mobileledger/ui/main/TransactionListTab.kt にLazyColumnとグループヘッダーを使用したタブを作成
 - [ ] T049a [US3] AccountSummaryTab/TransactionListTab で1000件以上のデータでスクロールパフォーマンスを確認（SC-003: 60fps維持）
-- [ ] T050 [US3] app/src/main/kotlin/net/ktnx/mobileledger/ui/main/MainScreen.kt にHorizontalPagerを使用したタブ構成を作成
-- [ ] T051 [US3] MainScreen.kt にSwipeRefreshを使用したプルリフレッシュを実装
-- [ ] T052 [US3] MainScreen.kt にNewTransactionActivityへのナビゲーション付きFABを実装
-- [ ] T053 [US3] MainScreen.kt にプロファイル未設定時のウェルカムメッセージを実装
-- [ ] T054 [US3] app/src/main/kotlin/net/ktnx/mobileledger/ui/activity/MainActivity.kt をsetContentとMoLeThemeを使用するよう更新
-- [ ] T055 [US3] `nix run .#verify` を実行してデバイスでテスト
+- [X] T050 [US3] app/src/main/kotlin/net/ktnx/mobileledger/ui/main/MainScreen.kt にHorizontalPagerを使用したタブ構成を作成
+- [X] T051 [US3] MainScreen.kt にSwipeRefreshを使用したプルリフレッシュを実装
+- [X] T052 [US3] MainScreen.kt にNewTransactionActivityへのナビゲーション付きFABを実装
+- [X] T053 [US3] MainScreen.kt にプロファイル未設定時のウェルカムメッセージを実装
+- [X] T054 [US3] app/src/main/kotlin/net/ktnx/mobileledger/ui/activity/MainActivity.kt をsetContentとMoLeThemeを使用するよう更新
+- [X] T055 [US3] `nix run .#verify` を実行してデバイスでテスト
 
 ### User Story 3 のクリーンアップ
 

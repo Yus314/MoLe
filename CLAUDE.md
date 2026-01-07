@@ -92,11 +92,74 @@ nix run .#verify
 - プロファイル作成/編集ができる
 - 取引登録ができる
 
-### ログ確認
+## 実機デバッグ
+
+### adb MCP ツール
+
+Claude Code は以下の adb ツールを使用可能:
+
+| ツール | 用途 | 使用例 |
+|--------|------|--------|
+| `adb_devices` | 接続確認 | デバイス一覧取得 |
+| `adb_logcat` | ログ確認 | エラー調査、クラッシュ原因特定 |
+| `inspect_ui` | UI階層取得 | Compose レイアウトデバッグ |
+| `dump_image` | スクリーンショット | UI表示確認 |
+| `adb_activity_manager` | Activity操作 | 画面遷移テスト、アプリ起動 |
+| `adb_shell` | シェルコマンド | DB確認、任意操作 |
+| `adb_package_manager` | パッケージ操作 | インストール確認 |
+
+### パッケージ情報
+
+| ビルド | パッケージ名 | Activity パス |
+|--------|-------------|---------------|
+| Debug | `net.ktnx.mobileledger.debug` | `net.ktnx.mobileledger.ui.activity.*` |
+| Release | `net.ktnx.mobileledger` | `net.ktnx.mobileledger.ui.activity.*` |
+
+**注意**: Debug ビルドでも Activity クラスのパスは元のパッケージ名を使用する。
+
+### ログ確認パターン
 
 ```bash
-adb logcat | grep -E "(MoLe|mobileledger)"
+# 基本（grep使用）
+adb logcat -d | grep -E "(mobileledger|MoLe)"
+
+# PIDベース（アプリ実行中のみ）
+adb shell "logcat -d --pid=$(pidof net.ktnx.mobileledger.debug) | tail -50"
+
+# エラーのみ
+adb logcat -d *:E | grep mobileledger
 ```
+
+### デバッグワークフロー
+
+1. **ビルド・インストール**: `nix run .#verify`
+2. **起動確認**: `adb_activity_manager` で SplashActivity 起動
+   ```
+   amCommand: start
+   amArgs: -n net.ktnx.mobileledger.debug/net.ktnx.mobileledger.ui.activity.SplashActivity
+   ```
+3. **UI確認**: `dump_image` でスクリーンショット取得
+4. **ログ確認**: `adb_logcat` でエラーチェック
+5. **UI階層**: `inspect_ui` で Compose 階層確認（問題時）
+
+### 検証チェックリスト
+
+実機検証時に確認すべき項目:
+
+- [ ] アプリ起動: SplashActivity → MainActivityCompose への遷移成功
+- [ ] エラーなし: `adb_logcat` で E レベルログなし
+- [ ] UI表示: `dump_image` で期待通りの画面
+- [ ] 基本操作: プロファイル選択、取引一覧表示
+
+### トラブルシューティング
+
+| 症状 | 確認方法 | 対処 |
+|------|----------|------|
+| アプリ起動しない | `adb_logcat` でクラッシュログ | スタックトレース確認 |
+| UI表示崩れ | `dump_image` + `inspect_ui` | レイアウト確認 |
+| データ不整合 | `adb_shell` で DB 確認 | Room マイグレーション確認 |
+| ビルド失敗 | `nix run .#build` 出力 | 依存関係・構文エラー確認 |
+| Activity not found | パッケージ名とActivityパス確認 | Debug版はパッケージ名が異なる |
 
 ## Pre-commit Hooks
 
