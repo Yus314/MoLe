@@ -31,9 +31,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import dagger.hilt.android.AndroidEntryPoint
+import java.util.Date
 import java.util.Locale
 import net.ktnx.mobileledger.BackupsActivity
 import net.ktnx.mobileledger.R
+import net.ktnx.mobileledger.db.DB
+import net.ktnx.mobileledger.db.Option
 import net.ktnx.mobileledger.db.Profile
 import net.ktnx.mobileledger.model.Data
 import net.ktnx.mobileledger.ui.main.MainEffect
@@ -193,6 +196,7 @@ class MainActivityCompose : ProfileThemedActivity() {
         }
 
         viewModel.updateProfile(newProfile)
+        updateLastUpdateTextFromDB()
     }
 
     private fun onProfileListChanged(newList: List<Profile>) {
@@ -271,6 +275,30 @@ class MainActivityCompose : ProfileThemedActivity() {
                 DateUtils.formatDateTime(this, lastUpdate.time, formatFlags)
             )
         }
+    }
+
+    private fun updateLastUpdateTextFromDB() {
+        val currentProfile = Data.getProfile() ?: return
+
+        DB.get()
+            .getOptionDAO()
+            .load(currentProfile.id, Option.OPT_LAST_SCRAPE)
+            .observe(this) { opt: Option? ->
+                var lastUpdate = 0L
+                if (opt != null) {
+                    try {
+                        lastUpdate = opt.value?.toLong() ?: 0L
+                    } catch (ex: NumberFormatException) {
+                        Logger.debug(TAG, "Error parsing '${opt.value}' as long", ex)
+                    }
+                }
+
+                if (lastUpdate == 0L) {
+                    Data.lastUpdateDate.postValue(null)
+                } else {
+                    Data.lastUpdateDate.postValue(Date(lastUpdate))
+                }
+            }
     }
 
     private fun profileThemeChanged() {
