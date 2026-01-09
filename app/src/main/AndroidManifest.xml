@@ -49,21 +49,18 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".ui.activity.MainActivity"
-            android:theme="@style/AppTheme.default" />
-        <activity
             android:name=".ui.activity.MainActivityCompose"
             android:theme="@style/AppTheme.default" />
         <activity
             android:name=".ui.new_transaction.NewTransactionActivity"
             android:label="@string/title_activity_new_transaction"
-            android:parentActivityName=".ui.activity.MainActivity"
+            android:parentActivityName=".ui.activity.MainActivityCompose"
             android:theme="@style/AppTheme.default"
             android:windowSoftInputMode="stateVisible|adjustResize" />
         <activity
             android:name=".ui.profiles.ProfileDetailActivity"
             android:label="@string/title_profile_details"
-            android:parentActivityName=".ui.activity.MainActivity"
+            android:parentActivityName=".ui.activity.MainActivityCompose"
             android:windowSoftInputMode="stateVisible|adjustResize" />
     </application>
 

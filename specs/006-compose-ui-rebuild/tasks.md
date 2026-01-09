@@ -139,13 +139,13 @@
 
 ### User Story 3 のクリーンアップ
 
-- [ ] T056 [US3] 検証後、app/src/main/kotlin/net/ktnx/mobileledger/ui/account_summary/AccountSummaryFragment.kt を削除
-- [ ] T057 [US3] 検証後、app/src/main/kotlin/net/ktnx/mobileledger/ui/transaction_list/TransactionListFragment.kt を削除
-- [ ] T058 [US3] app/src/main/kotlin/net/ktnx/mobileledger/ui/ の関連RecyclerViewアダプター（AccountSummaryAdapter, TransactionListAdapter）を削除
-- [ ] T059 [US3] app/src/main/res/layout/ のactivity_main.xmlと関連レイアウトファイルを削除
-- [ ] T060 [US3] `nix run .#test` を実行して既存テストが通過することを確認
+- [X] T056 [US3] 検証後、app/src/main/kotlin/net/ktnx/mobileledger/ui/account_summary/AccountSummaryFragment.kt を削除
+- [X] T057 [US3] 検証後、app/src/main/kotlin/net/ktnx/mobileledger/ui/transaction_list/TransactionListFragment.kt を削除
+- [X] T058 [US3] app/src/main/kotlin/net/ktnx/mobileledger/ui/ の関連RecyclerViewアダプター（AccountSummaryAdapter, TransactionListAdapter）を削除
+- [X] T059 [US3] app/src/main/res/layout/ のactivity_main.xmlと関連レイアウトファイルを削除
+- [X] T060 [US3] `nix run .#test` を実行して既存テストが通過することを確認
 
-**チェックポイント**: User Story 3 完了 - MainActivityのCompose移行完了
+**チェックポイント**: User Story 3 完了 - MainActivityのCompose移行完了 ✓
 
 ---
 
