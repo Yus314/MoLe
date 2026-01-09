@@ -42,7 +42,6 @@ import net.ktnx.mobileledger.model.Data
 import net.ktnx.mobileledger.ui.main.MainEffect
 import net.ktnx.mobileledger.ui.main.MainScreen
 import net.ktnx.mobileledger.ui.main.MainViewModel
-import net.ktnx.mobileledger.ui.new_transaction.NewTransactionActivity
 import net.ktnx.mobileledger.ui.profiles.ProfileDetailActivity
 import net.ktnx.mobileledger.ui.templates.TemplatesActivity
 import net.ktnx.mobileledger.ui.theme.MoLeTheme
@@ -177,7 +176,7 @@ class MainActivityCompose : ProfileThemedActivity() {
     }
 
     private fun navigateToNewTransaction(profileId: Long, theme: Int) {
-        val intent = Intent(this, NewTransactionActivity::class.java)
+        val intent = Intent(this, NewTransactionActivityCompose::class.java)
         intent.putExtra(ProfileThemedActivity.PARAM_PROFILE_ID, profileId)
         intent.putExtra(ProfileThemedActivity.PARAM_THEME, theme)
         startActivity(intent)
@@ -239,7 +238,7 @@ class MainActivityCompose : ProfileThemedActivity() {
             val si = builder.setShortLabel(p.name)
                 .setIcon(Icon.createWithResource(this, R.drawable.thick_plus_icon))
                 .setIntent(
-                    Intent(Intent.ACTION_VIEW, null, this, NewTransactionActivity::class.java)
+                    Intent(Intent.ACTION_VIEW, null, this, NewTransactionActivityCompose::class.java)
                         .putExtra(ProfileThemedActivity.PARAM_PROFILE_ID, p.id)
                         .putExtra(ProfileThemedActivity.PARAM_THEME, p.theme)
                 )

@@ -52,7 +52,7 @@
             android:name=".ui.activity.MainActivityCompose"
             android:theme="@style/AppTheme.default" />
         <activity
-            android:name=".ui.new_transaction.NewTransactionActivity"
+            android:name=".ui.activity.NewTransactionActivityCompose"
             android:label="@string/title_activity_new_transaction"
             android:parentActivityName=".ui.activity.MainActivityCompose"
             android:theme="@style/AppTheme.default"

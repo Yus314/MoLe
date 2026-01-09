@@ -1,6 +1,6 @@
 # MoLe Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-01-06
+Auto-generated from all feature plans. Last updated: 2026-01-09
 
 ## Active Technologies
 - AGP 8.7.3 / Gradle 8.9 (002-agp-update)
@@ -8,7 +8,7 @@ Auto-generated from all feature plans. Last updated: 2026-01-06
 - Room Database (SQLite) with KSP 2.0.21-1.0.26 (004-kapt-ksp-migration)
 - Hilt 2.51.1 for Dependency Injection (005-hilt-di-setup)
 - AndroidX Lifecycle 2.4.1, Room 2.4.2, Navigation 2.4.2, Jackson 2.17.1, Material 1.5.0 (001-java-kotlin-migration)
-- Kotlin 2.0.21 / Java 8互換 (JVM target 1.8) (006-compose-ui-rebuild)
+- Jetpack Compose with Material3 (composeBom 2024.12.01) (006-compose-ui-rebuild)
 - Room Database（既存、変更なし） (006-compose-ui-rebuild)
 
 ## Project Structure
@@ -25,7 +25,7 @@ app/
 ├── build.gradle                          # アプリビルド設定
 └── schemas/                              # Room データベーススキーマ
 specs/
-└── 005-hilt-di-setup/                    # 現在の機能仕様
+└── 006-compose-ui-rebuild/               # 現在の機能仕様
 ```
 
 ## Commands
@@ -244,8 +244,153 @@ class MyActivity : AppCompatActivity() {
 - `by viewModels()` デリゲートで ViewModel 取得
 - 既存の `DB.get()` / `Data` 直接アクセスは動作するが、新規コードでは DI を使用
 
+## Jetpack Compose
+
+### 概要
+
+MoLe は Jetpack Compose に移行中です。以下の画面は Compose で実装されています:
+
+- **MainActivityCompose**: メイン画面（アカウント一覧、取引一覧タブ）
+- **ProfileDetailActivity**: プロファイル詳細（Compose移行済み）
+- **TemplatesActivity**: テンプレート管理（Compose移行済み）
+- **NewTransactionActivityCompose**: 取引登録画面
+
+### Compose ファイル構成
+
+```text
+app/src/main/kotlin/net/ktnx/mobileledger/ui/
+├── activity/
+│   ├── MainActivityCompose.kt      # メインActivity
+│   └── NewTransactionActivityCompose.kt  # 取引登録Activity
+├── main/
+│   ├── MainScreen.kt               # メイン画面のComposable
+│   ├── MainUiState.kt              # メイン画面の状態
+│   ├── MainViewModel.kt            # メイン画面のViewModel
+│   ├── AccountSummaryTab.kt        # アカウント一覧タブ
+│   └── TransactionListTab.kt       # 取引一覧タブ
+├── transaction/
+│   ├── NewTransactionScreen.kt     # 取引登録画面
+│   ├── NewTransactionUiState.kt    # 取引登録の状態
+│   ├── NewTransactionViewModel.kt  # 取引登録のViewModel
+│   ├── AccountAutocomplete.kt      # アカウント名オートコンプリート
+│   └── TransactionRowItem.kt       # 取引行コンポーネント
+├── profiles/
+│   └── ProfileDetailScreen.kt      # プロファイル詳細画面
+├── templates/
+│   └── TemplatesScreen.kt          # テンプレート管理画面
+├── theme/
+│   ├── Theme.kt                    # MoLeTheme
+│   ├── Color.kt                    # カラー定義
+│   └── Type.kt                     # タイポグラフィ
+└── components/
+    ├── LoadingIndicator.kt         # ローディング表示
+    ├── ErrorSnackbar.kt            # エラー表示
+    └── ConfirmDialog.kt            # 確認ダイアログ
+```
+
+### Compose 開発パターン
+
+#### UiState パターン
+
+```kotlin
+data class MyScreenUiState(
+    val isLoading: Boolean = false,
+    val items: List<Item> = emptyList(),
+    val error: String? = null
+)
+
+sealed class MyScreenEvent {
+    data class ItemClicked(val id: Long) : MyScreenEvent()
+    object Refresh : MyScreenEvent()
+}
+
+sealed class MyScreenEffect {
+    data class ShowError(val message: String) : MyScreenEffect()
+    object NavigateBack : MyScreenEffect()
+}
+```
+
+#### ViewModel パターン
+
+```kotlin
+@HiltViewModel
+class MyViewModel @Inject constructor(
+    private val someDAO: SomeDAO
+) : ViewModel() {
+    private val _uiState = MutableStateFlow(MyScreenUiState())
+    val uiState: StateFlow<MyScreenUiState> = _uiState.asStateFlow()
+
+    private val _effects = Channel<MyScreenEffect>()
+    val effects = _effects.receiveAsFlow()
+
+    fun onEvent(event: MyScreenEvent) {
+        when (event) {
+            is MyScreenEvent.ItemClicked -> handleItemClick(event.id)
+            is MyScreenEvent.Refresh -> refresh()
+        }
+    }
+}
+```
+
+#### Screen Composable パターン
+
+```kotlin
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MyScreen(
+    viewModel: MyViewModel = hiltViewModel(),
+    onNavigateBack: () -> Unit
+) {
+    val uiState by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.effects.collect { effect ->
+            when (effect) {
+                is MyScreenEffect.NavigateBack -> onNavigateBack()
+                is MyScreenEffect.ShowError -> { /* handle error */ }
+            }
+        }
+    }
+
+    Scaffold(
+        topBar = { /* TopAppBar */ }
+    ) { paddingValues ->
+        // Content
+    }
+}
+```
+
+### Material3 注意事項
+
+- **ExposedDropdownMenuBox**: `menuAnchor()` は deprecated だが、新しい API は composeBom 2024.12.01 では使用不可。`@Suppress("DEPRECATION")` を使用
+- **DatePicker**: `rememberDatePickerState()` を使用
+- **テーマ**: `MoLeTheme` でプロファイル色のカスタマイズをサポート
+
+### テスト
+
+Compose UI テストは `androidTest/` に配置:
+
+```kotlin
+@HiltAndroidTest
+class MyScreenTest {
+    @get:Rule(order = 0)
+    val hiltRule = HiltAndroidRule(this)
+
+    @get:Rule(order = 1)
+    val composeTestRule = createAndroidComposeRule<TestActivity>()
+
+    @Test
+    fun myScreen_displaysContent() {
+        composeTestRule.setContent {
+            MyScreen()
+        }
+        composeTestRule.onNodeWithText("Expected Text").assertIsDisplayed()
+    }
+}
+```
+
 ## Recent Changes
-- 006-compose-ui-rebuild: Added Kotlin 2.0.21 / Java 8互換 (JVM target 1.8)
+- 006-compose-ui-rebuild: Migrated MainActivityCompose, ProfileDetailActivity, TemplatesActivity, NewTransactionActivityCompose to Jetpack Compose with Material3
 - ktlint-enforcement: Enabled most ktlint rules, auto-fixed 200+ files across 4 phases, permanently disabled 8 rules for JSON/API compatibility
 - 005-hilt-di-setup: Added Hilt 2.51.1 DI framework, migrated MainModel to constructor injection, created DatabaseModule and DataModule, added instrumentation test infrastructure with HiltTestRunner and TestDatabaseModule
 
