@@ -98,8 +98,12 @@ fun NavigationDrawerContent(
     val reorderState = rememberReorderableLazyListState(
         onMove = { from, to ->
             isDragging = true
-            reorderableProfiles = reorderableProfiles.toMutableList().apply {
-                add(to.index, removeAt(from.index))
+            // Clamp to.index to valid range to prevent crash when dragging past "New profile"
+            val safeToIndex = to.index.coerceIn(0, reorderableProfiles.lastIndex)
+            if (from.index != safeToIndex) {
+                reorderableProfiles = reorderableProfiles.toMutableList().apply {
+                    add(safeToIndex, removeAt(from.index))
+                }
             }
         },
         onDragEnd = { _, _ ->
