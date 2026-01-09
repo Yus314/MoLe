@@ -49,7 +49,9 @@ import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -96,11 +98,14 @@ fun MainScreen(
         }
     }
 
+    // Keep reference to latest selectedTab for use in collect lambda
+    val currentSelectedTab by rememberUpdatedState(mainUiState.selectedTab)
+
     // Update UI state when pager changes
     LaunchedEffect(pagerState) {
         snapshotFlow { pagerState.currentPage }.collect { page ->
             val newTab = if (page == 0) MainTab.Accounts else MainTab.Transactions
-            if (mainUiState.selectedTab != newTab) {
+            if (currentSelectedTab != newTab) {
                 onMainEvent(MainEvent.SelectTab(newTab))
             }
         }
