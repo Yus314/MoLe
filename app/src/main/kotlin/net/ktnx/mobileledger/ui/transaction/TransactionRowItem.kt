@@ -18,7 +18,11 @@
 package net.ktnx.mobileledger.ui.transaction
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -30,7 +34,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ChatBubble
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.outlined.ChatBubbleOutline
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -59,13 +65,13 @@ fun TransactionRowItem(
     accountSuggestions: List<String>,
     accountSuggestionsVersion: Int,
     showCurrency: Boolean,
-    showComments: Boolean,
     canDelete: Boolean,
     onAccountNameChange: (String) -> Unit,
     onAccountSuggestionSelected: (String) -> Unit,
     onAmountChange: (String) -> Unit,
     onCurrencyClick: () -> Unit,
     onCommentChange: (String) -> Unit,
+    onToggleComment: () -> Unit,
     onDelete: () -> Unit,
     onFocusChanged: (FocusedElement?) -> Unit,
     modifier: Modifier = Modifier
@@ -139,8 +145,33 @@ fun TransactionRowItem(
                 }
             }
 
+            // Comment toggle button
+            IconButton(
+                onClick = onToggleComment,
+                modifier = Modifier.align(Alignment.CenterVertically)
+            ) {
+                val hasComment = row.comment.isNotBlank()
+                Icon(
+                    imageVector = if (hasComment) {
+                        Icons.Filled.ChatBubble
+                    } else {
+                        Icons.Outlined.ChatBubbleOutline
+                    },
+                    contentDescription = if (hasComment) "Hide comment" else "Add comment",
+                    tint = if (hasComment) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    }
+                )
+            }
+
             // Delete button (only if more than 2 rows)
-            if (canDelete) {
+            AnimatedVisibility(
+                visible = canDelete,
+                enter = fadeIn() + expandHorizontally(),
+                exit = fadeOut() + shrinkHorizontally()
+            ) {
                 IconButton(
                     onClick = onDelete,
                     modifier = Modifier.align(Alignment.CenterVertically)
@@ -151,14 +182,12 @@ fun TransactionRowItem(
                         tint = MaterialTheme.colorScheme.error
                     )
                 }
-            } else {
-                Spacer(modifier = Modifier.width(48.dp))
             }
         }
 
         // Comment field (optional, shown below main row)
         AnimatedVisibility(
-            visible = showComments,
+            visible = row.isCommentExpanded || row.comment.isNotBlank(),
             enter = expandVertically(),
             exit = shrinkVertically()
         ) {
@@ -194,11 +223,12 @@ fun TransactionHeaderRow(
     description: String,
     descriptionSuggestions: List<String>,
     transactionComment: String,
-    showComments: Boolean,
+    isCommentExpanded: Boolean,
     onDateClick: () -> Unit,
     onDescriptionChange: (String) -> Unit,
     onDescriptionSuggestionSelected: (String) -> Unit,
     onTransactionCommentChange: (String) -> Unit,
+    onToggleComment: () -> Unit,
     onFocusChanged: (FocusedElement?) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -238,11 +268,32 @@ fun TransactionHeaderRow(
                     if (focused) onFocusChanged(FocusedElement.Description)
                 }
             )
+
+            // Comment toggle button
+            IconButton(
+                onClick = onToggleComment,
+                modifier = Modifier.align(Alignment.CenterVertically)
+            ) {
+                val hasComment = transactionComment.isNotBlank()
+                Icon(
+                    imageVector = if (hasComment) {
+                        Icons.Filled.ChatBubble
+                    } else {
+                        Icons.Outlined.ChatBubbleOutline
+                    },
+                    contentDescription = if (hasComment) "Hide comment" else "Add comment",
+                    tint = if (hasComment) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    }
+                )
+            }
         }
 
         // Transaction comment (optional)
         AnimatedVisibility(
-            visible = showComments,
+            visible = isCommentExpanded || transactionComment.isNotBlank(),
             enter = expandVertically(),
             exit = shrinkVertically()
         ) {

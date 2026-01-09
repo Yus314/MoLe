@@ -30,11 +30,11 @@ data class NewTransactionUiState(
     val description: String = "",
     val transactionComment: String = "",
     val accounts: List<TransactionAccountRow> = listOf(
-        TransactionAccountRow(id = 1),
-        TransactionAccountRow(id = 2)
+        TransactionAccountRow(id = nextId()),
+        TransactionAccountRow(id = nextId())
     ),
     val showCurrency: Boolean = false,
-    val showComments: Boolean = true,
+    val isTransactionCommentExpanded: Boolean = false,
     val focusedRowId: Int? = null,
     val focusedElement: FocusedElement? = null,
 
@@ -127,6 +127,7 @@ data class TransactionAccountRow(
     val amountHint: String? = null,
     val currency: String = "",
     val comment: String = "",
+    val isCommentExpanded: Boolean = false,
     val isAmountValid: Boolean = true,
     val isLast: Boolean = false
 ) {
@@ -209,7 +210,8 @@ sealed class NewTransactionEvent {
 
     // Toggle visibility
     data object ToggleCurrency : NewTransactionEvent()
-    data object ToggleComments : NewTransactionEvent()
+    data object ToggleTransactionComment : NewTransactionEvent()
+    data class ToggleAccountComment(val rowId: Int) : NewTransactionEvent()
     data object ToggleSimulateSave : NewTransactionEvent()
 
     // Submission
@@ -235,6 +237,8 @@ sealed class NewTransactionEffect {
     data object NavigateBack : NewTransactionEffect()
     data object TransactionSaved : NewTransactionEffect()
     data class ShowError(val message: String) : NewTransactionEffect()
-    data class RequestFocus(val rowId: Int, val element: FocusedElement) : NewTransactionEffect()
+
+    /** Request focus on a specific element. rowId is null for header elements. */
+    data class RequestFocus(val rowId: Int?, val element: FocusedElement) : NewTransactionEffect()
     data object HideKeyboard : NewTransactionEffect()
 }

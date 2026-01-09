@@ -78,10 +78,9 @@ class NewTransactionViewModel @Inject constructor(
                 it.copy(
                     profileId = profile.id,
                     showCurrency = profile.showCommodityByDefault,
-                    showComments = profile.showCommentsByDefault,
                     accounts = listOf(
-                        TransactionAccountRow(id = 1, currency = defaultCurrency),
-                        TransactionAccountRow(id = 2, currency = defaultCurrency)
+                        TransactionAccountRow(id = NewTransactionUiState.nextId(), currency = defaultCurrency),
+                        TransactionAccountRow(id = NewTransactionUiState.nextId(), currency = defaultCurrency)
                     )
                 )
             }
@@ -137,7 +136,9 @@ class NewTransactionViewModel @Inject constructor(
 
             NewTransactionEvent.ToggleCurrency -> toggleCurrency()
 
-            NewTransactionEvent.ToggleComments -> toggleComments()
+            NewTransactionEvent.ToggleTransactionComment -> toggleTransactionComment()
+
+            is NewTransactionEvent.ToggleAccountComment -> toggleAccountComment(event.rowId)
 
             NewTransactionEvent.ToggleSimulateSave -> toggleSimulateSave()
 
@@ -556,8 +557,38 @@ class NewTransactionViewModel @Inject constructor(
         recalculateAmountHints()
     }
 
-    private fun toggleComments() {
-        _uiState.update { it.copy(showComments = !it.showComments) }
+    private fun toggleTransactionComment() {
+        val wasExpanded = _uiState.value.isTransactionCommentExpanded
+        _uiState.update { it.copy(isTransactionCommentExpanded = !wasExpanded) }
+
+        // If expanding, request focus on the transaction comment field
+        if (!wasExpanded) {
+            viewModelScope.launch {
+                _effects.send(
+                    NewTransactionEffect.RequestFocus(null, FocusedElement.TransactionComment)
+                )
+            }
+        }
+    }
+
+    private fun toggleAccountComment(rowId: Int) {
+        val row = _uiState.value.accounts.find { it.id == rowId }
+        val wasExpanded = row?.isCommentExpanded ?: false
+
+        _uiState.update { state ->
+            state.copy(
+                accounts = state.accounts.map { r ->
+                    if (r.id == rowId) r.copy(isCommentExpanded = !r.isCommentExpanded) else r
+                }
+            )
+        }
+
+        // If expanding, request focus on the account comment field
+        if (!wasExpanded) {
+            viewModelScope.launch {
+                _effects.send(NewTransactionEffect.RequestFocus(rowId, FocusedElement.AccountComment))
+            }
+        }
     }
 
     private fun toggleSimulateSave() {
@@ -695,7 +726,6 @@ class NewTransactionViewModel @Inject constructor(
         _uiState.update {
             NewTransactionUiState(
                 showCurrency = profile?.showCommodityByDefault ?: false,
-                showComments = profile?.showCommentsByDefault ?: true,
                 accounts = listOf(
                     TransactionAccountRow(id = NewTransactionUiState.nextId(), currency = defaultCurrency),
                     TransactionAccountRow(id = NewTransactionUiState.nextId(), currency = defaultCurrency)
@@ -704,7 +734,7 @@ class NewTransactionViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            _effects.send(NewTransactionEffect.RequestFocus(1, FocusedElement.Description))
+            _effects.send(NewTransactionEffect.RequestFocus(null, FocusedElement.Description))
         }
     }
 

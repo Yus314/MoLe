@@ -224,13 +224,6 @@ fun NewTransactionScreen(viewModel: NewTransactionViewModel = hiltViewModel(), o
                                     showMenuExpanded = false
                                 }
                             )
-                            DropdownMenuItem(
-                                text = { Text(if (uiState.showComments) "Hide comments" else "Show comments") },
-                                onClick = {
-                                    viewModel.onEvent(NewTransactionEvent.ToggleComments)
-                                    showMenuExpanded = false
-                                }
-                            )
                             HorizontalDivider()
                             DropdownMenuItem(
                                 text = { Text("Use template") },
@@ -335,7 +328,7 @@ private fun NewTransactionContent(uiState: NewTransactionUiState, onEvent: (NewT
                 description = uiState.description,
                 descriptionSuggestions = uiState.descriptionSuggestions,
                 transactionComment = uiState.transactionComment,
-                showComments = uiState.showComments,
+                isCommentExpanded = uiState.isTransactionCommentExpanded,
                 onDateClick = { onEvent(NewTransactionEvent.ShowDatePicker) },
                 onDescriptionChange = { onEvent(NewTransactionEvent.UpdateDescription(it)) },
                 onDescriptionSuggestionSelected = { description ->
@@ -343,6 +336,7 @@ private fun NewTransactionContent(uiState: NewTransactionUiState, onEvent: (NewT
                     onEvent(NewTransactionEvent.LoadFromDescription(description))
                 },
                 onTransactionCommentChange = { onEvent(NewTransactionEvent.UpdateTransactionComment(it)) },
+                onToggleComment = { onEvent(NewTransactionEvent.ToggleTransactionComment) },
                 onFocusChanged = { element ->
                     onEvent(NewTransactionEvent.NoteFocus(null, element))
                 }
@@ -370,7 +364,6 @@ private fun NewTransactionContent(uiState: NewTransactionUiState, onEvent: (NewT
                     },
                     accountSuggestionsVersion = uiState.accountSuggestionsVersion,
                     showCurrency = uiState.showCurrency,
-                    showComments = uiState.showComments,
                     canDelete = uiState.accounts.size > 2,
                     onAccountNameChange = { name ->
                         onEvent(NewTransactionEvent.UpdateAccountName(row.id, name))
@@ -386,6 +379,9 @@ private fun NewTransactionContent(uiState: NewTransactionUiState, onEvent: (NewT
                     },
                     onCommentChange = { comment ->
                         onEvent(NewTransactionEvent.UpdateAccountComment(row.id, comment))
+                    },
+                    onToggleComment = {
+                        onEvent(NewTransactionEvent.ToggleAccountComment(row.id))
                     },
                     onDelete = {
                         onEvent(NewTransactionEvent.RemoveAccountRow(row.id))
