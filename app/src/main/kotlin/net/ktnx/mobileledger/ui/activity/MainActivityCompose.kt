@@ -114,10 +114,8 @@ class MainActivityCompose : ProfileThemedActivity() {
 
                         is MainEffect.NavigateToProfileDetail -> {
                             if (effect.profileId != null) {
-                                ProfileDetailActivity.start(
-                                    this@MainActivityCompose,
-                                    Data.getProfile()
-                                )
+                                val profile = Data.profiles.value?.find { it.id == effect.profileId }
+                                ProfileDetailActivity.start(this@MainActivityCompose, profile)
                             } else {
                                 ProfileDetailActivity.start(this@MainActivityCompose, null)
                             }
@@ -163,7 +161,8 @@ class MainActivityCompose : ProfileThemedActivity() {
                         if (profileId == -1L) {
                             ProfileDetailActivity.start(this, null)
                         } else {
-                            ProfileDetailActivity.start(this, Data.getProfile())
+                            val profile = Data.profiles.value?.find { it.id == profileId }
+                            ProfileDetailActivity.start(this, profile)
                         }
                     },
                     onNavigateToTemplates = {
