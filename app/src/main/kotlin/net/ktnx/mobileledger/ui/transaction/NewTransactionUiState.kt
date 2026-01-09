@@ -18,6 +18,7 @@
 package net.ktnx.mobileledger.ui.transaction
 
 import java.util.concurrent.atomic.AtomicInteger
+import net.ktnx.mobileledger.model.FutureDates
 import net.ktnx.mobileledger.utils.SimpleDate
 
 /**
@@ -45,6 +46,8 @@ data class NewTransactionUiState(
     val showTemplateSelector: Boolean = false,
     val showCurrencySelector: Boolean = false,
     val currencySelectorRowId: Int? = null,
+    val availableCurrencies: List<String> = emptyList(),
+    val futureDates: FutureDates = FutureDates.All,
     val availableTemplates: List<TemplateItem> = emptyList(),
     val accountSuggestions: List<String> = emptyList(),
     val accountSuggestionsVersion: Int = 0,
@@ -201,6 +204,12 @@ sealed class NewTransactionEvent {
     // Currency selector
     data class ShowCurrencySelector(val rowId: Int) : NewTransactionEvent()
     data object DismissCurrencySelector : NewTransactionEvent()
+    data class AddCurrency(
+        val name: String,
+        val position: net.ktnx.mobileledger.model.Currency.Position,
+        val gap: Boolean
+    ) : NewTransactionEvent()
+    data class DeleteCurrency(val name: String) : NewTransactionEvent()
 
     // Template events
     data object ShowTemplateSelector : NewTransactionEvent()
