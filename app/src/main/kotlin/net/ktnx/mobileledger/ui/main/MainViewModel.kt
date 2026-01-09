@@ -151,7 +151,7 @@ class MainViewModel @Inject constructor(
     private fun selectProfile(profileId: Long) {
         GeneralBackgroundTasks.run {
             profileDAO.getByIdSync(profileId)?.let { profile ->
-                data.setCurrentProfile(profile)
+                data.postCurrentProfile(profile)
                 closeDrawer()
             }
         }
