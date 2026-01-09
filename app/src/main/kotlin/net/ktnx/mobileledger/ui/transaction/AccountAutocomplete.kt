@@ -165,6 +165,7 @@ fun DescriptionAutocomplete(
     focusRequester: FocusRequester? = null,
     onFocusChanged: ((Boolean) -> Unit)? = null
 ) {
+    val focusManager = LocalFocusManager.current
     var expanded by remember { mutableStateOf(false) }
     var isFocused by remember { mutableStateOf(false) }
 
@@ -192,6 +193,10 @@ fun DescriptionAutocomplete(
             placeholder = placeholder?.let { { Text(it) } },
             enabled = enabled,
             singleLine = true,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+            keyboardActions = KeyboardActions(
+                onNext = { focusManager.moveFocus(FocusDirection.Next) }
+            ),
             colors = OutlinedTextFieldDefaults.colors()
         )
 
@@ -205,6 +210,7 @@ fun DescriptionAutocomplete(
                     onClick = {
                         onSuggestionSelected(suggestion)
                         expanded = false
+                        focusManager.moveFocus(FocusDirection.Next)
                     }
                 )
             }
