@@ -78,6 +78,7 @@ class NewTransactionViewModel @Inject constructor(
                     )
                 )
             }
+            recalculateAmountHints()
         }
     }
 
@@ -200,6 +201,7 @@ class NewTransactionViewModel @Inject constructor(
         }
         lookupAccountSuggestions(rowId, name)
         ensureMinimumRows()
+        recalculateAmountHints()
     }
 
     private fun lookupAccountSuggestions(rowId: Int, term: String) {
@@ -274,18 +276,13 @@ class NewTransactionViewModel @Inject constructor(
             val newAccounts = state.accounts.map { row ->
                 val currencyAccounts = currencyGroups[row.currency] ?: emptyList()
                 val accountsWithAmount = currencyAccounts.filter { it.isAmountSet && it.isAmountValid }
-                val accountsWithNameNoAmount = currencyAccounts.filter {
-                    it.accountName.isNotBlank() && !it.isAmountSet
-                }
 
-                val hint = if (!row.isAmountSet && accountsWithNameNoAmount.size == 1 &&
-                    accountsWithNameNoAmount[0].id == row.id
-                ) {
+                val hint = if (!row.isAmountSet) {
                     val balance = accountsWithAmount.sumOf { it.amount?.toDouble() ?: 0.0 }
-                    if (kotlin.math.abs(balance) > 0.005) {
-                        Data.formatNumber(-balance.toFloat())
+                    if (kotlin.math.abs(balance) < 0.005) {
+                        "0"
                     } else {
-                        null
+                        Data.formatNumber(-balance.toFloat())
                     }
                 } else {
                     null
