@@ -21,9 +21,13 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import androidx.activity.compose.setContent
 import java.util.Locale
+import net.ktnx.mobileledger.App
 import net.ktnx.mobileledger.R
 import net.ktnx.mobileledger.db.DB
+import net.ktnx.mobileledger.ui.splash.SplashScreen
+import net.ktnx.mobileledger.ui.theme.MoLeTheme
 import net.ktnx.mobileledger.utils.Logger
 
 class SplashActivity : CrashReportingActivity() {
@@ -33,7 +37,14 @@ class SplashActivity : CrashReportingActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setTheme(R.style.AppTheme_default)
-        setContentView(R.layout.splash_activity_layout)
+
+        val savedHue = App.getStartupTheme()
+        setContent {
+            MoLeTheme(profileHue = savedHue.toFloat()) {
+                SplashScreen()
+            }
+        }
+
         Logger.debug("splash", "onCreate()")
 
         DB.initComplete.setValue(false)
