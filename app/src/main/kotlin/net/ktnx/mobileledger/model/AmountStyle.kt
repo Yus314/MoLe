@@ -17,6 +17,9 @@
 
 package net.ktnx.mobileledger.model
 
+import java.util.Locale
+import kotlin.math.abs
+import kotlin.math.round
 import net.ktnx.mobileledger.utils.Misc
 
 /**
@@ -146,10 +149,12 @@ data class AmountStyle(
         fun getDefault(currency: String?): AmountStyle {
             val globalPos = Data.currencySymbolPosition.value
 
+            // Default to AFTER when globalPos is not set
             val position = when {
                 currency.isNullOrEmpty() -> Position.NONE
                 globalPos == Currency.Position.before -> Position.BEFORE
                 globalPos == Currency.Position.after -> Position.AFTER
+                globalPos == null -> Position.AFTER
                 else -> Position.NONE
             }
 
@@ -163,6 +168,69 @@ data class AmountStyle(
             val decimalMark = "."
 
             return AmountStyle(position, spaced, precision, decimalMark)
+        }
+
+        /**
+         * Formats an amount with currency according to the style settings.
+         * This is the standalone version for use in Compose with memoization.
+         */
+        @JvmStatic
+        fun formatAccountAmount(amount: Float, currency: String?, amountStyle: AmountStyle? = null): String {
+            val style = amountStyle ?: getDefault(currency)
+            val sb = StringBuilder()
+
+            // Currency before amount
+            if (!currency.isNullOrEmpty() && style.commodityPosition == Position.BEFORE) {
+                sb.append(currency)
+                if (style.isCommoditySpaced) {
+                    sb.append(' ')
+                }
+            }
+
+            // Format the amount
+            sb.append(formatAmountValue(amount, style))
+
+            // Currency after amount
+            if (!currency.isNullOrEmpty() && style.commodityPosition == Position.AFTER) {
+                if (style.isCommoditySpaced) {
+                    sb.append(' ')
+                }
+                sb.append(currency)
+            }
+
+            return sb.toString()
+        }
+
+        /**
+         * Formats the amount value according to the given style
+         */
+        private fun formatAmountValue(amount: Float, style: AmountStyle): String {
+            val precision = style.precision
+            val decimalMark = style.decimalMark
+
+            // Check if amount is effectively an integer
+            val isInteger = abs(amount - round(amount)) < 0.001f
+
+            // For zero precision and integer amounts, format as integer
+            if (precision == 0 && isInteger) {
+                return String.format(Locale.US, "%,d", round(amount).toLong())
+            }
+
+            // Format with specified precision
+            val pattern = "%,.${precision}f"
+            var formatted = String.format(Locale.US, pattern, amount)
+
+            // Replace decimal mark if needed
+            if (decimalMark != ".") {
+                if (decimalMark == ",") {
+                    formatted = formatted.replace(".", "DECIMAL_PLACEHOLDER")
+                    formatted = formatted.replace("DECIMAL_PLACEHOLDER", decimalMark)
+                } else {
+                    formatted = formatted.replace(".", decimalMark)
+                }
+            }
+
+            return formatted
         }
 
         /**

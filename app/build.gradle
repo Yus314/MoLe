@@ -18,6 +18,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
 }
@@ -92,7 +93,10 @@ android {
     }
     productFlavors {
     }
-    buildFeatures.viewBinding = true
+    buildFeatures {
+        viewBinding = true
+        compose = true
+    }
     buildToolsVersion '34.0.0'
     namespace 'net.ktnx.mobileledger'
 }
@@ -107,6 +111,7 @@ dependencies {
     // Kotlin
     implementation libs.kotlin.stdlib
     implementation libs.kotlinx.coroutines.android
+    implementation libs.kotlinx.collections.immutable
 
     // AndroidX Lifecycle
     implementation libs.bundles.lifecycle
@@ -137,6 +142,16 @@ dependencies {
     implementation libs.hilt.android
     ksp libs.hilt.compiler
 
+    // Compose
+    implementation platform(libs.compose.bom)
+    implementation libs.bundles.compose
+    implementation libs.compose.navigation
+    implementation libs.compose.hilt.navigation
+    implementation libs.androidx.activity.compose
+    implementation libs.reorderable
+    debugImplementation libs.compose.ui.tooling
+    debugImplementation libs.compose.ui.test.manifest
+
     // Testing
     testImplementation libs.junit
     testImplementation libs.mockk
@@ -146,6 +161,8 @@ dependencies {
     androidTestImplementation libs.androidx.test.ext.junit
     androidTestImplementation libs.androidx.test.espresso.core
     androidTestImplementation libs.hilt.android.testing
+    androidTestImplementation platform(libs.compose.bom)
+    androidTestImplementation libs.bundles.compose.testing
     kspAndroidTest libs.hilt.compiler
 }
 

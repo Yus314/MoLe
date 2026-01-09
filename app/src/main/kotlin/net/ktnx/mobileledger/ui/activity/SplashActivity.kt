@@ -91,7 +91,7 @@ class SplashActivity : CrashReportingActivity() {
     private fun startMainActivity() {
         if (running) {
             Logger.debug("splash", "still running, launching main activity")
-            val intent = Intent(this, MainActivity::class.java).apply {
+            val intent = Intent(this, MainActivityCompose::class.java).apply {
                 addFlags(
                     Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NO_USER_ACTION or
                         Intent.FLAG_ACTIVITY_NEW_TASK
