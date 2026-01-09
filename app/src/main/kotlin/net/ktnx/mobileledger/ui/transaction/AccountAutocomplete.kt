@@ -38,24 +38,27 @@ import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
-import net.ktnx.mobileledger.utils.Logger
 
 /**
  * Autocomplete text field for account names.
  * Shows suggestions as the user types, with dropdown for selection.
+ *
+ * This is a simplified implementation that:
+ * - Uses the parent's value directly (no local TextFieldValue state)
+ * - Lets TextField manage cursor position internally
+ * - Relies on ViewModel debouncing for suggestions (50ms + Job cancellation)
+ * - Controls dropdown state independently based on focus and suggestions
  */
 @Suppress("DEPRECATION")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AccountAutocomplete(
     value: String,
-    cursorPosition: Int,
     suggestions: List<String>,
-    onValueChange: (String, Int) -> Unit,
+    suggestionsVersion: Int,
+    onValueChange: (String) -> Unit,
     onSuggestionSelected: (String) -> Unit,
     modifier: Modifier = Modifier,
     label: String? = null,
@@ -71,69 +74,17 @@ fun AccountAutocomplete(
     var expanded by remember { mutableStateOf(false) }
     var isFocused by remember { mutableStateOf(false) }
 
-    // Track pending leaf account selection for deferred focus move
-    var pendingLeafAccount by remember { mutableStateOf<String?>(null) }
-
-    // Track TextFieldValue for cursor position management
-    // Note: Don't use value/cursorPosition as remember keys to preserve IME composition state
-    var textFieldValue by remember {
-        mutableStateOf(
-            TextFieldValue(
-                text = value,
-                selection = TextRange(cursorPosition)
-            )
-        )
+    // Dropdown expansion: focus + has suggestions + not an exact leaf match
+    // Use 'suggestionsVersion' (counter from ViewModel) as key to ensure LaunchedEffect
+    // triggers every time suggestions are updated, regardless of list content/size.
+    // IMPORTANT: Do NOT add 'value' to dependencies - it causes recomposition on every keystroke,
+    // which blocks long-press delete.
+    LaunchedEffect(suggestionsVersion, isFocused) {
+        // Don't open dropdown if the value is an exact match with only one suggestion (leaf account)
+        val isLeafExactMatch = suggestions.size == 1 &&
+            suggestions.first().equals(value, ignoreCase = true)
+        expanded = isFocused && suggestions.isNotEmpty() && !isLeafExactMatch
     }
-
-    // Update when external value changes (only when not in composition/IME conversion)
-    // Also handle deferred focus move when value is confirmed
-    LaunchedEffect(value) {
-        Logger.debug(
-            "autocomplete-ui",
-            "LaunchedEffect(value): value='${value.take(20)}', " +
-                "text='${textFieldValue.text.take(20)}', composition=${textFieldValue.composition}, " +
-                "pendingLeafAccount=${pendingLeafAccount?.take(20)}"
-        )
-
-        // Check if pending leaf account value is confirmed
-        if (pendingLeafAccount != null && value.equals(pendingLeafAccount, ignoreCase = true)) {
-            Logger.debug(
-                "autocomplete-ui",
-                "Value confirmed as '$value', moving focus to next field"
-            )
-            focusManager.moveFocus(FocusDirection.Next)
-            pendingLeafAccount = null
-        }
-
-        // Only sync if not in IME composition and text differs
-        if (textFieldValue.composition == null && textFieldValue.text != value) {
-            Logger.debug("autocomplete-ui", "LaunchedEffect: Updating textFieldValue to '$value'")
-            textFieldValue = TextFieldValue(
-                text = value,
-                selection = TextRange(value.length)
-            )
-        }
-    }
-
-    // Show dropdown when focused and suggestions available
-    // Close dropdown when input exactly matches a leaf account (no children)
-    LaunchedEffect(value, suggestions, isFocused) {
-        val isLeafMatch = isExactMatchWithNoChildren(value, suggestions)
-        val shouldExpand = isFocused && suggestions.isNotEmpty() && !isLeafMatch
-        Logger.debug(
-            "autocomplete-ui",
-            "LaunchedEffect: isFocused=$isFocused, suggestions=${suggestions.size}, " +
-                "isLeafMatch=$isLeafMatch, expanded=$shouldExpand"
-        )
-        expanded = shouldExpand
-    }
-
-    // Log current state for debugging
-    Logger.debug(
-        "autocomplete-ui",
-        "Render: value='${value.take(10)}', expanded=$expanded, " +
-            "isFocused=$isFocused, suggestions=${suggestions.size}"
-    )
 
     ExposedDropdownMenuBox(
         expanded = expanded,
@@ -141,25 +92,20 @@ fun AccountAutocomplete(
         modifier = modifier
     ) {
         OutlinedTextField(
-            value = textFieldValue,
+            value = value,
             onValueChange = { newValue ->
-                Logger.debug(
-                    "autocomplete-ui",
-                    "onValueChange: text='${newValue.text.take(20)}', " +
-                        "cursor=${newValue.selection.start}, composition=${newValue.composition}"
-                )
-                textFieldValue = newValue
-                onValueChange(newValue.text, newValue.selection.start)
+                expanded = false // Close dropdown during typing to avoid keyboard interception
+                onValueChange(newValue)
             },
             modifier = Modifier
                 .menuAnchor()
                 .fillMaxWidth()
                 .onFocusChanged { focusState ->
-                    Logger.debug(
-                        "autocomplete-ui",
-                        "onFocusChanged: ${focusState.isFocused} for value='${value.take(10)}'"
-                    )
                     isFocused = focusState.isFocused
+                    // Close dropdown when focus is lost
+                    if (!focusState.isFocused) {
+                        expanded = false
+                    }
                     onFocusChanged?.invoke(focusState.isFocused)
                 },
             label = label?.let { { Text(it) } },
@@ -176,44 +122,20 @@ fun AccountAutocomplete(
 
         ExposedDropdownMenu(
             expanded = expanded,
-            onDismissRequest = {
-                Logger.debug("autocomplete-ui", "onDismissRequest called")
-                expanded = false
-            },
+            onDismissRequest = { expanded = false },
             modifier = Modifier
                 .exposedDropdownSize(matchTextFieldWidth = false)
                 .width(screenWidth - 32.dp)
         ) {
-            Logger.debug(
-                "autocomplete-ui",
-                "DropdownMenu content: ${suggestions.take(MAX_SUGGESTIONS).size} items"
-            )
             suggestions.take(MAX_SUGGESTIONS).forEach { suggestion ->
                 DropdownMenuItem(
                     text = { Text(suggestion) },
                     onClick = {
-                        Logger.debug(
-                            "autocomplete-ui",
-                            "DropdownMenuItem clicked: '$suggestion' (length=${suggestion.length})"
-                        )
-                        // 1. まず textFieldValue を直接更新（composition をクリア）
-                        textFieldValue = TextFieldValue(
-                            text = suggestion,
-                            selection = TextRange(suggestion.length)
-                        )
-                        // 2. ViewModel に通知
                         onSuggestionSelected(suggestion)
-                        // 3. ドロップダウンを閉じる
                         expanded = false
-                        // 4. リーフアカウントならフォーカス移動を予約
-                        //    (実際の移動は LaunchedEffect(value) で値が確定した後に行う)
-                        val isLeaf = isExactMatchWithNoChildren(suggestion, suggestions)
-                        if (isLeaf) {
-                            Logger.debug(
-                                "autocomplete-ui",
-                                "Leaf account selected, scheduling focus move for '$suggestion'"
-                            )
-                            pendingLeafAccount = suggestion
+                        // Move to next field if leaf account selected
+                        if (isExactMatchWithNoChildren(suggestion, suggestions)) {
+                            focusManager.moveFocus(FocusDirection.Next)
                         }
                     }
                 )

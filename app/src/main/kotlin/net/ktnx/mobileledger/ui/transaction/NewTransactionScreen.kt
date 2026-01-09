@@ -368,19 +368,15 @@ private fun NewTransactionContent(uiState: NewTransactionUiState, onEvent: (NewT
                     } else {
                         emptyList()
                     },
+                    accountSuggestionsVersion = uiState.accountSuggestionsVersion,
                     showCurrency = uiState.showCurrency,
                     showComments = uiState.showComments,
                     canDelete = uiState.accounts.size > 2,
-                    onAccountNameChange = { name, cursor ->
-                        onEvent(NewTransactionEvent.UpdateAccountName(row.id, name, cursor))
+                    onAccountNameChange = { name ->
+                        onEvent(NewTransactionEvent.UpdateAccountName(row.id, name))
                     },
                     onAccountSuggestionSelected = { name ->
-                        net.ktnx.mobileledger.utils.Logger.debug(
-                            "autocomplete",
-                            "onAccountSuggestionSelected: row.id=${row.id}, " +
-                                "name='$name', name.length=${name.length}"
-                        )
-                        onEvent(NewTransactionEvent.UpdateAccountName(row.id, name, name.length))
+                        onEvent(NewTransactionEvent.UpdateAccountName(row.id, name))
                     },
                     onAmountChange = { amount ->
                         onEvent(NewTransactionEvent.UpdateAmount(row.id, amount))

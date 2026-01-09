@@ -57,10 +57,11 @@ import androidx.compose.ui.unit.dp
 fun TransactionRowItem(
     row: TransactionAccountRow,
     accountSuggestions: List<String>,
+    accountSuggestionsVersion: Int,
     showCurrency: Boolean,
     showComments: Boolean,
     canDelete: Boolean,
-    onAccountNameChange: (String, Int) -> Unit,
+    onAccountNameChange: (String) -> Unit,
     onAccountSuggestionSelected: (String) -> Unit,
     onAmountChange: (String) -> Unit,
     onCurrencyClick: () -> Unit,
@@ -85,8 +86,8 @@ fun TransactionRowItem(
             // Account name with autocomplete
             AccountAutocomplete(
                 value = row.accountName,
-                cursorPosition = row.accountNameCursor,
                 suggestions = accountSuggestions,
+                suggestionsVersion = accountSuggestionsVersion,
                 onValueChange = onAccountNameChange,
                 onSuggestionSelected = onAccountSuggestionSelected,
                 modifier = Modifier.weight(1f),

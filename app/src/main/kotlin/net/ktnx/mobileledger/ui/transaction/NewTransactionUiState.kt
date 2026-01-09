@@ -47,6 +47,7 @@ data class NewTransactionUiState(
     val currencySelectorRowId: Int? = null,
     val availableTemplates: List<TemplateItem> = emptyList(),
     val accountSuggestions: List<String> = emptyList(),
+    val accountSuggestionsVersion: Int = 0,
     val accountSuggestionsForRowId: Int? = null,
     val descriptionSuggestions: List<String> = emptyList(),
     val isSimulateSave: Boolean = false,
@@ -122,7 +123,6 @@ data class NewTransactionUiState(
 data class TransactionAccountRow(
     val id: Int = NewTransactionUiState.nextId(),
     val accountName: String = "",
-    val accountNameCursor: Int = 0,
     val amountText: String = "",
     val amountHint: String? = null,
     val currency: String = "",
@@ -186,8 +186,7 @@ sealed class NewTransactionEvent {
     data object DismissDatePicker : NewTransactionEvent()
 
     // Account row events
-    data class UpdateAccountName(val rowId: Int, val name: String, val cursorPosition: Int = 0) :
-        NewTransactionEvent()
+    data class UpdateAccountName(val rowId: Int, val name: String) : NewTransactionEvent()
     data class UpdateAmount(val rowId: Int, val amount: String) : NewTransactionEvent()
     data class UpdateCurrency(val rowId: Int, val currency: String) : NewTransactionEvent()
     data class UpdateAccountComment(val rowId: Int, val comment: String) : NewTransactionEvent()

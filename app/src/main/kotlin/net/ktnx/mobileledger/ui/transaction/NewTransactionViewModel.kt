@@ -22,12 +22,15 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import net.ktnx.mobileledger.async.SendTransactionTask
@@ -60,6 +63,9 @@ class NewTransactionViewModel @Inject constructor(
 
     private var pendingTransaction: LedgerTransaction? = null
 
+    // Job for account suggestion lookup (for cancellation during rapid input)
+    private var accountSuggestionJob: Job? = null
+
     init {
         initializeFromProfile()
     }
@@ -70,6 +76,7 @@ class NewTransactionViewModel @Inject constructor(
             val defaultCurrency = profile.getDefaultCommodityOrEmpty()
             _uiState.update {
                 it.copy(
+                    profileId = profile.id,
                     showCurrency = profile.showCommodityByDefault,
                     showComments = profile.showCommentsByDefault,
                     accounts = listOf(
@@ -96,8 +103,7 @@ class NewTransactionViewModel @Inject constructor(
 
             is NewTransactionEvent.UpdateAccountName -> updateAccountName(
                 event.rowId,
-                event.name,
-                event.cursorPosition
+                event.name
             )
 
             is NewTransactionEvent.UpdateAmount -> updateAmount(event.rowId, event.amount)
@@ -187,12 +193,12 @@ class NewTransactionViewModel @Inject constructor(
         _uiState.update { it.copy(showDatePicker = false) }
     }
 
-    private fun updateAccountName(rowId: Int, name: String, cursorPosition: Int) {
+    private fun updateAccountName(rowId: Int, name: String) {
         _uiState.update { state ->
             state.copy(
                 accounts = state.accounts.map { row ->
                     if (row.id == rowId) {
-                        row.copy(accountName = name, accountNameCursor = cursorPosition)
+                        row.copy(accountName = name)
                     } else {
                         row
                     }
@@ -207,13 +213,25 @@ class NewTransactionViewModel @Inject constructor(
     private fun lookupAccountSuggestions(rowId: Int, term: String) {
         Logger.debug("autocomplete", "lookupAccountSuggestions: rowId=$rowId, term='$term'")
 
+        // Cancel previous suggestion job to prevent race conditions during rapid input
+        accountSuggestionJob?.cancel()
+
         if (term.length < 2) {
             Logger.debug("autocomplete", "term too short (${term.length}), clearing suggestions")
-            _uiState.update { it.copy(accountSuggestions = emptyList(), accountSuggestionsForRowId = null) }
+            _uiState.update {
+                it.copy(
+                    accountSuggestions = emptyList(),
+                    accountSuggestionsVersion = it.accountSuggestionsVersion + 1,
+                    accountSuggestionsForRowId = null
+                )
+            }
             return
         }
 
-        viewModelScope.launch {
+        accountSuggestionJob = viewModelScope.launch {
+            // Small delay to debounce rapid input
+            delay(50)
+
             val profileId = _uiState.value.profileId
             Logger.debug("autocomplete", "profileId=$profileId")
 
@@ -228,12 +246,21 @@ class NewTransactionViewModel @Inject constructor(
                 AccountDAO.unbox(accountDAO.lookupNamesInProfileByNameSync(profileId, termUpper))
             }
 
-            Logger.debug("autocomplete", "got ${suggestions.size} suggestions for row $rowId: ${suggestions.take(3)}")
-            _uiState.update {
-                it.copy(
-                    accountSuggestions = suggestions,
-                    accountSuggestionsForRowId = rowId
+            // Only update if this job is still active (not cancelled by a newer input)
+            if (isActive) {
+                Logger.debug(
+                    "autocomplete",
+                    "got ${suggestions.size} suggestions for row $rowId: ${suggestions.take(3)}"
                 )
+                _uiState.update {
+                    it.copy(
+                        accountSuggestions = suggestions,
+                        accountSuggestionsVersion = it.accountSuggestionsVersion + 1,
+                        accountSuggestionsForRowId = rowId
+                    )
+                }
+            } else {
+                Logger.debug("autocomplete", "job cancelled, discarding ${suggestions.size} suggestions")
             }
         }
     }
