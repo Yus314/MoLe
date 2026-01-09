@@ -18,7 +18,7 @@
 package net.ktnx.mobileledger.ui.transaction
 
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.DropdownMenu
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -33,9 +33,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.window.PopupProperties
+import androidx.compose.ui.unit.dp
 import net.ktnx.mobileledger.utils.Logger
 
 /**
@@ -58,6 +59,9 @@ fun AccountAutocomplete(
     isError: Boolean = false,
     onFocusChanged: ((Boolean) -> Unit)? = null
 ) {
+    val configuration = LocalConfiguration.current
+    val screenWidth = configuration.screenWidthDp.dp
+
     var expanded by remember { mutableStateOf(false) }
     var isFocused by remember { mutableStateOf(false) }
 
@@ -143,14 +147,15 @@ fun AccountAutocomplete(
             colors = OutlinedTextFieldDefaults.colors()
         )
 
-        DropdownMenu(
+        ExposedDropdownMenu(
             expanded = expanded,
             onDismissRequest = {
                 Logger.debug("autocomplete-ui", "onDismissRequest called")
                 expanded = false
             },
-            properties = PopupProperties(focusable = false),
-            modifier = Modifier.exposedDropdownSize()
+            modifier = Modifier
+                .exposedDropdownSize(matchTextFieldWidth = false)
+                .width(screenWidth - 32.dp)
         ) {
             Logger.debug(
                 "autocomplete-ui",
