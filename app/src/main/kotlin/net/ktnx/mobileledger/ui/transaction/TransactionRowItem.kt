@@ -48,6 +48,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
@@ -230,7 +231,8 @@ fun TransactionHeaderRow(
     onTransactionCommentChange: (String) -> Unit,
     onToggleComment: () -> Unit,
     onFocusChanged: (FocusedElement?) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    descriptionFocusRequester: FocusRequester? = null
 ) {
     val focusManager = LocalFocusManager.current
 
@@ -264,6 +266,7 @@ fun TransactionHeaderRow(
                 onSuggestionSelected = onDescriptionSuggestionSelected,
                 modifier = Modifier.weight(1f),
                 placeholder = "Description",
+                focusRequester = descriptionFocusRequester,
                 onFocusChanged = { focused ->
                     if (focused) onFocusChanged(FocusedElement.Description)
                 }

@@ -71,6 +71,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
@@ -91,6 +93,7 @@ fun NewTransactionScreen(viewModel: NewTransactionViewModel = hiltViewModel(), o
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val keyboardController = LocalSoftwareKeyboardController.current
+    val descriptionFocusRequester = remember { FocusRequester() }
     var showDiscardDialog by remember { mutableStateOf(false) }
     var showMenuExpanded by remember { mutableStateOf(false) }
 
@@ -128,10 +131,17 @@ fun NewTransactionScreen(viewModel: NewTransactionViewModel = hiltViewModel(), o
                 }
 
                 is NewTransactionEffect.RequestFocus -> {
-                    // Focus handling would require FocusRequester setup
+                    if (effect.element == FocusedElement.Description) {
+                        descriptionFocusRequester.requestFocus()
+                    }
                 }
             }
         }
+    }
+
+    // Request initial focus on Description field
+    LaunchedEffect(Unit) {
+        descriptionFocusRequester.requestFocus()
     }
 
     // Discard changes confirmation dialog
@@ -303,7 +313,8 @@ fun NewTransactionScreen(viewModel: NewTransactionViewModel = hiltViewModel(), o
             } else {
                 NewTransactionContent(
                     uiState = uiState,
-                    onEvent = viewModel::onEvent
+                    onEvent = viewModel::onEvent,
+                    descriptionFocusRequester = descriptionFocusRequester
                 )
             }
         }
@@ -311,7 +322,11 @@ fun NewTransactionScreen(viewModel: NewTransactionViewModel = hiltViewModel(), o
 }
 
 @Composable
-private fun NewTransactionContent(uiState: NewTransactionUiState, onEvent: (NewTransactionEvent) -> Unit) {
+private fun NewTransactionContent(
+    uiState: NewTransactionUiState,
+    onEvent: (NewTransactionEvent) -> Unit,
+    descriptionFocusRequester: FocusRequester
+) {
     val dateFormat = remember { SimpleDateFormat("yyyy/MM/dd", Locale.US) }
     val formattedDate = remember(uiState.date) {
         val calendar = GregorianCalendar(uiState.date.year, uiState.date.month - 1, uiState.date.day)
@@ -339,7 +354,8 @@ private fun NewTransactionContent(uiState: NewTransactionUiState, onEvent: (NewT
                 onToggleComment = { onEvent(NewTransactionEvent.ToggleTransactionComment) },
                 onFocusChanged = { element ->
                     onEvent(NewTransactionEvent.NoteFocus(null, element))
-                }
+                },
+                descriptionFocusRequester = descriptionFocusRequester
             )
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))

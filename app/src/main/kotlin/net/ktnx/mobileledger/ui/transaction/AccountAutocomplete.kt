@@ -35,6 +35,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalFocusManager
@@ -160,6 +162,7 @@ fun DescriptionAutocomplete(
     label: String? = null,
     placeholder: String? = null,
     enabled: Boolean = true,
+    focusRequester: FocusRequester? = null,
     onFocusChanged: ((Boolean) -> Unit)? = null
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -180,6 +183,7 @@ fun DescriptionAutocomplete(
             modifier = Modifier
                 .menuAnchor()
                 .fillMaxWidth()
+                .then(focusRequester?.let { Modifier.focusRequester(it) } ?: Modifier)
                 .onFocusChanged { focusState ->
                     isFocused = focusState.isFocused
                     onFocusChanged?.invoke(focusState.isFocused)
