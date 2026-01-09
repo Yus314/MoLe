@@ -22,6 +22,8 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.util.Date
 import javax.inject.Inject
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -130,8 +132,19 @@ class MainViewModel @Inject constructor(
     // Main screen functions
     private fun selectTab(tab: MainTab) {
         _mainUiState.update { it.copy(selectedTab = tab) }
-        if (tab == MainTab.Accounts) {
-            clearAccountFilter()
+        when (tab) {
+            MainTab.Accounts -> {
+                clearAccountFilter()
+            }
+
+            MainTab.Transactions -> {
+                // Transactions タブが選択され、まだデータがロードされていない場合にロード
+                if (_transactionListUiState.value.transactions.isEmpty() &&
+                    !_transactionListUiState.value.isLoading
+                ) {
+                    reloadTransactions()
+                }
+            }
         }
     }
 
@@ -312,8 +325,14 @@ class MainViewModel @Inject constructor(
                 currentProfileCanPost = profile?.canPost() ?: false
             )
         }
+        // Transactions データをクリア（次回タブ選択時に再ロード）
+        _transactionListUiState.update {
+            it.copy(
+                transactions = persistentListOf(),
+                isLoading = false
+            )
+        }
         reloadAccounts()
-        reloadTransactions()
     }
 
     fun updateProfiles(profiles: List<Profile>) {
@@ -569,10 +588,10 @@ class MainViewModel @Inject constructor(
                                 accountName = acc.accountName,
                                 amount = if (acc.isAmountSet) acc.amount else 0f,
                                 currency = acc.currency ?: "",
-                                formattedAmount = acc.toString(),
-                                comment = acc.comment
+                                comment = acc.comment,
+                                amountStyle = acc.amountStyle
                             )
-                        },
+                        }.toImmutableList(),
                         boldAccountName = item.boldAccountName,
                         runningTotal = item.runningTotal
                     )
@@ -601,7 +620,7 @@ class MainViewModel @Inject constructor(
         val headerText = data.lastTransactionsUpdateText.value ?: "----"
         _transactionListUiState.update {
             it.copy(
-                transactions = displayItems,
+                transactions = displayItems.toImmutableList(),
                 isLoading = false,
                 firstTransactionDate = first,
                 lastTransactionDate = last,

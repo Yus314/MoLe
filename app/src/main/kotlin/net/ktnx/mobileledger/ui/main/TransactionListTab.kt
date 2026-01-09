@@ -55,6 +55,7 @@ import androidx.compose.ui.unit.dp
 import java.text.DateFormatSymbols
 import java.util.Calendar
 import java.util.Locale
+import net.ktnx.mobileledger.model.AmountStyle
 import net.ktnx.mobileledger.ui.components.WeakOverscrollContainer
 import net.ktnx.mobileledger.utils.SimpleDate
 
@@ -109,9 +110,16 @@ fun TransactionListTab(
                         items = uiState.transactions,
                         key = { item ->
                             when (item) {
-                                is TransactionListDisplayItem.Header -> "header"
-                                is TransactionListDisplayItem.DateDelimiter -> "date-${item.date}"
-                                is TransactionListDisplayItem.Transaction -> "tx-${item.id}"
+                                is TransactionListDisplayItem.Header -> Long.MIN_VALUE
+                                is TransactionListDisplayItem.DateDelimiter -> -item.date.toDate().time
+                                is TransactionListDisplayItem.Transaction -> item.id
+                            }
+                        },
+                        contentType = { item ->
+                            when (item) {
+                                is TransactionListDisplayItem.Header -> 0
+                                is TransactionListDisplayItem.DateDelimiter -> 1
+                                is TransactionListDisplayItem.Transaction -> 2
                             }
                         }
                     ) { item ->
@@ -270,11 +278,14 @@ private fun TransactionCard(transaction: TransactionListDisplayItem.Transaction)
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Account rows
-            transaction.accounts.forEach { account ->
+            // Account rows - memoize bold account comparison
+            val boldAccountFlags = remember(transaction.boldAccountName, transaction.accounts) {
+                transaction.accounts.map { it.accountName == transaction.boldAccountName }
+            }
+            transaction.accounts.forEachIndexed { index, account ->
                 TransactionAccountRow(
                     account = account,
-                    isBold = account.accountName == transaction.boldAccountName
+                    isBold = boldAccountFlags[index]
                 )
             }
 
@@ -297,14 +308,18 @@ private fun TransactionCard(transaction: TransactionListDisplayItem.Transaction)
 
 @Composable
 private fun TransactionAccountRow(account: TransactionAccountDisplayItem, isBold: Boolean) {
-    val amountColor = when {
-        account.amount > 0 -> Color(0xFF4CAF50)
+    // Memoize color calculation based on amount (green for positive, red for negative)
+    val amountColor = remember(account.amount) {
+        when {
+            account.amount > 0 -> Color(0xFF4CAF50)
+            account.amount < 0 -> Color(0xFFF44336)
+            else -> null
+        }
+    } ?: MaterialTheme.colorScheme.onSurface
 
-        // Green for positive
-        account.amount < 0 -> Color(0xFFF44336)
-
-        // Red for negative
-        else -> MaterialTheme.colorScheme.onSurface
+    // Memoize amount formatting - only format when visible
+    val formattedAmount = remember(account.amount, account.currency, account.amountStyle) {
+        AmountStyle.formatAccountAmount(account.amount, account.currency.ifEmpty { null }, account.amountStyle)
     }
 
     Row(
@@ -326,9 +341,9 @@ private fun TransactionAccountRow(account: TransactionAccountDisplayItem, isBold
 
         Spacer(modifier = Modifier.width(8.dp))
 
-        // Amount with currency (pre-formatted)
+        // Amount with currency (formatted on demand)
         Text(
-            text = account.formattedAmount,
+            text = formattedAmount,
             style = MaterialTheme.typography.bodySmall,
             fontWeight = FontWeight.Medium,
             color = amountColor,

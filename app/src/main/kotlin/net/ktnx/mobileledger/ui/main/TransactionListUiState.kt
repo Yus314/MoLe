@@ -17,17 +17,21 @@
 
 package net.ktnx.mobileledger.ui.main
 
+import androidx.compose.runtime.Stable
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import net.ktnx.mobileledger.model.AmountStyle
 import net.ktnx.mobileledger.utils.SimpleDate
 
 /**
  * UI state for the transaction list tab.
  */
 data class TransactionListUiState(
-    val transactions: List<TransactionListDisplayItem> = emptyList(),
+    val transactions: ImmutableList<TransactionListDisplayItem> = persistentListOf(),
     val isLoading: Boolean = false,
     val accountFilter: String? = null,
     val showAccountFilterInput: Boolean = false,
-    val accountSuggestions: List<String> = emptyList(),
+    val accountSuggestions: ImmutableList<String> = persistentListOf(),
     val foundTransactionIndex: Int? = null,
     val firstTransactionDate: SimpleDate? = null,
     val lastTransactionDate: SimpleDate? = null,
@@ -37,6 +41,7 @@ data class TransactionListUiState(
 /**
  * Sealed class representing items in the transaction list.
  */
+@Stable
 sealed class TransactionListDisplayItem {
     /**
      * Header item showing the last update information.
@@ -51,12 +56,13 @@ sealed class TransactionListDisplayItem {
     /**
      * Transaction item representing a single transaction.
      */
+    @Stable
     data class Transaction(
         val id: Long,
         val date: SimpleDate,
         val description: String,
         val comment: String?,
-        val accounts: List<TransactionAccountDisplayItem>,
+        val accounts: ImmutableList<TransactionAccountDisplayItem>,
         val boldAccountName: String?,
         val runningTotal: String?
     ) : TransactionListDisplayItem()
@@ -65,12 +71,13 @@ sealed class TransactionListDisplayItem {
 /**
  * Represents an account row within a transaction.
  */
+@Stable
 data class TransactionAccountDisplayItem(
     val accountName: String,
     val amount: Float,
     val currency: String,
-    val formattedAmount: String,
-    val comment: String?
+    val comment: String?,
+    val amountStyle: AmountStyle?
 )
 
 /**

@@ -3,6 +3,7 @@ agp = "8.7.3"
 kotlin = "2.0.21"
 ksp = "2.0.21-1.0.26"
 coroutines = "1.9.0"
+collectionsImmutable = "0.3.7"
 lifecycle = "2.4.1"
 room = "2.4.2"
 navigation = "2.4.2"
@@ -27,6 +28,7 @@ composeNavigation = "2.8.5"
 [libraries]
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
+kotlinx-collections-immutable = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version.ref = "collectionsImmutable" }
 
 androidx-lifecycle-livedata-ktx = { module = "androidx.lifecycle:lifecycle-livedata-ktx", version.ref = "lifecycle" }
 androidx-lifecycle-viewmodel-ktx = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "lifecycle" }

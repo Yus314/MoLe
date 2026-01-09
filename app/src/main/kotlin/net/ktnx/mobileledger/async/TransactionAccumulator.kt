@@ -55,7 +55,7 @@ class TransactionAccumulator(private val boldAccountName: String?, private val a
         lastDate?.let { last ->
             if (date != last) {
                 val showMonth = date.month != last.month || date.year != last.year
-                list.add(1, TransactionListItem(last, showMonth))
+                list.add(TransactionListItem(last, showMonth))
             }
         }
 
@@ -76,7 +76,7 @@ class TransactionAccumulator(private val boldAccountName: String?, private val a
 
             currentTotal = summarizeRunningTotal(runningTotal)
         }
-        list.add(1, TransactionListItem(transaction, boldAccountName, currentTotal))
+        list.add(TransactionListItem(transaction, boldAccountName, currentTotal))
 
         lastDate = date
     }
@@ -101,11 +101,23 @@ class TransactionAccumulator(private val boldAccountName: String?, private val a
             val today = SimpleDate.today()
             if (last != today) {
                 val showMonth = today.month != last.month || today.year != last.year
-                list.add(1, TransactionListItem(last, showMonth))
+                list.add(TransactionListItem(last, showMonth))
             }
         }
 
-        model.setDisplayedTransactions(list, transactionCount)
+        // Return header + reversed items (to show newest first)
+        val orderedList = if (list.size <= 1) {
+            list
+        } else {
+            val header = list[0]
+            val items = list.subList(1, list.size).reversed()
+            ArrayList<TransactionListItem>().apply {
+                add(header)
+                addAll(items)
+            }
+        }
+
+        model.setDisplayedTransactions(orderedList, transactionCount)
         model.firstTransactionDate = earliestDate
         model.lastTransactionDate = latestDate
     }
@@ -126,11 +138,15 @@ class TransactionAccumulator(private val boldAccountName: String?, private val a
                         item.date == last
                 }
                 if (!hasDelimiter) {
-                    list.add(1, TransactionListItem(last, showMonth))
+                    list.add(TransactionListItem(last, showMonth))
                 }
             }
         }
-        return list.toList()
+        // Return header + reversed items (to show newest first)
+        if (list.size <= 1) return list.toList()
+        val header = list[0]
+        val items = list.subList(1, list.size).reversed()
+        return listOf(header) + items
     }
 
     /**
