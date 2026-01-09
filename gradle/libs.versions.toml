@@ -69,6 +69,7 @@ compose-ui = { module = "androidx.compose.ui:ui" }
 compose-ui-graphics = { module = "androidx.compose.ui:ui-graphics" }
 compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
 compose-material3 = { module = "androidx.compose.material3:material3" }
+compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
 compose-navigation = { module = "androidx.navigation:navigation-compose", version.ref = "composeNavigation" }
 compose-hilt-navigation = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltAndroidX" }
 compose-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4" }
@@ -88,5 +89,5 @@ lifecycle = ["androidx-lifecycle-livedata-ktx", "androidx-lifecycle-viewmodel-kt
 room = ["androidx-room-runtime", "androidx-room-ktx"]
 navigation = ["androidx-navigation-fragment", "androidx-navigation-ui"]
 jackson = ["jackson-modules-java8", "jackson-module-kotlin"]
-compose = ["compose-ui", "compose-ui-graphics", "compose-ui-tooling-preview", "compose-material3"]
+compose = ["compose-ui", "compose-ui-graphics", "compose-ui-tooling-preview", "compose-material3", "compose-material-icons-extended"]
 compose-testing = ["compose-ui-test-junit4"]

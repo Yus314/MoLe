@@ -29,7 +29,8 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -149,11 +150,24 @@ fun MainScreen(
                         }
                     },
                     actions = {
-                        IconButton(onClick = { onMainEvent(MainEvent.RefreshData) }) {
-                            Icon(
-                                imageVector = Icons.Default.Refresh,
-                                contentDescription = stringResource(R.string.menu_refresh)
-                            )
+                        // Show zero balance toggle only on Accounts tab
+                        if (mainUiState.selectedTab == MainTab.Accounts) {
+                            IconButton(
+                                onClick = {
+                                    onAccountSummaryEvent(AccountSummaryEvent.ToggleZeroBalanceAccounts)
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = if (accountSummaryUiState.showZeroBalanceAccounts) {
+                                        Icons.Default.Visibility
+                                    } else {
+                                        Icons.Default.VisibilityOff
+                                    },
+                                    contentDescription = stringResource(
+                                        R.string.accounts_menu_show_zero
+                                    )
+                                )
+                            }
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
