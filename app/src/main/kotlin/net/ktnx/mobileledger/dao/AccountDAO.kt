@@ -154,6 +154,9 @@ abstract class AccountDAO : BaseDAO<Account>() {
     @Query("SELECT * FROM accounts WHERE profile_id = :profileId")
     abstract fun allForProfileSync(profileId: Long): List<Account>
 
+    @Query("SELECT COUNT(*) FROM accounts WHERE profile_id = :profileId")
+    abstract fun getCountForProfileSync(profileId: Long): Int
+
     @Query("SELECT generation FROM accounts WHERE profile_id = :profileId LIMIT 1")
     protected abstract fun getGenerationPOJOSync(profileId: Long): AccountGenerationContainer?
 

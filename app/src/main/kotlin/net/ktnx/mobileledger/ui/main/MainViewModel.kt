@@ -433,6 +433,9 @@ class MainViewModel @Inject constructor(
 
         GeneralBackgroundTasks.run {
             try {
+                // Get total account count for hybrid display (displayed/total)
+                val totalCount = accountDAO.getCountForProfileSync(profileId)
+
                 val dbAccounts = accountDAO.getAllWithAmountsSync(profileId, showZeroBalances)
 
                 // First pass: build LedgerAccount objects and determine hasSubAccounts
@@ -494,6 +497,7 @@ class MainViewModel @Inject constructor(
                     )
                 }
                 data.lastUpdateAccountCount.postValue(filteredList.size - 1)
+                data.lastUpdateTotalAccountCount.postValue(totalCount)
             } catch (e: Exception) {
                 Logger.debug("MainViewModel", "Error loading accounts", e)
                 _accountSummaryUiState.update { it.copy(isLoading = false) }

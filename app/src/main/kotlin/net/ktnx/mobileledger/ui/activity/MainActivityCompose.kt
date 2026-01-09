@@ -86,6 +86,9 @@ class MainActivityCompose : ProfileThemedActivity() {
         Data.lastUpdateAccountCount.observe(this) { _ ->
             updateLastUpdateText()
         }
+        Data.lastUpdateTotalAccountCount.observe(this) { _ ->
+            updateLastUpdateText()
+        }
         Data.lastUpdateTransactionCount.observe(this) { _ ->
             updateLastUpdateText()
         }
@@ -253,7 +256,9 @@ class MainActivityCompose : ProfileThemedActivity() {
         val formatFlags = DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_SHOW_TIME
         val templateForTransactions = resources.getString(R.string.transaction_count_summary)
         val templateForAccounts = resources.getString(R.string.account_count_summary)
-        val accountCount = Data.lastUpdateAccountCount.value
+        val templateForAccountsFiltered = resources.getString(R.string.account_count_summary_filtered)
+        val displayedAccountCount = Data.lastUpdateAccountCount.value ?: 0
+        val totalAccountCount = Data.lastUpdateTotalAccountCount.value ?: 0
         val transactionCount = Data.lastUpdateTransactionCount.value
         val lastUpdate = Data.lastUpdateDate.value
         val locale = Data.locale.value ?: Locale.getDefault()
@@ -262,18 +267,27 @@ class MainActivityCompose : ProfileThemedActivity() {
             Data.lastTransactionsUpdateText.value = "----"
             Data.lastAccountsUpdateText.value = "----"
         } else {
+            val dateTimeText = DateUtils.formatDateTime(this, lastUpdate.time, formatFlags)
+
             Data.lastTransactionsUpdateText.value = String.format(
                 locale,
                 templateForTransactions,
                 transactionCount ?: 0,
-                DateUtils.formatDateTime(this, lastUpdate.time, formatFlags)
+                dateTimeText
             )
-            Data.lastAccountsUpdateText.value = String.format(
-                locale,
-                templateForAccounts,
-                accountCount ?: 0,
-                DateUtils.formatDateTime(this, lastUpdate.time, formatFlags)
-            )
+
+            // Use hybrid format when filtered (displayed != total)
+            Data.lastAccountsUpdateText.value = if (displayedAccountCount == totalAccountCount) {
+                String.format(locale, templateForAccounts, displayedAccountCount, dateTimeText)
+            } else {
+                String.format(
+                    locale,
+                    templateForAccountsFiltered,
+                    displayedAccountCount,
+                    totalAccountCount,
+                    dateTimeText
+                )
+            }
         }
     }
 
@@ -306,6 +320,7 @@ class MainActivityCompose : ProfileThemedActivity() {
         Data.profiles.removeObservers(this)
         Data.lastUpdateTransactionCount.removeObservers(this)
         Data.lastUpdateAccountCount.removeObservers(this)
+        Data.lastUpdateTotalAccountCount.removeObservers(this)
         Data.lastUpdateDate.removeObservers(this)
 
         Logger.debug(TAG, "profileThemeChanged(): recreating activity")

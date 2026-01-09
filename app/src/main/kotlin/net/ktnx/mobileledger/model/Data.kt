@@ -66,6 +66,9 @@ object Data {
     val lastUpdateAccountCount = MutableLiveData(0)
 
     @JvmField
+    val lastUpdateTotalAccountCount = MutableLiveData(0)
+
+    @JvmField
     val lastTransactionsUpdateText = MutableLiveData<String>()
 
     @JvmField
