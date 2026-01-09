@@ -42,8 +42,6 @@ import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -60,7 +58,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -78,10 +75,11 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import java.text.SimpleDateFormat
-import java.util.Calendar
 import java.util.GregorianCalendar
 import java.util.Locale
-import net.ktnx.mobileledger.utils.SimpleDate
+import net.ktnx.mobileledger.model.Currency
+import net.ktnx.mobileledger.ui.components.CurrencyPickerDialog
+import net.ktnx.mobileledger.ui.components.MoleDatePickerDialog
 
 /**
  * Main composable for the New Transaction screen.
@@ -170,13 +168,47 @@ fun NewTransactionScreen(viewModel: NewTransactionViewModel = hiltViewModel(), o
 
     // Date picker dialog
     if (uiState.showDatePicker) {
-        DatePickerDialogCompose(
-            currentDate = uiState.date,
+        MoleDatePickerDialog(
+            initialDate = uiState.date,
+            futureDates = uiState.futureDates,
             onDateSelected = { date ->
                 viewModel.onEvent(NewTransactionEvent.UpdateDate(date))
             },
             onDismiss = {
                 viewModel.onEvent(NewTransactionEvent.DismissDatePicker)
+            }
+        )
+    }
+
+    // Currency picker dialog
+    if (uiState.showCurrencySelector) {
+        CurrencyPickerDialog(
+            currencies = uiState.availableCurrencies,
+            showPositionSettings = true,
+            onCurrencySelected = { currency ->
+                uiState.currencySelectorRowId?.let { rowId ->
+                    viewModel.onEvent(NewTransactionEvent.UpdateCurrency(rowId, currency))
+                }
+                viewModel.onEvent(NewTransactionEvent.DismissCurrencySelector)
+            },
+            onCurrencyAdded = { name, position, gap ->
+                viewModel.onEvent(NewTransactionEvent.AddCurrency(name, position, gap))
+            },
+            onCurrencyDeleted = { name ->
+                viewModel.onEvent(NewTransactionEvent.DeleteCurrency(name))
+            },
+            onNoCurrencySelected = {
+                uiState.currencySelectorRowId?.let { rowId ->
+                    viewModel.onEvent(NewTransactionEvent.UpdateCurrency(rowId, ""))
+                }
+                viewModel.onEvent(NewTransactionEvent.DismissCurrencySelector)
+            },
+            // Position settings are stored in currency DB
+            onPositionChanged = { },
+            // Gap settings are stored in currency DB
+            onGapChanged = { },
+            onDismiss = {
+                viewModel.onEvent(NewTransactionEvent.DismissCurrencySelector)
             }
         )
     }
@@ -432,54 +464,6 @@ private fun NewTransactionContent(
             // Bottom padding for FAB
             Spacer(modifier = Modifier.height(80.dp))
         }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun DatePickerDialogCompose(
-    currentDate: SimpleDate,
-    onDateSelected: (SimpleDate) -> Unit,
-    onDismiss: () -> Unit
-) {
-    val calendar = remember(currentDate) {
-        Calendar.getInstance().apply {
-            set(currentDate.year, currentDate.month - 1, currentDate.day)
-        }
-    }
-
-    val datePickerState = rememberDatePickerState(
-        initialSelectedDateMillis = calendar.timeInMillis
-    )
-
-    DatePickerDialog(
-        onDismissRequest = onDismiss,
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    datePickerState.selectedDateMillis?.let { millis ->
-                        val selectedCalendar = Calendar.getInstance().apply {
-                            timeInMillis = millis
-                        }
-                        val date = SimpleDate(
-                            selectedCalendar.get(Calendar.YEAR),
-                            selectedCalendar.get(Calendar.MONTH) + 1,
-                            selectedCalendar.get(Calendar.DAY_OF_MONTH)
-                        )
-                        onDateSelected(date)
-                    }
-                }
-            ) {
-                Text("OK")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
-            }
-        }
-    ) {
-        DatePicker(state = datePickerState)
     }
 }
 
