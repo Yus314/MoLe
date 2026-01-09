@@ -203,19 +203,37 @@ class NewTransactionViewModel @Inject constructor(
     }
 
     private fun lookupAccountSuggestions(term: String) {
+        Logger.debug("autocomplete", "lookupAccountSuggestions: term='$term'")
+
         if (term.length < 2) {
+            Logger.debug("autocomplete", "term too short (${term.length}), clearing suggestions")
             _uiState.update { it.copy(accountSuggestions = emptyList()) }
             return
         }
 
         viewModelScope.launch {
-            val profileId = Data.getProfile()?.id ?: return@launch
+            val profileId = _uiState.value.profileId
+            Logger.debug("autocomplete", "profileId=$profileId")
+
+            if (profileId == null) {
+                Logger.debug("autocomplete", "profileId is null, returning")
+                return@launch
+            }
+
             val suggestions = withContext(Dispatchers.IO) {
                 val termUpper = term.uppercase()
+                Logger.debug("autocomplete", "querying DB: profileId=$profileId, term='$termUpper'")
                 AccountDAO.unbox(accountDAO.lookupNamesInProfileByNameSync(profileId, termUpper))
             }
+
+            Logger.debug("autocomplete", "got ${suggestions.size} suggestions: ${suggestions.take(3)}")
             _uiState.update { it.copy(accountSuggestions = suggestions) }
         }
+    }
+
+    fun setProfile(profileId: Long) {
+        Logger.debug("autocomplete", "setProfile: profileId=$profileId")
+        _uiState.update { it.copy(profileId = profileId) }
     }
 
     private fun updateAmount(rowId: Int, amountText: String) {

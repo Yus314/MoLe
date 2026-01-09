@@ -22,6 +22,7 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.viewModels
 import dagger.hilt.android.AndroidEntryPoint
 import net.ktnx.mobileledger.R
 import net.ktnx.mobileledger.db.Profile
@@ -29,6 +30,7 @@ import net.ktnx.mobileledger.model.Data
 import net.ktnx.mobileledger.ui.QR
 import net.ktnx.mobileledger.ui.theme.MoLeTheme
 import net.ktnx.mobileledger.ui.transaction.NewTransactionScreen
+import net.ktnx.mobileledger.ui.transaction.NewTransactionViewModel
 import net.ktnx.mobileledger.utils.Logger
 
 /**
@@ -45,15 +47,22 @@ class NewTransactionActivityCompose :
     ProfileThemedActivity(),
     QR.QRScanResultReceiver {
 
+    private val viewModel: NewTransactionViewModel by viewModels()
     private lateinit var qrScanLauncher: ActivityResultLauncher<Void?>
     private var profileTheme: Int = -1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // intentから直接profileIdを取得して即座に設定（非同期を待たない）
+        val profileId = intent.getLongExtra(PARAM_PROFILE_ID, 0)
+        if (profileId > 0) {
+            viewModel.setProfile(profileId)
+        }
+
         qrScanLauncher = QR.registerLauncher(this, this)
 
-        // Observe profile changes
+        // Observe profile changes (プロファイル変更時の対応)
         Data.observeProfile(this) { profile ->
             if (profile == null) {
                 Logger.debug("new-trans-compose", "No active profile. Redirecting to SplashActivity")
@@ -61,6 +70,8 @@ class NewTransactionActivityCompose :
                 intent.flags = Intent.FLAG_ACTIVITY_TASK_ON_HOME or Intent.FLAG_ACTIVITY_NEW_TASK
                 startActivity(intent)
                 finish()
+            } else {
+                viewModel.setProfile(profile.id)
             }
         }
 

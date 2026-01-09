@@ -371,6 +371,11 @@ private fun NewTransactionContent(uiState: NewTransactionUiState, onEvent: (NewT
                         onEvent(NewTransactionEvent.UpdateAccountName(row.id, name, cursor))
                     },
                     onAccountSuggestionSelected = { name ->
+                        net.ktnx.mobileledger.utils.Logger.debug(
+                            "autocomplete",
+                            "onAccountSuggestionSelected: row.id=${row.id}, " +
+                                "name='$name', name.length=${name.length}"
+                        )
                         onEvent(NewTransactionEvent.UpdateAccountName(row.id, name, name.length))
                     },
                     onAmountChange = { amount ->

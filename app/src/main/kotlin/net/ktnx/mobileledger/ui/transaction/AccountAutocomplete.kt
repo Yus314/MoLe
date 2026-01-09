@@ -18,6 +18,7 @@
 package net.ktnx.mobileledger.ui.transaction
 
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -34,6 +35,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.window.PopupProperties
+import net.ktnx.mobileledger.utils.Logger
 
 /**
  * Autocomplete text field for account names.
@@ -59,7 +62,8 @@ fun AccountAutocomplete(
     var isFocused by remember { mutableStateOf(false) }
 
     // Track TextFieldValue for cursor position management
-    var textFieldValue by remember(value, cursorPosition) {
+    // Note: Don't use value/cursorPosition as remember keys to preserve IME composition state
+    var textFieldValue by remember {
         mutableStateOf(
             TextFieldValue(
                 text = value,
@@ -68,9 +72,16 @@ fun AccountAutocomplete(
         )
     }
 
-    // Update when external value changes
+    // Update when external value changes (only when not in composition/IME conversion)
     LaunchedEffect(value) {
-        if (textFieldValue.text != value) {
+        Logger.debug(
+            "autocomplete-ui",
+            "LaunchedEffect(value): value='${value.take(20)}', " +
+                "text='${textFieldValue.text.take(20)}', composition=${textFieldValue.composition}"
+        )
+        // Only sync if not in IME composition and text differs
+        if (textFieldValue.composition == null && textFieldValue.text != value) {
+            Logger.debug("autocomplete-ui", "LaunchedEffect: Updating textFieldValue to '$value'")
             textFieldValue = TextFieldValue(
                 text = value,
                 selection = TextRange(value.length)
@@ -79,9 +90,23 @@ fun AccountAutocomplete(
     }
 
     // Show dropdown when focused and suggestions available
-    LaunchedEffect(suggestions, isFocused) {
-        expanded = isFocused && suggestions.isNotEmpty()
+    // value をキーに含めて、入力変更時に必ず再評価する
+    LaunchedEffect(value, suggestions, isFocused) {
+        val shouldExpand = isFocused && suggestions.isNotEmpty()
+        Logger.debug(
+            "autocomplete-ui",
+            "LaunchedEffect: isFocused=$isFocused, suggestions=${suggestions.size}, " +
+                "expanded=$shouldExpand"
+        )
+        expanded = shouldExpand
     }
+
+    // Log current state for debugging
+    Logger.debug(
+        "autocomplete-ui",
+        "Render: value='${value.take(10)}', expanded=$expanded, " +
+            "isFocused=$isFocused, suggestions=${suggestions.size}"
+    )
 
     ExposedDropdownMenuBox(
         expanded = expanded,
@@ -91,6 +116,11 @@ fun AccountAutocomplete(
         OutlinedTextField(
             value = textFieldValue,
             onValueChange = { newValue ->
+                Logger.debug(
+                    "autocomplete-ui",
+                    "onValueChange: text='${newValue.text.take(20)}', " +
+                        "cursor=${newValue.selection.start}, composition=${newValue.composition}"
+                )
                 textFieldValue = newValue
                 onValueChange(newValue.text, newValue.selection.start)
             },
@@ -98,6 +128,10 @@ fun AccountAutocomplete(
                 .menuAnchor()
                 .fillMaxWidth()
                 .onFocusChanged { focusState ->
+                    Logger.debug(
+                        "autocomplete-ui",
+                        "onFocusChanged: ${focusState.isFocused} for value='${value.take(10)}'"
+                    )
                     isFocused = focusState.isFocused
                     onFocusChanged?.invoke(focusState.isFocused)
                 },
@@ -109,19 +143,35 @@ fun AccountAutocomplete(
             colors = OutlinedTextFieldDefaults.colors()
         )
 
-        ExposedDropdownMenu(
+        DropdownMenu(
             expanded = expanded,
-            onDismissRequest = { expanded = false }
+            onDismissRequest = {
+                Logger.debug("autocomplete-ui", "onDismissRequest called")
+                expanded = false
+            },
+            properties = PopupProperties(focusable = false),
+            modifier = Modifier.exposedDropdownSize()
         ) {
+            Logger.debug(
+                "autocomplete-ui",
+                "DropdownMenu content: ${suggestions.take(MAX_SUGGESTIONS).size} items"
+            )
             suggestions.take(MAX_SUGGESTIONS).forEach { suggestion ->
                 DropdownMenuItem(
                     text = { Text(suggestion) },
                     onClick = {
-                        onSuggestionSelected(suggestion)
+                        Logger.debug(
+                            "autocomplete-ui",
+                            "DropdownMenuItem clicked: '$suggestion' (length=${suggestion.length})"
+                        )
+                        // 1. まず textFieldValue を直接更新（composition をクリア）
                         textFieldValue = TextFieldValue(
                             text = suggestion,
                             selection = TextRange(suggestion.length)
                         )
+                        // 2. ViewModel に通知
+                        onSuggestionSelected(suggestion)
+                        // 3. ドロップダウンを閉じる
                         expanded = false
                     }
                 )

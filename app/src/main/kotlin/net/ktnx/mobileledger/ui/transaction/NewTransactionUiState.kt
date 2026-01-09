@@ -25,6 +25,7 @@ import net.ktnx.mobileledger.utils.SimpleDate
  * Represents the complete state of the transaction form including header and account rows.
  */
 data class NewTransactionUiState(
+    val profileId: Long? = null,
     val date: SimpleDate = SimpleDate.today(),
     val description: String = "",
     val transactionComment: String = "",
