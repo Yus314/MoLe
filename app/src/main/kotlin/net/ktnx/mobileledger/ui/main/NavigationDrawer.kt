@@ -17,6 +17,7 @@
 
 package net.ktnx.mobileledger.ui.main
 
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -46,12 +47,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
@@ -60,8 +63,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import net.ktnx.mobileledger.BuildConfig
 import net.ktnx.mobileledger.R
-import net.ktnx.mobileledger.ui.main.ProfileListItem
 import net.ktnx.mobileledger.utils.Colors
+import org.burnoutcrew.reorderable.ReorderableItem
+import org.burnoutcrew.reorderable.detectReorderAfterLongPress
+import org.burnoutcrew.reorderable.rememberReorderableLazyListState
+import org.burnoutcrew.reorderable.reorderable
 
 /**
  * Navigation drawer content for the main screen.
@@ -75,9 +81,32 @@ fun NavigationDrawerContent(
     onCreateNewProfile: () -> Unit,
     onNavigateToTemplates: () -> Unit,
     onNavigateToBackups: () -> Unit,
+    onProfilesReordered: (List<ProfileListItem>) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var isEditingProfiles by remember { mutableStateOf(false) }
+    // Track dragging state to prevent parent updates from resetting the list during drag
+    var isDragging by remember { mutableStateOf(false) }
+    var reorderableProfiles by remember { mutableStateOf(profiles) }
+
+    // Sync with parent profiles only when not dragging
+    LaunchedEffect(profiles) {
+        if (!isDragging) {
+            reorderableProfiles = profiles
+        }
+    }
+
+    val reorderState = rememberReorderableLazyListState(
+        onMove = { from, to ->
+            isDragging = true
+            reorderableProfiles = reorderableProfiles.toMutableList().apply {
+                add(to.index, removeAt(from.index))
+            }
+        },
+        onDragEnd = { _, _ ->
+            onProfilesReordered(reorderableProfiles)
+            isDragging = false
+        }
+    )
 
     Column(
         modifier = modifier
@@ -89,26 +118,36 @@ fun NavigationDrawerContent(
 
         // Profile list
         LazyColumn(
+            state = reorderState.listState,
             modifier = Modifier
                 .weight(1f)
-                .fillMaxWidth(),
+                .fillMaxWidth()
+                .reorderable(reorderState),
             contentPadding = PaddingValues(vertical = 8.dp)
         ) {
             items(
-                items = profiles,
+                items = reorderableProfiles,
                 key = { it.id }
             ) { profile ->
-                ProfileRow(
-                    profile = profile,
-                    isSelected = profile.id == currentProfileId,
-                    isEditing = isEditingProfiles,
-                    onProfileClick = { onProfileSelected(profile.id) },
-                    onEditClick = { onEditProfile(profile.id) },
-                    onLongClick = { isEditingProfiles = !isEditingProfiles }
-                )
+                ReorderableItem(reorderState, key = profile.id) { isDragging ->
+                    val elevation by animateDpAsState(
+                        if (isDragging) 8.dp else 0.dp,
+                        label = "elevation"
+                    )
+                    ProfileRow(
+                        profile = profile,
+                        isSelected = profile.id == currentProfileId,
+                        onProfileClick = { onProfileSelected(profile.id) },
+                        onEditClick = { onEditProfile(profile.id) },
+                        modifier = Modifier
+                            .shadow(elevation)
+                            .background(MaterialTheme.colorScheme.surface)
+                            .detectReorderAfterLongPress(reorderState)
+                    )
+                }
             }
 
-            // Add new profile button
+            // Add new profile button (not reorderable)
             item {
                 AddProfileRow(onClick = onCreateNewProfile)
             }
@@ -167,10 +206,9 @@ private fun DrawerHeader() {
 private fun ProfileRow(
     profile: ProfileListItem,
     isSelected: Boolean,
-    isEditing: Boolean,
     onProfileClick: () -> Unit,
     onEditClick: () -> Unit,
-    onLongClick: () -> Unit
+    modifier: Modifier = Modifier
 ) {
     val backgroundColor = if (isSelected) {
         MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
@@ -187,7 +225,7 @@ private fun ProfileRow(
     }
 
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .background(backgroundColor)
             .clickable(onClick = onProfileClick)
@@ -212,15 +250,13 @@ private fun ProfileRow(
             modifier = Modifier.weight(1f)
         )
 
-        // Edit button (visible when editing)
-        if (isEditing) {
-            IconButton(onClick = onEditClick) {
-                Icon(
-                    imageVector = Icons.Default.Edit,
-                    contentDescription = "Edit",
-                    tint = MaterialTheme.colorScheme.primary
-                )
-            }
+        // Edit button (always visible)
+        IconButton(onClick = onEditClick) {
+            Icon(
+                imageVector = Icons.Default.Edit,
+                contentDescription = "Edit",
+                tint = MaterialTheme.colorScheme.primary
+            )
         }
     }
 }

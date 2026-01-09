@@ -148,6 +148,7 @@ dependencies {
     implementation libs.compose.navigation
     implementation libs.compose.hilt.navigation
     implementation libs.androidx.activity.compose
+    implementation libs.reorderable
     debugImplementation libs.compose.ui.tooling
     debugImplementation libs.compose.ui.test.manifest
 

@@ -106,6 +106,7 @@ class MainViewModel @Inject constructor(
             is MainEvent.NavigateToTemplates -> navigateToTemplates()
             is MainEvent.NavigateToBackups -> navigateToBackups()
             is MainEvent.ClearUpdateError -> clearUpdateError()
+            is MainEvent.ReorderProfiles -> reorderProfiles(event.orderedProfiles)
         }
     }
 
@@ -215,6 +216,15 @@ class MainViewModel @Inject constructor(
 
     private fun clearUpdateError() {
         _mainUiState.update { it.copy(updateError = null) }
+    }
+
+    private fun reorderProfiles(orderedProfiles: List<ProfileListItem>) {
+        GeneralBackgroundTasks.run {
+            val profiles = orderedProfiles.mapNotNull { item ->
+                profileDAO.getByIdSync(item.id)
+            }
+            profileDAO.updateOrderSync(profiles)
+        }
     }
 
     // Account summary functions

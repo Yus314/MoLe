@@ -132,6 +132,9 @@ fun MainScreen(
                     onNavigateToBackups()
                     scope.launch { drawerState.close() }
                 },
+                onProfilesReordered = { orderedProfiles ->
+                    onMainEvent(MainEvent.ReorderProfiles(orderedProfiles))
+                },
                 modifier = Modifier.fillMaxWidth(0.85f)
             )
         }

@@ -79,4 +79,5 @@ sealed class MainEvent {
     data object NavigateToTemplates : MainEvent()
     data object NavigateToBackups : MainEvent()
     data object ClearUpdateError : MainEvent()
+    data class ReorderProfiles(val orderedProfiles: List<ProfileListItem>) : MainEvent()
 }
