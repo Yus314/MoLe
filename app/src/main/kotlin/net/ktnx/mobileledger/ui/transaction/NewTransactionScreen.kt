@@ -363,7 +363,11 @@ private fun NewTransactionContent(uiState: NewTransactionUiState, onEvent: (NewT
             ) {
                 TransactionRowItem(
                     row = row,
-                    accountSuggestions = uiState.accountSuggestions,
+                    accountSuggestions = if (uiState.accountSuggestionsForRowId == row.id) {
+                        uiState.accountSuggestions
+                    } else {
+                        emptyList()
+                    },
                     showCurrency = uiState.showCurrency,
                     showComments = uiState.showComments,
                     canDelete = uiState.accounts.size > 2,

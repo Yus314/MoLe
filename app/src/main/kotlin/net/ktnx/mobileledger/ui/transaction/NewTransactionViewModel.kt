@@ -198,16 +198,16 @@ class NewTransactionViewModel @Inject constructor(
                 }
             )
         }
-        lookupAccountSuggestions(name)
+        lookupAccountSuggestions(rowId, name)
         ensureMinimumRows()
     }
 
-    private fun lookupAccountSuggestions(term: String) {
-        Logger.debug("autocomplete", "lookupAccountSuggestions: term='$term'")
+    private fun lookupAccountSuggestions(rowId: Int, term: String) {
+        Logger.debug("autocomplete", "lookupAccountSuggestions: rowId=$rowId, term='$term'")
 
         if (term.length < 2) {
             Logger.debug("autocomplete", "term too short (${term.length}), clearing suggestions")
-            _uiState.update { it.copy(accountSuggestions = emptyList()) }
+            _uiState.update { it.copy(accountSuggestions = emptyList(), accountSuggestionsForRowId = null) }
             return
         }
 
@@ -226,8 +226,13 @@ class NewTransactionViewModel @Inject constructor(
                 AccountDAO.unbox(accountDAO.lookupNamesInProfileByNameSync(profileId, termUpper))
             }
 
-            Logger.debug("autocomplete", "got ${suggestions.size} suggestions: ${suggestions.take(3)}")
-            _uiState.update { it.copy(accountSuggestions = suggestions) }
+            Logger.debug("autocomplete", "got ${suggestions.size} suggestions for row $rowId: ${suggestions.take(3)}")
+            _uiState.update {
+                it.copy(
+                    accountSuggestions = suggestions,
+                    accountSuggestionsForRowId = rowId
+                )
+            }
         }
     }
 

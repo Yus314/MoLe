@@ -47,6 +47,7 @@ data class NewTransactionUiState(
     val currencySelectorRowId: Int? = null,
     val availableTemplates: List<TemplateItem> = emptyList(),
     val accountSuggestions: List<String> = emptyList(),
+    val accountSuggestionsForRowId: Int? = null,
     val descriptionSuggestions: List<String> = emptyList(),
     val isSimulateSave: Boolean = false,
     val isBusy: Boolean = false,
