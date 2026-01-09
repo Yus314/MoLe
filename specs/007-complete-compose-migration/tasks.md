@@ -98,22 +98,22 @@
 
 ### User Story 3 の実装
 
-- [ ] T029 [P] [US3] app/src/main/kotlin/net/ktnx/mobileledger/ui/backups/BackupsUiState.kt にUiState、イベント、エフェクトクラスを作成
-- [ ] T030 [US3] app/src/main/kotlin/net/ktnx/mobileledger/ui/backups/BackupsViewModel.kt にStateFlowを使用したViewModelを作成
-- [ ] T031 [US3] app/src/main/kotlin/net/ktnx/mobileledger/ui/backups/BackupsScreen.kt にバックアップ画面Composableを作成
-- [ ] T032 [US3] BackupsScreenにバックアップ/リストアボタンと説明テキストを実装
-- [ ] T033 [US3] BackupsViewModelにConfigWriter/ConfigReaderとの連携を実装
-- [ ] T034 [US3] BackupsScreenにSnackbarHostでステータスメッセージ表示を実装
-- [ ] T035 [US3] app/src/main/kotlin/net/ktnx/mobileledger/BackupsActivity.kt をsetContentとMoLeThemeを使用するよう更新
-- [ ] T036 [US3] `nix run .#verify` を実行してデバイスでテスト
+- [x] T029 [P] [US3] app/src/main/kotlin/net/ktnx/mobileledger/ui/backups/BackupsUiState.kt にUiState、イベント、エフェクトクラスを作成
+- [x] T030 [US3] app/src/main/kotlin/net/ktnx/mobileledger/ui/backups/BackupsViewModel.kt にStateFlowを使用したViewModelを作成
+- [x] T031 [US3] app/src/main/kotlin/net/ktnx/mobileledger/ui/backups/BackupsScreen.kt にバックアップ画面Composableを作成
+- [x] T032 [US3] BackupsScreenにバックアップ/リストアボタンと説明テキストを実装
+- [x] T033 [US3] BackupsViewModelにConfigWriter/ConfigReaderとの連携を実装
+- [x] T034 [US3] BackupsScreenにSnackbarHostでステータスメッセージ表示を実装
+- [x] T035 [US3] app/src/main/kotlin/net/ktnx/mobileledger/BackupsActivity.kt をsetContentとMoLeThemeを使用するよう更新
+- [x] T036 [US3] `nix run .#verify` を実行してデバイスでテスト
 
 ### User Story 3 のクリーンアップ
 
-- [ ] T037 [US3] 検証後、app/src/main/res/layout/fragment_backups.xml を削除
-- [ ] T038 [US3] BackupsActivityからViewBinding参照を削除
-- [ ] T039 [US3] `nix run .#test` を実行して既存テストが通過することを確認
+- [x] T037 [US3] 検証後、app/src/main/res/layout/fragment_backups.xml を削除
+- [x] T038 [US3] BackupsActivityからViewBinding参照を削除
+- [x] T039 [US3] `nix run .#test` を実行して既存テストが通過することを確認
 
-**チェックポイント**: User Story 3 完了 - BackupsActivityのCompose移行完了
+**チェックポイント**: User Story 3 完了 - BackupsActivityのCompose移行完了 ✅
 
 ---
 
