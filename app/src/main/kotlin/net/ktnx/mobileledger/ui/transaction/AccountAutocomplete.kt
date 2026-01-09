@@ -32,8 +32,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
@@ -61,9 +63,13 @@ fun AccountAutocomplete(
 ) {
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
+    val focusManager = LocalFocusManager.current
 
     var expanded by remember { mutableStateOf(false) }
     var isFocused by remember { mutableStateOf(false) }
+
+    // Track pending leaf account selection for deferred focus move
+    var pendingLeafAccount by remember { mutableStateOf<String?>(null) }
 
     // Track TextFieldValue for cursor position management
     // Note: Don't use value/cursorPosition as remember keys to preserve IME composition state
@@ -77,12 +83,25 @@ fun AccountAutocomplete(
     }
 
     // Update when external value changes (only when not in composition/IME conversion)
+    // Also handle deferred focus move when value is confirmed
     LaunchedEffect(value) {
         Logger.debug(
             "autocomplete-ui",
             "LaunchedEffect(value): value='${value.take(20)}', " +
-                "text='${textFieldValue.text.take(20)}', composition=${textFieldValue.composition}"
+                "text='${textFieldValue.text.take(20)}', composition=${textFieldValue.composition}, " +
+                "pendingLeafAccount=${pendingLeafAccount?.take(20)}"
         )
+
+        // Check if pending leaf account value is confirmed
+        if (pendingLeafAccount != null && value.equals(pendingLeafAccount, ignoreCase = true)) {
+            Logger.debug(
+                "autocomplete-ui",
+                "Value confirmed as '$value', moving focus to next field"
+            )
+            focusManager.moveFocus(FocusDirection.Next)
+            pendingLeafAccount = null
+        }
+
         // Only sync if not in IME composition and text differs
         if (textFieldValue.composition == null && textFieldValue.text != value) {
             Logger.debug("autocomplete-ui", "LaunchedEffect: Updating textFieldValue to '$value'")
@@ -94,13 +113,14 @@ fun AccountAutocomplete(
     }
 
     // Show dropdown when focused and suggestions available
-    // value をキーに含めて、入力変更時に必ず再評価する
+    // Close dropdown when input exactly matches a leaf account (no children)
     LaunchedEffect(value, suggestions, isFocused) {
-        val shouldExpand = isFocused && suggestions.isNotEmpty()
+        val isLeafMatch = isExactMatchWithNoChildren(value, suggestions)
+        val shouldExpand = isFocused && suggestions.isNotEmpty() && !isLeafMatch
         Logger.debug(
             "autocomplete-ui",
             "LaunchedEffect: isFocused=$isFocused, suggestions=${suggestions.size}, " +
-                "expanded=$shouldExpand"
+                "isLeafMatch=$isLeafMatch, expanded=$shouldExpand"
         )
         expanded = shouldExpand
     }
@@ -178,6 +198,16 @@ fun AccountAutocomplete(
                         onSuggestionSelected(suggestion)
                         // 3. ドロップダウンを閉じる
                         expanded = false
+                        // 4. リーフアカウントならフォーカス移動を予約
+                        //    (実際の移動は LaunchedEffect(value) で値が確定した後に行う)
+                        val isLeaf = isExactMatchWithNoChildren(suggestion, suggestions)
+                        if (isLeaf) {
+                            Logger.debug(
+                                "autocomplete-ui",
+                                "Leaf account selected, scheduling focus move for '$suggestion'"
+                            )
+                            pendingLeafAccount = suggestion
+                        }
                     }
                 )
             }
@@ -247,6 +277,22 @@ fun DescriptionAutocomplete(
             }
         }
     }
+}
+
+/**
+ * Check if the input value exactly matches an account name and has no child accounts.
+ * Used to auto-close dropdown when user has typed a complete leaf account name.
+ */
+private fun isExactMatchWithNoChildren(input: String, suggestions: List<String>): Boolean {
+    if (input.isBlank()) return false
+
+    val hasExactMatch = suggestions.any { it.equals(input, ignoreCase = true) }
+    if (!hasExactMatch) return false
+
+    val childPrefix = "${input.lowercase()}:"
+    val hasChildren = suggestions.any { it.lowercase().startsWith(childPrefix) }
+
+    return !hasChildren
 }
 
 private const val MAX_SUGGESTIONS = 10
