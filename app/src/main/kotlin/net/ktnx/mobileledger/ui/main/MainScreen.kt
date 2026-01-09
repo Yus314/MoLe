@@ -28,9 +28,12 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -39,27 +42,35 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import java.util.Date
 import kotlinx.coroutines.launch
 import net.ktnx.mobileledger.R
+import net.ktnx.mobileledger.utils.SimpleDate
 
 /**
  * Main screen composable with tab navigation and drawer.
@@ -90,6 +101,9 @@ fun MainScreen(
     val accountsListState = rememberLazyListState()
     val transactionsListState = rememberLazyListState()
 
+    // Date picker dialog state
+    var showDatePicker by remember { mutableStateOf(false) }
+
     // Sync pager state with UI state
     LaunchedEffect(mainUiState.selectedTab) {
         val targetPage = if (mainUiState.selectedTab == MainTab.Accounts) 0 else 1
@@ -109,6 +123,19 @@ fun MainScreen(
                 onMainEvent(MainEvent.SelectTab(newTab))
             }
         }
+    }
+
+    // Date picker dialog
+    if (showDatePicker) {
+        GoToDatePickerDialog(
+            minDate = transactionListUiState.firstTransactionDate,
+            maxDate = transactionListUiState.lastTransactionDate,
+            onDateSelected = { date ->
+                showDatePicker = false
+                onTransactionListEvent(TransactionListEvent.GoToDate(date))
+            },
+            onDismiss = { showDatePicker = false }
+        )
     }
 
     ModalNavigationDrawer(
@@ -174,6 +201,18 @@ fun MainScreen(
                                     contentDescription = stringResource(
                                         R.string.accounts_menu_show_zero
                                     )
+                                )
+                            }
+                        }
+                        // Show go-to-date button only on Transactions tab
+                        if (mainUiState.selectedTab == MainTab.Transactions) {
+                            IconButton(
+                                onClick = { showDatePicker = true },
+                                enabled = transactionListUiState.firstTransactionDate != null
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.DateRange,
+                                    contentDescription = stringResource(R.string.go_to_date_menu_title)
                                 )
                             }
                         }
@@ -317,5 +356,47 @@ private fun WelcomeScreen(onCreateProfile: () -> Unit, modifier: Modifier = Modi
                 Text(stringResource(R.string.new_profile_title))
             }
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun GoToDatePickerDialog(
+    minDate: SimpleDate?,
+    maxDate: SimpleDate?,
+    onDateSelected: (SimpleDate) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = SimpleDate.today().toDate().time,
+        selectableDates = object : SelectableDates {
+            override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                if (minDate == null || maxDate == null) return true
+                val date = SimpleDate.fromDate(Date(utcTimeMillis))
+                return date >= minDate && date <= maxDate
+            }
+        }
+    )
+
+    DatePickerDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    datePickerState.selectedDateMillis?.let { millis ->
+                        onDateSelected(SimpleDate.fromDate(Date(millis)))
+                    }
+                }
+            ) {
+                Text(stringResource(android.R.string.ok))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(android.R.string.cancel))
+            }
+        }
+    ) {
+        DatePicker(state = datePickerState)
     }
 }
