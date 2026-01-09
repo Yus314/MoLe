@@ -40,11 +40,11 @@
 
 - [X] T005 [P] app/src/main/kotlin/net/ktnx/mobileledger/ui/theme/Color.kt にMaterial 3カラーパレットを作成
 - [X] T006 [P] app/src/main/kotlin/net/ktnx/mobileledger/ui/theme/Type.kt にTypography定義を作成
-- [X] T007 app/src/main/kotlin/net/ktnox/mobileledger/ui/theme/Theme.kt にMoLeTheme Composableを作成
-- [X] T008 app/src/main/kotlin/net/ktnox/mobileledger/ui/theme/ProfileTheme.kt にHSLベースの動的カラー生成を作成
-- [X] T009 [P] app/src/main/kotlin/net/ktnox/mobileledger/ui/components/LoadingIndicator.kt に共通コンポーネントを作成
-- [X] T010 [P] app/src/main/kotlin/net/ktnox/mobileledger/ui/components/ErrorSnackbar.kt に共通コンポーネントを作成
-- [X] T011 [P] app/src/main/kotlin/net/ktnox/mobileledger/ui/components/ConfirmDialog.kt に共通コンポーネントを作成
+- [X] T007 app/src/main/kotlin/net/ktnx/mobileledger/ui/theme/Theme.kt にMoLeTheme Composableを作成
+- [X] T008 app/src/main/kotlin/net/ktnx/mobileledger/ui/theme/ProfileTheme.kt にHSLベースの動的カラー生成を作成
+- [X] T009 [P] app/src/main/kotlin/net/ktnx/mobileledger/ui/components/LoadingIndicator.kt に共通コンポーネントを作成
+- [X] T010 [P] app/src/main/kotlin/net/ktnx/mobileledger/ui/components/ErrorSnackbar.kt に共通コンポーネントを作成
+- [X] T011 [P] app/src/main/kotlin/net/ktnx/mobileledger/ui/components/ConfirmDialog.kt に共通コンポーネントを作成
 - [X] T012 `nix run .#test` を実行して既存テストが通過することを確認
 - [X] T013 `nix run .#build` を実行してテーマが正しくビルドされることを確認
 
@@ -68,7 +68,7 @@
 - [X] T019 [US1] ProfileDetailScreen.kt にテーマカラー選択用HueRing統合を追加
 - [X] T020 [US1] ProfileDetailViewModel.kt にローディング状態付き接続テスト機能を実装
 - [X] T021 [US1] ProfileDetailScreen.kt に未保存変更確認ダイアログを追加
-- [X] T022 [US1] app/src/main/kotlin/net/ktnox/mobileledger/ui/profiles/ProfileDetailActivity.kt をsetContentとMoLeThemeを使用するよう更新
+- [X] T022 [US1] app/src/main/kotlin/net/ktnx/mobileledger/ui/profiles/ProfileDetailActivity.kt をsetContentとMoLeThemeを使用するよう更新
 - [X] T023 [US1] `nix run .#verify` を実行してデバイスでテスト
 
 ### User Story 1 のクリーンアップ
