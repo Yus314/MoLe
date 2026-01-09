@@ -114,7 +114,7 @@ abstract class TransactionDAO : BaseDAO<Transaction>() {
         "SELECT distinct(tr.id), tr.ledger_id, tr.profile_id, tr.data_hash, tr.year, tr.month," +
             " tr.day, tr.description, tr.description_uc, tr.comment, tr.generation FROM " +
             "transactions tr JOIN transaction_accounts ta ON ta.transaction_id=tr.id WHERE ta" +
-            ".account_name LIKE :accountName||'%' AND ta.amount <> 0 AND tr.profile_id = " +
+            ".account_name LIKE '%'||:accountName||'%' AND ta.amount <> 0 AND tr.profile_id = " +
             ":profileId ORDER BY tr.year asc, tr.month asc, tr.day asc, tr.ledger_id asc"
     )
     abstract fun getAllWithAccountsFiltered(
@@ -134,7 +134,7 @@ abstract class TransactionDAO : BaseDAO<Transaction>() {
         "SELECT distinct(tr.id), tr.ledger_id, tr.profile_id, tr.data_hash, tr.year, tr.month," +
             " tr.day, tr.description, tr.description_uc, tr.comment, tr.generation FROM " +
             "transactions tr JOIN transaction_accounts ta ON ta.transaction_id=tr.id WHERE ta" +
-            ".account_name LIKE :accountName||'%' AND ta.amount <> 0 AND tr.profile_id = " +
+            ".account_name LIKE '%'||:accountName||'%' AND ta.amount <> 0 AND tr.profile_id = " +
             ":profileId ORDER BY tr.year asc, tr.month asc, tr.day asc, tr.ledger_id asc"
     )
     abstract fun getAllWithAccountsFilteredSync(profileId: Long, accountName: String?): List<TransactionWithAccounts>

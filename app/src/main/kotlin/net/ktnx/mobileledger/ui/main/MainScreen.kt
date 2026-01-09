@@ -30,6 +30,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.DatePicker
@@ -204,8 +205,22 @@ fun MainScreen(
                                 )
                             }
                         }
-                        // Show go-to-date button only on Transactions tab
+                        // Show filter and go-to-date buttons only on Transactions tab
                         if (mainUiState.selectedTab == MainTab.Transactions) {
+                            // Search icon to show filter bar (only when filter bar is hidden)
+                            if (!transactionListUiState.showAccountFilterInput) {
+                                IconButton(
+                                    onClick = {
+                                        onTransactionListEvent(TransactionListEvent.ShowAccountFilterInput)
+                                    }
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Search,
+                                        contentDescription = stringResource(R.string.filter_by_account)
+                                    )
+                                }
+                            }
+                            // Go to date button
                             IconButton(
                                 onClick = { showDatePicker = true },
                                 enabled = transactionListUiState.firstTransactionDate != null
@@ -312,6 +327,9 @@ fun MainScreen(
                                     uiState = transactionListUiState,
                                     onAccountFilterChanged = { filter ->
                                         onTransactionListEvent(TransactionListEvent.SetAccountFilter(filter))
+                                    },
+                                    onSuggestionSelected = { accountName ->
+                                        onTransactionListEvent(TransactionListEvent.SelectSuggestion(accountName))
                                     },
                                     onClearFilter = {
                                         onTransactionListEvent(TransactionListEvent.ClearAccountFilter)

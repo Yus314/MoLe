@@ -24,10 +24,13 @@ import java.util.Date
 import javax.inject.Inject
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -67,6 +70,8 @@ class MainViewModel @Inject constructor(
     private val _transactionListUiState = MutableStateFlow(TransactionListUiState())
     val transactionListUiState: StateFlow<TransactionListUiState> = _transactionListUiState.asStateFlow()
 
+    private val _accountSearchQuery = MutableStateFlow("")
+
     private val _effects = Channel<MainEffect>(Channel.BUFFERED)
     val effects = _effects.receiveAsFlow()
 
@@ -81,6 +86,7 @@ class MainViewModel @Inject constructor(
     init {
         loadInitialData()
         observeDataChanges()
+        observeAccountSearch()
     }
 
     private fun loadInitialData() {
@@ -90,6 +96,47 @@ class MainViewModel @Inject constructor(
     private fun observeDataChanges() {
         // These will be connected in the Activity/Fragment lifecycle
         // The Compose UI will collect these StateFlows directly
+    }
+
+    @OptIn(FlowPreview::class)
+    private fun observeAccountSearch() {
+        viewModelScope.launch {
+            _accountSearchQuery
+                .debounce(300)
+                .distinctUntilChanged()
+                .collect { query ->
+                    if (query.isNotEmpty()) {
+                        searchAccountNames(query)
+                    } else {
+                        _transactionListUiState.update {
+                            it.copy(accountSuggestions = persistentListOf())
+                        }
+                    }
+                }
+        }
+    }
+
+    private fun searchAccountNames(query: String) {
+        val profileId = _mainUiState.value.currentProfileId ?: return
+        GeneralBackgroundTasks.run {
+            val suggestions = AccountDAO.unbox(
+                accountDAO.lookupNamesInProfileByNameSync(profileId, query.uppercase())
+            ).take(10)
+            _transactionListUiState.update {
+                it.copy(accountSuggestions = suggestions.toImmutableList())
+            }
+        }
+    }
+
+    private fun onSuggestionSelected(accountName: String) {
+        _accountSearchQuery.value = ""
+        _transactionListUiState.update {
+            it.copy(
+                accountFilter = accountName,
+                accountSuggestions = persistentListOf()
+            )
+        }
+        reloadTransactions()
     }
 
     fun onMainEvent(event: MainEvent) {
@@ -127,6 +174,7 @@ class MainViewModel @Inject constructor(
             is TransactionListEvent.ClearAccountFilter -> clearAccountFilter()
             is TransactionListEvent.GoToDate -> goToDate(event.date)
             is TransactionListEvent.ScrollToTransaction -> scrollToTransaction(event.index)
+            is TransactionListEvent.SelectSuggestion -> onSuggestionSelected(event.accountName)
         }
     }
 
@@ -280,6 +328,7 @@ class MainViewModel @Inject constructor(
 
     // Transaction list functions
     private fun setAccountFilter(accountName: String?) {
+        _accountSearchQuery.value = accountName ?: ""
         _transactionListUiState.update {
             it.copy(
                 accountFilter = accountName,

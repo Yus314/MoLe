@@ -90,4 +90,5 @@ sealed class TransactionListEvent {
     data object ClearAccountFilter : TransactionListEvent()
     data class GoToDate(val date: SimpleDate) : TransactionListEvent()
     data class ScrollToTransaction(val index: Int) : TransactionListEvent()
+    data class SelectSuggestion(val accountName: String) : TransactionListEvent()
 }

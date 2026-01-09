@@ -37,6 +37,10 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -44,9 +48,13 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -55,6 +63,7 @@ import androidx.compose.ui.unit.dp
 import java.text.DateFormatSymbols
 import java.util.Calendar
 import java.util.Locale
+import kotlinx.collections.immutable.ImmutableList
 import net.ktnx.mobileledger.model.AmountStyle
 import net.ktnx.mobileledger.ui.components.WeakOverscrollContainer
 import net.ktnx.mobileledger.utils.SimpleDate
@@ -66,6 +75,7 @@ import net.ktnx.mobileledger.utils.SimpleDate
 fun TransactionListTab(
     uiState: TransactionListUiState,
     onAccountFilterChanged: (String?) -> Unit,
+    onSuggestionSelected: (String) -> Unit,
     onClearFilter: () -> Unit,
     listState: LazyListState = rememberLazyListState(),
     modifier: Modifier = Modifier
@@ -82,7 +92,9 @@ fun TransactionListTab(
         if (uiState.showAccountFilterInput) {
             AccountFilterBar(
                 accountFilter = uiState.accountFilter ?: "",
+                suggestions = uiState.accountSuggestions,
                 onAccountFilterChanged = onAccountFilterChanged,
+                onSuggestionSelected = onSuggestionSelected,
                 onClearFilter = onClearFilter
             )
         }
@@ -143,33 +155,67 @@ fun TransactionListTab(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AccountFilterBar(
     accountFilter: String,
+    suggestions: ImmutableList<String>,
     onAccountFilterChanged: (String?) -> Unit,
+    onSuggestionSelected: (String) -> Unit,
     onClearFilter: () -> Unit
 ) {
+    var expanded by remember { mutableStateOf(false) }
+    var isFocused by remember { mutableStateOf(false) }
+
+    LaunchedEffect(suggestions, isFocused) {
+        expanded = isFocused && suggestions.isNotEmpty()
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        OutlinedTextField(
-            value = accountFilter,
-            onValueChange = { onAccountFilterChanged(it.ifEmpty { null }) },
-            modifier = Modifier.weight(1f),
-            placeholder = { Text("Filter by account") },
-            singleLine = true,
-            trailingIcon = {
-                IconButton(onClick = onClearFilter) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = "Clear filter"
+        ExposedDropdownMenuBox(
+            expanded = expanded,
+            onExpandedChange = { },
+            modifier = Modifier.weight(1f)
+        ) {
+            OutlinedTextField(
+                value = accountFilter,
+                onValueChange = { onAccountFilterChanged(it.ifEmpty { null }) },
+                modifier = Modifier
+                    .menuAnchor()
+                    .onFocusChanged { focusState -> isFocused = focusState.isFocused }
+                    .fillMaxWidth(),
+                placeholder = { Text("Filter by account") },
+                singleLine = true,
+                trailingIcon = {
+                    IconButton(onClick = onClearFilter) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Clear filter"
+                        )
+                    }
+                }
+            )
+
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                suggestions.forEach { suggestion ->
+                    DropdownMenuItem(
+                        text = { Text(suggestion) },
+                        onClick = {
+                            onSuggestionSelected(suggestion)
+                            expanded = false
+                        }
                     )
                 }
             }
-        )
+        }
     }
 }
 
