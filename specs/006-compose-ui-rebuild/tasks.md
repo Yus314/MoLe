@@ -94,7 +94,7 @@
 - [X] T029 [US2] app/src/main/kotlin/net/ktnx/mobileledger/ui/templates/TemplateListViewModelCompose.kt にStateFlowを使用したViewModelを作成
 - [X] T030 [US2] app/src/main/kotlin/net/ktnx/mobileledger/ui/templates/TemplateDetailViewModelCompose.kt にStateFlowを使用したViewModelを作成
 - [X] T031 [US2] app/src/main/kotlin/net/ktnx/mobileledger/ui/templates/TemplateListScreen.kt にLazyColumnを使用した画面を作成
-- [ ] T031a [US2] TemplateListScreen で1000件以上のテンプレートデータでスクロールパフォーマンスを確認（SC-003: 60fps維持）
+- [X] T031a [US2] TemplateListScreen で1000件以上のテンプレートデータでスクロールパフォーマンスを確認（SC-003: 60fps維持）
 - [X] T032 [US2] app/src/main/kotlin/net/ktnx/mobileledger/ui/templates/TemplateDetailScreen.kt にフォームフィールド付き画面を作成
 - [X] T033 [US2] app/src/main/kotlin/net/ktnx/mobileledger/ui/templates/TemplatesNavigation.kt にCompose Navigationを作成
 - [X] T034 [US2] TemplateListScreen.kt にFABとスライド遷移アニメーションを実装
@@ -129,7 +129,7 @@
 - [X] T047 [US3] app/src/main/kotlin/net/ktnx/mobileledger/ui/main/NavigationDrawer.kt にプロファイルリスト付きドロワーを作成
 - [X] T048 [US3] app/src/main/kotlin/net/ktnx/mobileledger/ui/main/AccountSummaryTab.kt にLazyColumnとkey最適化を使用したタブを作成
 - [X] T049 [US3] app/src/main/kotlin/net/ktnx/mobileledger/ui/main/TransactionListTab.kt にLazyColumnとグループヘッダーを使用したタブを作成
-- [ ] T049a [US3] AccountSummaryTab/TransactionListTab で1000件以上のデータでスクロールパフォーマンスを確認（SC-003: 60fps維持）
+- [X] T049a [US3] AccountSummaryTab/TransactionListTab で1000件以上のデータでスクロールパフォーマンスを確認（SC-003: 60fps維持）
 - [X] T050 [US3] app/src/main/kotlin/net/ktnx/mobileledger/ui/main/MainScreen.kt にHorizontalPagerを使用したタブ構成を作成
 - [X] T051 [US3] MainScreen.kt にSwipeRefreshを使用したプルリフレッシュを実装
 - [X] T052 [US3] MainScreen.kt にNewTransactionActivityへのナビゲーション付きFABを実装

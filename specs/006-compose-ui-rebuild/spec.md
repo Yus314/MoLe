@@ -2,7 +2,7 @@
 
 **Feature Branch**: `006-compose-ui-rebuild`
 **Created**: 2026-01-06
-**Status**: Draft
+**Status**: Completed
 **Input**: User description: "Jetpack Composeを使用して既存のUIの再構築を行う"
 
 ## Clarifications
