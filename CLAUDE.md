@@ -10,6 +10,7 @@ Auto-generated from all feature plans. Last updated: 2026-01-10
 - AndroidX Lifecycle 2.4.1, Room 2.4.2, Navigation 2.4.2, Jackson 2.17.1, Material 1.5.0 (001-java-kotlin-migration)
 - Jetpack Compose with Material3 (composeBom 2024.12.01) (006-compose-ui-rebuild)
 - Room Database（既存、変更なし） (006-compose-ui-rebuild)
+- Kotlin 2.0.21 / JVM target 1.8 + Hilt 2.51.1, Room 2.4.2, Coroutines 1.9.0, Jetpack Compose (008-data-layer-repository)
 
 ## Project Structure
 
@@ -216,8 +217,8 @@ Kotlin 2.0.21 / Java 8 互換 (JVM target 1.8): Follow standard conventions
 ```kotlin
 @HiltViewModel
 class MyViewModel @Inject constructor(
-    private val profileDAO: ProfileDAO,
-    private val data: Data
+    private val profileRepository: ProfileRepository,
+    private val transactionRepository: TransactionRepository
 ) : ViewModel() {
     // ビジネスロジック
 }
@@ -234,15 +235,57 @@ class MyActivity : AppCompatActivity() {
 
 ### 利用可能な依存関係
 
-- **DatabaseModule**: DB, ProfileDAO, TransactionDAO, AccountDAO, AccountValueDAO, TemplateHeaderDAO, TemplateAccountDAO, CurrencyDAO, OptionDAO
-- **DataModule**: Data (グローバル状態)
+- **RepositoryModule**: ProfileRepository, TransactionRepository, AccountRepository, TemplateRepository, CurrencyRepository
+- **DatabaseModule**: DB, ProfileDAO, TransactionDAO, AccountDAO, AccountValueDAO, TemplateHeaderDAO, TemplateAccountDAO, CurrencyDAO, OptionDAO （レガシー、新規コードでは Repository を使用）
 
 ### DI ベストプラクティス
 
 - 新しい ViewModel は `@HiltViewModel` と `@Inject constructor` を使用
 - Activity は `@AndroidEntryPoint` でマーク
 - `by viewModels()` デリゲートで ViewModel 取得
-- 既存の `DB.get()` / `Data` 直接アクセスは動作するが、新規コードでは DI を使用
+- **新規コードでは Repository を使用**（DAO 直接アクセスは非推奨）
+- `Data` / `AppStateManager` は UI 状態（ロケール、背景タスク）のみに使用
+
+## Repository Pattern (008-data-layer-repository)
+
+### 概要
+
+MoLe は **Repository パターン**を採用し、データアクセスをカプセル化しています。
+
+### 利用可能なリポジトリ
+
+| Repository | 用途 | 主なメソッド |
+|------------|------|-------------|
+| `ProfileRepository` | プロファイル管理 | `currentProfile`, `getAllProfiles()`, `insertProfile()` |
+| `TransactionRepository` | 取引管理 | `getAllTransactions()`, `insertTransaction()`, `searchByDescription()` |
+| `AccountRepository` | 勘定科目管理 | `getAllWithAmounts()`, `searchAccountNames()` |
+| `TemplateRepository` | テンプレート管理 | `getAllTemplates()`, `getTemplateWithAccounts()` |
+| `CurrencyRepository` | 通貨管理 | `getAllCurrencies()`, `getCurrencyByName()` |
+
+### ViewModel での使用例
+
+```kotlin
+@HiltViewModel
+class TransactionListViewModel @Inject constructor(
+    private val profileRepository: ProfileRepository,
+    private val transactionRepository: TransactionRepository
+) : ViewModel() {
+
+    val transactions = profileRepository.currentProfile
+        .flatMapLatest { profile ->
+            profile?.let { transactionRepository.getAllTransactions(it.id) }
+                ?: flowOf(emptyList())
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+}
+```
+
+### 注意事項
+
+- **DAO 直接アクセスは非推奨**: ViewModel では Repository を使用
+- **Flow を使用**: リアクティブデータストリーム
+- **Data.getProfile() は非推奨**: `profileRepository.currentProfile.value` を使用
+- **Data.profiles は非推奨**: `profileRepository.getAllProfiles()` を使用
 
 ## Jetpack Compose
 
@@ -420,10 +463,9 @@ class MyScreenTest {
 ```
 
 ## Recent Changes
+- 008-data-layer-repository: **Repository パターン導入** - ProfileRepository, TransactionRepository, AccountRepository, TemplateRepository, CurrencyRepository を追加。ViewModel は DAO 直接アクセスから Repository 経由に移行。Data.getProfile() / Data.profiles は ProfileRepository に移行済み
 - 007-complete-compose-migration: **Compose移行完了** - 全XMLレイアウト削除、Fragment/DialogFragment全廃止、ViewBinding全廃止。DatePickerDialog、CurrencyPickerDialog、CrashReportDialog、SplashScreen、BackupsScreen をCompose化。ProfilesRecyclerViewAdapter等レガシーアダプター削除
 - 006-compose-ui-rebuild: Migrated MainActivityCompose, ProfileDetailActivity, TemplatesActivity, NewTransactionActivityCompose to Jetpack Compose with Material3
-- ktlint-enforcement: Enabled most ktlint rules, auto-fixed 200+ files across 4 phases, permanently disabled 8 rules for JSON/API compatibility
-- 005-hilt-di-setup: Added Hilt 2.51.1 DI framework, migrated MainModel to constructor injection, created DatabaseModule and DataModule, added instrumentation test infrastructure with HiltTestRunner and TestDatabaseModule
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->

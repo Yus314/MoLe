@@ -38,10 +38,10 @@ import net.ktnx.mobileledger.R
 import net.ktnx.mobileledger.backup.ConfigIO
 import net.ktnx.mobileledger.backup.ConfigReader
 import net.ktnx.mobileledger.backup.ConfigWriter
-import net.ktnx.mobileledger.model.Data
+import net.ktnx.mobileledger.data.repository.ProfileRepository
 
 @HiltViewModel
-class BackupsViewModel @Inject constructor() : ViewModel() {
+class BackupsViewModel @Inject constructor(private val profileRepository: ProfileRepository) : ViewModel() {
 
     private val _uiState = MutableStateFlow(BackupsUiState())
     val uiState: StateFlow<BackupsUiState> = _uiState.asStateFlow()
@@ -51,7 +51,7 @@ class BackupsViewModel @Inject constructor() : ViewModel() {
 
     init {
         // Initial backup enabled state based on current profile
-        _uiState.update { it.copy(backupEnabled = Data.getProfile() != null) }
+        _uiState.update { it.copy(backupEnabled = profileRepository.currentProfile.value != null) }
     }
 
     fun onEvent(event: BackupsEvent) {
