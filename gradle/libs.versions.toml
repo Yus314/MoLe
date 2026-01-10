@@ -39,7 +39,6 @@ androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "
 androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
 
-androidx-navigation-fragment = { module = "androidx.navigation:navigation-fragment", version.ref = "navigation" }
 androidx-navigation-ui = { module = "androidx.navigation:navigation-ui", version.ref = "navigation" }
 
 jackson-modules-java8 = { module = "com.fasterxml.jackson.module:jackson-modules-java8", version.ref = "jackson" }
@@ -89,7 +88,7 @@ hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 [bundles]
 lifecycle = ["androidx-lifecycle-livedata-ktx", "androidx-lifecycle-viewmodel-ktx"]
 room = ["androidx-room-runtime", "androidx-room-ktx"]
-navigation = ["androidx-navigation-fragment", "androidx-navigation-ui"]
+navigation = ["androidx-navigation-ui"]
 jackson = ["jackson-modules-java8", "jackson-module-kotlin"]
 compose = ["compose-ui", "compose-ui-graphics", "compose-ui-tooling-preview", "compose-material3", "compose-material-icons-extended"]
 compose-testing = ["compose-ui-test-junit4"]

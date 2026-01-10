@@ -94,7 +94,7 @@ android {
     productFlavors {
     }
     buildFeatures {
-        viewBinding = true
+        viewBinding = false
         compose = true
     }
     buildToolsVersion '34.0.0'
