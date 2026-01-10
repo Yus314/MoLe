@@ -23,7 +23,6 @@ import android.os.Handler
 import android.os.Looper
 import android.text.Editable
 import android.view.WindowManager
-import androidx.fragment.app.Fragment
 
 object Misc {
     const val ZERO_WIDTH_SPACE: Char = '\u200B'
@@ -42,16 +41,6 @@ object Misc {
         ) {
             activity.window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
         }
-    }
-
-    @JvmStatic
-    fun showSoftKeyboard(fragment: Fragment) {
-        fragment.activity?.let { showSoftKeyboard(it) }
-    }
-
-    @JvmStatic
-    fun hideSoftKeyboard(fragment: Fragment) {
-        fragment.activity?.let { hideSoftKeyboard(it) }
     }
 
     @JvmStatic
