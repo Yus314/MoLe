@@ -117,6 +117,7 @@
     <string name="choose_currency_label">Currency</string>
     <string name="new_currency_name_hint">currency/commodity</string>
     <string name="btn_no_currency">none</string>
+    <string name="no_currencies">No currencies defined</string>
     <string name="currency_position_left">Left</string>
     <string name="currency_position_right">Right</string>
     <string name="currency_has_gap">Offset from the value</string>

@@ -26,6 +26,7 @@ import java.util.Locale
 import net.ktnx.mobileledger.db.Profile
 import net.ktnx.mobileledger.model.Data
 import net.ktnx.mobileledger.ui.activity.CrashReportingActivity
+import net.ktnx.mobileledger.ui.components.CrashReportDialog
 import net.ktnx.mobileledger.ui.profile.ProfileDetailScreen
 import net.ktnx.mobileledger.ui.theme.MoLeTheme
 import net.ktnx.mobileledger.utils.Colors
@@ -61,6 +62,13 @@ class ProfileDetailActivity : CrashReportingActivity() {
                     initialThemeHue = themeHue,
                     onNavigateBack = { finish() }
                 )
+
+                crashReportText?.let { text ->
+                    CrashReportDialog(
+                        crashReportText = text,
+                        onDismiss = { dismissCrashReport() }
+                    )
+                }
             }
         }
     }

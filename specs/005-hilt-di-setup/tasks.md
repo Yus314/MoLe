@@ -42,10 +42,10 @@
 **⚠️ 重要**: このフェーズが完了するまでユーザーストーリー作業は開始できない
 
 - [X] T007 app/src/main/kotlin/net/ktnx/mobileledger/App.ktに@HiltAndroidAppアノテーションを追加
-- [X] T008 app/src/main/kotlin/net/ktnox/mobileledger/di/ディレクトリを作成
+- [X] T008 app/src/main/kotlin/net/ktnx/mobileledger/di/ディレクトリを作成
 - [X] T009 [P] app/src/main/kotlin/net/ktnx/mobileledger/di/DatabaseModule.ktを作成（DB.get()をラップしてDBを@Singleton提供）
 - [X] T010 [P] DatabaseModule.ktにすべてのDAO提供メソッドを追加（ProfileDAO, TransactionDAO, AccountDAO, AccountValueDAO, TemplateHeaderDAO, TemplateAccountDAO, CurrencyDAO, OptionDAO）
-- [X] T011 [P] app/src/main/kotlin/net/ktnox/mobileledger/di/DataModule.ktを作成（Dataオブジェクトを@Singleton提供）
+- [X] T011 [P] app/src/main/kotlin/net/ktnx/mobileledger/di/DataModule.ktを作成（Dataオブジェクトを@Singleton提供）
 - [X] T012 ビルド成功を確認（nix run .#build）
 
 **チェックポイント**: 基盤準備完了 - ユーザーストーリー実装を並列で開始可能
@@ -66,13 +66,13 @@
 - [X] T013.1 [US1] gradle/libs.versions.tomlにMockKライブラリ定義を追加（mockk = { module = "io.mockk:mockk", version.ref = "mockk" }）
 - [X] T013.2 [US1] app/build.gradleにMockK依存関係を追加（testImplementation libs.mockk）
 - [X] T014 [US1] app/src/test/kotlin/net/ktnx/mobileledger/ui/ディレクトリを作成
-- [X] T015 [US1] app/src/test/kotlin/net/ktnox/mobileledger/ui/MainModelTest.ktを作成（モックDAOを使用したテストクラス骨格）
+- [X] T015 [US1] app/src/test/kotlin/net/ktnx/mobileledger/ui/MainModelTest.ktを作成（モックDAOを使用したテストクラス骨格）
 - [X] T016 [US1] MainModelTest.ktに@Beforeセットアップメソッドを追加（MockKでモックDAO作成）
 - [X] T017 [US1] MainModelTest.ktにサンプルテストケースを追加（テストが失敗することを確認）
 
 ### ユーザーストーリー 1 の実装
 
-- [X] T018 [US1] app/src/main/kotlin/net/ktnox/mobileledger/ui/MainModel.ktを分析し、現在の直接依存関係を特定
+- [X] T018 [US1] app/src/main/kotlin/net/ktnx/mobileledger/ui/MainModel.ktを分析し、現在の直接依存関係を特定
 - [X] T019 [US1] MainModel.ktに@HiltViewModelアノテーションを追加
 - [X] T020 [US1] MainModel.ktにコンストラクタを追加し、@Injectで依存関係を宣言（ProfileDAO, TransactionDAO, AccountDAO, Data）
 - [X] T021 [US1] MainModel.kt内のDB.get().getXxxDAO()呼び出しを注入された依存関係に置き換え

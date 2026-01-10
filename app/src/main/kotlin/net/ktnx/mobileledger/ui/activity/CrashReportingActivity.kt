@@ -22,12 +22,21 @@ import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import java.io.PrintWriter
 import java.io.StringWriter
-import net.ktnx.mobileledger.ui.CrashReportDialogFragment
 import net.ktnx.mobileledger.utils.Logger.debug
 
 abstract class CrashReportingActivity : AppCompatActivity() {
+    protected var crashReportText: String? by mutableStateOf(null)
+        private set
+
+    protected fun dismissCrashReport() {
+        crashReportText = null
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -58,9 +67,7 @@ abstract class CrashReportingActivity : AppCompatActivity() {
 
             Log.e(null, sw.toString())
 
-            val df = CrashReportDialogFragment()
-            df.setCrashReportText(sw.toString())
-            df.show(supportFragmentManager, "crash_report")
+            crashReportText = sw.toString()
         }
         debug("crash", "Uncaught exception handler set")
     }
