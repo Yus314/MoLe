@@ -37,16 +37,16 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import net.ktnx.mobileledger.App
 import net.ktnx.mobileledger.BuildConfig
-import net.ktnx.mobileledger.dao.ProfileDAO
+import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.db.Profile
 import net.ktnx.mobileledger.json.API
-import net.ktnx.mobileledger.model.Data
 import net.ktnx.mobileledger.model.FutureDates
 import net.ktnx.mobileledger.model.HledgerVersion
 import net.ktnx.mobileledger.ui.profiles.ProfileDetailModel
@@ -56,7 +56,7 @@ import net.ktnx.mobileledger.utils.NetworkUtil
 
 @HiltViewModel
 class ProfileDetailViewModel @Inject constructor(
-    private val profileDAO: ProfileDAO,
+    private val profileRepository: ProfileRepository,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -89,7 +89,8 @@ class ProfileDetailViewModel @Inject constructor(
                 val themeHue = if (initialThemeHue >= 0) {
                     initialThemeHue
                 } else {
-                    Colors.getNewProfileThemeHue(Data.profiles.value)
+                    val existingProfiles = profileRepository.getAllProfiles().first()
+                    Colors.getNewProfileThemeHue(existingProfiles)
                 }
 
                 _uiState.update {
@@ -107,7 +108,7 @@ class ProfileDetailViewModel @Inject constructor(
 
     private suspend fun loadProfile(profileId: Long) {
         withContext(Dispatchers.IO) {
-            val profile = profileDAO.getByIdSync(profileId)
+            val profile = profileRepository.getProfileByIdSync(profileId)
             if (profile != null) {
                 orderNo = profile.orderNo
                 val detectedVersion = if (profile.isVersionPre_1_19()) {
@@ -343,41 +344,39 @@ class ProfileDetailViewModel @Inject constructor(
             _uiState.update { it.copy(isSaving = true) }
 
             try {
-                withContext(Dispatchers.IO) {
-                    val state = _uiState.value
-                    val profile = Profile().apply {
-                        id = state.profileId
-                        name = state.name
-                        url = state.url
-                        useAuthentication = state.useAuthentication
-                        authUser = if (state.useAuthentication) state.authUser else null
-                        authPassword = if (state.useAuthentication) state.authPassword else null
-                        theme = state.themeHue
-                        preferredAccountsFilter = state.preferredAccountsFilter.ifEmpty { null }
-                        futureDates = state.futureDates.toInt()
-                        apiVersion = state.apiVersion.toInt()
-                        permitPosting = state.permitPosting
-                        showCommentsByDefault = state.showCommentsByDefault
-                        showCommodityByDefault = state.showCommodityByDefault
-                        setDefaultCommodity(state.defaultCommodity)
-                        orderNo = this@ProfileDetailViewModel.orderNo
+                val state = _uiState.value
+                val profile = Profile().apply {
+                    id = state.profileId
+                    name = state.name
+                    url = state.url
+                    useAuthentication = state.useAuthentication
+                    authUser = if (state.useAuthentication) state.authUser else null
+                    authPassword = if (state.useAuthentication) state.authPassword else null
+                    theme = state.themeHue
+                    preferredAccountsFilter = state.preferredAccountsFilter.ifEmpty { null }
+                    futureDates = state.futureDates.toInt()
+                    apiVersion = state.apiVersion.toInt()
+                    permitPosting = state.permitPosting
+                    showCommentsByDefault = state.showCommentsByDefault
+                    showCommodityByDefault = state.showCommodityByDefault
+                    setDefaultCommodity(state.defaultCommodity)
+                    orderNo = this@ProfileDetailViewModel.orderNo
 
-                        val version = state.detectedVersion
-                        detectedVersionPre_1_19 = version?.isPre_1_20_1 ?: false
-                        detectedVersionMajor = version?.major ?: -1
-                        detectedVersionMinor = version?.minor ?: -1
-                    }
-
-                    if (profile.id > 0) {
-                        profileDAO.updateSync(profile)
-                        Logger.debug("profiles", "Profile updated in DB")
-                    } else {
-                        profileDAO.insertLastSync(profile)
-                        Logger.debug("profiles", "Profile inserted in DB")
-                    }
-
-                    BackupManager.dataChanged(BuildConfig.APPLICATION_ID)
+                    val version = state.detectedVersion
+                    detectedVersionPre_1_19 = version?.isPre_1_20_1 ?: false
+                    detectedVersionMajor = version?.major ?: -1
+                    detectedVersionMinor = version?.minor ?: -1
                 }
+
+                if (profile.id > 0) {
+                    profileRepository.updateProfile(profile)
+                    Logger.debug("profiles", "Profile updated in DB")
+                } else {
+                    profileRepository.insertProfile(profile)
+                    Logger.debug("profiles", "Profile inserted in DB")
+                }
+
+                BackupManager.dataChanged(BuildConfig.APPLICATION_ID)
 
                 _uiState.update { it.copy(isSaving = false, hasUnsavedChanges = false) }
                 _effects.send(ProfileDetailEffect.ProfileSaved)
@@ -540,15 +539,13 @@ class ProfileDetailViewModel @Inject constructor(
             _uiState.update { it.copy(showDeleteConfirmDialog = false, isLoading = true) }
 
             try {
-                withContext(Dispatchers.IO) {
-                    val profileId = _uiState.value.profileId
-                    if (profileId > 0) {
-                        val profile = profileDAO.getByIdSync(profileId)
-                        if (profile != null) {
-                            profileDAO.deleteSync(profile)
-                            profileDAO.updateOrderSync(profileDAO.getAllOrderedSync())
-                            Logger.debug("profiles", "Profile deleted from DB")
-                        }
+                val profileId = _uiState.value.profileId
+                if (profileId > 0) {
+                    val profile = profileRepository.getProfileByIdSync(profileId)
+                    if (profile != null) {
+                        profileRepository.deleteProfile(profile)
+                        // Repository handles order updates internally
+                        Logger.debug("profiles", "Profile deleted from DB")
                     }
                 }
 

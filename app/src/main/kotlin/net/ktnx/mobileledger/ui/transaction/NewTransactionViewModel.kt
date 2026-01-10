@@ -35,27 +35,28 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import net.ktnx.mobileledger.async.SendTransactionTask
 import net.ktnx.mobileledger.async.TaskCallback
-import net.ktnx.mobileledger.dao.AccountDAO
-import net.ktnx.mobileledger.dao.CurrencyDAO
-import net.ktnx.mobileledger.dao.TemplateHeaderDAO
-import net.ktnx.mobileledger.dao.TransactionDAO
+import net.ktnx.mobileledger.data.repository.AccountRepository
+import net.ktnx.mobileledger.data.repository.CurrencyRepository
+import net.ktnx.mobileledger.data.repository.ProfileRepository
+import net.ktnx.mobileledger.data.repository.TemplateRepository
+import net.ktnx.mobileledger.data.repository.TransactionRepository
 import net.ktnx.mobileledger.db.TemplateWithAccounts
+import net.ktnx.mobileledger.model.AppStateManager
 import net.ktnx.mobileledger.model.Currency
-import net.ktnx.mobileledger.model.Data
 import net.ktnx.mobileledger.model.FutureDates
 import net.ktnx.mobileledger.model.LedgerTransaction
 import net.ktnx.mobileledger.model.LedgerTransactionAccount
 import net.ktnx.mobileledger.model.MatchedTemplate
 import net.ktnx.mobileledger.utils.Logger
-import net.ktnx.mobileledger.utils.Misc
 import net.ktnx.mobileledger.utils.SimpleDate
 
 @HiltViewModel
 class NewTransactionViewModel @Inject constructor(
-    private val accountDAO: AccountDAO,
-    private val transactionDAO: TransactionDAO,
-    private val templateHeaderDAO: TemplateHeaderDAO,
-    private val currencyDAO: CurrencyDAO
+    private val profileRepository: ProfileRepository,
+    private val transactionRepository: TransactionRepository,
+    private val accountRepository: AccountRepository,
+    private val templateRepository: TemplateRepository,
+    private val currencyRepository: CurrencyRepository
 ) : ViewModel(),
     TaskCallback {
 
@@ -75,7 +76,7 @@ class NewTransactionViewModel @Inject constructor(
     }
 
     private fun initializeFromProfile() {
-        val profile = Data.getProfile()
+        val profile = profileRepository.currentProfile.value
         if (profile != null) {
             val defaultCurrency = profile.getDefaultCommodityOrEmpty()
             val futureDates = FutureDates.valueOf(profile.futureDates)
@@ -97,9 +98,7 @@ class NewTransactionViewModel @Inject constructor(
 
     private fun loadCurrencies() {
         viewModelScope.launch {
-            val currencies = withContext(Dispatchers.IO) {
-                currencyDAO.getAllSync().map { it.name }
-            }
+            val currencies = currencyRepository.getAllCurrenciesSync().map { it.name }
             _uiState.update { it.copy(availableCurrencies = currencies) }
         }
     }
@@ -194,10 +193,9 @@ class NewTransactionViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            val suggestions = withContext(Dispatchers.IO) {
-                val termUpper = term.uppercase()
-                TransactionDAO.unbox(transactionDAO.lookupDescriptionSync(termUpper))
-            }
+            val termUpper = term.uppercase()
+            val containers = transactionRepository.searchByDescription(termUpper)
+            val suggestions = containers.mapNotNull { it.description }
             _uiState.update { it.copy(descriptionSuggestions = suggestions) }
         }
     }
@@ -261,11 +259,9 @@ class NewTransactionViewModel @Inject constructor(
                 return@launch
             }
 
-            val suggestions = withContext(Dispatchers.IO) {
-                val termUpper = term.uppercase()
-                Logger.debug("autocomplete", "querying DB: profileId=$profileId, term='$termUpper'")
-                AccountDAO.unbox(accountDAO.lookupNamesInProfileByNameSync(profileId, termUpper))
-            }
+            val termUpper = term.uppercase()
+            Logger.debug("autocomplete", "querying DB: profileId=$profileId, term='$termUpper'")
+            val suggestions = accountRepository.searchAccountNamesSync(profileId, termUpper)
 
             // Only update if this job is still active (not cancelled by a newer input)
             if (isActive) {
@@ -330,7 +326,7 @@ class NewTransactionViewModel @Inject constructor(
                     if (kotlin.math.abs(balance) < 0.005) {
                         "0"
                     } else {
-                        Data.formatNumber(-balance.toFloat())
+                        AppStateManager.formatNumber(-balance.toFloat())
                     }
                 } else {
                     null
@@ -366,7 +362,7 @@ class NewTransactionViewModel @Inject constructor(
     }
 
     private fun addAccountRow(afterRowId: Int?) {
-        val defaultCurrency = Data.getProfile()?.getDefaultCommodityOrEmpty() ?: ""
+        val defaultCurrency = profileRepository.currentProfile.value?.getDefaultCommodityOrEmpty() ?: ""
         _uiState.update { state ->
             val newRow = TransactionAccountRow(currency = defaultCurrency)
             val newAccounts = if (afterRowId != null) {
@@ -415,7 +411,7 @@ class NewTransactionViewModel @Inject constructor(
 
     private fun ensureMinimumRows() {
         _uiState.update { state ->
-            val defaultCurrency = Data.getProfile()?.getDefaultCommodityOrEmpty() ?: ""
+            val defaultCurrency = profileRepository.currentProfile.value?.getDefaultCommodityOrEmpty() ?: ""
             val minRows = 2
             if (state.accounts.size < minRows) {
                 val additionalRows = (state.accounts.size until minRows).map {
@@ -452,24 +448,20 @@ class NewTransactionViewModel @Inject constructor(
 
     private fun addCurrency(name: String, position: Currency.Position, gap: Boolean) {
         viewModelScope.launch {
-            withContext(Dispatchers.IO) {
-                val currency = net.ktnx.mobileledger.db.Currency()
-                currency.name = name
-                currency.position = position.toString()
-                currency.hasGap = gap
-                currencyDAO.insertSync(currency)
-            }
+            val currency = net.ktnx.mobileledger.db.Currency()
+            currency.name = name
+            currency.position = position.toString()
+            currency.hasGap = gap
+            currencyRepository.insertCurrency(currency)
             loadCurrencies()
         }
     }
 
     private fun deleteCurrency(name: String) {
         viewModelScope.launch {
-            withContext(Dispatchers.IO) {
-                val currency = currencyDAO.getByNameSync(name)
-                if (currency != null) {
-                    currencyDAO.deleteSync(currency)
-                }
+            val currency = currencyRepository.getCurrencyByNameSync(name)
+            if (currency != null) {
+                currencyRepository.deleteCurrency(currency)
             }
             loadCurrencies()
         }
@@ -477,10 +469,8 @@ class NewTransactionViewModel @Inject constructor(
 
     private fun showTemplateSelector() {
         viewModelScope.launch {
-            val templates = withContext(Dispatchers.IO) {
-                templateHeaderDAO.getAllTemplatesWithAccountsSync()
-                    .map { TemplateItem(it.header.id, it.header.name, null, it.header.regularExpression) }
-            }
+            val templates = templateRepository.getAllTemplatesWithAccountsSync()
+                .map { TemplateItem(it.header.id, it.header.name, null, it.header.regularExpression) }
             _uiState.update {
                 it.copy(
                     showTemplateSelector = true,
@@ -496,9 +486,7 @@ class NewTransactionViewModel @Inject constructor(
 
     private fun applyTemplate(templateId: Long) {
         viewModelScope.launch {
-            val template = withContext(Dispatchers.IO) {
-                templateHeaderDAO.getTemplateWithAccountsSync(templateId)
-            }
+            val template = templateRepository.getTemplateWithAccountsSync(templateId)
             if (template != null) {
                 applyTemplateWithAccounts(template)
             }
@@ -507,12 +495,12 @@ class NewTransactionViewModel @Inject constructor(
     }
 
     private fun applyTemplateWithAccounts(template: TemplateWithAccounts) {
-        val defaultCurrency = Data.getProfile()?.getDefaultCommodityOrEmpty() ?: ""
+        val defaultCurrency = profileRepository.currentProfile.value?.getDefaultCommodityOrEmpty() ?: ""
 
         val newAccounts = template.accounts.map { acc ->
             TransactionAccountRow(
                 accountName = acc.accountName ?: "",
-                amountText = if (acc.amount != null) Data.formatNumber(acc.amount!!) else "",
+                amountText = if (acc.amount != null) AppStateManager.formatNumber(acc.amount!!) else "",
                 currency = acc.getCurrencyObject()?.name ?: defaultCurrency,
                 comment = acc.accountComment ?: "",
                 isAmountValid = true
@@ -549,8 +537,8 @@ class NewTransactionViewModel @Inject constructor(
         }
     }
 
-    private fun findMatchingTemplate(text: String): MatchedTemplate? {
-        val templates = templateHeaderDAO.getAllTemplatesWithAccountsSync()
+    private suspend fun findMatchingTemplate(text: String): MatchedTemplate? {
+        val templates = templateRepository.getAllTemplatesWithAccountsSync()
         for (twa in templates) {
             val header = twa.header
             val regex = header.regularExpression ?: continue
@@ -574,9 +562,7 @@ class NewTransactionViewModel @Inject constructor(
 
     private fun applyMatchedTemplate(matched: MatchedTemplate, text: String) {
         viewModelScope.launch {
-            val template = withContext(Dispatchers.IO) {
-                templateHeaderDAO.getTemplateWithAccountsSync(matched.templateHead.id)
-            }
+            val template = templateRepository.getTemplateWithAccountsSync(matched.templateHead.id)
             if (template != null) {
                 // For now, just apply the template without regex substitution
                 // The existing NewTransactionModel.applyTemplate() has complex regex extraction logic
@@ -587,7 +573,7 @@ class NewTransactionViewModel @Inject constructor(
     }
 
     private fun toggleCurrency() {
-        val profile = Data.getProfile() ?: return
+        val profile = profileRepository.currentProfile.value ?: return
         val newShowCurrency = !_uiState.value.showCurrency
         val defaultCurrency = if (newShowCurrency) profile.getDefaultCommodityOrEmpty() else ""
 
@@ -644,7 +630,7 @@ class NewTransactionViewModel @Inject constructor(
         val state = _uiState.value
         if (!state.isSubmittable) return
 
-        val profile = Data.getProfile() ?: run {
+        val profile = profileRepository.currentProfile.value ?: run {
             viewModelScope.launch {
                 _effects.send(NewTransactionEffect.ShowError("プロファイルが選択されていません"))
             }
@@ -673,7 +659,7 @@ class NewTransactionViewModel @Inject constructor(
 
     private fun constructLedgerTransaction(): LedgerTransaction {
         val state = _uiState.value
-        val profile = Data.getProfile()!!
+        val profile = profileRepository.currentProfile.value!!
 
         val transaction = LedgerTransaction(
             0,
@@ -734,13 +720,11 @@ class NewTransactionViewModel @Inject constructor(
             // Save to local database
             if (transaction != null) {
                 viewModelScope.launch {
-                    withContext(Dispatchers.IO) {
-                        try {
-                            transactionDAO.storeLast(transaction.toDBO())
-                            Logger.debug("new-trans", "Transaction saved to DB")
-                        } catch (e: Exception) {
-                            Logger.debug("new-trans", "Failed to save transaction: ${e.message}")
-                        }
+                    try {
+                        transactionRepository.storeTransaction(transaction.toDBO())
+                        Logger.debug("new-trans", "Transaction saved to DB")
+                    } catch (e: Exception) {
+                        Logger.debug("new-trans", "Failed to save transaction: ${e.message}")
                     }
 
                     _uiState.update {
@@ -765,7 +749,7 @@ class NewTransactionViewModel @Inject constructor(
 
     private fun reset() {
         NewTransactionUiState.resetIdCounter()
-        val profile = Data.getProfile()
+        val profile = profileRepository.currentProfile.value
         val defaultCurrency = profile?.getDefaultCommodityOrEmpty() ?: ""
 
         _uiState.update {
@@ -787,16 +771,14 @@ class NewTransactionViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isBusy = true) }
 
-            val transactionWithAccounts = withContext(Dispatchers.IO) {
-                transactionDAO.getByIdWithAccountsSync(transactionId)
-            }
+            val transactionWithAccounts = transactionRepository.getTransactionByIdSync(transactionId)
 
             if (transactionWithAccounts != null) {
-                val defaultCurrency = Data.getProfile()?.getDefaultCommodityOrEmpty() ?: ""
+                val defaultCurrency = profileRepository.currentProfile.value?.getDefaultCommodityOrEmpty() ?: ""
                 val accounts = transactionWithAccounts.accounts?.map { acc ->
                     TransactionAccountRow(
                         accountName = acc.accountName,
-                        amountText = if (acc.amount != 0f) Data.formatNumber(acc.amount) else "",
+                        amountText = if (acc.amount != 0f) AppStateManager.formatNumber(acc.amount) else "",
                         currency = acc.currency.ifEmpty { defaultCurrency },
                         comment = acc.comment ?: "",
                         isAmountValid = true
@@ -830,16 +812,14 @@ class NewTransactionViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isBusy = true) }
 
-            val transactionWithAccounts = withContext(Dispatchers.IO) {
-                transactionDAO.getFirstByDescriptionSync(description)
-            }
+            val transactionWithAccounts = transactionRepository.getFirstByDescription(description)
 
             if (transactionWithAccounts != null) {
-                val defaultCurrency = Data.getProfile()?.getDefaultCommodityOrEmpty() ?: ""
+                val defaultCurrency = profileRepository.currentProfile.value?.getDefaultCommodityOrEmpty() ?: ""
                 val accounts = transactionWithAccounts.accounts?.map { acc ->
                     TransactionAccountRow(
                         accountName = acc.accountName,
-                        amountText = if (acc.amount != 0f) Data.formatNumber(acc.amount) else "",
+                        amountText = if (acc.amount != 0f) AppStateManager.formatNumber(acc.amount) else "",
                         currency = acc.currency.ifEmpty { defaultCurrency },
                         comment = acc.comment ?: "",
                         isAmountValid = true
