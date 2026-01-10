@@ -26,6 +26,7 @@ import java.util.Locale
 import net.ktnx.mobileledger.App
 import net.ktnx.mobileledger.R
 import net.ktnx.mobileledger.db.DB
+import net.ktnx.mobileledger.ui.components.CrashReportDialog
 import net.ktnx.mobileledger.ui.splash.SplashScreen
 import net.ktnx.mobileledger.ui.theme.MoLeTheme
 import net.ktnx.mobileledger.utils.Logger
@@ -42,6 +43,13 @@ class SplashActivity : CrashReportingActivity() {
         setContent {
             MoLeTheme(profileHue = savedHue.toFloat()) {
                 SplashScreen()
+
+                crashReportText?.let { text ->
+                    CrashReportDialog(
+                        crashReportText = text,
+                        onDismiss = { dismissCrashReport() }
+                    )
+                }
             }
         }
 

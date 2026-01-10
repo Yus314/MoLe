@@ -156,21 +156,21 @@
 
 ### User Story 5 の実装
 
-- [ ] T055 [P] [US5] app/src/main/kotlin/net/ktnx/mobileledger/ui/components/CrashReportUiState.kt にUiStateクラスを作成
-- [ ] T056 [US5] app/src/main/kotlin/net/ktnx/mobileledger/ui/components/CrashReportDialog.kt にCompose Dialogを作成
-- [ ] T057 [US5] CrashReportDialogにクラッシュレポートテキスト表示（スクロール可能）を実装
-- [ ] T058 [US5] CrashReportDialogにShow Report/Hide Reportトグルを実装
-- [ ] T059 [US5] CrashReportDialogにメール送信Intent起動を実装
-- [ ] T060 [US5] app/src/main/kotlin/net/ktnx/mobileledger/ui/activity/CrashReportingActivity.kt をCompose Dialogを使用するよう更新
-- [ ] T061 [US5] `nix run .#verify` を実行してデバイスでテスト
+- [x] T055 [P] [US5] app/src/main/kotlin/net/ktnx/mobileledger/ui/components/CrashReportUiState.kt にUiStateクラスを作成
+- [x] T056 [US5] app/src/main/kotlin/net/ktnx/mobileledger/ui/components/CrashReportDialog.kt にCompose Dialogを作成
+- [x] T057 [US5] CrashReportDialogにクラッシュレポートテキスト表示（スクロール可能）を実装
+- [x] T058 [US5] CrashReportDialogにShow Report/Hide Reportトグルを実装
+- [x] T059 [US5] CrashReportDialogにメール送信Intent起動を実装
+- [x] T060 [US5] app/src/main/kotlin/net/ktnx/mobileledger/ui/activity/CrashReportingActivity.kt をCompose Dialogを使用するよう更新
+- [x] T061 [US5] `nix run .#verify` を実行してデバイスでテスト
 
 ### User Story 5 のクリーンアップ
 
-- [ ] T062 [US5] 検証後、app/src/main/kotlin/net/ktnx/mobileledger/ui/CrashReportDialogFragment.kt を削除
-- [ ] T063 [US5] 検証後、app/src/main/kotlin/net/ktnx/mobileledger/ui/QRScanCapableFragment.kt を削除
-- [ ] T064 [P] [US5] app/src/main/res/layout/crash_dialog.xml を削除
-- [ ] T065 [P] [US5] app/src/main/res/layout/hue_dialog.xml を削除（残存XML）
-- [ ] T066 [US5] `nix run .#test` を実行して既存テストが通過することを確認
+- [x] T062 [US5] 検証後、app/src/main/kotlin/net/ktnx/mobileledger/ui/CrashReportDialogFragment.kt を削除
+- [x] T063 [US5] 検証後、app/src/main/kotlin/net/ktnx/mobileledger/ui/QRScanCapableFragment.kt を削除
+- [x] T064 [P] [US5] app/src/main/res/layout/crash_dialog.xml を削除
+- [x] T065 [P] [US5] app/src/main/res/layout/hue_dialog.xml を削除（残存XML）
+- [x] T066 [US5] `nix run .#test` を実行して既存テストが通過することを確認
 
 **チェックポイント**: User Story 5 完了 - CrashReportDialogのCompose移行完了
 
