@@ -18,7 +18,6 @@
 package net.ktnx.mobileledger.ui.activity
 
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.content.pm.ShortcutInfo
 import android.content.pm.ShortcutManager
 import android.graphics.drawable.Icon
@@ -39,6 +38,7 @@ import net.ktnx.mobileledger.db.DB
 import net.ktnx.mobileledger.db.Option
 import net.ktnx.mobileledger.db.Profile
 import net.ktnx.mobileledger.model.Data
+import net.ktnx.mobileledger.ui.components.CrashReportDialog
 import net.ktnx.mobileledger.ui.main.MainEffect
 import net.ktnx.mobileledger.ui.main.MainScreen
 import net.ktnx.mobileledger.ui.main.MainViewModel
@@ -171,6 +171,13 @@ class MainActivityCompose : ProfileThemedActivity() {
                         BackupsActivity.start(this)
                     }
                 )
+
+                crashReportText?.let { text ->
+                    CrashReportDialog(
+                        crashReportText = text,
+                        onDismiss = { dismissCrashReport() }
+                    )
+                }
             }
         }
     }
