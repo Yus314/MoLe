@@ -373,6 +373,8 @@ class MainViewModel @Inject constructor(
 
     // Data loading functions
     fun updateProfile(profile: Profile?) {
+        // ProfileRepository の currentProfile を同期（他の ViewModel が参照するため）
+        profileRepository.setCurrentProfile(profile)
         _mainUiState.update {
             it.copy(
                 currentProfileId = profile?.id,

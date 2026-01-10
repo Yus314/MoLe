@@ -16,9 +16,9 @@
 | Phase 3: US1 TransactionRepository | ✅ Complete | 17 tests pass, FakeRepository pattern used |
 | Phase 4: US2 ProfileRepository | ✅ Complete | 20 tests pass, currentProfile StateFlow |
 | Phase 5: US2 Extension | ✅ Complete | Account, Template, Currency repositories |
-| Phase 6: US3 ViewModel Migration | 🔄 Partial | MainViewModel done, others pending |
-| Phase 7: US4 Legacy Deprecation | ⏳ Pending | Depends on Phase 6 completion |
-| Phase 8: Polish | ⏳ Pending | Edge case tests, documentation |
+| Phase 6: US3 ViewModel Migration | ✅ Complete | All ViewModels migrated, tests pass |
+| Phase 7: US4 Legacy Deprecation | ✅ Complete | Verified legacy deprecation |
+| Phase 8: Polish | ✅ Complete | Edge case tests, documentation, lint passes |
 
 **Testing Note**: FakeDAO pattern was impractical due to Room DAO abstract class requirements.
 Tests use FakeRepository pattern (implementing interface directly) instead.
@@ -289,7 +289,7 @@ app/src/test/kotlin/net/ktnx/mobileledger/
   - Use `profileRepository.getAllProfiles()` instead of `Data.profiles`
   - Use `transactionRepository.getAllTransactions()` for transaction list
   - Use `accountRepository.getAllAccounts()` for account list
-- [ ] T037 [US3] Create `MainViewModelTest.kt` in `app/src/test/kotlin/net/ktnx/mobileledger/ui/main/MainViewModelTest.kt`
+- [X] T037 [US3] Create `MainViewModelTest.kt` in `app/src/test/kotlin/net/ktnx/mobileledger/ui/main/MainViewModelTest.kt`
   - Test with FakeRepositories (no real DAOs needed)
 
 ### NewTransactionViewModel Migration
@@ -302,7 +302,7 @@ app/src/test/kotlin/net/ktnx/mobileledger/
   - Use `accountRepository.searchAccountNames()` for autocomplete
   - Use `currencyRepository.getAllCurrencies()` for currency picker
   - Use `appStateManager` for locale/number formatting (currencySymbolPosition, currencyGap)
-- [ ] T039 [US3] Create `NewTransactionViewModelTest.kt` in `app/src/test/kotlin/net/ktnx/mobileledger/ui/transaction/NewTransactionViewModelTest.kt`
+- [X] T039 [US3] Create `NewTransactionViewModelTest.kt` in `app/src/test/kotlin/net/ktnx/mobileledger/ui/transaction/NewTransactionViewModelTest.kt`
 
 ### ProfileDetailViewModel Migration
 
@@ -310,7 +310,7 @@ app/src/test/kotlin/net/ktnx/mobileledger/
   - Change constructor: `@Inject constructor(profileRepository: ProfileRepository, savedStateHandle: SavedStateHandle)`
   - Remove: `profileDAO` parameter
   - Update all data access to use profileRepository
-- [ ] T041 [US3] Create `ProfileDetailViewModelTest.kt` in `app/src/test/kotlin/net/ktnx/mobileledger/ui/profile/ProfileDetailViewModelTest.kt`
+- [X] T041 [US3] Create `ProfileDetailViewModelTest.kt` in `app/src/test/kotlin/net/ktnx/mobileledger/ui/profile/ProfileDetailViewModelTest.kt`
 
 ### BackupsViewModel Migration
 
@@ -318,7 +318,7 @@ app/src/test/kotlin/net/ktnx/mobileledger/
   - Change constructor: `@Inject constructor(profileRepository: ProfileRepository)`
   - Remove direct `Data.getProfile()` usage
   - Use `profileRepository.currentProfile` for profile access
-- [ ] T043 [US3] Create `BackupsViewModelTest.kt` in `app/src/test/kotlin/net/ktnx/mobileledger/ui/backups/BackupsViewModelTest.kt`
+- [X] T043 [US3] Create `BackupsViewModelTest.kt` in `app/src/test/kotlin/net/ktnx/mobileledger/ui/backups/BackupsViewModelTest.kt`
 
 ### Verification for User Story 3
 
@@ -376,7 +376,7 @@ app/src/test/kotlin/net/ktnx/mobileledger/
 
 ### Edge Case Testing (from spec.md)
 
-- [ ] T052 [P] Create `RepositoryConcurrencyTest.kt` in `app/src/test/kotlin/net/ktnx/mobileledger/data/repository/RepositoryConcurrencyTest.kt`
+- [X] T052 [P] Create `RepositoryConcurrencyTest.kt` in `app/src/test/kotlin/net/ktnox/mobileledger/data/repository/RepositoryConcurrencyTest.kt`
   - Test: Multiple coroutines accessing TransactionRepository simultaneously
   - Test: Concurrent read/write operations on ProfileRepository
   - Test: StateFlow thread-safety for currentProfile updates
@@ -396,7 +396,7 @@ app/src/test/kotlin/net/ktnx/mobileledger/
   }
   ```
 
-- [ ] T053 [P] Create `ProfileSwitchingEdgeCaseTest.kt` in `app/src/test/kotlin/net/ktnx/mobileledger/data/repository/ProfileSwitchingEdgeCaseTest.kt`
+- [X] T053 [P] Create `ProfileSwitchingEdgeCaseTest.kt` in `app/src/test/kotlin/net/ktnx/mobileledger/data/repository/ProfileSwitchingEdgeCaseTest.kt`
   - Test: Transaction insert during profile switch
   - Test: Account query after profile change completes
   - Test: Flow collectors receive correct profile-scoped data after switch
@@ -404,13 +404,13 @@ app/src/test/kotlin/net/ktnx/mobileledger/
 
 ### Documentation
 
-- [ ] T054 [P] Add KDoc documentation to all Repository interfaces
-- [ ] T055 [P] Add KDoc documentation to all Repository implementations
+- [X] T054 [P] Add KDoc documentation to all Repository interfaces
+- [X] T055 [P] Add KDoc documentation to all Repository implementations
 
 ### Verification
 
-- [ ] T056 Verify ktlint passes: `pre-commit run ktlint --all-files`
-- [ ] T057 Verify detekt passes: `pre-commit run detekt --all-files`
+- [X] T056 Verify ktlint passes: `pre-commit run ktlint --all-files`
+- [X] T057 Verify detekt passes: `pre-commit run detekt --all-files`
 - [X] T058 Update `CLAUDE.md` with Repository pattern documentation ✅
 - [X] T059 Run final `nix run .#verify` and confirm all tests pass ✅
 
