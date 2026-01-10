@@ -2,7 +2,8 @@
 
 **Feature Branch**: `008-data-layer-repository`
 **Created**: 2026-01-10
-**Status**: Draft
+**Completed**: 2026-01-10
+**Status**: Complete
 **Input**: User description: "Googleが推奨しているデータレイヤに移行します。Data.ktのシングルトンからRepositoryパターンへの移行"
 
 ## Clarifications
