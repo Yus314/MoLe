@@ -1,5 +1,5 @@
 /*
- * Copyright © 2020 Damyan Ivanov.
+ * Copyright © 2024 Damyan Ivanov.
  * This file is part of MoLe.
  * MoLe is free software: you can distribute it and/or modify it
  * under the term of the GNU General Public License as published by
@@ -15,18 +15,6 @@
  * along with MoLe. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ktnx.mobileledger.ui
+package net.ktnx.mobileledger.ui.components
 
-/**
- * This interface must be implemented by activities that contain this
- * fragment to allow an interaction in this fragment to be communicated
- * to the activity and potentially other fragments contained in that
- * activity.
- *
- * See the Android Training lesson
- * [Communicating with Other Fragments](http://developer.android.com/training/basics/fragments/communicating.html)
- * for more information.
- */
-fun interface OnCurrencySelectedListener {
-    fun onCurrencySelected(item: String)
-}
+data class CrashReportUiState(val crashReportText: String = "", val isReportVisible: Boolean = false)

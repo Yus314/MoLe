@@ -33,7 +33,7 @@
 - [X] T005 [P] Add `sourceSets` configuration for Kotlin directories in `app/build.gradle`
 - [X] T006 [P] Create directory `app/src/main/kotlin/net/ktnx/mobileledger/`
 - [X] T007 [P] Create directory `app/src/test/kotlin/net/ktnx/mobileledger/`
-- [X] T008 [P] Create directory `app/src/androidTest/kotlin/net/ktnox/mobileledger/`
+- [X] T008 [P] Create directory `app/src/androidTest/kotlin/net/ktnx/mobileledger/`
 - [X] T009 Verify build succeeds with `./gradlew clean assembleDebug`
 - [X] T010 Verify all existing tests pass with `./gradlew test`
 
@@ -92,90 +92,90 @@
 
 ### model Package Conversion (16 files) - data class 化
 
-- [X] T029 [P] [US1] Convert `LedgerAccount.java` → `app/src/main/kotlin/net/ktnox/mobileledger/model/LedgerAccount.kt` (use data class)
+- [X] T029 [P] [US1] Convert `LedgerAccount.java` → `app/src/main/kotlin/net/ktnx/mobileledger/model/LedgerAccount.kt` (use data class)
 - [X] T030 [P] [US1] Convert `LedgerTransaction.java` → `app/src/main/kotlin/net/ktnx/mobileledger/model/LedgerTransaction.kt` (use data class)
-- [X] T031 [P] [US1] Convert `LedgerTransactionAccount.java` → `app/src/main/kotlin/net/ktnox/mobileledger/model/LedgerTransactionAccount.kt` (use data class)
-- [X] T032 [P] [US1] Convert `LedgerAmount.java` → `app/src/main/kotlin/net/ktnox/mobileledger/model/LedgerAmount.kt` (use data class)
-- [X] T033 [P] [US1] Convert `AmountStyle.java` → `app/src/main/kotlin/net/ktnox/mobileledger/model/AmountStyle.kt` (use data class with enum)
+- [X] T031 [P] [US1] Convert `LedgerTransactionAccount.java` → `app/src/main/kotlin/net/ktnx/mobileledger/model/LedgerTransactionAccount.kt` (use data class)
+- [X] T032 [P] [US1] Convert `LedgerAmount.java` → `app/src/main/kotlin/net/ktnx/mobileledger/model/LedgerAmount.kt` (use data class)
+- [X] T033 [P] [US1] Convert `AmountStyle.java` → `app/src/main/kotlin/net/ktnx/mobileledger/model/AmountStyle.kt` (use data class with enum)
 - [X] T034 [P] [US1] Convert `Data.java` → `app/src/main/kotlin/net/ktnx/mobileledger/model/Data.kt` (use object singleton)
-- [X] T035 [P] [US1] Convert remaining model files to `app/src/main/kotlin/net/ktnox/mobileledger/model/`
-- [X] T036 [P] [US1] Convert `LedgerAccountTest.java` → `app/src/test/kotlin/net/ktnox/mobileledger/model/LedgerAccountTest.kt`
-- [X] T037 [P] [US1] Convert `AmountStyleTest.java` → `app/src/test/kotlin/net/ktnox/mobileledger/model/AmountStyleTest.kt`
+- [X] T035 [P] [US1] Convert remaining model files to `app/src/main/kotlin/net/ktnx/mobileledger/model/`
+- [X] T036 [P] [US1] Convert `LedgerAccountTest.java` → `app/src/test/kotlin/net/ktnx/mobileledger/model/LedgerAccountTest.kt`
+- [X] T037 [P] [US1] Convert `AmountStyleTest.java` → `app/src/test/kotlin/net/ktnx/mobileledger/model/AmountStyleTest.kt`
 - [X] T038 [US1] Verify model tests pass with `./gradlew test --tests "*.LedgerAccountTest" --tests "*.AmountStyleTest"`
 
 ### db Package Conversion (16 files) - Room Entities
 
-- [X] T039 [P] [US1] Convert `Currency.java` → `app/src/main/kotlin/net/ktnox/mobileledger/db/Currency.kt` (data class, no FK)
-- [X] T040 [P] [US1] Convert `Profile.java` → `app/src/main/kotlin/net/ktnox/mobileledger/db/Profile.kt` (data class, no FK)
-- [X] T041 [US1] Convert `Account.java` → `app/src/main/kotlin/net/ktnox/mobileledger/db/Account.kt` (data class, FK→Profile)
-- [X] T042 [US1] Convert `AccountValue.java` → `app/src/main/kotlin/net/ktnox/mobileledger/db/AccountValue.kt` (data class, FK→Account)
-- [X] T043 [US1] Convert `Transaction.java` → `app/src/main/kotlin/net/ktnox/mobileledger/db/Transaction.kt` (data class, FK→Profile)
-- [X] T044 [US1] Convert `TransactionAccount.java` → `app/src/main/kotlin/net/ktnox/mobileledger/db/TransactionAccount.kt` (data class, FK→Transaction)
-- [X] T045 [P] [US1] Convert `TemplateHeader.java` → `app/src/main/kotlin/net/ktnox/mobileledger/db/TemplateHeader.kt` (data class)
-- [X] T046 [US1] Convert `TemplateAccount.java` → `app/src/main/kotlin/net/ktnox/mobileledger/db/TemplateAccount.kt` (data class, FK→TemplateHeader, Currency)
-- [X] T047 [P] [US1] Convert `Option.java` → `app/src/main/kotlin/net/ktnox/mobileledger/db/Option.kt` (data class, composite PK)
-- [X] T048 [P] [US1] Convert remaining db files (DB.java, TypeConverters) to `app/src/main/kotlin/net/ktnox/mobileledger/db/`
+- [X] T039 [P] [US1] Convert `Currency.java` → `app/src/main/kotlin/net/ktnx/mobileledger/db/Currency.kt` (data class, no FK)
+- [X] T040 [P] [US1] Convert `Profile.java` → `app/src/main/kotlin/net/ktnx/mobileledger/db/Profile.kt` (data class, no FK)
+- [X] T041 [US1] Convert `Account.java` → `app/src/main/kotlin/net/ktnx/mobileledger/db/Account.kt` (data class, FK→Profile)
+- [X] T042 [US1] Convert `AccountValue.java` → `app/src/main/kotlin/net/ktnx/mobileledger/db/AccountValue.kt` (data class, FK→Account)
+- [X] T043 [US1] Convert `Transaction.java` → `app/src/main/kotlin/net/ktnx/mobileledger/db/Transaction.kt` (data class, FK→Profile)
+- [X] T044 [US1] Convert `TransactionAccount.java` → `app/src/main/kotlin/net/ktnx/mobileledger/db/TransactionAccount.kt` (data class, FK→Transaction)
+- [X] T045 [P] [US1] Convert `TemplateHeader.java` → `app/src/main/kotlin/net/ktnx/mobileledger/db/TemplateHeader.kt` (data class)
+- [X] T046 [US1] Convert `TemplateAccount.java` → `app/src/main/kotlin/net/ktnx/mobileledger/db/TemplateAccount.kt` (data class, FK→TemplateHeader, Currency)
+- [X] T047 [P] [US1] Convert `Option.java` → `app/src/main/kotlin/net/ktnx/mobileledger/db/Option.kt` (data class, composite PK)
+- [X] T048 [P] [US1] Convert remaining db files (DB.java, TypeConverters) to `app/src/main/kotlin/net/ktnx/mobileledger/db/`
 - [X] T049 [US1] Verify Room schema unchanged by comparing `app/schemas/` before/after
 
 ### dao Package Conversion (11 files)
 
-- [X] T050 [P] [US1] Convert `AccountDAO.java` → `app/src/main/kotlin/net/ktnox/mobileledger/dao/AccountDAO.kt` (add suspend functions)
-- [X] T051 [P] [US1] Convert `TransactionDAO.java` → `app/src/main/kotlin/net/ktnox/mobileledger/dao/TransactionDAO.kt`
-- [X] T052 [P] [US1] Convert `ProfileDAO.java` → `app/src/main/kotlin/net/ktnox/mobileledger/dao/ProfileDAO.kt`
-- [X] T053 [P] [US1] Convert `CurrencyDAO.java` → `app/src/main/kotlin/net/ktnox/mobileledger/dao/CurrencyDAO.kt`
-- [X] T054 [P] [US1] Convert `TemplateHeaderDAO.java` → `app/src/main/kotlin/net/ktnox/mobileledger/dao/TemplateHeaderDAO.kt`
-- [X] T055 [P] [US1] Convert remaining DAO files to `app/src/main/kotlin/net/ktnox/mobileledger/dao/`
+- [X] T050 [P] [US1] Convert `AccountDAO.java` → `app/src/main/kotlin/net/ktnx/mobileledger/dao/AccountDAO.kt` (add suspend functions)
+- [X] T051 [P] [US1] Convert `TransactionDAO.java` → `app/src/main/kotlin/net/ktnx/mobileledger/dao/TransactionDAO.kt`
+- [X] T052 [P] [US1] Convert `ProfileDAO.java` → `app/src/main/kotlin/net/ktnx/mobileledger/dao/ProfileDAO.kt`
+- [X] T053 [P] [US1] Convert `CurrencyDAO.java` → `app/src/main/kotlin/net/ktnx/mobileledger/dao/CurrencyDAO.kt`
+- [X] T054 [P] [US1] Convert `TemplateHeaderDAO.java` → `app/src/main/kotlin/net/ktnx/mobileledger/dao/TemplateHeaderDAO.kt`
+- [X] T055 [P] [US1] Convert remaining DAO files to `app/src/main/kotlin/net/ktnx/mobileledger/dao/`
 - [X] T056 [US1] Verify KSP code generation succeeds with `./gradlew kspDebugKotlin`
 
 ### async Package Conversion (7 files)
 
-- [X] T057 [P] [US1] Convert `DescriptionSelectedCallback.java` → `app/src/main/kotlin/net/ktnox/mobileledger/async/DescriptionSelectedCallback.kt`
-- [X] T058 [P] [US1] Convert `SendTransactionTask.java` → `app/src/main/kotlin/net/ktnox/mobileledger/async/SendTransactionTask.kt`
-- [X] T059 [P] [US1] Convert `RetrieveTransactionsTask.java` → `app/src/main/kotlin/net/ktnox/mobileledger/async/RetrieveTransactionsTask.kt`
-- [X] T060 [P] [US1] Convert remaining async files to `app/src/main/kotlin/net/ktnox/mobileledger/async/`
+- [X] T057 [P] [US1] Convert `DescriptionSelectedCallback.java` → `app/src/main/kotlin/net/ktnx/mobileledger/async/DescriptionSelectedCallback.kt`
+- [X] T058 [P] [US1] Convert `SendTransactionTask.java` → `app/src/main/kotlin/net/ktnx/mobileledger/async/SendTransactionTask.kt`
+- [X] T059 [P] [US1] Convert `RetrieveTransactionsTask.java` → `app/src/main/kotlin/net/ktnx/mobileledger/async/RetrieveTransactionsTask.kt`
+- [X] T060 [P] [US1] Convert remaining async files to `app/src/main/kotlin/net/ktnx/mobileledger/async/`
 
 ### backup Package Conversion (6 files)
 
-- [X] T061 [P] [US1] Convert backup package files to `app/src/main/kotlin/net/ktnox/mobileledger/backup/`
+- [X] T061 [P] [US1] Convert backup package files to `app/src/main/kotlin/net/ktnx/mobileledger/backup/`
 
 ### json Package - Base Conversion (102 files)
 
-- [X] T062 [P] [US1] Convert `API.java` → `app/src/main/kotlin/net/ktnox/mobileledger/json/API.kt` (use enum class)
-- [X] T063 [P] [US1] Convert `Gateway.java` → `app/src/main/kotlin/net/ktnox/mobileledger/json/Gateway.kt` (abstract class with companion object)
-- [X] T064 [P] [US1] Convert `AccountListParser.java` → `app/src/main/kotlin/net/ktnox/mobileledger/json/AccountListParser.kt`
-- [X] T065 [P] [US1] Convert `TransactionListParser.java` → `app/src/main/kotlin/net/ktnox/mobileledger/json/TransactionListParser.kt`
+- [X] T062 [P] [US1] Convert `API.java` → `app/src/main/kotlin/net/ktnx/mobileledger/json/API.kt` (use enum class)
+- [X] T063 [P] [US1] Convert `Gateway.java` → `app/src/main/kotlin/net/ktnx/mobileledger/json/Gateway.kt` (abstract class with companion object)
+- [X] T064 [P] [US1] Convert `AccountListParser.java` → `app/src/main/kotlin/net/ktnx/mobileledger/json/AccountListParser.kt`
+- [X] T065 [P] [US1] Convert `TransactionListParser.java` → `app/src/main/kotlin/net/ktnx/mobileledger/json/TransactionListParser.kt`
 
 ### json/v1_14 Conversion (12 files)
 
-- [X] T066 [P] [US1] Convert v1_14 package files to `app/src/main/kotlin/net/ktnox/mobileledger/json/v1_14/`
+- [X] T066 [P] [US1] Convert v1_14 package files to `app/src/main/kotlin/net/ktnx/mobileledger/json/v1_14/`
 
 ### json/v1_15 Conversion (12 files)
 
-- [X] T067 [P] [US1] Convert v1_15 package files to `app/src/main/kotlin/net/ktnox/mobileledger/json/v1_15/`
+- [X] T067 [P] [US1] Convert v1_15 package files to `app/src/main/kotlin/net/ktnx/mobileledger/json/v1_15/`
 
 ### json/v1_19_1 Conversion (13 files)
 
-- [X] T068 [P] [US1] Convert v1_19_1 package files to `app/src/main/kotlin/net/ktnox/mobileledger/json/v1_19_1/`
+- [X] T068 [P] [US1] Convert v1_19_1 package files to `app/src/main/kotlin/net/ktnx/mobileledger/json/v1_19_1/`
 
 ### json/v1_23 Conversion (12 files)
 
-- [X] T069 [P] [US1] Convert v1_23 package files to `app/src/main/kotlin/net/ktnox/mobileledger/json/v1_23/`
+- [X] T069 [P] [US1] Convert v1_23 package files to `app/src/main/kotlin/net/ktnx/mobileledger/json/v1_23/`
 
 ### json/v1_32 Conversion (13 files)
 
-- [X] T070 [P] [US1] Convert v1_32 package files to `app/src/main/kotlin/net/ktnox/mobileledger/json/v1_32/`
+- [X] T070 [P] [US1] Convert v1_32 package files to `app/src/main/kotlin/net/ktnx/mobileledger/json/v1_32/`
 
 ### json/v1_40 Conversion (13 files)
 
-- [X] T071 [P] [US1] Convert v1_40 package files to `app/src/main/kotlin/net/ktnox/mobileledger/json/v1_40/`
+- [X] T071 [P] [US1] Convert v1_40 package files to `app/src/main/kotlin/net/ktnx/mobileledger/json/v1_40/`
 
 ### json/v1_50 Conversion (15 files)
 
-- [X] T072 [P] [US1] Convert v1_50 package files to `app/src/main/kotlin/net/ktnox/mobileledger/json/v1_50/`
+- [X] T072 [P] [US1] Convert v1_50 package files to `app/src/main/kotlin/net/ktnx/mobileledger/json/v1_50/`
 
 ### json Test Conversion
 
-- [X] T073 [P] [US1] Convert `ParsedQuantityTest.java` → `app/src/test/kotlin/net/ktnox/mobileledger/json/ParsedQuantityTest.kt`
+- [X] T073 [P] [US1] Convert `ParsedQuantityTest.java` → `app/src/test/kotlin/net/ktnx/mobileledger/json/ParsedQuantityTest.kt`
 - [X] T074 [P] [US1] Convert `LegacyParserTest.java` → `app/src/test/kotlin/net/ktnx/mobileledger/async/LegacyParserTest.kt`
 - [X] T075 [US1] Verify JSON parser tests pass with `./gradlew test --tests "*.ParsedQuantityTest" --tests "*.LegacyParserTest"`
 
@@ -255,14 +255,14 @@
 
 ### Scope Function Optimization
 
-- [X] T096 [P] [US2] Apply `apply {}` for object configuration in `app/src/main/kotlin/net/ktnox/mobileledger/json/` - Applied to all 7 API versions (v1_14 through v1_50) ✅
-- [X] T097 [P] [US2] Apply `let {}` for null-safe chaining in `app/src/main/kotlin/net/ktnox/mobileledger/ui/` - Already widely used throughout codebase ✅
+- [X] T096 [P] [US2] Apply `apply {}` for object configuration in `app/src/main/kotlin/net/ktnx/mobileledger/json/` - Applied to all 7 API versions (v1_14 through v1_50) ✅
+- [X] T097 [P] [US2] Apply `let {}` for null-safe chaining in `app/src/main/kotlin/net/ktnx/mobileledger/ui/` - Already widely used throughout codebase ✅
 - [X] T098 [P] [US2] Apply `with {}` for multiple calls on same object - Used `apply {}` instead for object configuration patterns ✅
 - [X] T099 [US2] Ensure scope function nesting is ≤2 levels deep throughout codebase - Object construction patterns (3 levels) are acceptable per Kotlin idioms ✅
 
 ### Extension Functions
 
-- [X] T100 [P] [US2] Extract common patterns as extension functions in `app/src/main/kotlin/net/ktnox/mobileledger/utils/Extensions.kt` - Created with View visibility, String, and Float extensions ✅
+- [X] T100 [P] [US2] Extract common patterns as extension functions in `app/src/main/kotlin/net/ktnx/mobileledger/utils/Extensions.kt` - Created with View visibility, String, and Float extensions ✅
 
 ### var → val Conversion
 
@@ -577,7 +577,7 @@ private val isoDateFormatter: ThreadLocal<SimpleDateFormat> = ThreadLocal.withIn
 **Current state**: Build succeeds with mixed Java (ui/) and Kotlin (all other packages)
 
 ### Issue 8: Kotlin files created with wrong package path
-**Symptom**: `duplicate class: net.ktnox.mobileledger.*` during kapt
-**Cause**: Automated conversion agents created files under `ktnox` instead of `ktnx`
-**Files affected**: `/home/kaki/MoLe/app/src/main/kotlin/net/ktnox/` directory (typo)
-**Fix**: Deleted the incorrectly-pathed directory: `rm -rf app/src/main/kotlin/net/ktnox/`
+**Symptom**: `duplicate class: net.ktnx.mobileledger.*` during kapt
+**Cause**: Automated conversion agents created files under `ktnx` instead of `ktnx`
+**Files affected**: `/home/kaki/MoLe/app/src/main/kotlin/net/ktnx/` directory (typo)
+**Fix**: Deleted the incorrectly-pathed directory: `rm -rf app/src/main/kotlin/net/ktnx/`

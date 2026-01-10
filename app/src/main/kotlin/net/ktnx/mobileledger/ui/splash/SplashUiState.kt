@@ -1,5 +1,5 @@
 /*
- * Copyright © 2020 Damyan Ivanov.
+ * Copyright © 2024 Damyan Ivanov.
  * This file is part of MoLe.
  * MoLe is free software: you can distribute it and/or modify it
  * under the term of the GNU General Public License as published by
@@ -15,18 +15,25 @@
  * along with MoLe. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ktnx.mobileledger.ui
+package net.ktnx.mobileledger.ui.splash
 
 /**
- * This interface must be implemented by activities that contain this
- * fragment to allow an interaction in this fragment to be communicated
- * to the activity and potentially other fragments contained in that
- * activity.
- *
- * See the Android Training lesson
- * [Communicating with Other Fragments](http://developer.android.com/training/basics/fragments/communicating.html)
- * for more information.
+ * UI state for the splash screen
  */
-fun interface OnCurrencyLongClickListener {
-    fun onCurrencyLongClick(item: String)
+data class SplashUiState(
+    /** DB initialization completed flag */
+    val isInitialized: Boolean = false,
+    /** Minimum display time elapsed flag */
+    val minDisplayTimeElapsed: Boolean = false
+) {
+    /** Ready to navigate to main screen */
+    val canNavigate: Boolean get() = isInitialized && minDisplayTimeElapsed
+}
+
+/**
+ * One-shot effects for splash screen
+ */
+sealed class SplashEffect {
+    /** Navigate to main activity */
+    data object NavigateToMain : SplashEffect()
 }

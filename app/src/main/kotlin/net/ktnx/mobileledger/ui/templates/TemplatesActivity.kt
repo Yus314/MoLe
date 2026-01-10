@@ -22,6 +22,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import dagger.hilt.android.AndroidEntryPoint
 import net.ktnx.mobileledger.ui.activity.CrashReportingActivity
+import net.ktnx.mobileledger.ui.components.CrashReportDialog
 import net.ktnx.mobileledger.ui.theme.MoLeTheme
 
 /**
@@ -40,6 +41,13 @@ class TemplatesActivity : CrashReportingActivity() {
                 TemplatesNavHost(
                     onNavigateBack = { finish() }
                 )
+
+                crashReportText?.let { text ->
+                    CrashReportDialog(
+                        crashReportText = text,
+                        onDismiss = { dismissCrashReport() }
+                    )
+                }
             }
         }
     }

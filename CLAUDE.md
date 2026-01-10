@@ -1,6 +1,6 @@
 # MoLe Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-01-09
+Auto-generated from all feature plans. Last updated: 2026-01-10
 
 ## Active Technologies
 - AGP 8.7.3 / Gradle 8.9 (002-agp-update)
@@ -25,7 +25,7 @@ app/
 ├── build.gradle                          # アプリビルド設定
 └── schemas/                              # Room データベーススキーマ
 specs/
-└── 006-compose-ui-rebuild/               # 現在の機能仕様
+└── 007-complete-compose-migration/       # 現在の機能仕様
 ```
 
 ## Commands
@@ -248,44 +248,74 @@ class MyActivity : AppCompatActivity() {
 
 ### 概要
 
-MoLe は Jetpack Compose に移行中です。以下の画面は Compose で実装されています:
+MoLe は **Jetpack Compose への完全移行が完了**しています（007-complete-compose-migration）。
+
+**重要な制約**:
+- XMLレイアウトファイル: **0件**（`app/src/main/res/layout/` は空）
+- Fragment/DialogFragment: **使用禁止**（全てCompose Dialogに移行済み）
+- ViewBinding: **使用禁止**（全てCompose UIに移行済み）
+
+### Compose 実装済み画面
 
 - **MainActivityCompose**: メイン画面（アカウント一覧、取引一覧タブ）
-- **ProfileDetailActivity**: プロファイル詳細（Compose移行済み）
-- **TemplatesActivity**: テンプレート管理（Compose移行済み）
+- **ProfileDetailActivity**: プロファイル詳細
+- **TemplatesActivity**: テンプレート管理
 - **NewTransactionActivityCompose**: 取引登録画面
+- **SplashActivity**: スプラッシュ画面（Compose移行済み）
+- **BackupsActivity**: バックアップ/リストア画面（Compose移行済み）
+
+### Compose 実装済みダイアログ
+
+- **DatePickerDialog**: 日付選択（Material3 DatePicker）
+- **CurrencyPickerDialog**: 通貨選択（LazyVerticalGrid）
+- **CrashReportDialog**: クラッシュレポート送信
 
 ### Compose ファイル構成
 
 ```text
 app/src/main/kotlin/net/ktnx/mobileledger/ui/
 ├── activity/
-│   ├── MainActivityCompose.kt      # メインActivity
-│   └── NewTransactionActivityCompose.kt  # 取引登録Activity
+│   ├── MainActivityCompose.kt           # メインActivity
+│   ├── NewTransactionActivityCompose.kt # 取引登録Activity
+│   ├── SplashActivity.kt                # スプラッシュActivity（Compose）
+│   └── CrashReportingActivity.kt        # クラッシュレポートActivity
 ├── main/
-│   ├── MainScreen.kt               # メイン画面のComposable
-│   ├── MainUiState.kt              # メイン画面の状態
-│   ├── MainViewModel.kt            # メイン画面のViewModel
-│   ├── AccountSummaryTab.kt        # アカウント一覧タブ
-│   └── TransactionListTab.kt       # 取引一覧タブ
+│   ├── MainScreen.kt                    # メイン画面のComposable
+│   ├── MainUiState.kt                   # メイン画面の状態
+│   ├── MainViewModel.kt                 # メイン画面のViewModel
+│   ├── AccountSummaryTab.kt             # アカウント一覧タブ
+│   ├── TransactionListTab.kt            # 取引一覧タブ
+│   └── NavigationDrawer.kt              # ナビゲーションドロワー
 ├── transaction/
-│   ├── NewTransactionScreen.kt     # 取引登録画面
-│   ├── NewTransactionUiState.kt    # 取引登録の状態
-│   ├── NewTransactionViewModel.kt  # 取引登録のViewModel
-│   ├── AccountAutocomplete.kt      # アカウント名オートコンプリート
-│   └── TransactionRowItem.kt       # 取引行コンポーネント
+│   ├── NewTransactionScreen.kt          # 取引登録画面
+│   ├── NewTransactionUiState.kt         # 取引登録の状態
+│   ├── NewTransactionViewModel.kt       # 取引登録のViewModel
+│   ├── AccountAutocomplete.kt           # アカウント名オートコンプリート
+│   └── TransactionRowItem.kt            # 取引行コンポーネント
 ├── profiles/
-│   └── ProfileDetailScreen.kt      # プロファイル詳細画面
+│   └── ProfileDetailScreen.kt           # プロファイル詳細画面
 ├── templates/
-│   └── TemplatesScreen.kt          # テンプレート管理画面
+│   └── TemplatesScreen.kt               # テンプレート管理画面
+├── splash/
+│   ├── SplashScreen.kt                  # スプラッシュ画面Composable
+│   └── SplashUiState.kt                 # スプラッシュ状態
+├── backups/
+│   ├── BackupsScreen.kt                 # バックアップ画面Composable
+│   ├── BackupsViewModel.kt              # バックアップViewModel
+│   └── BackupsUiState.kt                # バックアップ状態
 ├── theme/
-│   ├── Theme.kt                    # MoLeTheme
-│   ├── Color.kt                    # カラー定義
-│   └── Type.kt                     # タイポグラフィ
+│   ├── Theme.kt                         # MoLeTheme
+│   ├── Color.kt                         # カラー定義
+│   └── Type.kt                          # タイポグラフィ
 └── components/
-    ├── LoadingIndicator.kt         # ローディング表示
-    ├── ErrorSnackbar.kt            # エラー表示
-    └── ConfirmDialog.kt            # 確認ダイアログ
+    ├── LoadingIndicator.kt              # ローディング表示
+    ├── ErrorSnackbar.kt                 # エラー表示
+    ├── ConfirmDialog.kt                 # 確認ダイアログ
+    ├── DatePickerDialog.kt              # 日付選択ダイアログ
+    ├── CurrencyPickerDialog.kt          # 通貨選択ダイアログ
+    ├── CurrencyPickerUiState.kt         # 通貨選択状態
+    ├── CrashReportDialog.kt             # クラッシュレポートダイアログ
+    └── CrashReportUiState.kt            # クラッシュレポート状態
 ```
 
 ### Compose 開発パターン
@@ -390,6 +420,7 @@ class MyScreenTest {
 ```
 
 ## Recent Changes
+- 007-complete-compose-migration: **Compose移行完了** - 全XMLレイアウト削除、Fragment/DialogFragment全廃止、ViewBinding全廃止。DatePickerDialog、CurrencyPickerDialog、CrashReportDialog、SplashScreen、BackupsScreen をCompose化。ProfilesRecyclerViewAdapter等レガシーアダプター削除
 - 006-compose-ui-rebuild: Migrated MainActivityCompose, ProfileDetailActivity, TemplatesActivity, NewTransactionActivityCompose to Jetpack Compose with Material3
 - ktlint-enforcement: Enabled most ktlint rules, auto-fixed 200+ files across 4 phases, permanently disabled 8 rules for JSON/API compatibility
 - 005-hilt-di-setup: Added Hilt 2.51.1 DI framework, migrated MainModel to constructor injection, created DatabaseModule and DataModule, added instrumentation test infrastructure with HiltTestRunner and TestDatabaseModule

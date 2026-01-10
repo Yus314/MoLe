@@ -36,10 +36,13 @@ import kotlinx.coroutines.withContext
 import net.ktnx.mobileledger.async.SendTransactionTask
 import net.ktnx.mobileledger.async.TaskCallback
 import net.ktnx.mobileledger.dao.AccountDAO
+import net.ktnx.mobileledger.dao.CurrencyDAO
 import net.ktnx.mobileledger.dao.TemplateHeaderDAO
 import net.ktnx.mobileledger.dao.TransactionDAO
 import net.ktnx.mobileledger.db.TemplateWithAccounts
+import net.ktnx.mobileledger.model.Currency
 import net.ktnx.mobileledger.model.Data
+import net.ktnx.mobileledger.model.FutureDates
 import net.ktnx.mobileledger.model.LedgerTransaction
 import net.ktnx.mobileledger.model.LedgerTransactionAccount
 import net.ktnx.mobileledger.model.MatchedTemplate
@@ -51,7 +54,8 @@ import net.ktnx.mobileledger.utils.SimpleDate
 class NewTransactionViewModel @Inject constructor(
     private val accountDAO: AccountDAO,
     private val transactionDAO: TransactionDAO,
-    private val templateHeaderDAO: TemplateHeaderDAO
+    private val templateHeaderDAO: TemplateHeaderDAO,
+    private val currencyDAO: CurrencyDAO
 ) : ViewModel(),
     TaskCallback {
 
@@ -74,10 +78,12 @@ class NewTransactionViewModel @Inject constructor(
         val profile = Data.getProfile()
         if (profile != null) {
             val defaultCurrency = profile.getDefaultCommodityOrEmpty()
+            val futureDates = FutureDates.valueOf(profile.futureDates)
             _uiState.update {
                 it.copy(
                     profileId = profile.id,
                     showCurrency = profile.showCommodityByDefault,
+                    futureDates = futureDates,
                     accounts = listOf(
                         TransactionAccountRow(id = NewTransactionUiState.nextId(), currency = defaultCurrency),
                         TransactionAccountRow(id = NewTransactionUiState.nextId(), currency = defaultCurrency)
@@ -85,6 +91,16 @@ class NewTransactionViewModel @Inject constructor(
                 )
             }
             recalculateAmountHints()
+            loadCurrencies()
+        }
+    }
+
+    private fun loadCurrencies() {
+        viewModelScope.launch {
+            val currencies = withContext(Dispatchers.IO) {
+                currencyDAO.getAllSync().map { it.name }
+            }
+            _uiState.update { it.copy(availableCurrencies = currencies) }
         }
     }
 
@@ -125,6 +141,10 @@ class NewTransactionViewModel @Inject constructor(
             is NewTransactionEvent.ShowCurrencySelector -> showCurrencySelector(event.rowId)
 
             NewTransactionEvent.DismissCurrencySelector -> dismissCurrencySelector()
+
+            is NewTransactionEvent.AddCurrency -> addCurrency(event.name, event.position, event.gap)
+
+            is NewTransactionEvent.DeleteCurrency -> deleteCurrency(event.name)
 
             NewTransactionEvent.ShowTemplateSelector -> showTemplateSelector()
 
@@ -427,6 +447,31 @@ class NewTransactionViewModel @Inject constructor(
                 showCurrencySelector = false,
                 currencySelectorRowId = null
             )
+        }
+    }
+
+    private fun addCurrency(name: String, position: Currency.Position, gap: Boolean) {
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                val currency = net.ktnx.mobileledger.db.Currency()
+                currency.name = name
+                currency.position = position.toString()
+                currency.hasGap = gap
+                currencyDAO.insertSync(currency)
+            }
+            loadCurrencies()
+        }
+    }
+
+    private fun deleteCurrency(name: String) {
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                val currency = currencyDAO.getByNameSync(name)
+                if (currency != null) {
+                    currencyDAO.deleteSync(currency)
+                }
+            }
+            loadCurrencies()
         }
     }
 

@@ -19,141 +19,103 @@ package net.ktnx.mobileledger
 
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
-import android.view.MenuItem
-import android.view.View
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AppCompatActivity
-import com.google.android.material.snackbar.BaseTransientBottomBar
-import com.google.android.material.snackbar.Snackbar
-import java.io.IOException
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
-import net.ktnx.mobileledger.backup.ConfigIO
-import net.ktnx.mobileledger.backup.ConfigReader
-import net.ktnx.mobileledger.backup.ConfigWriter
-import net.ktnx.mobileledger.databinding.FragmentBackupsBinding
+import androidx.activity.viewModels
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import dagger.hilt.android.AndroidEntryPoint
 import net.ktnx.mobileledger.model.Data
+import net.ktnx.mobileledger.ui.backups.BackupsEffect
+import net.ktnx.mobileledger.ui.backups.BackupsMessage
+import net.ktnx.mobileledger.ui.backups.BackupsScreen
+import net.ktnx.mobileledger.ui.backups.BackupsViewModel
+import net.ktnx.mobileledger.ui.theme.MoLeTheme
 
-class BackupsActivity : AppCompatActivity() {
-    private lateinit var b: FragmentBackupsBinding
+@AndroidEntryPoint
+class BackupsActivity : ComponentActivity() {
+    private val viewModel: BackupsViewModel by viewModels()
     private lateinit var backupChooserLauncher: ActivityResultLauncher<String>
     private lateinit var restoreChooserLauncher: ActivityResultLauncher<Array<String>>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        b = FragmentBackupsBinding.inflate(layoutInflater)
-        setContentView(b.root)
 
-        setSupportActionBar(b.toolbar)
-        // Show the Up button in the action bar.
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-
-        b.backupButton.setOnClickListener { view -> backupClicked(view) }
-        b.restoreButton.setOnClickListener { view -> restoreClicked(view) }
-
+        // Register file pickers
         backupChooserLauncher = registerForActivityResult(
             ActivityResultContracts.CreateDocument("application/json")
-        ) { result -> storeConfig(result) }
+        ) { uri ->
+            uri?.let { viewModel.performBackup(baseContext, it) }
+        }
 
         restoreChooserLauncher = registerForActivityResult(
             ActivityResultContracts.OpenDocument()
-        ) { result -> readConfig(result) }
+        ) { uri ->
+            uri?.let { viewModel.performRestore(baseContext, it) }
+        }
 
-        Data.observeProfile(this) { p ->
-            if (p == null) {
-                b.backupButton.isEnabled = false
-                b.backupExplanationText.isEnabled = false
-            } else {
-                b.backupButton.isEnabled = true
-                b.backupExplanationText.isEnabled = true
+        // Get initial profile theme
+        var profileTheme = Data.getProfile()?.theme ?: -1
+
+        // Observe profile changes for backup button state and theme
+        Data.observeProfile(this) { profile ->
+            viewModel.updateBackupEnabled(profile != null)
+            profileTheme = profile?.theme ?: -1
+        }
+
+        setContent {
+            var currentTheme by remember { mutableIntStateOf(profileTheme) }
+
+            // Update theme when profile changes
+            LaunchedEffect(profileTheme) {
+                currentTheme = profileTheme
+            }
+
+            MoLeTheme(
+                profileHue = if (currentTheme >= 0) currentTheme.toFloat() else null
+            ) {
+                val uiState by viewModel.uiState.collectAsState()
+                val snackbarHostState = remember { SnackbarHostState() }
+
+                // Handle effects
+                LaunchedEffect(Unit) {
+                    viewModel.effects.collect { effect ->
+                        when (effect) {
+                            is BackupsEffect.LaunchBackupFilePicker -> {
+                                backupChooserLauncher.launch(effect.suggestedFileName)
+                            }
+
+                            is BackupsEffect.LaunchRestoreFilePicker -> {
+                                restoreChooserLauncher.launch(arrayOf("application/json"))
+                            }
+
+                            is BackupsEffect.ShowSnackbar -> {
+                                val message = when (val msg = effect.message) {
+                                    is BackupsMessage.Success -> getString(msg.messageResId)
+                                    is BackupsMessage.Error -> msg.message
+                                }
+                                snackbarHostState.showSnackbar(message)
+                            }
+                        }
+                    }
+                }
+
+                BackupsScreen(
+                    uiState = uiState,
+                    snackbarHostState = snackbarHostState,
+                    onEvent = viewModel::onEvent,
+                    onNavigateBack = { finish() }
+                )
             }
         }
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if (item.itemId == android.R.id.home) {
-            finish()
-            return true
-        }
-        return super.onOptionsItemSelected(item)
-    }
-
-    private fun storeConfig(result: Uri?) {
-        if (result == null) return
-
-        try {
-            val saver = ConfigWriter(
-                baseContext,
-                result,
-                object : ConfigIO.OnErrorListener() {
-                    override fun error(e: Exception) {
-                        Snackbar.make(
-                            b.backupButton,
-                            e.toString(),
-                            BaseTransientBottomBar.LENGTH_LONG
-                        ).show()
-                    }
-                },
-                object : ConfigWriter.OnDoneListener() {
-                    override fun done() {
-                        Snackbar.make(
-                            b.backupButton,
-                            R.string.config_saved,
-                            Snackbar.LENGTH_LONG
-                        ).show()
-                    }
-                }
-            )
-            saver.start()
-        } catch (e: IOException) {
-            e.printStackTrace()
-        }
-    }
-
-    private fun readConfig(result: Uri?) {
-        if (result == null) return
-
-        try {
-            val reader = ConfigReader(
-                baseContext,
-                result,
-                object : ConfigIO.OnErrorListener() {
-                    override fun error(e: Exception) {
-                        Snackbar.make(
-                            b.backupButton,
-                            e.toString(),
-                            BaseTransientBottomBar.LENGTH_LONG
-                        ).show()
-                    }
-                },
-                object : ConfigReader.OnDoneListener() {
-                    override fun done() {
-                        Snackbar.make(
-                            b.backupButton,
-                            R.string.config_restored,
-                            Snackbar.LENGTH_LONG
-                        ).show()
-                    }
-                }
-            )
-            reader.start()
-        } catch (e: IOException) {
-            e.printStackTrace()
-        }
-    }
-
-    private fun backupClicked(view: View) {
-        val now = Date()
-        val df = SimpleDateFormat("y-MM-dd HH:mm", Locale.getDefault())
-        backupChooserLauncher.launch(String.format("MoLe-%s.json", df.format(now)))
-    }
-
-    private fun restoreClicked(view: View) {
-        restoreChooserLauncher.launch(arrayOf("application/json"))
     }
 
     companion object {
