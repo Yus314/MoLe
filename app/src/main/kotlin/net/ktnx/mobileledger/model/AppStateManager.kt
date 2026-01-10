@@ -31,16 +31,44 @@ import java.util.concurrent.atomic.AtomicInteger
 import net.ktnx.mobileledger.async.RetrieveTransactionsTask
 import net.ktnx.mobileledger.db.DB
 import net.ktnx.mobileledger.db.Profile
-import net.ktnx.mobileledger.utils.Locker
 import net.ktnx.mobileledger.utils.Logger
 
-object Data {
+/**
+ * Application state manager for UI and app-level state.
+ *
+ * This object manages:
+ * - Background task state (running status, progress)
+ * - Drawer open/closed state
+ * - Currency formatting preferences
+ * - Locale settings
+ * - Update status information
+ *
+ * ## Migration Note (008-data-layer-repository)
+ *
+ * Profile-related state is being migrated to ProfileRepository:
+ * - `profiles` -> ProfileRepository.getAllProfiles()
+ * - `profile` -> ProfileRepository.currentProfile
+ * - `getProfile()` -> ProfileRepository.currentProfile.value
+ * - `setCurrentProfile()` -> ProfileRepository.setCurrentProfile()
+ *
+ * The profile-related members are marked @Deprecated and will be removed
+ * once all ViewModels are migrated to use ProfileRepository.
+ */
+object AppStateManager {
     @JvmField
     val backgroundTasksRunning = MutableLiveData(false)
 
     @JvmField
     val backgroundTaskProgress = MutableLiveData<RetrieveTransactionsTask.Progress>()
 
+    /**
+     * @deprecated Use ProfileRepository.getAllProfiles() instead.
+     * This will be removed after ViewModel migration (Phase 6).
+     */
+    @Deprecated(
+        message = "Use ProfileRepository.getAllProfiles() instead",
+        replaceWith = ReplaceWith("profileRepository.getAllProfiles()")
+    )
     @JvmField
     val profiles: LiveData<List<Profile>> = DB.get().getProfileDAO().getAllOrdered()
 
@@ -76,9 +104,17 @@ object Data {
 
     const val decimalDot = "."
 
+    /**
+     * @deprecated Use ProfileRepository.currentProfile instead.
+     * This will be removed after ViewModel migration (Phase 6).
+     */
+    @Deprecated(
+        message = "Use ProfileRepository.currentProfile instead",
+        replaceWith = ReplaceWith("profileRepository.currentProfile")
+    )
     private val profile = MutableLiveData<Profile?>()
+
     private val backgroundTaskCount = AtomicInteger(0)
-    private val profilesLocker = Locker()
     private var numberFormatter: NumberFormat? = null
     private var decimalSeparator = ""
 
@@ -89,6 +125,14 @@ object Data {
     @JvmStatic
     fun getDecimalSeparator(): String = decimalSeparator
 
+    /**
+     * @deprecated Use ProfileRepository.currentProfile.value instead.
+     * This will be removed after ViewModel migration (Phase 6).
+     */
+    @Deprecated(
+        message = "Use ProfileRepository.currentProfile.value instead",
+        replaceWith = ReplaceWith("profileRepository.currentProfile.value")
+    )
     @JvmStatic
     fun getProfile(): Profile? = profile.value
 
@@ -112,11 +156,27 @@ object Data {
         backgroundTasksRunning.postValue(cnt > 0)
     }
 
+    /**
+     * @deprecated Use ProfileRepository.setCurrentProfile() instead.
+     * This will be removed after ViewModel migration (Phase 6).
+     */
+    @Deprecated(
+        message = "Use ProfileRepository.setCurrentProfile() instead",
+        replaceWith = ReplaceWith("profileRepository.setCurrentProfile(newProfile)")
+    )
     @JvmStatic
     fun setCurrentProfile(newProfile: Profile?) {
         profile.value = newProfile
     }
 
+    /**
+     * @deprecated Use ProfileRepository.setCurrentProfile() instead (with appropriate coroutine context).
+     * This will be removed after ViewModel migration (Phase 6).
+     */
+    @Deprecated(
+        message = "Use ProfileRepository.setCurrentProfile() instead",
+        replaceWith = ReplaceWith("profileRepository.setCurrentProfile(newProfile)")
+    )
     @JvmStatic
     fun postCurrentProfile(newProfile: Profile?) {
         profile.postValue(newProfile)
@@ -180,11 +240,27 @@ object Data {
     @JvmStatic
     fun formatNumber(number: Float): String = numberFormatter?.format(number) ?: number.toString()
 
+    /**
+     * @deprecated Use ProfileRepository.currentProfile with Flow collection instead.
+     * This will be removed after ViewModel migration (Phase 6).
+     */
+    @Deprecated(
+        message = "Use ProfileRepository.currentProfile with Flow collection instead",
+        replaceWith = ReplaceWith("profileRepository.currentProfile.collect { ... }")
+    )
     @JvmStatic
     fun observeProfile(lifecycleOwner: LifecycleOwner, observer: Observer<Profile?>) {
         profile.observe(lifecycleOwner, observer)
     }
 
+    /**
+     * @deprecated Use structured concurrency with Flow instead.
+     * This will be removed after ViewModel migration (Phase 6).
+     */
+    @Deprecated(
+        message = "Use structured concurrency with Flow instead",
+        replaceWith = ReplaceWith("// Use coroutine scope cancellation instead")
+    )
     @JvmStatic
     fun removeProfileObservers(owner: LifecycleOwner) {
         profile.removeObservers(owner)
@@ -202,3 +278,13 @@ object Data {
         return parsed.toFloat()
     }
 }
+
+/**
+ * Type alias for backward compatibility during migration.
+ * @deprecated Use AppStateManager directly.
+ */
+@Deprecated(
+    message = "Use AppStateManager directly",
+    replaceWith = ReplaceWith("AppStateManager")
+)
+typealias Data = AppStateManager

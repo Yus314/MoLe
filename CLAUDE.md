@@ -10,6 +10,7 @@ Auto-generated from all feature plans. Last updated: 2026-01-10
 - AndroidX Lifecycle 2.4.1, Room 2.4.2, Navigation 2.4.2, Jackson 2.17.1, Material 1.5.0 (001-java-kotlin-migration)
 - Jetpack Compose with Material3 (composeBom 2024.12.01) (006-compose-ui-rebuild)
 - Room Database（既存、変更なし） (006-compose-ui-rebuild)
+- Kotlin 2.0.21 / JVM target 1.8 + Hilt 2.51.1, Room 2.4.2, Coroutines 1.9.0, Jetpack Compose (008-data-layer-repository)
 
 ## Project Structure
 
@@ -420,10 +421,9 @@ class MyScreenTest {
 ```
 
 ## Recent Changes
+- 008-data-layer-repository: Added Kotlin 2.0.21 / JVM target 1.8 + Hilt 2.51.1, Room 2.4.2, Coroutines 1.9.0, Jetpack Compose
 - 007-complete-compose-migration: **Compose移行完了** - 全XMLレイアウト削除、Fragment/DialogFragment全廃止、ViewBinding全廃止。DatePickerDialog、CurrencyPickerDialog、CrashReportDialog、SplashScreen、BackupsScreen をCompose化。ProfilesRecyclerViewAdapter等レガシーアダプター削除
 - 006-compose-ui-rebuild: Migrated MainActivityCompose, ProfileDetailActivity, TemplatesActivity, NewTransactionActivityCompose to Jetpack Compose with Material3
-- ktlint-enforcement: Enabled most ktlint rules, auto-fixed 200+ files across 4 phases, permanently disabled 8 rules for JSON/API compatibility
-- 005-hilt-di-setup: Added Hilt 2.51.1 DI framework, migrated MainModel to constructor injection, created DatabaseModule and DataModule, added instrumentation test infrastructure with HiltTestRunner and TestDatabaseModule
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->

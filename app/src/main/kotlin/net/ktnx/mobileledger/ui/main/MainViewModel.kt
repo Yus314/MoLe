@@ -31,18 +31,18 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import net.ktnx.mobileledger.App
-import net.ktnx.mobileledger.async.GeneralBackgroundTasks
 import net.ktnx.mobileledger.async.RetrieveTransactionsTask
 import net.ktnx.mobileledger.async.TransactionAccumulator
-import net.ktnx.mobileledger.dao.AccountDAO
-import net.ktnx.mobileledger.dao.ProfileDAO
-import net.ktnx.mobileledger.dao.TransactionDAO
+import net.ktnx.mobileledger.data.repository.AccountRepository
+import net.ktnx.mobileledger.data.repository.ProfileRepository
+import net.ktnx.mobileledger.data.repository.TransactionRepository
 import net.ktnx.mobileledger.db.Profile
-import net.ktnx.mobileledger.model.Data
+import net.ktnx.mobileledger.model.AppStateManager
 import net.ktnx.mobileledger.model.LedgerAccount
 import net.ktnx.mobileledger.model.LedgerTransaction
 import net.ktnx.mobileledger.model.TransactionListItem
@@ -55,10 +55,9 @@ import net.ktnx.mobileledger.utils.SimpleDate
  */
 @HiltViewModel
 class MainViewModel @Inject constructor(
-    private val profileDAO: ProfileDAO,
-    private val accountDAO: AccountDAO,
-    private val transactionDAO: TransactionDAO,
-    private val data: Data
+    private val profileRepository: ProfileRepository,
+    private val accountRepository: AccountRepository,
+    private val transactionRepository: TransactionRepository
 ) : ViewModel() {
 
     private val _mainUiState = MutableStateFlow(MainUiState())
@@ -118,10 +117,8 @@ class MainViewModel @Inject constructor(
 
     private fun searchAccountNames(query: String) {
         val profileId = _mainUiState.value.currentProfileId ?: return
-        GeneralBackgroundTasks.run {
-            val suggestions = AccountDAO.unbox(
-                accountDAO.lookupNamesInProfileByNameSync(profileId, query.uppercase())
-            ).take(10)
+        viewModelScope.launch {
+            val suggestions = accountRepository.searchAccountNamesSync(profileId, query).take(10)
             _transactionListUiState.update {
                 it.copy(accountSuggestions = suggestions.toImmutableList())
             }
@@ -198,9 +195,9 @@ class MainViewModel @Inject constructor(
     }
 
     private fun selectProfile(profileId: Long) {
-        GeneralBackgroundTasks.run {
-            profileDAO.getByIdSync(profileId)?.let { profile ->
-                data.postCurrentProfile(profile)
+        viewModelScope.launch {
+            profileRepository.getProfileByIdSync(profileId)?.let { profile ->
+                profileRepository.setCurrentProfile(profile)
                 closeDrawer()
             }
         }
@@ -208,12 +205,12 @@ class MainViewModel @Inject constructor(
 
     private fun openDrawer() {
         _mainUiState.update { it.copy(isDrawerOpen = true) }
-        data.drawerOpen.postValue(true)
+        AppStateManager.drawerOpen.postValue(true)
     }
 
     private fun closeDrawer() {
         _mainUiState.update { it.copy(isDrawerOpen = false) }
-        data.drawerOpen.postValue(false)
+        AppStateManager.drawerOpen.postValue(false)
     }
 
     private fun refreshData() {
@@ -267,11 +264,11 @@ class MainViewModel @Inject constructor(
     }
 
     private fun reorderProfiles(orderedProfiles: List<ProfileListItem>) {
-        GeneralBackgroundTasks.run {
+        viewModelScope.launch {
             val profiles = orderedProfiles.mapNotNull { item ->
-                profileDAO.getByIdSync(item.id)
+                profileRepository.getProfileByIdSync(item.id)
             }
-            profileDAO.updateOrderSync(profiles)
+            profileRepository.updateProfileOrder(profiles)
         }
     }
 
@@ -480,12 +477,12 @@ class MainViewModel @Inject constructor(
 
         _accountSummaryUiState.update { it.copy(isLoading = true) }
 
-        GeneralBackgroundTasks.run {
+        viewModelScope.launch {
             try {
                 // Get total account count for hybrid display (displayed/total)
-                val totalCount = accountDAO.getCountForProfileSync(profileId)
+                val totalCount = accountRepository.getCountForProfile(profileId)
 
-                val dbAccounts = accountDAO.getAllWithAmountsSync(profileId, showZeroBalances)
+                val dbAccounts = accountRepository.getAllWithAmountsSync(profileId, showZeroBalances)
 
                 // First pass: build LedgerAccount objects and determine hasSubAccounts
                 val accMap = HashMap<String, LedgerAccount>()
@@ -505,7 +502,7 @@ class MainViewModel @Inject constructor(
                 // Second pass: build the display list with correct hasSubAccounts values
                 // Include ALL accounts - visibility will be computed in UI based on parent's isExpanded
                 val adapterList = mutableListOf<AccountSummaryListItem>()
-                val headerText = data.lastAccountsUpdateText.value ?: "----"
+                val headerText = AppStateManager.lastAccountsUpdateText.value ?: "----"
                 adapterList.add(AccountSummaryListItem.Header(headerText))
 
                 for (dbAcc in dbAccounts) {
@@ -545,8 +542,8 @@ class MainViewModel @Inject constructor(
                         headerText = headerText
                     )
                 }
-                data.lastUpdateAccountCount.postValue(filteredList.size - 1)
-                data.lastUpdateTotalAccountCount.postValue(totalCount)
+                AppStateManager.lastUpdateAccountCount.postValue(filteredList.size - 1)
+                AppStateManager.lastUpdateTotalAccountCount.postValue(totalCount)
             } catch (e: Exception) {
                 Logger.debug("MainViewModel", "Error loading accounts", e)
                 _accountSummaryUiState.update { it.copy(isLoading = false) }
@@ -607,13 +604,12 @@ class MainViewModel @Inject constructor(
 
         _transactionListUiState.update { it.copy(isLoading = true) }
 
-        GeneralBackgroundTasks.run {
+        viewModelScope.launch {
             try {
-                val dbTransactions = if (accountFilter.isNullOrEmpty()) {
-                    transactionDAO.getAllWithAccountsSync(profileId)
-                } else {
-                    transactionDAO.getAllWithAccountsFilteredSync(profileId, accountFilter)
-                }
+                val dbTransactions = transactionRepository.getTransactionsFiltered(
+                    profileId,
+                    accountFilter
+                ).first()
 
                 val accumulator = TransactionAccumulator(accountFilter, accountFilter)
                 for (tr in dbTransactions) {
@@ -680,7 +676,7 @@ class MainViewModel @Inject constructor(
         firstTransactionDate = first
         lastTransactionDate = last
 
-        val headerText = data.lastTransactionsUpdateText.value ?: "----"
+        val headerText = AppStateManager.lastTransactionsUpdateText.value ?: "----"
         _transactionListUiState.update {
             it.copy(
                 transactions = displayItems.toImmutableList(),
@@ -690,7 +686,7 @@ class MainViewModel @Inject constructor(
                 headerText = headerText
             )
         }
-        data.lastUpdateTransactionCount.postValue(count)
+        AppStateManager.lastUpdateTransactionCount.postValue(count)
     }
 
     @Synchronized
@@ -699,7 +695,7 @@ class MainViewModel @Inject constructor(
             Logger.debug("db", "Ignoring request for transaction retrieval - already active")
             return
         }
-        val profile = data.getProfile()
+        val profile = profileRepository.currentProfile.value
         checkNotNull(profile)
 
         retrieveTransactionsTask = RetrieveTransactionsTask(profile)
@@ -713,7 +709,7 @@ class MainViewModel @Inject constructor(
         if (retrieveTransactionsTask != null) {
             retrieveTransactionsTask?.interrupt()
         } else {
-            data.backgroundTaskProgress.value = null
+            AppStateManager.backgroundTaskProgress.value = null
         }
     }
 

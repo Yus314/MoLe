@@ -22,46 +22,49 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
-import net.ktnx.mobileledger.model.Data
+import net.ktnx.mobileledger.model.AppStateManager
 
 /**
- * Hilt module providing the global [Data] singleton.
+ * Hilt module providing the global [AppStateManager] singleton.
  *
- * This module provides the existing [Data] Kotlin object to enable dependency
+ * This module provides the [AppStateManager] Kotlin object to enable dependency
  * injection while maintaining backward compatibility with existing code.
  *
  * ## Provided Dependencies
  *
- * - [Data] - The global application state holder (singleton)
- *   - Contains the currently selected profile
+ * - [AppStateManager] - The global application UI/state holder (singleton)
  *   - Holds observable state for background tasks
- *   - Provides access to transaction counts and update status
+ *   - Contains drawer open/closed state
+ *   - Contains currency formatting preferences
+ *   - Contains locale settings
+ *   - Provides access to update status information
+ *
+ * ## Migration Note (008-data-layer-repository)
+ *
+ * Profile-related state has been moved to ProfileRepository:
+ * - `AppStateManager.profiles` -> `ProfileRepository.getAllProfiles()`
+ * - `AppStateManager.getProfile()` -> `ProfileRepository.currentProfile`
+ *
+ * ViewModels should inject ProfileRepository for profile data access.
  *
  * ## Usage
  *
- * ViewModels can request [Data] via constructor injection:
+ * ViewModels can request [AppStateManager] via constructor injection:
  *
  * ```kotlin
  * @HiltViewModel
  * class MyViewModel @Inject constructor(
- *     private val data: Data
+ *     private val appStateManager: AppStateManager
  * ) : ViewModel() {
- *     fun getProfile() = data.getProfile()
+ *     fun isBackgroundTaskRunning() = appStateManager.backgroundTasksRunning.value
  * }
  * ```
- *
- * ## Note
- *
- * The [Data] object has static initialization that accesses the database.
- * For unit tests that don't require the full Android environment, consider
- * using instrumentation tests where [TestDatabaseModule] provides an
- * in-memory database.
  */
 @Module
 @InstallIn(SingletonComponent::class)
-object DataModule {
+object AppStateModule {
 
     @Provides
     @Singleton
-    fun provideData(): Data = Data
+    fun provideAppStateManager(): AppStateManager = AppStateManager
 }
