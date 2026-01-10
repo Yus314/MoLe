@@ -2,28 +2,36 @@
 ===============================================================================
 同期影響レポート
 ===============================================================================
-バージョン変更: 1.3.0 → 1.4.0 (静的解析・リント原則の追加)
+バージョン変更: 1.4.0 → 1.5.0 (階層型アーキテクチャ原則の追加)
 
 変更された原則:
 - なし
 
 追加されたセクション:
-- IX. 静的解析とリント: ktlint, detekt, Android Lintの設定と実行ルールを新設
+- X. 階層型アーキテクチャ（Googleアーキテクチャガイドライン準拠）
+  - 関心の分離
+  - 単方向データフロー
+  - 信頼できる唯一の情報源（Single Source of Truth）
+  - データレイヤ（Repositoryパターン）
+  - ドメインレイヤ（UseCaseパターン）
+  - UIレイヤ（ViewModel + Compose）
+  - Coroutines/Flow
 
 削除されたセクション: なし
 
 更新が必要なテンプレート:
 - .specify/templates/plan-template.md ✅ 互換性あり（Constitution Checkセクションが存在）
 - .specify/templates/spec-template.md ✅ 互換性あり（User Scenarios & Testingセクションが整合）
-- .specify/templates/tasks-template.md ✅ 互換性あり（Phase 1でlinting設定タスクが含まれる）
+- .specify/templates/tasks-template.md ✅ 互換性あり（Phase構造が柔軟）
 - .specify/templates/checklist-template.md ✅ 互換性あり（汎用構造）
 - .specify/templates/agent-file-template.md ✅ 互換性あり（汎用構造）
 
 関連ドキュメント:
-- CLAUDE.md ✅ 互換性あり: Pre-commit Hooksセクションが既に存在
-- flake.nix ✅ ソース: ktlint, detektのpre-commit hook設定、Android Lintスクリプト
+- CLAUDE.md ⚠ 更新推奨: 階層型アーキテクチャのパッケージ構成を追記すべき
 
-フォローアップTODO: なし
+フォローアップTODO:
+- CLAUDE.mdに新しいパッケージ構成（data/domain/ui）を追記
+- 既存コードの段階的なアーキテクチャ移行計画を策定
 
 ===============================================================================
 -->
@@ -323,6 +331,308 @@ nix run .#verify     # フルワークフロー（test → build → install）
 リポジトリに混入することを防ぎ、コードレビューの負担を軽減する。
 Nixで環境を統一することで、開発者間やCI環境でのツールバージョンの差異を排除する。
 
+### X. 階層型アーキテクチャ（Googleアーキテクチャガイドライン）
+
+**絶対ルール**: Googleが推奨する階層型アーキテクチャを採用する。
+関心の分離、単方向データフロー、信頼できる唯一の情報源（Single Source of Truth）を
+厳守し、テスト容易性と保守性を最大化する。
+
+#### アーキテクチャの階層
+
+```text
+┌─────────────────────────────────────────────────────────────────────────┐
+│                              UI Layer                                    │
+│  ┌─────────────────────────────────────────────────────────────────┐    │
+│  │  UI Elements (Compose)  ←─────────  ViewModel                    │    │
+│  │  - 状態の表示のみ           - UiStateの保持・公開               │    │
+│  │  - イベントの発火のみ       - ユーザーイベントの処理             │    │
+│  └─────────────────────────────────────────────────────────────────┘    │
+└──────────────────────────────────────┬──────────────────────────────────┘
+                                       │
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                           Domain Layer (Optional)                        │
+│  ┌─────────────────────────────────────────────────────────────────┐    │
+│  │  UseCase                                                         │    │
+│  │  - 複雑なビジネスロジックのカプセル化                            │    │
+│  │  - 複数Repositoryの組み合わせ                                   │    │
+│  │  - 再利用可能なビジネスルール                                    │    │
+│  └─────────────────────────────────────────────────────────────────┘    │
+└──────────────────────────────────────┬──────────────────────────────────┘
+                                       │
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                             Data Layer                                   │
+│  ┌─────────────────────────────────────────────────────────────────┐    │
+│  │  Repository                                                      │    │
+│  │  - データアクセスの抽象化                                        │    │
+│  │  - 単一のデータソースを公開（Single Source of Truth）           │    │
+│  │  - キャッシュ戦略の管理                                         │    │
+│  └─────────────────────────────────────────────────────────────────┘    │
+│  ┌─────────────────────────────────────────────────────────────────┐    │
+│  │  Data Sources                                                    │    │
+│  │  - Local: Room Database (DAO)                                    │    │
+│  │  - Remote: Retrofit/OkHttp (API)                                 │    │
+│  └─────────────────────────────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+#### パッケージ構成
+
+```text
+app/src/main/kotlin/net/ktnx/mobileledger/
+├── data/                    # Data Layer
+│   ├── repository/          # Repository実装
+│   │   ├── ProfileRepository.kt
+│   │   ├── TransactionRepository.kt
+│   │   └── AccountRepository.kt
+│   ├── local/               # ローカルデータソース
+│   │   ├── dao/             # Room DAO（既存）
+│   │   └── entity/          # Room Entity（既存）
+│   └── remote/              # リモートデータソース
+│       └── api/             # Retrofit API（既存）
+│
+├── domain/                  # Domain Layer
+│   ├── usecase/             # UseCase実装
+│   │   ├── profile/
+│   │   ├── transaction/
+│   │   └── account/
+│   └── model/               # ドメインモデル
+│
+├── ui/                      # UI Layer
+│   ├── main/                # メイン画面
+│   │   ├── MainScreen.kt
+│   │   ├── MainViewModel.kt
+│   │   └── MainUiState.kt
+│   ├── transaction/         # 取引画面
+│   ├── profile/             # プロファイル画面
+│   ├── theme/               # Composeテーマ
+│   └── components/          # 共通UIコンポーネント
+│
+└── di/                      # Hilt DIモジュール
+    ├── DatabaseModule.kt
+    ├── DataModule.kt
+    ├── RepositoryModule.kt  # 新規追加
+    └── UseCaseModule.kt     # 新規追加（必要に応じて）
+```
+
+#### 単方向データフロー（Unidirectional Data Flow）
+
+```text
+Events (User actions)
+        │
+        ▼
+┌───────────────┐     ┌─────────────────┐     ┌────────────────┐
+│   UI Element  │────►│   ViewModel     │────►│   UseCase/     │
+│   (Compose)   │     │                 │     │   Repository   │
+└───────────────┘     └─────────────────┘     └────────────────┘
+        ▲                     │                        │
+        │                     │                        │
+        │              ┌──────▼──────┐                │
+        └──────────────│   UiState   │◄───────────────┘
+                       │   (Flow)    │
+                       └─────────────┘
+
+State (Immutable)
+```
+
+**データフローの原則**:
+- UIはViewModelからUiState（Flow）を収集して表示する
+- ユーザーアクションはイベントとしてViewModelに伝達する
+- ViewModelはUseCase/Repositoryを呼び出しデータを更新する
+- データ変更はFlowを通じてUIに自動的に反映される
+
+#### Repository パターン
+
+**絶対ルール**: アプリケーションデータはRepositoryを通じて公開する。
+ViewModelはDAOに直接アクセスしない。
+
+```kotlin
+// Repository インターフェース
+interface ProfileRepository {
+    fun getAllProfiles(): Flow<List<Profile>>
+    suspend fun getProfileById(id: Long): Profile?
+    suspend fun insertProfile(profile: Profile): Long
+    suspend fun updateProfile(profile: Profile)
+    suspend fun deleteProfile(profile: Profile)
+}
+
+// Repository 実装
+class ProfileRepositoryImpl @Inject constructor(
+    private val profileDAO: ProfileDAO
+) : ProfileRepository {
+    override fun getAllProfiles(): Flow<List<Profile>> =
+        profileDAO.getAllProfiles()
+
+    override suspend fun getProfileById(id: Long): Profile? =
+        profileDAO.getProfileById(id)
+    // ...
+}
+
+// ViewModel での使用
+@HiltViewModel
+class ProfileViewModel @Inject constructor(
+    private val profileRepository: ProfileRepository  // DAOではなくRepository
+) : ViewModel() {
+    val profiles: StateFlow<List<Profile>> = profileRepository
+        .getAllProfiles()
+        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+}
+```
+
+**Repository の責務**:
+- データソース（ローカル/リモート）の切り替えを隠蔽する
+- キャッシュ戦略を実装する（必要に応じて）
+- データの整合性を保証する
+- 上位層にFlowでリアクティブなデータを公開する
+
+#### UseCase パターン（ドメインレイヤ）
+
+**絶対ルール**: 複雑なビジネスロジックはUseCaseにカプセル化する。
+単純なCRUD操作のみの場合はUseCaseをスキップしてRepositoryを直接使用してもよい。
+
+```kotlin
+// UseCase の例
+class SyncTransactionsUseCase @Inject constructor(
+    private val transactionRepository: TransactionRepository,
+    private val profileRepository: ProfileRepository
+) {
+    suspend operator fun invoke(profileId: Long): Result<SyncResult> {
+        val profile = profileRepository.getProfileById(profileId)
+            ?: return Result.failure(ProfileNotFoundException())
+
+        return try {
+            val transactions = transactionRepository.fetchRemoteTransactions(profile)
+            transactionRepository.saveTransactions(transactions)
+            Result.success(SyncResult(transactions.size))
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+}
+```
+
+**UseCase を作成する条件**:
+- 複数のRepositoryを組み合わせる必要がある場合
+- ビジネスルールが複雑で再利用可能な場合
+- 同じロジックを複数のViewModelで使用する場合
+
+**UseCase を作成しない条件**:
+- 単純なCRUD操作（Repository直接呼び出しで十分）
+- ロジックが1つのViewModelでのみ使用される場合
+
+#### UiState パターン
+
+**絶対ルール**: UIの状態は不変のデータクラス（UiState）として表現する。
+ViewModelはStateFlowでUiStateを公開し、UIはこれを収集して表示する。
+
+```kotlin
+// UiState の定義
+data class MainUiState(
+    val isLoading: Boolean = false,
+    val profiles: List<Profile> = emptyList(),
+    val selectedProfile: Profile? = null,
+    val error: String? = null
+)
+
+// イベント（ユーザーアクション）
+sealed class MainEvent {
+    data class ProfileSelected(val profileId: Long) : MainEvent()
+    object RefreshRequested : MainEvent()
+    object ErrorDismissed : MainEvent()
+}
+
+// エフェクト（1回限りのナビゲーションやダイアログ）
+sealed class MainEffect {
+    data class NavigateToProfile(val profileId: Long) : MainEffect()
+    data class ShowSnackbar(val message: String) : MainEffect()
+}
+
+// ViewModel
+@HiltViewModel
+class MainViewModel @Inject constructor(
+    private val profileRepository: ProfileRepository
+) : ViewModel() {
+    private val _uiState = MutableStateFlow(MainUiState())
+    val uiState: StateFlow<MainUiState> = _uiState.asStateFlow()
+
+    private val _effects = Channel<MainEffect>()
+    val effects = _effects.receiveAsFlow()
+
+    fun onEvent(event: MainEvent) {
+        when (event) {
+            is MainEvent.ProfileSelected -> selectProfile(event.profileId)
+            is MainEvent.RefreshRequested -> refresh()
+            is MainEvent.ErrorDismissed -> dismissError()
+        }
+    }
+
+    private fun selectProfile(profileId: Long) {
+        viewModelScope.launch {
+            _effects.send(MainEffect.NavigateToProfile(profileId))
+        }
+    }
+}
+```
+
+#### Coroutines と Flow
+
+**絶対ルール**: 非同期処理にはKotlin CoroutinesとFlowを使用する。
+RxJavaやコールバックベースの非同期処理は新規コードでは使用しない。
+
+**Coroutines のルール**:
+- `viewModelScope`を使用する（`GlobalScope`禁止）
+- 長時間処理は`withContext(Dispatchers.IO)`で実行する
+- 例外処理は`try-catch`または`runCatching`で適切に行う
+- キャンセルに対応する（`isActive`チェック、`ensureActive()`）
+
+**Flow のルール**:
+- Repositoryはデータを`Flow`で公開する
+- ViewModelは`Flow`を`StateFlow`に変換して公開する
+- UIは`collectAsState()`でFlowを収集する
+- `stateIn()`で適切な`SharingStarted`ポリシーを選択する
+
+```kotlin
+// Repository
+fun getAllProfiles(): Flow<List<Profile>>
+
+// ViewModel
+val profiles: StateFlow<List<Profile>> = profileRepository
+    .getAllProfiles()
+    .stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
+// Compose UI
+@Composable
+fun ProfileList(viewModel: ProfileViewModel = hiltViewModel()) {
+    val profiles by viewModel.profiles.collectAsState()
+    // UIを描画
+}
+```
+
+#### 移行ガイドライン
+
+**新規コード**: 必ず階層型アーキテクチャに従う
+
+**既存コード**: 段階的に移行する
+
+1. **Phase 1**: 新規機能でRepositoryパターンを導入
+2. **Phase 2**: 既存ViewModelを段階的にRepository経由に移行
+3. **Phase 3**: 複雑なロジックをUseCaseに抽出
+4. **Phase 4**: 全DAOアクセスをRepository経由に統一
+
+**既存コードとの共存**:
+- 既存のDAO直接アクセスは動作するが、新規コードでは使用しない
+- リファクタリング時に段階的にRepository経由に移行する
+
+**根拠**: Googleが推奨する階層型アーキテクチャは、関心の分離を徹底することで
+テスト容易性、保守性、拡張性を最大化する。単方向データフローにより状態管理が
+予測可能になり、バグの発生を抑制する。Repositoryパターンによりデータソースの
+実装詳細を隠蔽し、将来的なデータソース変更にも柔軟に対応できる。
+
 ## 開発ワークフロー
 
 ### TDD開発フロー
@@ -446,4 +756,4 @@ Nixで環境を統一することで、開発者間やCI環境でのツールバ
 - 違反は文書化され、是正される
 - 例外は正当化され、機能計画のComplexity Trackingセクションに文書化する
 
-**バージョン**: 1.4.0 | **批准日**: 2026-01-05 | **最終修正日**: 2026-01-06
+**バージョン**: 1.5.0 | **批准日**: 2026-01-05 | **最終修正日**: 2026-01-10
