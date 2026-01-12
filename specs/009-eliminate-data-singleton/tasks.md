@@ -162,7 +162,7 @@ app/src/test/kotlin/net/ktnx/mobileledger/
 
 ---
 
-## Phase 8: User Story 6 - すべての ViewModel が独立してテスト可能になる (Priority: P3)
+## Phase 8: User Story 6 - すべての ViewModel が独立してテスト可能になる (Priority: P3) ✅
 
 **Goal**: 全 ViewModel がモックリポジトリ注入によるユニットテストが可能
 
@@ -170,9 +170,9 @@ app/src/test/kotlin/net/ktnx/mobileledger/
 
 ### Implementation for User Story 6
 
-- [ ] T045 [US6] Update MainViewModelTest to use mock repositories without Data singleton at `app/src/test/kotlin/net/ktnx/mobileledger/ui/main/MainViewModelTest.kt`
-- [ ] T046 [US6] Create AppStateServiceTest at `app/src/test/kotlin/net/ktnx/mobileledger/service/AppStateServiceTest.kt`
-- [ ] T047 [US6] Run all unit tests: `nix run .#test`
+- [X] T045 [US6] Update MainViewModelTest to use mock repositories without Data singleton at `app/src/test/kotlin/net/ktnx/mobileledger/ui/main/MainViewModelTest.kt`
+- [X] T046 [US6] Create AppStateServiceTest at `app/src/test/kotlin/net/ktnx/mobileledger/service/AppStateServiceTest.kt`
+- [X] T047 [US6] Run all unit tests: `nix run .#test`
 
 **Checkpoint**: All ViewModel tests pass without global state setup
 

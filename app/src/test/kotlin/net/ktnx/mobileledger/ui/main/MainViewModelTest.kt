@@ -17,6 +17,7 @@
 
 package net.ktnx.mobileledger.ui.main
 
+import java.util.Date
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -29,17 +30,25 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import net.ktnx.mobileledger.dao.TransactionDAO
 import net.ktnx.mobileledger.data.repository.AccountRepository
+import net.ktnx.mobileledger.data.repository.OptionRepository
 import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.data.repository.TransactionRepository
 import net.ktnx.mobileledger.db.Account
 import net.ktnx.mobileledger.db.AccountWithAmounts
+import net.ktnx.mobileledger.db.Option
 import net.ktnx.mobileledger.db.Profile
 import net.ktnx.mobileledger.db.Transaction
 import net.ktnx.mobileledger.db.TransactionWithAccounts
+import net.ktnx.mobileledger.service.AppStateService
+import net.ktnx.mobileledger.service.BackgroundTaskManager
+import net.ktnx.mobileledger.service.SyncInfo
+import net.ktnx.mobileledger.service.TaskProgress
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -63,6 +72,9 @@ class MainViewModelTest {
     private lateinit var profileRepository: FakeProfileRepositoryForViewModel
     private lateinit var transactionRepository: FakeTransactionRepositoryForViewModel
     private lateinit var accountRepository: FakeAccountRepositoryForViewModel
+    private lateinit var optionRepository: FakeOptionRepositoryForViewModel
+    private lateinit var backgroundTaskManager: FakeBackgroundTaskManagerForViewModel
+    private lateinit var appStateService: FakeAppStateServiceForViewModel
 
     @Before
     fun setup() {
@@ -70,6 +82,9 @@ class MainViewModelTest {
         profileRepository = FakeProfileRepositoryForViewModel()
         transactionRepository = FakeTransactionRepositoryForViewModel()
         accountRepository = FakeAccountRepositoryForViewModel()
+        optionRepository = FakeOptionRepositoryForViewModel()
+        backgroundTaskManager = FakeBackgroundTaskManagerForViewModel()
+        appStateService = FakeAppStateServiceForViewModel()
     }
 
     @After
@@ -226,6 +241,116 @@ class MainViewModelTest {
 
         assertEquals(1, results.size)
         assertEquals("Assets:Cash", results[0])
+    }
+
+    // ========================================
+    // BackgroundTaskManager integration tests
+    // ========================================
+
+    @Test
+    fun `backgroundTaskManager isRunning starts as false`() = runTest {
+        assertFalse(backgroundTaskManager.isRunning.value)
+    }
+
+    @Test
+    fun `backgroundTaskManager taskStarted updates isRunning`() = runTest {
+        backgroundTaskManager.taskStarted("test-task-1")
+
+        assertTrue(backgroundTaskManager.isRunning.value)
+        assertEquals(1, backgroundTaskManager.runningTaskCount)
+    }
+
+    @Test
+    fun `backgroundTaskManager taskFinished updates isRunning`() = runTest {
+        backgroundTaskManager.taskStarted("test-task-1")
+        assertTrue(backgroundTaskManager.isRunning.value)
+
+        backgroundTaskManager.taskFinished("test-task-1")
+
+        assertFalse(backgroundTaskManager.isRunning.value)
+        assertEquals(0, backgroundTaskManager.runningTaskCount)
+    }
+
+    @Test
+    fun `backgroundTaskManager updateProgress updates progress`() = runTest {
+        val progress = TaskProgress(
+            taskId = "test-task",
+            state = net.ktnx.mobileledger.service.TaskState.RUNNING,
+            message = "Syncing...",
+            current = 50,
+            total = 100
+        )
+
+        backgroundTaskManager.updateProgress(progress)
+
+        assertEquals(progress, backgroundTaskManager.progress.value)
+    }
+
+    // ========================================
+    // AppStateService integration tests
+    // ========================================
+
+    @Test
+    fun `appStateService drawerOpen starts as false`() = runTest {
+        assertFalse(appStateService.drawerOpen.value)
+    }
+
+    @Test
+    fun `appStateService setDrawerOpen updates state`() = runTest {
+        appStateService.setDrawerOpen(true)
+        assertTrue(appStateService.drawerOpen.value)
+
+        appStateService.setDrawerOpen(false)
+        assertFalse(appStateService.drawerOpen.value)
+    }
+
+    @Test
+    fun `appStateService toggleDrawer toggles state`() = runTest {
+        assertFalse(appStateService.drawerOpen.value)
+
+        appStateService.toggleDrawer()
+        assertTrue(appStateService.drawerOpen.value)
+
+        appStateService.toggleDrawer()
+        assertFalse(appStateService.drawerOpen.value)
+    }
+
+    @Test
+    fun `appStateService lastSyncInfo starts as EMPTY`() = runTest {
+        assertEquals(SyncInfo.EMPTY, appStateService.lastSyncInfo.value)
+        assertFalse(appStateService.lastSyncInfo.value.hasSynced)
+    }
+
+    @Test
+    fun `appStateService updateSyncInfo updates state`() = runTest {
+        val syncInfo = SyncInfo(
+            date = Date(),
+            transactionCount = 100,
+            accountCount = 50,
+            totalAccountCount = 75
+        )
+
+        appStateService.updateSyncInfo(syncInfo)
+
+        assertEquals(syncInfo, appStateService.lastSyncInfo.value)
+        assertTrue(appStateService.lastSyncInfo.value.hasSynced)
+    }
+
+    @Test
+    fun `appStateService clearSyncInfo resets to EMPTY`() = runTest {
+        val syncInfo = SyncInfo(
+            date = Date(),
+            transactionCount = 100,
+            accountCount = 50,
+            totalAccountCount = 75
+        )
+        appStateService.updateSyncInfo(syncInfo)
+        assertTrue(appStateService.lastSyncInfo.value.hasSynced)
+
+        appStateService.clearSyncInfo()
+
+        assertEquals(SyncInfo.EMPTY, appStateService.lastSyncInfo.value)
+        assertFalse(appStateService.lastSyncInfo.value.hasSynced)
     }
 
     // ========================================
@@ -459,5 +584,96 @@ class FakeAccountRepositoryForViewModel : AccountRepository {
 
     override suspend fun deleteAllAccounts() {
         accounts.clear()
+    }
+}
+
+/**
+ * Fake OptionRepository for ViewModel testing.
+ */
+class FakeOptionRepositoryForViewModel : OptionRepository {
+    private val options = mutableMapOf<String, Option>()
+
+    private fun makeKey(profileId: Long, name: String): String = "$profileId:$name"
+
+    override fun getOption(profileId: Long, name: String): Flow<Option?> =
+        MutableStateFlow(options[makeKey(profileId, name)])
+
+    override suspend fun getOptionSync(profileId: Long, name: String): Option? = options[makeKey(profileId, name)]
+
+    override suspend fun getAllOptionsForProfileSync(profileId: Long): List<Option> =
+        options.values.filter { it.profileId == profileId }
+
+    override suspend fun insertOption(option: Option): Long {
+        options[makeKey(option.profileId, option.name)] = option
+        return 1L
+    }
+
+    override suspend fun deleteOption(option: Option) {
+        options.remove(makeKey(option.profileId, option.name))
+    }
+
+    override suspend fun deleteOptionsForProfile(profileId: Long) {
+        options.keys.filter { it.startsWith("$profileId:") }.forEach { options.remove(it) }
+    }
+
+    override suspend fun deleteAllOptions() {
+        options.clear()
+    }
+}
+
+/**
+ * Fake BackgroundTaskManager for ViewModel testing.
+ */
+class FakeBackgroundTaskManagerForViewModel : BackgroundTaskManager {
+    private val runningTasks = mutableSetOf<String>()
+    private val _isRunning = MutableStateFlow(false)
+    private val _progress = MutableStateFlow<TaskProgress?>(null)
+
+    override val isRunning: StateFlow<Boolean> = _isRunning.asStateFlow()
+    override val progress: StateFlow<TaskProgress?> = _progress.asStateFlow()
+    override val runningTaskCount: Int get() = runningTasks.size
+
+    override fun taskStarted(taskId: String) {
+        runningTasks.add(taskId)
+        _isRunning.value = runningTasks.isNotEmpty()
+    }
+
+    override fun taskFinished(taskId: String) {
+        runningTasks.remove(taskId)
+        _isRunning.value = runningTasks.isNotEmpty()
+        if (runningTasks.isEmpty()) {
+            _progress.value = null
+        }
+    }
+
+    override fun updateProgress(progress: TaskProgress) {
+        _progress.value = progress
+    }
+}
+
+/**
+ * Fake AppStateService for ViewModel testing.
+ */
+class FakeAppStateServiceForViewModel : AppStateService {
+    private val _lastSyncInfo = MutableStateFlow(SyncInfo.EMPTY)
+    private val _drawerOpen = MutableStateFlow(false)
+
+    override val lastSyncInfo: StateFlow<SyncInfo> = _lastSyncInfo.asStateFlow()
+    override val drawerOpen: StateFlow<Boolean> = _drawerOpen.asStateFlow()
+
+    override fun updateSyncInfo(info: SyncInfo) {
+        _lastSyncInfo.value = info
+    }
+
+    override fun clearSyncInfo() {
+        _lastSyncInfo.value = SyncInfo.EMPTY
+    }
+
+    override fun setDrawerOpen(open: Boolean) {
+        _drawerOpen.value = open
+    }
+
+    override fun toggleDrawer() {
+        _drawerOpen.value = !_drawerOpen.value
     }
 }
