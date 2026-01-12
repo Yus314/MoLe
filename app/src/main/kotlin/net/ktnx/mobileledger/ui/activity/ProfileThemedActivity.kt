@@ -178,11 +178,7 @@ open class ProfileThemedActivity : CrashReportingActivity() {
 
     companion object {
         const val TAG: String = "prf-thm-act"
-
-        @JvmField
-        val PARAM_PROFILE_ID: String = "profile-id"
-
-        @JvmField
-        val PARAM_THEME: String = "theme"
+        const val PARAM_PROFILE_ID: String = "profile-id"
+        const val PARAM_THEME: String = "theme"
     }
 }

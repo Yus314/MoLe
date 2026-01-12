@@ -717,6 +717,7 @@ private fun FutureDatesSection(
     }
 }
 
+@Suppress("UnusedParameter")
 @Composable
 private fun PostingOptionsSection(
     permitPosting: Boolean,

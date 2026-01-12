@@ -67,7 +67,7 @@ class BackupsViewModel @Inject constructor(private val profileRepository: Profil
     private fun handleBackupClicked() {
         val now = Date()
         val df = SimpleDateFormat("y-MM-dd HH:mm", Locale.getDefault())
-        val suggestedFileName = String.format("MoLe-%s.json", df.format(now))
+        val suggestedFileName = String.format(Locale.ROOT, "MoLe-%s.json", df.format(now))
 
         viewModelScope.launch {
             _effects.send(BackupsEffect.LaunchBackupFilePicker(suggestedFileName))

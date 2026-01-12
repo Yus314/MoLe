@@ -28,9 +28,7 @@ class Profiler(private val name: String) {
     fun opStart() {
         if (!BuildConfig.DEBUG) return
 
-        if (opStart != 0L) {
-            throw IllegalStateException("opStart() already called with no opEnd()")
-        }
+        check(opStart == 0L) { "opStart() already called with no opEnd()" }
         this.opStart = System.currentTimeMillis()
         opCount++
     }
@@ -38,9 +36,7 @@ class Profiler(private val name: String) {
     fun opEnd() {
         if (!BuildConfig.DEBUG) return
 
-        if (opStart == 0L) {
-            throw IllegalStateException("opStart() not called")
-        }
+        check(opStart != 0L) { "opStart() not called" }
         opMills += System.currentTimeMillis() - opStart
         opStart = 0
     }

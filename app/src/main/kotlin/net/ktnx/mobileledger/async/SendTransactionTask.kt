@@ -118,7 +118,7 @@ class SendTransactionTask(
                         val reader = BufferedReader(InputStreamReader(resp))
                         val line = reader.readLine()
                         Logger.debug("network", "Response content: $line")
-                        throw IOException(String.format("Error response code %d", responseCode))
+                        throw IOException(String.format(Locale.ROOT, "Error response code %d", responseCode))
                     }
                 }
             }
@@ -132,7 +132,7 @@ class SendTransactionTask(
         http.setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
         http.setRequestProperty("Accept", "*/*")
         if (!session.isNullOrEmpty()) {
-            http.setRequestProperty("Cookie", String.format("_SESSION=%s", session))
+            http.setRequestProperty("Cookie", String.format(Locale.ROOT, "_SESSION=%s", session))
         }
         http.doOutput = true
         http.doInput = true
@@ -205,7 +205,7 @@ class SendTransactionTask(
                         throw IOException("Can't find _token string")
                     }
 
-                    else -> throw IOException(String.format("Error response code %d", http.responseCode))
+                    else -> throw IOException(String.format(Locale.ROOT, "Error response code %d", http.responseCode))
                 }
             }
         }
@@ -240,7 +240,7 @@ class SendTransactionTask(
 
                 API.v1_14, API.v1_15, API.v1_19_1, API.v1_23 -> sendOK(profileApiVersion)
 
-                else -> throw IllegalStateException("Unexpected API version: $profileApiVersion")
+                else -> error("Unexpected API version: $profileApiVersion")
             }
         } catch (e: Exception) {
             Logger.warn("SendTransaction", "Error sending transaction", e)
@@ -256,7 +256,7 @@ class SendTransactionTask(
         while (!legacySendOK()) {
             tried++
             if (tried >= 2) {
-                throw IOException(String.format("aborting after %d tries", tried))
+                throw IOException(String.format(Locale.ROOT, "aborting after %d tries", tried))
             }
             try {
                 sleep(100)

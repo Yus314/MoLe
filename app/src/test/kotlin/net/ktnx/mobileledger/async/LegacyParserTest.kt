@@ -41,10 +41,6 @@ class LegacyParserTest {
         assertEquals(comment, lta.comment)
     }
 
-    private fun expectNotParsed(input: String) {
-        assertNull(RetrieveTransactionsTask.parseTransactionAccountLine(input))
-    }
-
     @Test
     fun parseTransactionAccountLine() {
         expectParsedData(" acc:name  -34.56", "acc:name", -34.56f, null, null)

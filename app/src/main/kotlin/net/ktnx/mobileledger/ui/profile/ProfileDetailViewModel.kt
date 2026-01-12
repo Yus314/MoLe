@@ -57,7 +57,7 @@ import net.ktnx.mobileledger.utils.NetworkUtil
 @HiltViewModel
 class ProfileDetailViewModel @Inject constructor(
     private val profileRepository: ProfileRepository,
-    private val savedStateHandle: SavedStateHandle
+    @Suppress("unused") private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProfileDetailUiState())
@@ -477,7 +477,7 @@ class ProfileDetailViewModel @Inject constructor(
                         HledgerVersion(major, minor)
                     }
                 } else {
-                    Logger.debug("profile", String.format("Unrecognised version string '%s'", version))
+                    Logger.debug("profile", String.format(Locale.ROOT, "Unrecognised version string '%s'", version))
                     return null
                 }
             } finally {

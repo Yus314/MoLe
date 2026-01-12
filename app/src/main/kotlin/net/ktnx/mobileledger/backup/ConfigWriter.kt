@@ -52,7 +52,7 @@ constructor(
     override fun getStreamMode(): String = "w"
 
     override fun initStream() {
-        val fd = pfd?.fileDescriptor ?: throw IllegalStateException("File descriptor not available")
+        val fd = pfd?.fileDescriptor ?: error("File descriptor not available")
         w = RawConfigWriter(FileOutputStream(fd), profileRepository, templateRepository, currencyRepository)
     }
 

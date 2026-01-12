@@ -84,8 +84,6 @@ class MobileLedgerBackupAgent : BackupAgent() {
     }
 
     companion object {
-        private const val READ_BUF_LEN = 10
-
         @JvmField
         var SETTINGS_KEY = "settings"
     }

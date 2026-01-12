@@ -37,8 +37,7 @@ object Globals {
     @JvmField
     var monthNames: Array<String>? = null
 
-    @JvmField
-    val developerEmail = "dam+mole-crash@ktnx.net"
+    const val developerEmail = "dam+mole-crash@ktnx.net"
 
     private val reLedgerDate = Pattern.compile("^(?:(?:(\\d+)/)??(\\d\\d?)/)?(\\d\\d?)$")
 

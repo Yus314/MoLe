@@ -25,5 +25,5 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class ParsedDeclarationInfo(var file: String? = null, var line: Int = 0) {
-    override fun toString(): String = String.format("%s:%d", file ?: "unknown", line)
+    override fun toString(): String = String.format(java.util.Locale.ROOT, "%s:%d", file ?: "unknown", line)
 }

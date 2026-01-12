@@ -4,6 +4,8 @@
 build:
   maxIssues: -1  # 既存コードの段階的な改善のため、一時的に制限を無効化
   excludeCorrectable: false
+  excludes:
+    - '**/specs/**'  # 契約ファイルは実装コードではない
 
 config:
   validation: true
@@ -32,10 +34,23 @@ complexity:
     excludes:
       - '**/async/RetrieveTransactionsTask.kt'  # レガシー HTML パーサー
       - '**/async/SendTransactionTask.kt'  # レガシー送信処理
+      - '**/ui/main/*.kt'  # Compose UI
+      - '**/ui/transaction/*.kt'  # Compose UI
+      - '**/ui/profile/*.kt'  # Compose UI
+      - '**/ui/templates/*.kt'  # Compose UI
+      - '**/ui/components/*.kt'  # Compose UI
+      - '**/ui/backups/*.kt'  # Compose UI
+      - '**/ui/activity/MainActivityCompose.kt'  # Compose UI
   LongParameterList:
     active: true
     functionThreshold: 6
     constructorThreshold: 7
+    excludes:
+      - '**/ui/main/*.kt'  # Compose では多くのパラメータ/コールバックが必要
+      - '**/ui/transaction/*.kt'  # Compose UI
+      - '**/ui/profile/*.kt'  # Compose UI
+      - '**/ui/templates/*.kt'  # Compose UI
+      - '**/ui/components/*.kt'  # Compose UI
   NestedBlockDepth:
     active: true
     threshold: 4
@@ -68,6 +83,8 @@ exceptions:
     active: true
   TooGenericExceptionCaught:
     active: false  # Android では広範な例外キャッチが一般的
+  TooGenericExceptionThrown:
+    active: false  # Android/レガシーコードでは RuntimeException が一般的
 
 naming:
   active: true
@@ -87,6 +104,14 @@ naming:
       - '**/json/v1_*/**'  # hledger JSON API 互換性のため
       - '**/model/HledgerVersion.kt'  # API バージョン互換性のため
       - '**/db/Profile.kt'  # DB カラム名互換性のため
+  PackageNaming:
+    active: true
+    excludes:
+      - '**/json/v1_*/**'  # hledger API バージョン互換性のため
+  EnumNaming:
+    active: true
+    excludes:
+      - '**/json/API.kt'  # API バージョン名（v1_14 等）
 
 performance:
   active: true

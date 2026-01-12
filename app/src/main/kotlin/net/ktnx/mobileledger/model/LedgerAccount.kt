@@ -17,7 +17,7 @@
 
 package net.ktnx.mobileledger.model
 
-import java.util.regex.Pattern
+import java.util.Locale
 import net.ktnx.mobileledger.db.Account
 import net.ktnx.mobileledger.db.AccountValue
 import net.ktnx.mobileledger.db.AccountWithAmounts
@@ -47,6 +47,7 @@ class LedgerAccount(name: String, private val parent: LedgerAccount?) {
         if (parent != null && !name.startsWith(parent.name + ":")) {
             throw IllegalStateException(
                 String.format(
+                    Locale.ROOT,
                     "Account name '%s' doesn't match parent account '%s'",
                     name,
                     parent.name
@@ -165,7 +166,6 @@ class LedgerAccount(name: String, private val parent: LedgerAccount?) {
 
     companion object {
         private const val ACCOUNT_DELIMITER = ':'
-        private val reHigherAccount: Pattern = Pattern.compile("^[^:]+:")
 
         @JvmStatic
         fun extractParentName(accName: String): String? {

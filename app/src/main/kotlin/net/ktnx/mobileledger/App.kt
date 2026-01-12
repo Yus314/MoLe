@@ -67,6 +67,7 @@ class App : Application() {
                             Log.w(
                                 "http-auth",
                                 String.format(
+                                    Locale.ROOT,
                                     "Requesting host [%s] differs from expected [%s]",
                                     requestingHost,
                                     expectedHost
@@ -74,7 +75,7 @@ class App : Application() {
                             )
                         }
                     } catch (e: MalformedURLException) {
-                        e.printStackTrace()
+                        Logger.debug("http-auth", "Malformed URL for authentication", e)
                     }
                 }
 

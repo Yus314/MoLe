@@ -99,7 +99,6 @@ fun MainScreen(
         pageCount = { 2 }
     )
 
-    val accountsListState = rememberLazyListState()
     val transactionsListState = rememberLazyListState()
 
     // Date picker dialog state

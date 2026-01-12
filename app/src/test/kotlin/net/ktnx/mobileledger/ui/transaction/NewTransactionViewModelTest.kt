@@ -330,7 +330,7 @@ class FakeProfileRepositoryForTransaction : ProfileRepository {
         profiles.remove(profile.id)
     }
 
-    override suspend fun updateProfileOrder(profiles: List<Profile>) {}
+    override suspend fun updateProfileOrder(profiles: List<Profile>) { /* not needed for test */ }
     override suspend fun deleteAllProfiles() {
         profiles.clear()
         _currentProfile.value = null
@@ -448,10 +448,12 @@ class FakeAccountRepositoryForTransaction : AccountRepository {
         accounts.values.flatten().filter { it.contains(term, ignoreCase = true) }
 
     override suspend fun insertAccount(account: Account): Long = 0L
-    override suspend fun insertAccountWithAmounts(accountWithAmounts: AccountWithAmounts) {}
-    override suspend fun updateAccount(account: Account) {}
-    override suspend fun deleteAccount(account: Account) {}
-    override suspend fun storeAccounts(accounts: List<AccountWithAmounts>, profileId: Long) {}
+    override suspend fun insertAccountWithAmounts(accountWithAmounts: AccountWithAmounts) { /* not needed for test */ }
+    override suspend fun updateAccount(account: Account) { /* not needed for test */ }
+    override suspend fun deleteAccount(account: Account) { /* not needed for test */ }
+    override suspend fun storeAccounts(accounts: List<AccountWithAmounts>, profileId: Long) {
+        // not needed for test
+    }
     override suspend fun getCountForProfile(profileId: Long): Int = accounts[profileId]?.size ?: 0
     override suspend fun deleteAllAccounts() {
         accounts.clear()
@@ -516,10 +518,7 @@ class FakeTemplateRepositoryForTransaction : TemplateRepository {
         return copy
     }
 
-    override suspend fun saveTemplateWithAccounts(
-        header: TemplateHeader,
-        accounts: List<TemplateAccount>
-    ): Long {
+    override suspend fun saveTemplateWithAccounts(header: TemplateHeader, accounts: List<TemplateAccount>): Long {
         val twa = TemplateWithAccounts()
         twa.header = header
         twa.accounts = accounts

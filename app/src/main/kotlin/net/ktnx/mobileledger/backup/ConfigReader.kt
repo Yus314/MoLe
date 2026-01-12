@@ -53,7 +53,7 @@ constructor(
     override fun getStreamMode(): String = "r"
 
     override fun initStream() {
-        val fd = pfd?.fileDescriptor ?: throw IllegalStateException("File descriptor not available")
+        val fd = pfd?.fileDescriptor ?: error("File descriptor not available")
         r = RawConfigReader(FileInputStream(fd))
     }
 

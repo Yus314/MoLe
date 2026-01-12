@@ -64,7 +64,7 @@ abstract class OnSwipeTouchListener(ctx: Context) : View.OnTouchListener {
                     result = true
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                Logger.debug("sw-l", "Error during fling gesture", e)
             }
 
             return result

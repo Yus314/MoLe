@@ -190,6 +190,7 @@ object AppStateManager {
         Logger.debug(
             "locale",
             String.format(
+                Locale.ROOT,
                 "Discovering currency symbol position for locale %s (currency is %s; symbol is %s)",
                 locale.toString(),
                 currency?.toString() ?: "<none>",
@@ -197,7 +198,7 @@ object AppStateManager {
             )
         )
         val formatted = formatter.format(1234.56f)
-        Logger.debug("locale", String.format("1234.56 formats as '%s'", formatted))
+        Logger.debug("locale", String.format(Locale.ROOT, "1234.56 formats as '%s'", formatted))
 
         when {
             formatted.startsWith(symbol) -> {
