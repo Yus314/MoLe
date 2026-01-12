@@ -47,6 +47,11 @@ import net.ktnx.mobileledger.model.AppStateManager
 import net.ktnx.mobileledger.model.LedgerAccount
 import net.ktnx.mobileledger.model.LedgerTransaction
 import net.ktnx.mobileledger.model.TransactionListItem
+import net.ktnx.mobileledger.service.AppStateService
+import net.ktnx.mobileledger.service.BackgroundTaskManager
+import net.ktnx.mobileledger.service.SyncInfo
+import net.ktnx.mobileledger.service.TaskProgress
+import net.ktnx.mobileledger.service.TaskState
 import net.ktnx.mobileledger.utils.Logger
 import net.ktnx.mobileledger.utils.SimpleDate
 
@@ -59,7 +64,9 @@ class MainViewModel @Inject constructor(
     private val profileRepository: ProfileRepository,
     private val accountRepository: AccountRepository,
     private val transactionRepository: TransactionRepository,
-    private val optionRepository: OptionRepository
+    private val optionRepository: OptionRepository,
+    private val backgroundTaskManager: BackgroundTaskManager,
+    private val appStateService: AppStateService
 ) : ViewModel() {
 
     private val _mainUiState = MutableStateFlow(MainUiState())
@@ -207,12 +214,12 @@ class MainViewModel @Inject constructor(
 
     private fun openDrawer() {
         _mainUiState.update { it.copy(isDrawerOpen = true) }
-        AppStateManager.drawerOpen.postValue(true)
+        appStateService.setDrawerOpen(true)
     }
 
     private fun closeDrawer() {
         _mainUiState.update { it.copy(isDrawerOpen = false) }
-        AppStateManager.drawerOpen.postValue(false)
+        appStateService.setDrawerOpen(false)
     }
 
     private fun refreshData() {
@@ -720,7 +727,7 @@ class MainViewModel @Inject constructor(
         if (retrieveTransactionsTask != null) {
             retrieveTransactionsTask?.interrupt()
         } else {
-            AppStateManager.backgroundTaskProgress.value = null
+            backgroundTaskManager.updateProgress(TaskProgress("cancel", TaskState.FINISHED, "Cancelled"))
         }
     }
 

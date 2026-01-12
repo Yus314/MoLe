@@ -11,6 +11,8 @@ Auto-generated from all feature plans. Last updated: 2026-01-10
 - Jetpack Compose with Material3 (composeBom 2024.12.01) (006-compose-ui-rebuild)
 - Room Database（既存、変更なし） (006-compose-ui-rebuild)
 - Kotlin 2.0.21 / JVM target 1.8 + Hilt 2.51.1, Room 2.4.2, Coroutines 1.9.0, Jetpack Compose (008-data-layer-repository)
+- Kotlin 2.0.21 / JVM target 1.8 + Hilt 2.51.1, Room 2.4.2, Jetpack Compose (composeBom 2024.12.01), Coroutines 1.9.0 (009-eliminate-data-singleton)
+- Room Database (SQLite) - 既存、変更なし (009-eliminate-data-singleton)
 
 ## Project Structure
 
@@ -463,9 +465,9 @@ class MyScreenTest {
 ```
 
 ## Recent Changes
+- 009-eliminate-data-singleton: Added Kotlin 2.0.21 / JVM target 1.8 + Hilt 2.51.1, Room 2.4.2, Jetpack Compose (composeBom 2024.12.01), Coroutines 1.9.0
 - 008-data-layer-repository: **Repository パターン導入** - ProfileRepository, TransactionRepository, AccountRepository, TemplateRepository, CurrencyRepository を追加。ViewModel は DAO 直接アクセスから Repository 経由に移行。Data.getProfile() / Data.profiles は ProfileRepository に移行済み
 - 007-complete-compose-migration: **Compose移行完了** - 全XMLレイアウト削除、Fragment/DialogFragment全廃止、ViewBinding全廃止。DatePickerDialog、CurrencyPickerDialog、CrashReportDialog、SplashScreen、BackupsScreen をCompose化。ProfilesRecyclerViewAdapter等レガシーアダプター削除
-- 006-compose-ui-rebuild: Migrated MainActivityCompose, ProfileDetailActivity, TemplatesActivity, NewTransactionActivityCompose to Jetpack Compose with Material3
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->

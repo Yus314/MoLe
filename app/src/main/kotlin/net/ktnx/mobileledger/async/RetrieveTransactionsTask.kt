@@ -73,12 +73,6 @@ class RetrieveTransactionsTask(
         publishProgress(progress)
     }
 
-    private fun cancel() {
-        val progress = Progress()
-        progress.state = ProgressState.FINISHED
-        publishProgress(progress)
-    }
-
     @Throws(IOException::class, HTTPException::class)
     private fun retrieveTransactionListLegacy(
         accounts: MutableList<LedgerAccount>,
