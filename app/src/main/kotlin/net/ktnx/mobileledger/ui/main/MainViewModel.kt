@@ -77,6 +77,14 @@ class MainViewModel @Inject constructor(
     val allProfiles: StateFlow<List<Profile>> = profileRepository.getAllProfiles()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    // Task manager state - exposed from BackgroundTaskManager (T026)
+    val isTaskRunning: StateFlow<Boolean> = backgroundTaskManager.isRunning
+
+    val taskProgress: StateFlow<TaskProgress?> = backgroundTaskManager.progress
+
+    // Sync info from AppStateService (T029)
+    val lastSyncInfo: StateFlow<SyncInfo?> = appStateService.lastSyncInfo
+
     private val _mainUiState = MutableStateFlow(MainUiState())
     val mainUiState: StateFlow<MainUiState> = _mainUiState.asStateFlow()
 

@@ -93,17 +93,17 @@ app/src/test/kotlin/net/ktnx/mobileledger/
 
 - [X] T019 [US2] Implement BackgroundTaskManagerImpl at `app/src/main/kotlin/net/ktnx/mobileledger/service/BackgroundTaskManagerImpl.kt`
 - [X] T020 [US2] Add BackgroundTaskManager binding to ServiceModule at `app/src/main/kotlin/net/ktnx/mobileledger/di/ServiceModule.kt`
-- [ ] T021 [US2] Create BackgroundTaskManagerTest at `app/src/test/kotlin/net/ktnx/mobileledger/service/BackgroundTaskManagerTest.kt`
+- [X] T021 [US2] Create BackgroundTaskManagerTest at `app/src/test/kotlin/net/ktnox/mobileledger/service/BackgroundTaskManagerTest.kt`
 - [ ] T022 [US2] Update SendTransactionTask to use BackgroundTaskManager at `app/src/main/kotlin/net/ktnx/mobileledger/async/SendTransactionTask.kt`
 - [X] T023 [US2] Implement AppStateServiceImpl at `app/src/main/kotlin/net/ktnx/mobileledger/service/AppStateServiceImpl.kt`
 - [X] T024 [US2] Add AppStateService binding to ServiceModule at `app/src/main/kotlin/net/ktnx/mobileledger/di/ServiceModule.kt`
 - [X] T025 [US2] Update MainViewModel to inject BackgroundTaskManager at `app/src/main/kotlin/net/ktnx/mobileledger/ui/main/MainViewModel.kt`
-- [ ] T026 [US2] Update MainViewModel to expose isTaskRunning and taskProgress at `app/src/main/kotlin/net/ktnx/mobileledger/ui/main/MainViewModel.kt`
+- [X] T026 [US2] Update MainViewModel to expose isTaskRunning and taskProgress at `app/src/main/kotlin/net/ktnx/mobileledger/ui/main/MainViewModel.kt`
 - [X] T027 [US2] Update MainViewModel to inject AppStateService (provides lastSyncInfo and drawerOpen) at `app/src/main/kotlin/net/ktnx/mobileledger/ui/main/MainViewModel.kt`
-- [ ] T028 [US2] Update MainScreen to display task progress from ViewModel at `app/src/main/kotlin/net/ktnx/mobileledger/ui/main/MainScreen.kt`
-- [ ] T029 [US2] Update MainScreen to display lastSyncInfo from ViewModel at `app/src/main/kotlin/net/ktnx/mobileledger/ui/main/MainScreen.kt`
-- [ ] T029a [US2] Add unit test for sync-during-profile-switch edge case (spec Edge Case 3) at `app/src/test/kotlin/net/ktnx/mobileledger/service/BackgroundTaskManagerTest.kt`
-- [ ] T030 [US2] Run verification: `nix run .#verify` and test data sync manually (include profile switch during sync)
+- [X] T028 [US2] Update MainScreen to display task progress from ViewModel at `app/src/main/kotlin/net/ktnx/mobileledger/ui/main/MainScreen.kt`
+- [X] T029 [US2] Update MainScreen to display lastSyncInfo from ViewModel at `app/src/main/kotlin/net/ktnx/mobileledger/ui/main/MainScreen.kt`
+- [X] T029a [US2] Add unit test for sync-during-profile-switch edge case (spec Edge Case 3) at `app/src/test/kotlin/net/ktnox/mobileledger/service/BackgroundTaskManagerTest.kt`
+- [X] T030 [US2] Run verification: `nix run .#verify` and test data sync manually (include profile switch during sync)
 
 **Checkpoint**: Data sync works entirely through BackgroundTaskManager and AppStateService
 
