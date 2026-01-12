@@ -48,9 +48,11 @@ class RecyclerItemListener(ctx: Context, rv: RecyclerView, listener: RecyclerTou
     }
 
     override fun onTouchEvent(recyclerView: RecyclerView, motionEvent: MotionEvent) {
+        // No-op: Touch events are handled in onInterceptTouchEvent via GestureDetector
     }
 
     override fun onRequestDisallowInterceptTouchEvent(b: Boolean) {
+        // No-op: Disallow intercept is not used in this implementation
     }
 
     interface RecyclerTouchListener {

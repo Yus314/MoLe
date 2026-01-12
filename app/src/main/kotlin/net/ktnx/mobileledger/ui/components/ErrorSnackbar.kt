@@ -113,8 +113,12 @@ private fun ErrorSnackbarPreview() {
                     override val message: String = "接続エラーが発生しました"
                     override val withDismissAction: Boolean = true
                 }
-                override fun dismiss() {}
-                override fun performAction() {}
+                override fun dismiss() {
+                    // No-op: Preview mock
+                }
+                override fun performAction() {
+                    // No-op: Preview mock
+                }
             }
         )
     }
