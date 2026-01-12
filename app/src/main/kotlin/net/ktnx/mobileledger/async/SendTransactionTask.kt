@@ -226,7 +226,7 @@ class SendTransactionTask(
                             Logger.debug("network", "Version $ver request succeeded")
                             break
                         } catch (e: ApiNotSupportedException) {
-                            Logger.debug("network", "Version $ver seems not supported")
+                            Logger.debug("network", "Version $ver not supported: ${e.message}", e)
                         }
                     }
 
