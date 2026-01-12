@@ -23,10 +23,13 @@ import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import net.ktnx.mobileledger.R
 import net.ktnx.mobileledger.db.Profile
-import net.ktnx.mobileledger.model.Data
 import net.ktnx.mobileledger.ui.QR
 import net.ktnx.mobileledger.ui.theme.MoLeTheme
 import net.ktnx.mobileledger.ui.transaction.NewTransactionScreen
@@ -63,15 +66,19 @@ class NewTransactionActivityCompose :
         qrScanLauncher = QR.registerLauncher(this, this)
 
         // Observe profile changes (プロファイル変更時の対応)
-        Data.observeProfile(this) { profile ->
-            if (profile == null) {
-                Logger.debug("new-trans-compose", "No active profile. Redirecting to SplashActivity")
-                val intent = Intent(this, SplashActivity::class.java)
-                intent.flags = Intent.FLAG_ACTIVITY_TASK_ON_HOME or Intent.FLAG_ACTIVITY_NEW_TASK
-                startActivity(intent)
-                finish()
-            } else {
-                viewModel.setProfile(profile.id)
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                profileRepository.currentProfile.collect { profile ->
+                    if (profile == null) {
+                        Logger.debug("new-trans-compose", "No active profile. Redirecting to SplashActivity")
+                        val intent = Intent(this@NewTransactionActivityCompose, SplashActivity::class.java)
+                        intent.flags = Intent.FLAG_ACTIVITY_TASK_ON_HOME or Intent.FLAG_ACTIVITY_NEW_TASK
+                        startActivity(intent)
+                        finish()
+                    } else {
+                        viewModel.setProfile(profile.id)
+                    }
+                }
             }
         }
 

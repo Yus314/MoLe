@@ -58,8 +58,8 @@ class ProfileRepositoryImpl @Inject constructor(private val profileDAO: ProfileD
     override fun setCurrentProfile(profile: Profile?) {
         _currentProfile.value = profile
         // Sync with AppStateManager for backward compatibility during migration.
-        // MainActivityCompose still observes Data.observeProfile() (AppStateManager.profile).
-        // TODO: Remove this once MainActivityCompose is migrated to use profileRepository.currentProfile
+        // Many parts of the codebase still use Data.getProfile() (e.g., LedgerTransaction, RetrieveTransactionsTask).
+        // TODO: Remove this once all Data.getProfile() usages are migrated to ProfileRepository
         AppStateManager.setCurrentProfile(profile)
     }
 

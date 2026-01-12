@@ -29,14 +29,16 @@ import androidx.activity.viewModels
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.launch
 import java.util.Date
 import java.util.Locale
+import javax.inject.Inject
+import kotlinx.coroutines.launch
 import net.ktnx.mobileledger.BackupsActivity
 import net.ktnx.mobileledger.R
-import javax.inject.Inject
 import net.ktnx.mobileledger.data.repository.OptionRepository
 import net.ktnx.mobileledger.db.Option
 import net.ktnx.mobileledger.db.Profile
@@ -60,6 +62,8 @@ class MainActivityCompose : ProfileThemedActivity() {
     @Inject
     lateinit var optionRepository: OptionRepository
 
+    // profileRepository is inherited from ProfileThemedActivity
+
     private val viewModel: MainViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -67,9 +71,21 @@ class MainActivityCompose : ProfileThemedActivity() {
         super.onCreate(savedInstanceState)
         Logger.debug(TAG, "onCreate()/after super")
 
-        // Observe profile changes from Data singleton
-        Data.observeProfile(this) { newProfile -> onProfileChanged(newProfile) }
-        Data.profiles.observe(this) { profiles -> onProfileListChanged(profiles) }
+        // Observe profile changes from ProfileRepository (via ViewModel)
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
+                    viewModel.currentProfile.collect { newProfile ->
+                        onProfileChanged(newProfile)
+                    }
+                }
+                launch {
+                    viewModel.allProfiles.collect { profiles ->
+                        onProfileListChanged(profiles)
+                    }
+                }
+            }
+        }
         Data.backgroundTaskProgress.observe(this) { progress ->
             viewModel.updateBackgroundTaskProgress(progress)
             // Reset the task reference when finished so new refreshes can start
@@ -119,7 +135,7 @@ class MainActivityCompose : ProfileThemedActivity() {
 
                         is MainEffect.NavigateToProfileDetail -> {
                             if (effect.profileId != null) {
-                                val profile = Data.profiles.value?.find { it.id == effect.profileId }
+                                val profile = viewModel.allProfiles.value.find { it.id == effect.profileId }
                                 ProfileDetailActivity.start(this@MainActivityCompose, profile)
                             } else {
                                 ProfileDetailActivity.start(this@MainActivityCompose, null)
@@ -166,7 +182,7 @@ class MainActivityCompose : ProfileThemedActivity() {
                         if (profileId == -1L) {
                             ProfileDetailActivity.start(this, null)
                         } else {
-                            val profile = Data.profiles.value?.find { it.id == profileId }
+                            val profile = viewModel.allProfiles.value.find { it.id == profileId }
                             ProfileDetailActivity.start(this, profile)
                         }
                     },
@@ -217,7 +233,7 @@ class MainActivityCompose : ProfileThemedActivity() {
         createShortcuts(newList)
         viewModel.updateProfiles(newList)
 
-        val currentProfile = Data.getProfile()
+        val currentProfile = profileRepository.currentProfile.value
         var replacementProfile: Profile? = null
         if (currentProfile != null) {
             for (p in newList) {
@@ -230,9 +246,9 @@ class MainActivityCompose : ProfileThemedActivity() {
 
         if (newList.isNotEmpty() && replacementProfile == null) {
             Logger.debug(TAG, "Switching profile because the current is no longer available")
-            Data.setCurrentProfile(newList[0])
+            profileRepository.setCurrentProfile(newList[0])
         } else if (replacementProfile != null) {
-            Data.setCurrentProfile(replacementProfile)
+            profileRepository.setCurrentProfile(replacementProfile)
         }
     }
 
@@ -303,7 +319,7 @@ class MainActivityCompose : ProfileThemedActivity() {
     }
 
     private fun updateLastUpdateTextFromDB() {
-        val currentProfile = Data.getProfile() ?: return
+        val currentProfile = profileRepository.currentProfile.value ?: return
 
         lifecycleScope.launch {
             optionRepository.getOption(currentProfile.id, Option.OPT_LAST_SCRAPE)
@@ -327,8 +343,7 @@ class MainActivityCompose : ProfileThemedActivity() {
     }
 
     private fun profileThemeChanged() {
-        Data.removeProfileObservers(this)
-        Data.profiles.removeObservers(this)
+        // Remove remaining Data singleton observers (background task related)
         Data.lastUpdateTransactionCount.removeObservers(this)
         Data.lastUpdateAccountCount.removeObservers(this)
         Data.lastUpdateTotalAccountCount.removeObservers(this)

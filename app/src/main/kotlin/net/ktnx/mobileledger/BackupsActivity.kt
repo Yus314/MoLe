@@ -32,8 +32,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import dagger.hilt.android.AndroidEntryPoint
-import net.ktnx.mobileledger.model.Data
+import javax.inject.Inject
+import kotlinx.coroutines.launch
+import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.ui.backups.BackupsEffect
 import net.ktnx.mobileledger.ui.backups.BackupsMessage
 import net.ktnx.mobileledger.ui.backups.BackupsScreen
@@ -42,6 +47,9 @@ import net.ktnx.mobileledger.ui.theme.MoLeTheme
 
 @AndroidEntryPoint
 class BackupsActivity : ComponentActivity() {
+    @Inject
+    lateinit var profileRepository: ProfileRepository
+
     private val viewModel: BackupsViewModel by viewModels()
     private lateinit var backupChooserLauncher: ActivityResultLauncher<String>
     private lateinit var restoreChooserLauncher: ActivityResultLauncher<Array<String>>
@@ -62,22 +70,19 @@ class BackupsActivity : ComponentActivity() {
             uri?.let { viewModel.performRestore(baseContext, it) }
         }
 
-        // Get initial profile theme
-        var profileTheme = Data.getProfile()?.theme ?: -1
-
-        // Observe profile changes for backup button state and theme
-        Data.observeProfile(this) { profile ->
-            viewModel.updateBackupEnabled(profile != null)
-            profileTheme = profile?.theme ?: -1
+        // Observe profile changes for backup button state
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                profileRepository.currentProfile.collect { profile ->
+                    viewModel.updateBackupEnabled(profile != null)
+                }
+            }
         }
 
         setContent {
-            var currentTheme by remember { mutableIntStateOf(profileTheme) }
-
-            // Update theme when profile changes
-            LaunchedEffect(profileTheme) {
-                currentTheme = profileTheme
-            }
+            // Collect current profile for theme updates
+            val currentProfile by profileRepository.currentProfile.collectAsState()
+            val currentTheme = currentProfile?.theme ?: -1
 
             MoLeTheme(
                 profileHue = if (currentTheme >= 0) currentTheme.toFloat() else null

@@ -27,12 +27,14 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import net.ktnx.mobileledger.App
@@ -68,6 +70,12 @@ class MainViewModel @Inject constructor(
     private val backgroundTaskManager: BackgroundTaskManager,
     private val appStateService: AppStateService
 ) : ViewModel() {
+
+    // Profile state from ProfileRepository (replaces Data.observeProfile/Data.profiles)
+    val currentProfile: StateFlow<Profile?> = profileRepository.currentProfile
+
+    val allProfiles: StateFlow<List<Profile>> = profileRepository.getAllProfiles()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private val _mainUiState = MutableStateFlow(MainUiState())
     val mainUiState: StateFlow<MainUiState> = _mainUiState.asStateFlow()

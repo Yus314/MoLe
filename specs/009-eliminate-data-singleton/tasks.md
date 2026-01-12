@@ -58,7 +58,7 @@ app/src/test/kotlin/net/ktnx/mobileledger/
 
 ---
 
-## Phase 3: User Story 1 - シングルトンなしでプロファイル選択が動作する (Priority: P1) 🎯 MVP
+## Phase 3: User Story 1 - シングルトンなしでプロファイル選択が動作する (Priority: P1) 🎯 MVP ✅
 
 **Goal**: プロファイル選択・切り替え機能を ProfileRepository 経由で動作させる
 
@@ -66,16 +66,18 @@ app/src/test/kotlin/net/ktnx/mobileledger/
 
 ### Implementation for User Story 1
 
-- [ ] T010 [US1] Update MainViewModel to use ProfileRepository.currentProfile at `app/src/main/kotlin/net/ktnx/mobileledger/ui/main/MainViewModel.kt`
-- [ ] T011 [US1] Update MainViewModel to use ProfileRepository.getAllProfiles() at `app/src/main/kotlin/net/ktnx/mobileledger/ui/main/MainViewModel.kt`
-- [ ] T012 [US1] Add selectProfile() method to MainViewModel at `app/src/main/kotlin/net/ktnx/mobileledger/ui/main/MainViewModel.kt`
-- [ ] T013 [US1] Update MainScreen to collect currentProfile from ViewModel at `app/src/main/kotlin/net/ktnx/mobileledger/ui/main/MainScreen.kt`
-- [ ] T014 [US1] Update NavigationDrawer to use allProfiles from ViewModel at `app/src/main/kotlin/net/ktnx/mobileledger/ui/main/NavigationDrawer.kt`
-- [ ] T015 [US1] Replace Data.observeProfile() with ProfileRepository in ProfileThemedActivity at `app/src/main/kotlin/net/ktnx/mobileledger/ui/activity/ProfileThemedActivity.kt`
-- [ ] T016 [US1] Update BackupsViewModel to use ProfileRepository at `app/src/main/kotlin/net/ktnx/mobileledger/ui/backups/BackupsViewModel.kt`
-- [ ] T016a [US1] Replace Data.getProfile()/Data.observeProfile() in BackupsActivity at `app/src/main/kotlin/net/ktnx/mobileledger/BackupsActivity.kt`
-- [ ] T017 [US1] Remove AppStateManager.setCurrentProfile() sync in ProfileRepositoryImpl at `app/src/main/kotlin/net/ktnx/mobileledger/data/repository/ProfileRepositoryImpl.kt` (implements FR-007)
-- [ ] T018 [US1] Run verification: `nix run .#verify` and test profile switching manually
+- [X] T010 [US1] Update MainViewModel to use ProfileRepository.currentProfile at `app/src/main/kotlin/net/ktnx/mobileledger/ui/main/MainViewModel.kt`
+- [X] T011 [US1] Update MainViewModel to use ProfileRepository.getAllProfiles() at `app/src/main/kotlin/net/ktnx/mobileledger/ui/main/MainViewModel.kt`
+- [X] T012 [US1] Add selectProfile() method to MainViewModel at `app/src/main/kotlin/net/ktnx/mobileledger/ui/main/MainViewModel.kt`
+- [X] T013 [US1] Update MainScreen to collect currentProfile from ViewModel at `app/src/main/kotlin/net/ktnx/mobileledger/ui/main/MainScreen.kt` (via MainActivityCompose lifecycle observer)
+- [X] T014 [US1] Update NavigationDrawer to use allProfiles from ViewModel at `app/src/main/kotlin/net/ktnx/mobileledger/ui/main/NavigationDrawer.kt` (via MainActivityCompose lifecycle observer)
+- [X] T015 [US1] Replace Data.observeProfile() with ProfileRepository in ProfileThemedActivity at `app/src/main/kotlin/net/ktnx/mobileledger/ui/activity/ProfileThemedActivity.kt`
+- [X] T016 [US1] Update BackupsActivity to use ProfileRepository at `app/src/main/kotlin/net/ktnx/mobileledger/BackupsActivity.kt` (merged with T016a)
+- [X] T016a [US1] Replace Data.getProfile()/Data.observeProfile() in BackupsActivity at `app/src/main/kotlin/net/ktnx/mobileledger/BackupsActivity.kt`
+- [ ] T017 [US1] Remove AppStateManager.setCurrentProfile() sync in ProfileRepositoryImpl at `app/src/main/kotlin/net/ktnx/mobileledger/data/repository/ProfileRepositoryImpl.kt` (implements FR-007) **BLOCKED**: Many places still use Data.getProfile() (LedgerTransaction, RetrieveTransactionsTask, etc.). Must migrate all usages first.
+- [X] T017a [US1] Replace Data.observeProfile() in NewTransactionActivityCompose at `app/src/main/kotlin/net/ktnx/mobileledger/ui/activity/NewTransactionActivityCompose.kt` (discovered during implementation)
+- [X] T017b [US1] Fix Currency.Position enum case (BEFORE/AFTER/NONE) in multiple files (discovered during build)
+- [X] T018 [US1] Run verification: `nix run .#verify` and test profile switching manually
 
 **Checkpoint**: Profile selection works entirely through ProfileRepository without Data.kt
 

@@ -19,15 +19,17 @@ package net.ktnx.mobileledger.ui.activity
 
 import android.annotation.SuppressLint
 import android.os.Bundle
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import java.util.Locale
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import net.ktnx.mobileledger.App
+import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.db.Profile
 import net.ktnx.mobileledger.di.BackupEntryPoint
-import net.ktnx.mobileledger.model.Data
 import net.ktnx.mobileledger.utils.Colors
 import net.ktnx.mobileledger.utils.Logger
 
@@ -37,6 +39,11 @@ open class ProfileThemedActivity : CrashReportingActivity() {
     protected var mProfile: Profile? = null
     private var themeSetUp = false
     private var mThemeHue = 0
+
+    // Lazy access to ProfileRepository via EntryPoint (cannot use @Inject in base class)
+    protected val profileRepository: ProfileRepository by lazy {
+        BackupEntryPoint.get(this).profileRepository()
+    }
 
     protected fun setupProfileColors(newHue: Int) {
         if (themeSetUp && newHue == mThemeHue) {
@@ -80,26 +87,31 @@ open class ProfileThemedActivity : CrashReportingActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         initProfile()
 
-        Data.observeProfile(this) { profile ->
-            if (profile == null) {
-                Logger.debug(TAG, "No current profile, leaving")
-                return@observeProfile
-            }
+        // Observe profile changes from ProfileRepository
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                profileRepository.currentProfile.collect { profile ->
+                    if (profile == null) {
+                        Logger.debug(TAG, "No current profile, leaving")
+                        return@collect
+                    }
 
-            mProfile = profile
-            storeProfilePref(profile)
-            val hue = profile.theme
+                    mProfile = profile
+                    storeProfilePref(profile)
+                    val hue = profile.theme
 
-            if (hue != mThemeHue) {
-                Logger.debug(
-                    TAG,
-                    String.format(
-                        Locale.US,
-                        "profile observer calling setupProfileColors(%d)",
-                        hue
-                    )
-                )
-                setupProfileColors(hue)
+                    if (hue != mThemeHue) {
+                        Logger.debug(
+                            TAG,
+                            String.format(
+                                Locale.US,
+                                "profile observer calling setupProfileColors(%d)",
+                                hue
+                            )
+                        )
+                        setupProfileColors(hue)
+                    }
+                }
             }
         }
 
@@ -135,13 +147,10 @@ open class ProfileThemedActivity : CrashReportingActivity() {
     /**
      * Load profile asynchronously using coroutines and Repository pattern.
      *
-     * Uses BackupEntryPoint to access ProfileRepository since this is a base class
-     * that cannot use @AndroidEntryPoint directly.
+     * Uses the lazy profileRepository property which is initialized via BackupEntryPoint
+     * since this is a base class that cannot use @AndroidEntryPoint directly.
      */
     private suspend fun initProfileAsync(profileId: Long) {
-        val entryPoint = BackupEntryPoint.get(this@ProfileThemedActivity)
-        val profileRepository = entryPoint.profileRepository()
-
         val profile = withContext(Dispatchers.IO) {
             Logger.debug(TAG, String.format(Locale.US, "Loading profile %d", profileId))
 
