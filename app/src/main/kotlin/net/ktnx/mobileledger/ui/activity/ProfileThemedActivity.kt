@@ -19,11 +19,14 @@ package net.ktnx.mobileledger.ui.activity
 
 import android.annotation.SuppressLint
 import android.os.Bundle
+import androidx.lifecycle.lifecycleScope
 import java.util.Locale
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import net.ktnx.mobileledger.App
-import net.ktnx.mobileledger.dao.BaseDAO
-import net.ktnx.mobileledger.db.DB
 import net.ktnx.mobileledger.db.Profile
+import net.ktnx.mobileledger.di.BackupEntryPoint
 import net.ktnx.mobileledger.model.Data
 import net.ktnx.mobileledger.utils.Colors
 import net.ktnx.mobileledger.utils.Logger
@@ -124,40 +127,53 @@ open class ProfileThemedActivity : CrashReportingActivity() {
     }
 
     protected fun initProfile(profileId: Long) {
-        BaseDAO.runAsync { initProfileSync(profileId) }
+        lifecycleScope.launch {
+            initProfileAsync(profileId)
+        }
     }
 
     /**
-     * Load profile synchronously on a background thread.
+     * Load profile asynchronously using coroutines and Repository pattern.
      *
-     * TODO: Migrate to ProfileRepository when this base class is refactored
-     * to use Hilt injection and coroutines. Currently using DB.get() directly
-     * because BaseDAO.runAsync() is not compatible with suspend functions.
+     * Uses BackupEntryPoint to access ProfileRepository since this is a base class
+     * that cannot use @AndroidEntryPoint directly.
      */
-    private fun initProfileSync(profileId: Long) {
-        Logger.debug(TAG, String.format(Locale.US, "Loading profile %d", profileId))
-        val dao = DB.get().getProfileDAO()
-        var profile = dao.getByIdSync(profileId)
+    private suspend fun initProfileAsync(profileId: Long) {
+        val entryPoint = BackupEntryPoint.get(this@ProfileThemedActivity)
+        val profileRepository = entryPoint.profileRepository()
 
-        if (profile == null) {
-            Logger.debug(
-                TAG,
-                String.format(
-                    Locale.ROOT,
-                    "Profile %d not found. Trying any other",
-                    profileId
+        val profile = withContext(Dispatchers.IO) {
+            Logger.debug(TAG, String.format(Locale.US, "Loading profile %d", profileId))
+
+            var loadedProfile = profileRepository.getProfileByIdSync(profileId)
+
+            if (loadedProfile == null) {
+                Logger.debug(
+                    TAG,
+                    String.format(
+                        Locale.ROOT,
+                        "Profile %d not found. Trying any other",
+                        profileId
+                    )
                 )
-            )
 
-            profile = dao.getAnySync()
+                loadedProfile = profileRepository.getAnyProfile()
+            }
+
+            if (loadedProfile == null) {
+                Logger.debug(TAG, "No profile could be loaded")
+            } else {
+                Logger.debug(
+                    TAG,
+                    String.format(Locale.ROOT, "Profile %d loaded. posting", profileId)
+                )
+            }
+
+            loadedProfile
         }
 
-        if (profile == null) {
-            Logger.debug(TAG, "No profile could be loaded")
-        } else {
-            Logger.debug(TAG, String.format(Locale.ROOT, "Profile %d loaded. posting", profileId))
-        }
-        Data.postCurrentProfile(profile)
+        // Use ProfileRepository.setCurrentProfile() to update both StateFlow and LiveData
+        profileRepository.setCurrentProfile(profile)
     }
 
     companion object {
