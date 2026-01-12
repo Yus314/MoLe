@@ -85,6 +85,9 @@ class MainViewModel @Inject constructor(
     // Sync info from AppStateService (T029)
     val lastSyncInfo: StateFlow<SyncInfo?> = appStateService.lastSyncInfo
 
+    // Drawer state from AppStateService (T041)
+    val drawerOpen: StateFlow<Boolean> = appStateService.drawerOpen
+
     private val _mainUiState = MutableStateFlow(MainUiState())
     val mainUiState: StateFlow<MainUiState> = _mainUiState.asStateFlow()
 
@@ -236,6 +239,12 @@ class MainViewModel @Inject constructor(
     private fun closeDrawer() {
         _mainUiState.update { it.copy(isDrawerOpen = false) }
         appStateService.setDrawerOpen(false)
+    }
+
+    // T042: Add toggleDrawer method
+    fun toggleDrawer() {
+        appStateService.toggleDrawer()
+        _mainUiState.update { it.copy(isDrawerOpen = appStateService.drawerOpen.value) }
     }
 
     private fun refreshData() {

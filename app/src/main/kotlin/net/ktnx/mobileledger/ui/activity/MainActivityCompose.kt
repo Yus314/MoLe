@@ -124,6 +124,7 @@ class MainActivityCompose : ProfileThemedActivity() {
             val mainUiState by viewModel.mainUiState.collectAsState()
             val accountSummaryUiState by viewModel.accountSummaryUiState.collectAsState()
             val transactionListUiState by viewModel.transactionListUiState.collectAsState()
+            val drawerOpen by viewModel.drawerOpen.collectAsState()
 
             // Handle one-shot effects
             LaunchedEffect(Unit) {
@@ -170,6 +171,7 @@ class MainActivityCompose : ProfileThemedActivity() {
                     mainUiState = mainUiState,
                     accountSummaryUiState = accountSummaryUiState,
                     transactionListUiState = transactionListUiState,
+                    drawerOpen = drawerOpen,
                     onMainEvent = viewModel::onMainEvent,
                     onAccountSummaryEvent = viewModel::onAccountSummaryEvent,
                     onTransactionListEvent = viewModel::onTransactionListEvent,

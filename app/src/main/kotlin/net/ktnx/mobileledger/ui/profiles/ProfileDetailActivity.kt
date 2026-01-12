@@ -24,7 +24,6 @@ import androidx.activity.compose.setContent
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.Locale
 import net.ktnx.mobileledger.db.Profile
-import net.ktnx.mobileledger.model.Data
 import net.ktnx.mobileledger.ui.activity.CrashReportingActivity
 import net.ktnx.mobileledger.ui.components.CrashReportDialog
 import net.ktnx.mobileledger.ui.profile.ProfileDetailScreen
@@ -47,7 +46,8 @@ class ProfileDetailActivity : CrashReportingActivity() {
         themeHue = intent.getIntExtra(ARG_HUE, -1)
 
         if (themeHue == -1) {
-            themeHue = Colors.getNewProfileThemeHue(Data.profiles.value)
+            // Generate a random theme hue for new profiles (0-360)
+            themeHue = (Math.random() * 360).toInt()
         }
 
         // Set up the theme for the activity

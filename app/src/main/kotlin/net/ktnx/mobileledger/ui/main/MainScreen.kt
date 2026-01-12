@@ -82,6 +82,7 @@ fun MainScreen(
     mainUiState: MainUiState,
     accountSummaryUiState: AccountSummaryUiState,
     transactionListUiState: TransactionListUiState,
+    drawerOpen: Boolean, // T043: Drawer state from ViewModel
     onMainEvent: (MainEvent) -> Unit,
     onAccountSummaryEvent: (AccountSummaryEvent) -> Unit,
     onTransactionListEvent: (TransactionListEvent) -> Unit,
@@ -91,8 +92,30 @@ fun MainScreen(
     onNavigateToBackups: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val drawerState = rememberDrawerState(initialValue = if (drawerOpen) DrawerValue.Open else DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+
+    // Keep updated reference for use in collect lambda
+    val currentDrawerOpen by rememberUpdatedState(drawerOpen)
+
+    // T043: Sync ViewModel -> Compose drawer state
+    LaunchedEffect(drawerOpen) {
+        if (drawerOpen && !drawerState.isOpen) {
+            drawerState.open()
+        } else if (!drawerOpen && drawerState.isOpen) {
+            drawerState.close()
+        }
+    }
+
+    // T043: Sync Compose -> ViewModel drawer state (when user closes by tapping outside)
+    LaunchedEffect(drawerState) {
+        snapshotFlow { drawerState.isClosed }
+            .collect { isClosed ->
+                if (isClosed && currentDrawerOpen) {
+                    onMainEvent(MainEvent.CloseDrawer)
+                }
+            }
+    }
 
     val pagerState = rememberPagerState(
         initialPage = if (mainUiState.selectedTab == MainTab.Accounts) 0 else 1,
@@ -146,23 +169,23 @@ fun MainScreen(
                 currentProfileId = mainUiState.currentProfileId,
                 onProfileSelected = { profileId ->
                     onMainEvent(MainEvent.SelectProfile(profileId))
-                    scope.launch { drawerState.close() }
+                    // Drawer will be closed by ViewModel
                 },
                 onEditProfile = { profileId ->
                     onNavigateToProfileSettings(profileId)
-                    scope.launch { drawerState.close() }
+                    onMainEvent(MainEvent.CloseDrawer)
                 },
                 onCreateNewProfile = {
                     onNavigateToProfileSettings(-1)
-                    scope.launch { drawerState.close() }
+                    onMainEvent(MainEvent.CloseDrawer)
                 },
                 onNavigateToTemplates = {
                     onNavigateToTemplates()
-                    scope.launch { drawerState.close() }
+                    onMainEvent(MainEvent.CloseDrawer)
                 },
                 onNavigateToBackups = {
                     onNavigateToBackups()
-                    scope.launch { drawerState.close() }
+                    onMainEvent(MainEvent.CloseDrawer)
                 },
                 onProfilesReordered = { orderedProfiles ->
                     onMainEvent(MainEvent.ReorderProfiles(orderedProfiles))
@@ -177,7 +200,7 @@ fun MainScreen(
                 TopAppBar(
                     title = { Text(mainUiState.currentProfileName.ifEmpty { stringResource(R.string.app_name) }) },
                     navigationIcon = {
-                        IconButton(onClick = { scope.launch { drawerState.open() } }) {
+                        IconButton(onClick = { onMainEvent(MainEvent.OpenDrawer) }) {
                             Icon(
                                 imageVector = Icons.Default.Menu,
                                 contentDescription = stringResource(R.string.nav_header_desc)

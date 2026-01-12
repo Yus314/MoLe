@@ -27,7 +27,9 @@ import java.net.MalformedURLException
 import java.net.PasswordAuthentication
 import java.net.URL
 import java.util.Locale
-import net.ktnx.mobileledger.model.Data
+import javax.inject.Inject
+import net.ktnx.mobileledger.data.repository.ProfileRepository
+import net.ktnx.mobileledger.service.CurrencyFormatter
 import net.ktnx.mobileledger.ui.profiles.ProfileDetailModel
 import net.ktnx.mobileledger.utils.Colors
 import net.ktnx.mobileledger.utils.Globals
@@ -35,22 +37,32 @@ import net.ktnx.mobileledger.utils.Logger
 
 @HiltAndroidApp
 class App : Application() {
+
+    @Inject
+    lateinit var currencyFormatter: CurrencyFormatter
+
+    @Inject
+    lateinit var profileRepository: ProfileRepository
+
     private var monthNamesPrepared = false
 
-    private fun getAuthURL(): String = profileModel?.getUrl() ?: Data.getProfile()?.url ?: ""
+    private fun getAuthURL(): String = profileModel?.getUrl()
+        ?: profileRepository.currentProfile.value?.url ?: ""
 
-    private fun getAuthUserName(): String = profileModel?.getAuthUserName() ?: Data.getProfile()?.authUser ?: ""
+    private fun getAuthUserName(): String =
+        profileModel?.getAuthUserName() ?: profileRepository.currentProfile.value?.authUser ?: ""
 
-    private fun getAuthPassword(): String = profileModel?.getAuthPassword() ?: Data.getProfile()?.authPassword ?: ""
+    private fun getAuthPassword(): String =
+        profileModel?.getAuthPassword() ?: profileRepository.currentProfile.value?.authPassword ?: ""
 
     private fun getAuthEnabled(): Boolean =
-        profileModel?.getUseAuthentication() ?: Data.getProfile()?.isAuthEnabled() ?: false
+        profileModel?.getUseAuthentication() ?: profileRepository.currentProfile.value?.isAuthEnabled() ?: false
 
     override fun onCreate() {
         Logger.debug("flow", "App onCreate()")
         instance = this
         super.onCreate()
-        Data.refreshCurrencyData(Locale.getDefault())
+        currencyFormatter.refresh(Locale.getDefault())
         Authenticator.setDefault(object : Authenticator() {
             override fun getPasswordAuthentication(): PasswordAuthentication? {
                 if (getAuthEnabled()) {
@@ -94,8 +106,7 @@ class App : Application() {
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
         prepareMonthNamesInternal(true)
-        Data.refreshCurrencyData(Locale.getDefault())
-        Data.locale.value = Locale.getDefault()
+        currencyFormatter.refresh(Locale.getDefault())
     }
 
     companion object {
