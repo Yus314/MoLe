@@ -243,7 +243,7 @@ class SendTransactionTask(
                 else -> throw IllegalStateException("Unexpected API version: $profileApiVersion")
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            Logger.warn("SendTransaction", "Error sending transaction", e)
             error = e.message
         }
 
@@ -261,7 +261,7 @@ class SendTransactionTask(
             try {
                 sleep(100)
             } catch (e: InterruptedException) {
-                e.printStackTrace()
+                Logger.debug("SendTransaction", "Retry interrupted", e)
                 break
             }
         }

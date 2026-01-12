@@ -551,29 +551,29 @@ class RetrieveTransactionsTask(
 
             finish(Result(null))
         } catch (e: MalformedURLException) {
-            e.printStackTrace()
+            Logger.warn(TAG, "Invalid server URL", e)
             finish(Result("Invalid server URL"))
         } catch (e: HTTPException) {
-            e.printStackTrace()
+            Logger.warn(TAG, "HTTP error: ${e.responseCode}", e)
             finish(
                 Result(
                     String.format("HTTP error %d: %s", e.responseCode, e.message)
                 )
             )
         } catch (e: IOException) {
-            e.printStackTrace()
+            Logger.warn(TAG, "IO error during retrieval", e)
             finish(Result(e.localizedMessage))
         } catch (e: RuntimeJsonMappingException) {
-            e.printStackTrace()
+            Logger.warn(TAG, "JSON parsing error", e)
             finish(Result(Result.ERR_JSON_PARSER_ERROR))
         } catch (e: ParseException) {
-            e.printStackTrace()
+            Logger.warn(TAG, "Parse error during retrieval", e)
             finish(Result("Network error"))
         } catch (e: OperationCanceledException) {
             Logger.debug("RTT", "Retrieval was cancelled", e)
             finish(Result(null))
         } catch (e: ApiNotSupportedException) {
-            e.printStackTrace()
+            Logger.warn(TAG, "API version not supported", e)
             finish(Result("Server version not supported"))
         } finally {
             Data.backgroundTaskFinished()
@@ -683,41 +683,41 @@ class RetrieveTransactionsTask(
     ) : Thread() {
         override fun run() {
             runBlocking {
-            Logger.debug(TAG, "Preparing account list")
-            val list = ArrayList<AccountWithAmounts>()
-            for (acc in accounts) {
-                val a = acc.toDBOWithAmounts()
-                val existing: Account? = accountRepository.getByNameSync(profile.id, acc.name)
-                if (existing != null) {
-                    a.account.expanded = existing.expanded
-                    a.account.amountsExpanded = existing.amountsExpanded
-                    a.account.id = existing.id
+                Logger.debug(TAG, "Preparing account list")
+                val list = ArrayList<AccountWithAmounts>()
+                for (acc in accounts) {
+                    val a = acc.toDBOWithAmounts()
+                    val existing: Account? = accountRepository.getByNameSync(profile.id, acc.name)
+                    if (existing != null) {
+                        a.account.expanded = existing.expanded
+                        a.account.amountsExpanded = existing.amountsExpanded
+                        a.account.id = existing.id
+                    }
+                    list.add(a)
                 }
-                list.add(a)
-            }
-            Logger.debug(TAG, "Account list prepared. Storing")
-            accountRepository.storeAccounts(list, profile.id)
-            Logger.debug(TAG, "Account list stored")
+                Logger.debug(TAG, "Account list prepared. Storing")
+                accountRepository.storeAccounts(list, profile.id)
+                Logger.debug(TAG, "Account list stored")
 
-            Logger.debug(TAG, "Preparing transaction list")
-            val tranList = ArrayList<TransactionWithAccounts>()
+                Logger.debug(TAG, "Preparing transaction list")
+                val tranList = ArrayList<TransactionWithAccounts>()
 
-            for (tr in transactions) {
-                tranList.add(tr.toDBO())
-            }
+                for (tr in transactions) {
+                    tranList.add(tr.toDBO())
+                }
 
-            Logger.debug(TAG, "Storing transaction list")
-            transactionRepository.storeTransactions(tranList, profile.id)
+                Logger.debug(TAG, "Storing transaction list")
+                transactionRepository.storeTransactions(tranList, profile.id)
 
-            Logger.debug(TAG, "Transactions stored")
+                Logger.debug(TAG, "Transactions stored")
 
-            optionRepository.insertOption(
-                Option(
-                    profile.id,
-                    Option.OPT_LAST_SCRAPE,
-                    Date().time.toString()
+                optionRepository.insertOption(
+                    Option(
+                        profile.id,
+                        Option.OPT_LAST_SCRAPE,
+                        Date().time.toString()
+                    )
                 )
-            )
             }
         }
     }
