@@ -23,21 +23,41 @@ import net.ktnx.mobileledger.BuildConfig
 object Logger {
     @JvmStatic
     fun debug(tag: String, msg: String) {
-        if (BuildConfig.DEBUG) Log.d(tag, msg)
+        if (BuildConfig.DEBUG) {
+            try {
+                Log.d(tag, msg)
+            } catch (_: RuntimeException) {
+                // Unit test environment - Android Log not available
+            }
+        }
     }
 
     @JvmStatic
     fun debug(tag: String, msg: String, e: Throwable) {
-        if (BuildConfig.DEBUG) Log.d(tag, msg, e)
+        if (BuildConfig.DEBUG) {
+            try {
+                Log.d(tag, msg, e)
+            } catch (_: RuntimeException) {
+                // Unit test environment - Android Log not available
+            }
+        }
     }
 
     @JvmStatic
     fun warn(tag: String, msg: String) {
-        Log.w(tag, msg)
+        try {
+            Log.w(tag, msg)
+        } catch (_: RuntimeException) {
+            // Unit test environment - Android Log not available
+        }
     }
 
     @JvmStatic
     fun warn(tag: String, msg: String, e: Throwable) {
-        Log.w(tag, msg, e)
+        try {
+            Log.w(tag, msg, e)
+        } catch (_: RuntimeException) {
+            // Unit test environment - Android Log not available
+        }
     }
 }

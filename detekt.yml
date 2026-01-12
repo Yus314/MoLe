@@ -23,9 +23,15 @@ complexity:
   CyclomaticComplexMethod:
     active: true
     threshold: 15
+    excludes:
+      - '**/async/RetrieveTransactionsTask.kt'  # レガシー HTML パーサー（API 互換性必須）
+      - '**/async/SendTransactionTask.kt'  # レガシー送信処理（API 互換性必須）
   LongMethod:
     active: true
     threshold: 60
+    excludes:
+      - '**/async/RetrieveTransactionsTask.kt'  # レガシー HTML パーサー
+      - '**/async/SendTransactionTask.kt'  # レガシー送信処理
   LongParameterList:
     active: true
     functionThreshold: 6
@@ -33,6 +39,9 @@ complexity:
   NestedBlockDepth:
     active: true
     threshold: 4
+    excludes:
+      - '**/async/RetrieveTransactionsTask.kt'  # レガシー HTML パーサー
+      - '**/async/SendTransactionTask.kt'  # レガシー送信処理
   TooManyFunctions:
     active: true
     thresholdInFiles: 20
@@ -67,10 +76,17 @@ naming:
     ignoreAnnotated:
       - 'Composable'
       - 'Test'
+    excludes:
+      - '**/db/Profile.kt'  # isVersionPre_1_19 等の API バージョン関数
+      - '**/async/RetrieveTransactionsTask.kt'  # L() デバッグ関数
   VariableNaming:
     active: true
     variablePattern: '[a-z][A-Za-z0-9]*'
     privateVariablePattern: '_?[a-z][A-Za-z0-9]*'
+    excludes:
+      - '**/json/v1_*/**'  # hledger JSON API 互換性のため
+      - '**/model/HledgerVersion.kt'  # API バージョン互換性のため
+      - '**/db/Profile.kt'  # DB カラム名互換性のため
 
 performance:
   active: true
@@ -98,8 +114,13 @@ style:
     active: true
     max: 3
     excludeGuardClauses: true
+    excludes:
+      - '**/ui/profiles/ProfileDetailModel.kt'  # detectVersion() はエラーハンドリング上必要
+      - '**/ui/profile/ProfileDetailViewModel.kt'  # detectVersion() はエラーハンドリング上必要
   UnusedPrivateMember:
     active: true
     allowedNames: '(_|ignored|expected|serialVersionUID)'
+    ignoreAnnotated:
+      - 'Preview'  # Compose Preview 関数は Android Studio が使用
   WildcardImport:
     active: false  # Android Studio のデフォルト動作を許容

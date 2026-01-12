@@ -50,22 +50,26 @@ class TransactionDateFinder(private val model: MainModel, private val date: Simp
     class TransactionListItemComparator : Comparator<TransactionListItem> {
         override fun compare(a: TransactionListItem, b: TransactionListItem): Int {
             val aType = a.type
-            if (aType == TransactionListItem.Type.HEADER) return +1
             val bType = b.type
-            if (bType == TransactionListItem.Type.HEADER) return -1
-            val aDate = a.date
-            val bDate = b.date
-            val res = aDate.compareTo(bDate)
-            if (res != 0) return -res // transactions are reverse sorted by date
-
             return when {
-                aType == TransactionListItem.Type.DELIMITER -> {
-                    if (bType == TransactionListItem.Type.DELIMITER) 0 else -1
+                aType == TransactionListItem.Type.HEADER -> +1
+
+                bType == TransactionListItem.Type.HEADER -> -1
+
+                else -> {
+                    // transactions are reverse sorted by date
+                    val res = a.date.compareTo(b.date)
+                    when {
+                        res != 0 -> -res
+
+                        aType == TransactionListItem.Type.DELIMITER ->
+                            if (bType == TransactionListItem.Type.DELIMITER) 0 else -1
+
+                        bType == TransactionListItem.Type.DELIMITER -> +1
+
+                        else -> 0
+                    }
                 }
-
-                bType == TransactionListItem.Type.DELIMITER -> +1
-
-                else -> 0
             }
         }
     }

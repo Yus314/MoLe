@@ -557,7 +557,7 @@ class NewTransactionViewModel @Inject constructor(
                     }
                 }
             } catch (e: Exception) {
-                Logger.debug("qr", "Invalid regex in template: $regex")
+                Logger.debug("qr", "Invalid regex in template: $regex - ${e.message}")
             }
         }
         return null

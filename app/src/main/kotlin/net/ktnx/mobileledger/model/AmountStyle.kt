@@ -20,6 +20,7 @@ package net.ktnx.mobileledger.model
 import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.round
+import net.ktnx.mobileledger.utils.Logger
 import net.ktnx.mobileledger.utils.Misc
 
 /**
@@ -257,6 +258,7 @@ data class AmountStyle(
 
                 AmountStyle(position, spaced, precision, decimalMark)
             } catch (e: Exception) {
+                Logger.debug("AmountStyle", "Deserialization failed: ${e.message}")
                 null
             }
         }

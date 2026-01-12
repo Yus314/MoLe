@@ -731,7 +731,8 @@ class RetrieveTransactionsTask(
         private val reTransactionDescription =
             Pattern.compile("<tr class=\"posting\" title=\"(\\S+)\\s(.+)")
         private val reTransactionDetails = Pattern.compile(
-            "^\\s+([!*]\\s+)?(\\S[\\S\\s]+\\S)\\s\\s+(?:([^\\d\\s+\\-]+)\\s*)?([-+]?\\d[\\d,.]*)(?:\\s*([^\\d\\s+\\-]+)\\s*$)?"
+            "^\\s+([!*]\\s+)?(\\S[\\S\\s]+\\S)\\s\\s+" +
+                "(?:([^\\d\\s+\\-]+)\\s*)?([-+]?\\d[\\d,.]*)(?:\\s*([^\\d\\s+\\-]+)\\s*\$)?"
         )
         private val reEnd = Pattern.compile("\\bid=\"addmodal\"")
         private val reDecimalPoint = Pattern.compile("\\.\\d\\d?$")
