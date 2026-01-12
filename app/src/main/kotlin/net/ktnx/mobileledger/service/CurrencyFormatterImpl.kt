@@ -45,7 +45,7 @@ class CurrencyFormatterImpl @Inject constructor() : CurrencyFormatter {
     private val _config = MutableStateFlow(CurrencyFormatConfig.fromLocale(Locale.getDefault()))
     override val config: StateFlow<CurrencyFormatConfig> = _config.asStateFlow()
 
-    private val _currencySymbolPosition = MutableStateFlow(Currency.Position.before)
+    private val _currencySymbolPosition = MutableStateFlow(Currency.Position.BEFORE)
     override val currencySymbolPosition: StateFlow<Currency.Position> =
         _currencySymbolPosition.asStateFlow()
 
@@ -65,8 +65,8 @@ class CurrencyFormatterImpl @Inject constructor() : CurrencyFormatter {
         val gap = if (_currencyGap.value) " " else ""
 
         return when (_currencySymbolPosition.value) {
-            Currency.Position.before -> "$symbol$gap$formatted"
-            Currency.Position.after -> "$formatted$gap$symbol"
+            Currency.Position.BEFORE -> "$symbol$gap$formatted"
+            Currency.Position.AFTER -> "$formatted$gap$symbol"
             else -> formatted
         }
     }
@@ -105,18 +105,18 @@ class CurrencyFormatterImpl @Inject constructor() : CurrencyFormatter {
 
         when {
             formatted.startsWith(symbol) -> {
-                _currencySymbolPosition.value = Currency.Position.before
+                _currencySymbolPosition.value = Currency.Position.BEFORE
                 val canary = formatted[symbol.length]
                 _currencyGap.value = canary != '1'
             }
 
             formatted.endsWith(symbol) -> {
-                _currencySymbolPosition.value = Currency.Position.after
+                _currencySymbolPosition.value = Currency.Position.AFTER
                 val canary = formatted[formatted.length - symbol.length - 1]
                 _currencyGap.value = canary != '6'
             }
 
-            else -> _currencySymbolPosition.value = Currency.Position.none
+            else -> _currencySymbolPosition.value = Currency.Position.NONE
         }
 
         numberFormatter = NumberFormat.getNumberInstance(locale).apply {

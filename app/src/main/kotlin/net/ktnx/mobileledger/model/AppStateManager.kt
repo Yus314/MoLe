@@ -202,20 +202,20 @@ object AppStateManager {
 
         when {
             formatted.startsWith(symbol) -> {
-                currencySymbolPosition.value = Currency.Position.before
+                currencySymbolPosition.value = Currency.Position.BEFORE
                 // is the currency symbol directly followed by the first formatted digit?
                 val canary = formatted[symbol.length]
                 currencyGap.value = canary != '1'
             }
 
             formatted.endsWith(symbol) -> {
-                currencySymbolPosition.value = Currency.Position.after
+                currencySymbolPosition.value = Currency.Position.AFTER
                 // is the currency symbol directly preceded by the last formatted digit?
                 val canary = formatted[formatted.length - symbol.length - 1]
                 currencyGap.value = canary != '6'
             }
 
-            else -> currencySymbolPosition.value = Currency.Position.none
+            else -> currencySymbolPosition.value = Currency.Position.NONE
         }
 
         val newNumberFormatter = NumberFormat.getNumberInstance().apply {

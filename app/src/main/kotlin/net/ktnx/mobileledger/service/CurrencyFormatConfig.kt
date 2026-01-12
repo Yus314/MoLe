@@ -45,7 +45,7 @@ data class CurrencyFormatConfig(
             val symbols = DecimalFormatSymbols.getInstance(locale)
             return CurrencyFormatConfig(
                 locale = locale,
-                symbolPosition = Currency.Position.before,
+                symbolPosition = Currency.Position.BEFORE,
                 hasGap = true,
                 decimalSeparator = symbols.decimalSeparator,
                 groupingSeparator = symbols.groupingSeparator

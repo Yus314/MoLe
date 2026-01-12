@@ -74,7 +74,7 @@ import net.ktnx.mobileledger.model.Currency
 @Composable
 fun CurrencyPickerDialog(
     currencies: List<String>,
-    initialPosition: Currency.Position = Currency.Position.before,
+    initialPosition: Currency.Position = Currency.Position.BEFORE,
     initialGap: Boolean = true,
     showPositionSettings: Boolean = true,
     onCurrencySelected: (String) -> Unit,
@@ -284,8 +284,8 @@ private fun PositionSettings(
             verticalAlignment = Alignment.CenterVertically
         ) {
             RadioButton(
-                selected = position == Currency.Position.before,
-                onClick = { onPositionChange(Currency.Position.before) }
+                selected = position == Currency.Position.BEFORE,
+                onClick = { onPositionChange(Currency.Position.BEFORE) }
             )
             Text(
                 text = stringResource(R.string.currency_position_left),
@@ -293,8 +293,8 @@ private fun PositionSettings(
             )
 
             RadioButton(
-                selected = position == Currency.Position.after,
-                onClick = { onPositionChange(Currency.Position.after) }
+                selected = position == Currency.Position.AFTER,
+                onClick = { onPositionChange(Currency.Position.AFTER) }
             )
             Text(
                 text = stringResource(R.string.currency_position_right),

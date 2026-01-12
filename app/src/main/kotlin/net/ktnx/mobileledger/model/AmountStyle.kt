@@ -153,8 +153,8 @@ data class AmountStyle(
             // Default to AFTER when globalPos is not set
             val position = when {
                 currency.isNullOrEmpty() -> Position.NONE
-                globalPos == Currency.Position.before -> Position.BEFORE
-                globalPos == Currency.Position.after -> Position.AFTER
+                globalPos == Currency.Position.BEFORE -> Position.BEFORE
+                globalPos == Currency.Position.AFTER -> Position.AFTER
                 globalPos == null -> Position.AFTER
                 else -> Position.NONE
             }

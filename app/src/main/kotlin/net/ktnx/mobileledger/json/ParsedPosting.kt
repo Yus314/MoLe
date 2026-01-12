@@ -27,7 +27,7 @@ open class ParsedPosting {
 
         @JvmStatic
         protected fun getCommoditySide(): Char = if (Data.currencySymbolPosition.value ==
-            Currency.Position.after
+            Currency.Position.AFTER
         ) {
             'R'
         } else {
