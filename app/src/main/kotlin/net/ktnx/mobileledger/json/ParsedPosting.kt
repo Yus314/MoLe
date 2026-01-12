@@ -17,21 +17,20 @@
 
 package net.ktnx.mobileledger.json
 
+import net.ktnx.mobileledger.App
 import net.ktnx.mobileledger.model.Currency
-import net.ktnx.mobileledger.model.Data
 
 open class ParsedPosting {
     companion object {
         @JvmStatic
-        protected fun getCommoditySpaced(): Boolean = Data.currencyGap.value ?: false
+        protected fun getCommoditySpaced(): Boolean = App.currencyFormatter().currencyGap.value
 
         @JvmStatic
-        protected fun getCommoditySide(): Char = if (Data.currencySymbolPosition.value ==
-            Currency.Position.AFTER
-        ) {
-            'R'
-        } else {
-            'L'
-        }
+        protected fun getCommoditySide(): Char =
+            if (App.currencyFormatter().currencySymbolPosition.value == Currency.Position.AFTER) {
+                'R'
+            } else {
+                'L'
+            }
     }
 }

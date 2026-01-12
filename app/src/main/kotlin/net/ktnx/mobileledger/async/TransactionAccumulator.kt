@@ -19,7 +19,7 @@ package net.ktnx.mobileledger.async
 
 import java.math.BigDecimal
 import java.math.RoundingMode
-import net.ktnx.mobileledger.model.Data
+import net.ktnx.mobileledger.App
 import net.ktnx.mobileledger.model.LedgerAccount
 import net.ktnx.mobileledger.model.LedgerTransaction
 import net.ktnx.mobileledger.model.TransactionListItem
@@ -83,6 +83,7 @@ class TransactionAccumulator(private val boldAccountName: String?, private val a
 
     private fun summarizeRunningTotal(runningTotal: HashMap<String, BigDecimal>): String {
         val b = StringBuilder()
+        val currencyFormatter = App.currencyFormatter()
         for (currency in runningTotal.keys) {
             if (b.isNotEmpty()) {
                 b.append('\n')
@@ -91,7 +92,7 @@ class TransactionAccumulator(private val boldAccountName: String?, private val a
                 b.append(currency).append(' ')
             }
             val value = runningTotal[currency]
-            b.append(Data.formatNumber(value?.toFloat() ?: 0f))
+            b.append(currencyFormatter.formatNumber(value?.toFloat() ?: 0f))
         }
         return b.toString()
     }

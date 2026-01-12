@@ -45,7 +45,6 @@ import net.ktnx.mobileledger.data.repository.OptionRepository
 import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.data.repository.TransactionRepository
 import net.ktnx.mobileledger.db.Profile
-import net.ktnx.mobileledger.model.AppStateManager
 import net.ktnx.mobileledger.model.LedgerAccount
 import net.ktnx.mobileledger.model.LedgerTransaction
 import net.ktnx.mobileledger.model.TransactionListItem
@@ -540,7 +539,7 @@ class MainViewModel @Inject constructor(
                 // Second pass: build the display list with correct hasSubAccounts values
                 // Include ALL accounts - visibility will be computed in UI based on parent's isExpanded
                 val adapterList = mutableListOf<AccountSummaryListItem>()
-                val headerText = AppStateManager.lastAccountsUpdateText.value ?: "----"
+                val headerText = _accountSummaryUiState.value.headerText.ifEmpty { "----" }
                 adapterList.add(AccountSummaryListItem.Header(headerText))
 
                 for (dbAcc in dbAccounts) {
@@ -580,8 +579,7 @@ class MainViewModel @Inject constructor(
                         headerText = headerText
                     )
                 }
-                AppStateManager.lastUpdateAccountCount.postValue(filteredList.size - 1)
-                AppStateManager.lastUpdateTotalAccountCount.postValue(totalCount)
+                // Account counts are now managed via AppStateService.lastSyncInfo
             } catch (e: Exception) {
                 Logger.debug("MainViewModel", "Error loading accounts", e)
                 _accountSummaryUiState.update { it.copy(isLoading = false) }
@@ -714,7 +712,7 @@ class MainViewModel @Inject constructor(
         firstTransactionDate = first
         lastTransactionDate = last
 
-        val headerText = AppStateManager.lastTransactionsUpdateText.value ?: "----"
+        val headerText = _transactionListUiState.value.headerText.ifEmpty { "----" }
         _transactionListUiState.update {
             it.copy(
                 transactions = displayItems.toImmutableList(),
@@ -724,7 +722,7 @@ class MainViewModel @Inject constructor(
                 headerText = headerText
             )
         }
-        AppStateManager.lastUpdateTransactionCount.postValue(count)
+        // Transaction count is now managed via AppStateService.lastSyncInfo
     }
 
     @Synchronized
@@ -740,7 +738,9 @@ class MainViewModel @Inject constructor(
             profile,
             accountRepository,
             transactionRepository,
-            optionRepository
+            optionRepository,
+            backgroundTaskManager,
+            appStateService
         )
         Logger.debug("db", "Created a background transaction retrieval task")
 

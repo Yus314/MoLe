@@ -42,7 +42,7 @@ import net.ktnx.mobileledger.R
 import net.ktnx.mobileledger.data.repository.OptionRepository
 import net.ktnx.mobileledger.db.Option
 import net.ktnx.mobileledger.db.Profile
-import net.ktnx.mobileledger.model.Data
+import net.ktnx.mobileledger.service.TaskState
 import net.ktnx.mobileledger.ui.components.CrashReportDialog
 import net.ktnx.mobileledger.ui.main.MainEffect
 import net.ktnx.mobileledger.ui.main.MainScreen
@@ -84,40 +84,36 @@ class MainActivityCompose : ProfileThemedActivity() {
                         onProfileListChanged(profiles)
                     }
                 }
+                // Observe task progress from BackgroundTaskManager via ViewModel
+                launch {
+                    viewModel.taskProgress.collect { progress ->
+                        val isRunning = viewModel.isTaskRunning.value
+                        viewModel.updateBackgroundTasksRunning(isRunning)
+                        // Reset the task reference when finished so new refreshes can start
+                        if (progress?.state == TaskState.FINISHED || progress?.state == TaskState.ERROR) {
+                            viewModel.transactionRetrievalDone()
+                        }
+                    }
+                }
+                // Observe sync info from AppStateService via ViewModel
+                launch {
+                    viewModel.lastSyncInfo.collect { syncInfo ->
+                        if (syncInfo != null && syncInfo.date != null) {
+                            viewModel.updateLastUpdateInfo(
+                                syncInfo.date,
+                                syncInfo.transactionCount,
+                                syncInfo.accountCount
+                            )
+                            updateLastUpdateText(
+                                syncInfo.date,
+                                syncInfo.transactionCount,
+                                syncInfo.accountCount,
+                                syncInfo.totalAccountCount
+                            )
+                        }
+                    }
+                }
             }
-        }
-        Data.backgroundTaskProgress.observe(this) { progress ->
-            viewModel.updateBackgroundTaskProgress(progress)
-            // Reset the task reference when finished so new refreshes can start
-            if (progress?.state == net.ktnx.mobileledger.async.RetrieveTransactionsTask.ProgressState.FINISHED) {
-                viewModel.transactionRetrievalDone()
-            }
-        }
-        Data.backgroundTasksRunning.observe(this) { running ->
-            viewModel.updateBackgroundTasksRunning(running)
-        }
-        Data.lastUpdateDate.observe(this) { date ->
-            viewModel.updateLastUpdateInfo(
-                date,
-                Data.lastUpdateTransactionCount.value,
-                Data.lastUpdateAccountCount.value
-            )
-            updateLastUpdateText()
-        }
-        Data.lastUpdateAccountCount.observe(this) { _ ->
-            updateLastUpdateText()
-        }
-        Data.lastUpdateTotalAccountCount.observe(this) { _ ->
-            updateLastUpdateText()
-        }
-        Data.lastUpdateTransactionCount.observe(this) { _ ->
-            updateLastUpdateText()
-        }
-        Data.lastAccountsUpdateText.observe(this) { text ->
-            viewModel.updateHeaderTexts(text, null)
-        }
-        Data.lastTransactionsUpdateText.observe(this) { text ->
-            viewModel.updateHeaderTexts(null, text)
         }
 
         setContent {
@@ -281,32 +277,32 @@ class MainActivityCompose : ProfileThemedActivity() {
         sm.dynamicShortcuts = shortcuts
     }
 
-    private fun updateLastUpdateText() {
+    private fun updateLastUpdateText(
+        lastUpdate: Date?,
+        transactionCount: Int,
+        displayedAccountCount: Int,
+        totalAccountCount: Int
+    ) {
         val formatFlags = DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_SHOW_TIME
         val templateForTransactions = resources.getString(R.string.transaction_count_summary)
         val templateForAccounts = resources.getString(R.string.account_count_summary)
         val templateForAccountsFiltered = resources.getString(R.string.account_count_summary_filtered)
-        val displayedAccountCount = Data.lastUpdateAccountCount.value ?: 0
-        val totalAccountCount = Data.lastUpdateTotalAccountCount.value ?: 0
-        val transactionCount = Data.lastUpdateTransactionCount.value
-        val lastUpdate = Data.lastUpdateDate.value
-        val locale = Data.locale.value ?: Locale.getDefault()
+        val locale = Locale.getDefault()
 
         if (lastUpdate == null) {
-            Data.lastTransactionsUpdateText.value = "----"
-            Data.lastAccountsUpdateText.value = "----"
+            viewModel.updateHeaderTexts("----", "----")
         } else {
             val dateTimeText = DateUtils.formatDateTime(this, lastUpdate.time, formatFlags)
 
-            Data.lastTransactionsUpdateText.value = String.format(
+            val transactionsText = String.format(
                 locale,
                 templateForTransactions,
-                transactionCount ?: 0,
+                transactionCount,
                 dateTimeText
             )
 
             // Use hybrid format when filtered (displayed != total)
-            Data.lastAccountsUpdateText.value = if (displayedAccountCount == totalAccountCount) {
+            val accountsText = if (displayedAccountCount == totalAccountCount) {
                 String.format(locale, templateForAccounts, displayedAccountCount, dateTimeText)
             } else {
                 String.format(
@@ -317,6 +313,7 @@ class MainActivityCompose : ProfileThemedActivity() {
                     dateTimeText
                 )
             }
+            viewModel.updateHeaderTexts(accountsText, transactionsText)
         }
     }
 
@@ -335,22 +332,28 @@ class MainActivityCompose : ProfileThemedActivity() {
                         }
                     }
 
+                    val syncInfo = viewModel.lastSyncInfo.value
                     if (lastUpdate == 0L) {
-                        Data.lastUpdateDate.postValue(null)
+                        viewModel.updateLastUpdateInfo(null, 0, 0)
                     } else {
-                        Data.lastUpdateDate.postValue(Date(lastUpdate))
+                        val date = Date(lastUpdate)
+                        viewModel.updateLastUpdateInfo(
+                            date,
+                            syncInfo?.transactionCount ?: 0,
+                            syncInfo?.accountCount ?: 0
+                        )
+                        updateLastUpdateText(
+                            date,
+                            syncInfo?.transactionCount ?: 0,
+                            syncInfo?.accountCount ?: 0,
+                            syncInfo?.totalAccountCount ?: 0
+                        )
                     }
                 }
         }
     }
 
     private fun profileThemeChanged() {
-        // Remove remaining Data singleton observers (background task related)
-        Data.lastUpdateTransactionCount.removeObservers(this)
-        Data.lastUpdateAccountCount.removeObservers(this)
-        Data.lastUpdateTotalAccountCount.removeObservers(this)
-        Data.lastUpdateDate.removeObservers(this)
-
         Logger.debug(TAG, "profileThemeChanged(): recreating activity")
         recreate()
     }

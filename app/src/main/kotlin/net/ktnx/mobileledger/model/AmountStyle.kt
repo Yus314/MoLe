@@ -20,6 +20,7 @@ package net.ktnx.mobileledger.model
 import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.round
+import net.ktnx.mobileledger.App
 import net.ktnx.mobileledger.utils.Logger
 import net.ktnx.mobileledger.utils.Misc
 
@@ -148,19 +149,18 @@ data class AmountStyle(
          */
         @JvmStatic
         fun getDefault(currency: String?): AmountStyle {
-            val globalPos = Data.currencySymbolPosition.value
+            val currencyFormatter = App.currencyFormatter()
+            val globalPos = currencyFormatter.currencySymbolPosition.value
 
             // Default to AFTER when globalPos is not set
             val position = when {
                 currency.isNullOrEmpty() -> Position.NONE
                 globalPos == Currency.Position.BEFORE -> Position.BEFORE
                 globalPos == Currency.Position.AFTER -> Position.AFTER
-                globalPos == null -> Position.AFTER
                 else -> Position.NONE
             }
 
-            val gap = Data.currencyGap.value
-            val spaced = gap ?: true
+            val spaced = currencyFormatter.currencyGap.value
 
             // Default precision is 2 decimal places
             val precision = 2

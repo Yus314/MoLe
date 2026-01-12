@@ -41,12 +41,12 @@ import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.data.repository.TemplateRepository
 import net.ktnx.mobileledger.data.repository.TransactionRepository
 import net.ktnx.mobileledger.db.TemplateWithAccounts
-import net.ktnx.mobileledger.model.AppStateManager
 import net.ktnx.mobileledger.model.Currency
 import net.ktnx.mobileledger.model.FutureDates
 import net.ktnx.mobileledger.model.LedgerTransaction
 import net.ktnx.mobileledger.model.LedgerTransactionAccount
 import net.ktnx.mobileledger.model.MatchedTemplate
+import net.ktnx.mobileledger.service.CurrencyFormatter
 import net.ktnx.mobileledger.utils.Logger
 import net.ktnx.mobileledger.utils.SimpleDate
 
@@ -56,7 +56,8 @@ class NewTransactionViewModel @Inject constructor(
     private val transactionRepository: TransactionRepository,
     private val accountRepository: AccountRepository,
     private val templateRepository: TemplateRepository,
-    private val currencyRepository: CurrencyRepository
+    private val currencyRepository: CurrencyRepository,
+    private val currencyFormatter: CurrencyFormatter
 ) : ViewModel(),
     TaskCallback {
 
@@ -326,7 +327,7 @@ class NewTransactionViewModel @Inject constructor(
                     if (kotlin.math.abs(balance) < 0.005) {
                         "0"
                     } else {
-                        AppStateManager.formatNumber(-balance.toFloat())
+                        currencyFormatter.formatNumber(-balance.toFloat())
                     }
                 } else {
                     null
@@ -503,7 +504,7 @@ class NewTransactionViewModel @Inject constructor(
             } ?: defaultCurrency
             TransactionAccountRow(
                 accountName = acc.accountName ?: "",
-                amountText = if (acc.amount != null) AppStateManager.formatNumber(acc.amount!!) else "",
+                amountText = if (acc.amount != null) currencyFormatter.formatNumber(acc.amount!!) else "",
                 currency = currencyName,
                 comment = acc.accountComment ?: "",
                 isAmountValid = true
@@ -781,7 +782,7 @@ class NewTransactionViewModel @Inject constructor(
                 val accounts = transactionWithAccounts.accounts?.map { acc ->
                     TransactionAccountRow(
                         accountName = acc.accountName,
-                        amountText = if (acc.amount != 0f) AppStateManager.formatNumber(acc.amount) else "",
+                        amountText = if (acc.amount != 0f) currencyFormatter.formatNumber(acc.amount) else "",
                         currency = acc.currency.ifEmpty { defaultCurrency },
                         comment = acc.comment ?: "",
                         isAmountValid = true
@@ -822,7 +823,7 @@ class NewTransactionViewModel @Inject constructor(
                 val accounts = transactionWithAccounts.accounts?.map { acc ->
                     TransactionAccountRow(
                         accountName = acc.accountName,
-                        amountText = if (acc.amount != 0f) AppStateManager.formatNumber(acc.amount) else "",
+                        amountText = if (acc.amount != 0f) currencyFormatter.formatNumber(acc.amount) else "",
                         currency = acc.currency.ifEmpty { defaultCurrency },
                         comment = acc.comment ?: "",
                         isAmountValid = true

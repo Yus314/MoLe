@@ -19,6 +19,7 @@ package net.ktnx.mobileledger.model
 
 import java.nio.charset.StandardCharsets
 import java.text.ParseException
+import net.ktnx.mobileledger.App
 import net.ktnx.mobileledger.db.Profile
 import net.ktnx.mobileledger.db.Transaction
 import net.ktnx.mobileledger.db.TransactionAccount
@@ -85,7 +86,12 @@ class LedgerTransaction {
     }
 
     constructor(ledgerId: Long, date: SimpleDate?, description: String?) :
-        this(ledgerId, date, description, requireNotNull(Data.getProfile()) { "No profile selected" })
+        this(
+            ledgerId,
+            date,
+            description,
+            requireNotNull(App.profileRepository().currentProfile.value) { "No profile selected" }
+        )
 
     constructor(date: SimpleDate?, description: String?) :
         this(0, date, description)

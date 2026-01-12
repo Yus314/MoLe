@@ -169,5 +169,19 @@ class App : Application() {
                 .putBoolean(PREF_SHOW_ZERO_BALANCE_ACCOUNTS, value)
                 .apply()
         }
+
+        /**
+         * Get the CurrencyFormatter instance for static access.
+         * Use this only when Hilt injection is not available.
+         */
+        @JvmStatic
+        fun currencyFormatter(): CurrencyFormatter = instance.currencyFormatter
+
+        /**
+         * Get the ProfileRepository instance for static access.
+         * Use this only when Hilt injection is not available.
+         */
+        @JvmStatic
+        fun profileRepository(): ProfileRepository = instance.profileRepository
     }
 }

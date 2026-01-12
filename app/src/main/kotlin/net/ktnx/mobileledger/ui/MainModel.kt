@@ -29,19 +29,23 @@ import net.ktnx.mobileledger.data.repository.AccountRepository
 import net.ktnx.mobileledger.data.repository.OptionRepository
 import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.data.repository.TransactionRepository
-import net.ktnx.mobileledger.model.Data
 import net.ktnx.mobileledger.model.LedgerTransaction
 import net.ktnx.mobileledger.model.TransactionListItem
+import net.ktnx.mobileledger.service.AppStateService
+import net.ktnx.mobileledger.service.BackgroundTaskManager
+import net.ktnx.mobileledger.service.TaskProgress
+import net.ktnx.mobileledger.service.TaskState
 import net.ktnx.mobileledger.utils.Logger
 import net.ktnx.mobileledger.utils.SimpleDate
 
 @HiltViewModel
 class MainModel @Inject constructor(
-    private val data: Data,
     private val profileRepository: ProfileRepository,
     private val accountRepository: AccountRepository,
     private val transactionRepository: TransactionRepository,
-    private val optionRepository: OptionRepository
+    private val optionRepository: OptionRepository,
+    private val backgroundTaskManager: BackgroundTaskManager,
+    private val appStateService: AppStateService
 ) : ViewModel() {
     @JvmField
     val foundTransactionItemIndex = MutableLiveData<Int?>(null)
@@ -67,7 +71,7 @@ class MainModel @Inject constructor(
 
     fun setDisplayedTransactions(list: List<TransactionListItem>, transactionCount: Int) {
         _displayedTransactions.postValue(list)
-        data.lastUpdateTransactionCount.postValue(transactionCount)
+        // Transaction count is now tracked via AppStateService.lastSyncInfo
     }
 
     fun getShowZeroBalanceAccounts(): MutableLiveData<Boolean> = _showZeroBalanceAccounts
@@ -87,7 +91,9 @@ class MainModel @Inject constructor(
             profile,
             accountRepository,
             transactionRepository,
-            optionRepository
+            optionRepository,
+            backgroundTaskManager,
+            appStateService
         )
         Logger.debug("db", "Created a background transaction retrieval task")
 
@@ -99,7 +105,7 @@ class MainModel @Inject constructor(
         if (retrieveTransactionsTask != null) {
             retrieveTransactionsTask?.interrupt()
         } else {
-            data.backgroundTaskProgress.value = null
+            backgroundTaskManager.updateProgress(TaskProgress("cancel", TaskState.FINISHED, "Cancelled"))
         }
     }
 

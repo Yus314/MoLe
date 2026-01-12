@@ -46,10 +46,14 @@ import net.ktnx.mobileledger.json.API
 import net.ktnx.mobileledger.json.AccountListParser
 import net.ktnx.mobileledger.json.ApiNotSupportedException
 import net.ktnx.mobileledger.json.TransactionListParser
-import net.ktnx.mobileledger.model.Data
 import net.ktnx.mobileledger.model.LedgerAccount
 import net.ktnx.mobileledger.model.LedgerTransaction
 import net.ktnx.mobileledger.model.LedgerTransactionAccount
+import net.ktnx.mobileledger.service.AppStateService
+import net.ktnx.mobileledger.service.BackgroundTaskManager
+import net.ktnx.mobileledger.service.SyncInfo
+import net.ktnx.mobileledger.service.TaskProgress
+import net.ktnx.mobileledger.service.TaskState
 import net.ktnx.mobileledger.utils.Logger
 import net.ktnx.mobileledger.utils.NetworkUtil
 import net.ktnx.mobileledger.utils.SimpleDate
@@ -58,12 +62,40 @@ class RetrieveTransactionsTask(
     private val profile: Profile,
     private val accountRepository: AccountRepository,
     private val transactionRepository: TransactionRepository,
-    private val optionRepository: OptionRepository
+    private val optionRepository: OptionRepository,
+    private val backgroundTaskManager: BackgroundTaskManager,
+    private val appStateService: AppStateService
 ) : Thread() {
+    private val taskId = "sync-${profile.id}-${System.currentTimeMillis()}"
     private var expectedPostingsCount = -1
 
     private fun publishProgress(progress: Progress) {
-        Data.backgroundTaskProgress.postValue(progress)
+        val taskProgress = when (progress.state) {
+            ProgressState.STARTING -> TaskProgress(taskId, TaskState.STARTING, "Starting...")
+
+            ProgressState.RUNNING -> {
+                if (progress.isIndeterminate) {
+                    TaskProgress(taskId, TaskState.RUNNING, "Syncing...", 0, 0)
+                } else {
+                    TaskProgress(
+                        taskId,
+                        TaskState.RUNNING,
+                        "Syncing...",
+                        progress.getProgress(),
+                        progress.getTotal()
+                    )
+                }
+            }
+
+            ProgressState.FINISHED -> {
+                if (progress.error != null) {
+                    TaskProgress(taskId, TaskState.ERROR, progress.error!!)
+                } else {
+                    TaskProgress(taskId, TaskState.FINISHED, "Done")
+                }
+            }
+        }
+        backgroundTaskManager.updateProgress(taskProgress)
     }
 
     private fun finish(result: Result) {
@@ -71,6 +103,7 @@ class RetrieveTransactionsTask(
         progress.state = ProgressState.FINISHED
         progress.error = result.error
         publishProgress(progress)
+        backgroundTaskManager.taskFinished(taskId)
     }
 
     @Throws(IOException::class, HTTPException::class)
@@ -520,7 +553,7 @@ class RetrieveTransactionsTask(
 
     @SuppressLint("DefaultLocale")
     override fun run() {
-        Data.backgroundTaskStarted()
+        backgroundTaskManager.taskStarted(taskId)
         var accounts: List<LedgerAccount>?
         var transactions: List<LedgerTransaction>?
         try {
@@ -541,7 +574,14 @@ class RetrieveTransactionsTask(
 
             AccountAndTransactionListSaver(accounts, transactions).start()
 
-            Data.lastUpdateDate.postValue(Date())
+            appStateService.updateSyncInfo(
+                SyncInfo(
+                    date = Date(),
+                    transactionCount = transactions.size,
+                    accountCount = accounts.size,
+                    totalAccountCount = accounts.size
+                )
+            )
 
             finish(Result(null))
         } catch (e: MalformedURLException) {
@@ -569,8 +609,6 @@ class RetrieveTransactionsTask(
         } catch (e: ApiNotSupportedException) {
             Logger.warn(TAG, "API version not supported", e)
             finish(Result("Server version not supported"))
-        } finally {
-            Data.backgroundTaskFinished()
         }
     }
 

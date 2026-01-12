@@ -29,7 +29,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import net.ktnx.mobileledger.dao.ProfileDAO
 import net.ktnx.mobileledger.db.Profile
-import net.ktnx.mobileledger.model.AppStateManager
 
 /**
  * Implementation of [ProfileRepository] that wraps the existing [ProfileDAO].
@@ -54,13 +53,8 @@ class ProfileRepositoryImpl @Inject constructor(private val profileDAO: ProfileD
 
     override val currentProfile: StateFlow<Profile?> = _currentProfile.asStateFlow()
 
-    @Suppress("DEPRECATION")
     override fun setCurrentProfile(profile: Profile?) {
         _currentProfile.value = profile
-        // Sync with AppStateManager for backward compatibility during migration.
-        // Many parts of the codebase still use Data.getProfile() (e.g., LedgerTransaction, RetrieveTransactionsTask).
-        // TODO: Remove this once all Data.getProfile() usages are migrated to ProfileRepository
-        AppStateManager.setCurrentProfile(profile)
     }
 
     // ========================================

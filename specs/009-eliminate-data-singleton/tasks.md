@@ -74,7 +74,7 @@ app/src/test/kotlin/net/ktnx/mobileledger/
 - [X] T015 [US1] Replace Data.observeProfile() with ProfileRepository in ProfileThemedActivity at `app/src/main/kotlin/net/ktnx/mobileledger/ui/activity/ProfileThemedActivity.kt`
 - [X] T016 [US1] Update BackupsActivity to use ProfileRepository at `app/src/main/kotlin/net/ktnx/mobileledger/BackupsActivity.kt` (merged with T016a)
 - [X] T016a [US1] Replace Data.getProfile()/Data.observeProfile() in BackupsActivity at `app/src/main/kotlin/net/ktnx/mobileledger/BackupsActivity.kt`
-- [ ] T017 [US1] Remove AppStateManager.setCurrentProfile() sync in ProfileRepositoryImpl at `app/src/main/kotlin/net/ktnx/mobileledger/data/repository/ProfileRepositoryImpl.kt` (implements FR-007) **BLOCKED**: Many places still use Data.getProfile() (LedgerTransaction, RetrieveTransactionsTask, etc.). Must migrate all usages first.
+- [X] T017 [US1] Remove AppStateManager.setCurrentProfile() sync in ProfileRepositoryImpl at `app/src/main/kotlin/net/ktnx/mobileledger/data/repository/ProfileRepositoryImpl.kt` (implements FR-007)
 - [X] T017a [US1] Replace Data.observeProfile() in NewTransactionActivityCompose at `app/src/main/kotlin/net/ktnx/mobileledger/ui/activity/NewTransactionActivityCompose.kt` (discovered during implementation)
 - [X] T017b [US1] Fix Currency.Position enum case (BEFORE/AFTER/NONE) in multiple files (discovered during build)
 - [X] T018 [US1] Run verification: `nix run .#verify` and test profile switching manually
@@ -178,7 +178,7 @@ app/src/test/kotlin/net/ktnx/mobileledger/
 
 ---
 
-## Phase 9: Polish & Cross-Cutting Concerns (Cleanup)
+## Phase 9: Polish & Cross-Cutting Concerns (Cleanup) ✅
 
 **Purpose**: AppStateManager の完全削除と最終検証
 
@@ -187,13 +187,13 @@ app/src/test/kotlin/net/ktnx/mobileledger/
 - **除外**: `app/src/test/kotlin/` （テストコードは移行検証のため参照可）
 - **コメント内参照**: 対象（コメントも削除またはドキュメント更新）
 
-- [ ] T048 Remove all remaining Data.* references and verify SC-001: `grep -r "Data\." app/src/main/kotlin/` must return 0 results after cleanup
-- [ ] T049 Remove all remaining AppStateManager references and verify SC-001: `grep -r "AppStateManager" app/src/main/kotlin/` must return 0 results after cleanup
-- [ ] T050 Delete AppStateManager.kt at `app/src/main/kotlin/net/ktnx/mobileledger/model/AppStateManager.kt`
-- [ ] T051 Delete AppStateModule.kt at `app/src/main/kotlin/net/ktnx/mobileledger/di/AppStateModule.kt`
-- [ ] T052 Run final verification: `nix run .#test` - all tests must pass
-- [ ] T053 Run final build and install: `nix run .#verify`
-- [ ] T054 Manual full feature test: profile switching, data sync, theme changes, transaction creation
+- [X] T048 Remove all remaining Data.* references and verify SC-001: `grep -r "Data\." app/src/main/kotlin/` must return 0 results after cleanup
+- [X] T049 Remove all remaining AppStateManager references and verify SC-001: `grep -r "AppStateManager" app/src/main/kotlin/` must return 0 results after cleanup
+- [X] T050 Delete AppStateManager.kt at `app/src/main/kotlin/net/ktnx/mobileledger/model/AppStateManager.kt`
+- [X] T051 Delete AppStateModule.kt at `app/src/main/kotlin/net/ktnx/mobileledger/di/AppStateModule.kt`
+- [X] T052 Run final verification: `nix run .#test` - all tests must pass
+- [X] T053 Run final build and install: `nix run .#verify`
+- [X] T054 Manual full feature test: profile switching, data sync, theme changes, transaction creation
 
 **Note**: SC-001 verification is included in T048/T049 (grep must return 0 results after cleanup)
 
