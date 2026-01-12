@@ -92,6 +92,13 @@ interface ProfileRepository {
     fun getAllProfiles(): Flow<List<Profile>>
 
     /**
+     * Get all profiles ordered by their display order synchronously.
+     *
+     * @return The complete profile list
+     */
+    suspend fun getAllProfilesSync(): List<Profile>
+
+    /**
      * Get a profile by its ID.
      *
      * @param profileId The profile ID

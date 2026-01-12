@@ -22,6 +22,10 @@ import android.net.Uri
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
 import java.io.IOException
+import net.ktnx.mobileledger.data.repository.CurrencyRepository
+import net.ktnx.mobileledger.data.repository.ProfileRepository
+import net.ktnx.mobileledger.data.repository.TemplateRepository
+import net.ktnx.mobileledger.di.BackupEntryPoint
 import net.ktnx.mobileledger.utils.Misc
 
 class ConfigWriter
@@ -34,12 +38,22 @@ constructor(
 ) : ConfigIO(context, uri, onErrorListener) {
 
     private lateinit var w: RawConfigWriter
+    private val profileRepository: ProfileRepository
+    private val templateRepository: TemplateRepository
+    private val currencyRepository: CurrencyRepository
+
+    init {
+        val entryPoint = BackupEntryPoint.get(context)
+        profileRepository = entryPoint.profileRepository()
+        templateRepository = entryPoint.templateRepository()
+        currencyRepository = entryPoint.currencyRepository()
+    }
 
     override fun getStreamMode(): String = "w"
 
     override fun initStream() {
         val fd = pfd?.fileDescriptor ?: throw IllegalStateException("File descriptor not available")
-        w = RawConfigWriter(FileOutputStream(fd))
+        w = RawConfigWriter(FileOutputStream(fd), profileRepository, templateRepository, currencyRepository)
     }
 
     @Throws(IOException::class)

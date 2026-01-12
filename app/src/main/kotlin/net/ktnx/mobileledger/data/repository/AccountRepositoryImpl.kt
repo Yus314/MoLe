@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import net.ktnx.mobileledger.dao.AccountDAO
+import net.ktnx.mobileledger.dao.AccountValueDAO
 import net.ktnx.mobileledger.db.Account
 import net.ktnx.mobileledger.db.AccountWithAmounts
 
@@ -39,7 +40,10 @@ import net.ktnx.mobileledger.db.AccountWithAmounts
  * Thread-safety: All operations are safe to call from any coroutine context.
  */
 @Singleton
-class AccountRepositoryImpl @Inject constructor(private val accountDAO: AccountDAO) : AccountRepository {
+class AccountRepositoryImpl @Inject constructor(
+    private val accountDAO: AccountDAO,
+    private val accountValueDAO: AccountValueDAO
+) : AccountRepository {
 
     // ========================================
     // Query Operations
@@ -108,7 +112,13 @@ class AccountRepositoryImpl @Inject constructor(private val accountDAO: AccountD
 
     override suspend fun insertAccountWithAmounts(accountWithAmounts: AccountWithAmounts) {
         withContext(Dispatchers.IO) {
-            accountDAO.insertSync(accountWithAmounts)
+            val account = accountWithAmounts.account
+            account.id = accountDAO.insertSync(account)
+            for (value in accountWithAmounts.amounts) {
+                value.accountId = account.id
+                value.generation = account.generation
+                value.id = accountValueDAO.insertSync(value)
+            }
         }
     }
 
@@ -130,7 +140,23 @@ class AccountRepositoryImpl @Inject constructor(private val accountDAO: AccountD
 
     override suspend fun storeAccounts(accounts: List<AccountWithAmounts>, profileId: Long) {
         withContext(Dispatchers.IO) {
-            accountDAO.storeAccountsSync(accounts, profileId)
+            val generation = accountDAO.getGenerationSync(profileId) + 1
+
+            for (rec in accounts) {
+                rec.account.generation = generation
+                rec.account.profileId = profileId
+                // Insert account
+                val account = rec.account
+                account.id = accountDAO.insertSync(account)
+                // Insert amounts
+                for (value in rec.amounts) {
+                    value.accountId = account.id
+                    value.generation = account.generation
+                    value.id = accountValueDAO.insertSync(value)
+                }
+            }
+            accountDAO.purgeOldAccountsSync(profileId, generation)
+            accountDAO.purgeOldAccountValuesSync(profileId, generation)
         }
     }
 

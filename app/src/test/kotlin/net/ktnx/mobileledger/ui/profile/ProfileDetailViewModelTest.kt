@@ -244,6 +244,8 @@ class FakeProfileRepositoryForProfileDetail : ProfileRepository {
 
     override fun getAllProfiles(): Flow<List<Profile>> = MutableStateFlow(profiles.values.sortedBy { it.orderNo })
 
+    override suspend fun getAllProfilesSync(): List<Profile> = profiles.values.sortedBy { it.orderNo }
+
     override fun getProfileById(profileId: Long): Flow<Profile?> = MutableStateFlow(profiles[profileId])
 
     override suspend fun getProfileByIdSync(profileId: Long): Profile? = profiles[profileId]

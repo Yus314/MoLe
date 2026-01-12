@@ -24,7 +24,7 @@ import android.os.ParcelFileDescriptor
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.IOException
-import net.ktnx.mobileledger.db.DB
+import net.ktnx.mobileledger.di.BackupEntryPoint
 import net.ktnx.mobileledger.utils.Logger
 
 class MobileLedgerBackupAgent : BackupAgent() {
@@ -39,8 +39,14 @@ class MobileLedgerBackupAgent : BackupAgent() {
     @Throws(IOException::class)
     private fun backupSettings(data: BackupDataOutput) {
         Logger.debug("backup", "Starting cloud backup")
+        val entryPoint = BackupEntryPoint.get(this)
         val output = ByteArrayOutputStream(4096)
-        val saver = RawConfigWriter(output)
+        val saver = RawConfigWriter(
+            output,
+            entryPoint.profileRepository(),
+            entryPoint.templateRepository(),
+            entryPoint.currencyRepository()
+        )
         saver.writeConfig()
         val bytes = output.toByteArray()
         data.writeEntityHeader(SETTINGS_KEY, bytes.size)
@@ -61,14 +67,19 @@ class MobileLedgerBackupAgent : BackupAgent() {
 
     @Throws(IOException::class)
     private fun restoreSettings(data: BackupDataInput) {
+        val entryPoint = BackupEntryPoint.get(this)
         val bytes = ByteArray(data.dataSize)
         data.readEntityData(bytes, 0, bytes.size)
         val reader = RawConfigReader(ByteArrayInputStream(bytes))
         reader.readConfig()
         Logger.debug("restore", "Successfully read restore data. Wiping database")
-        DB.get().deleteAllSync()
+        entryPoint.db().deleteAllSync()
         Logger.debug("restore", "Database wiped")
-        reader.restoreAll()
+        reader.restoreAll(
+            entryPoint.profileRepository(),
+            entryPoint.templateRepository(),
+            entryPoint.currencyRepository()
+        )
         Logger.debug("restore", "All data restored from the cloud")
     }
 

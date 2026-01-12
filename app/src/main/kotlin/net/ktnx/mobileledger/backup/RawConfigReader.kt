@@ -23,14 +23,16 @@ import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStream
 import java.io.InputStreamReader
+import kotlinx.coroutines.runBlocking
 import net.ktnx.mobileledger.App
+import net.ktnx.mobileledger.data.repository.CurrencyRepository
+import net.ktnx.mobileledger.data.repository.ProfileRepository
+import net.ktnx.mobileledger.data.repository.TemplateRepository
 import net.ktnx.mobileledger.db.Currency
-import net.ktnx.mobileledger.db.DB
 import net.ktnx.mobileledger.db.Profile
 import net.ktnx.mobileledger.db.TemplateAccount
 import net.ktnx.mobileledger.db.TemplateHeader
 import net.ktnx.mobileledger.db.TemplateWithAccounts
-import net.ktnx.mobileledger.model.Data
 import net.ktnx.mobileledger.utils.Logger
 
 class RawConfigReader(inputStream: InputStream) {
@@ -239,59 +241,65 @@ class RawConfigReader(inputStream: InputStream) {
         return list
     }
 
-    fun restoreAll() {
-        restoreCommodities()
-        restoreProfiles()
-        restoreTemplates()
-        restoreCurrentProfile()
+    fun restoreAll(
+        profileRepository: ProfileRepository,
+        templateRepository: TemplateRepository,
+        currencyRepository: CurrencyRepository
+    ) {
+        restoreCommodities(currencyRepository)
+        restoreProfiles(profileRepository)
+        restoreTemplates(templateRepository)
+        restoreCurrentProfile(profileRepository)
     }
 
-    private fun restoreTemplates() {
+    private fun restoreTemplates(templateRepository: TemplateRepository) {
         val templatesList = templates ?: return
 
-        val dao = DB.get().getTemplateDAO()
-        for (t in templatesList) {
-            if (dao.getTemplateWithAccountsByUuidSync(t.header.uuid) == null) {
-                dao.insertSync(t)
+        runBlocking {
+            for (t in templatesList) {
+                if (templateRepository.getTemplateWithAccountsByUuidSync(t.header.uuid) == null) {
+                    templateRepository.insertTemplateWithAccounts(t)
+                }
             }
         }
     }
 
-    private fun restoreProfiles() {
+    private fun restoreProfiles(profileRepository: ProfileRepository) {
         val profilesList = profiles ?: return
 
-        val dao = DB.get().getProfileDAO()
-        for (p in profilesList) {
-            if (dao.getByUuidSync(p.uuid) == null) {
-                dao.insert(p)
+        runBlocking {
+            for (p in profilesList) {
+                if (profileRepository.getProfileByUuidSync(p.uuid) == null) {
+                    profileRepository.insertProfile(p)
+                }
             }
         }
     }
 
-    private fun restoreCommodities() {
+    private fun restoreCommodities(currencyRepository: CurrencyRepository) {
         val commoditiesList = commodities ?: return
 
-        val dao = DB.get().getCurrencyDAO()
-        for (c in commoditiesList) {
-            if (dao.getByNameSync(c.name) == null) {
-                dao.insert(c)
+        runBlocking {
+            for (c in commoditiesList) {
+                if (currencyRepository.getCurrencyByNameSync(c.name) == null) {
+                    currencyRepository.insertCurrency(c)
+                }
             }
         }
     }
 
-    private fun restoreCurrentProfile() {
+    private fun restoreCurrentProfile(profileRepository: ProfileRepository) {
         if (currentProfile == null) {
             Logger.debug("backup", "Not restoring current profile (not present in backup)")
             return
         }
 
         val currentProfileUuid = currentProfile ?: return
-        val dao = DB.get().getProfileDAO()
-        val p = dao.getByUuidSync(currentProfileUuid)
+        val p = runBlocking { profileRepository.getProfileByUuidSync(currentProfileUuid) }
 
         if (p != null) {
             Logger.debug("backup", "Restoring current profile ${p.name}")
-            Data.postCurrentProfile(p)
+            profileRepository.setCurrentProfile(p)
             App.storeStartupProfileAndTheme(p.id, p.theme)
         } else {
             Logger.debug("backup", "Not restoring profile $currentProfile: not found in DB")

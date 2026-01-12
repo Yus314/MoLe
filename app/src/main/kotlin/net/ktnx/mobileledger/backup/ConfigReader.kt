@@ -22,8 +22,11 @@ import android.net.Uri
 import java.io.FileInputStream
 import java.io.FileNotFoundException
 import java.io.IOException
-import net.ktnx.mobileledger.db.DB
-import net.ktnx.mobileledger.model.Data
+import kotlinx.coroutines.runBlocking
+import net.ktnx.mobileledger.data.repository.CurrencyRepository
+import net.ktnx.mobileledger.data.repository.ProfileRepository
+import net.ktnx.mobileledger.data.repository.TemplateRepository
+import net.ktnx.mobileledger.di.BackupEntryPoint
 import net.ktnx.mobileledger.utils.Misc
 
 class ConfigReader
@@ -36,6 +39,16 @@ constructor(
 ) : ConfigIO(context, uri, onErrorListener) {
 
     private lateinit var r: RawConfigReader
+    private val profileRepository: ProfileRepository
+    private val templateRepository: TemplateRepository
+    private val currencyRepository: CurrencyRepository
+
+    init {
+        val entryPoint = BackupEntryPoint.get(context)
+        profileRepository = entryPoint.profileRepository()
+        templateRepository = entryPoint.templateRepository()
+        currencyRepository = entryPoint.currencyRepository()
+    }
 
     override fun getStreamMode(): String = "r"
 
@@ -47,18 +60,19 @@ constructor(
     @Throws(IOException::class)
     override fun processStream() {
         r.readConfig()
-        r.restoreAll()
+        r.restoreAll(profileRepository, templateRepository, currencyRepository)
         val currentProfile = r.currentProfile
 
-        if (Data.getProfile() == null) {
-            val dao = DB.get().getProfileDAO()
-            var p = if (currentProfile != null) dao.getByUuidSync(currentProfile) else null
-
-            if (p == null) {
-                p = dao.getAnySync()
+        if (profileRepository.currentProfile.value == null) {
+            var p = runBlocking {
+                if (currentProfile != null) profileRepository.getProfileByUuidSync(currentProfile) else null
             }
 
-            p?.let { Data.postCurrentProfile(it) }
+            if (p == null) {
+                p = runBlocking { profileRepository.getAnyProfile() }
+            }
+
+            p?.let { profileRepository.setCurrentProfile(it) }
         }
 
         onDoneListener?.let { Misc.onMainThread { it.done() } }

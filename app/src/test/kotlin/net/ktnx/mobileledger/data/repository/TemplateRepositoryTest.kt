@@ -482,6 +482,35 @@ class FakeTemplateRepository : TemplateRepository {
         return result
     }
 
+    override suspend fun saveTemplateWithAccounts(
+        header: TemplateHeader,
+        accounts: List<TemplateAccount>
+    ): Long {
+        val isNew = header.id == 0L
+        val savedId = if (isNew) {
+            val id = nextTemplateId++
+            header.id = id
+            templates[id] = header
+            id
+        } else {
+            templates[header.id] = header
+            header.id
+        }
+
+        // Save accounts
+        val savedAccounts = mutableListOf<TemplateAccount>()
+        for (account in accounts) {
+            val accountId = if (account.id <= 0) nextAccountId++ else account.id
+            account.id = accountId
+            account.templateId = savedId
+            savedAccounts.add(account)
+        }
+        templateAccounts[savedId] = savedAccounts
+
+        emitChanges()
+        return savedId
+    }
+
     override suspend fun deleteAllTemplates() {
         templates.clear()
         templateAccounts.clear()

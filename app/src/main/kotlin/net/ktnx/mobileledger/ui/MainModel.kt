@@ -25,6 +25,10 @@ import java.util.Locale
 import javax.inject.Inject
 import net.ktnx.mobileledger.async.RetrieveTransactionsTask
 import net.ktnx.mobileledger.async.TransactionAccumulator
+import net.ktnx.mobileledger.data.repository.AccountRepository
+import net.ktnx.mobileledger.data.repository.OptionRepository
+import net.ktnx.mobileledger.data.repository.ProfileRepository
+import net.ktnx.mobileledger.data.repository.TransactionRepository
 import net.ktnx.mobileledger.model.Data
 import net.ktnx.mobileledger.model.LedgerTransaction
 import net.ktnx.mobileledger.model.TransactionListItem
@@ -32,7 +36,13 @@ import net.ktnx.mobileledger.utils.Logger
 import net.ktnx.mobileledger.utils.SimpleDate
 
 @HiltViewModel
-class MainModel @Inject constructor(private val data: Data) : ViewModel() {
+class MainModel @Inject constructor(
+    private val data: Data,
+    private val profileRepository: ProfileRepository,
+    private val accountRepository: AccountRepository,
+    private val transactionRepository: TransactionRepository,
+    private val optionRepository: OptionRepository
+) : ViewModel() {
     @JvmField
     val foundTransactionItemIndex = MutableLiveData<Int?>(null)
 
@@ -70,10 +80,15 @@ class MainModel @Inject constructor(private val data: Data) : ViewModel() {
             Logger.debug("db", "Ignoring request for transaction retrieval - already active")
             return
         }
-        val profile = data.getProfile()
+        val profile = profileRepository.currentProfile.value
         checkNotNull(profile)
 
-        retrieveTransactionsTask = RetrieveTransactionsTask(profile)
+        retrieveTransactionsTask = RetrieveTransactionsTask(
+            profile,
+            accountRepository,
+            transactionRepository,
+            optionRepository
+        )
         Logger.debug("db", "Created a background transaction retrieval task")
 
         retrieveTransactionsTask?.start()

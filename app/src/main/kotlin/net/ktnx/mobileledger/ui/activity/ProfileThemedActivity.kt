@@ -127,6 +127,13 @@ open class ProfileThemedActivity : CrashReportingActivity() {
         BaseDAO.runAsync { initProfileSync(profileId) }
     }
 
+    /**
+     * Load profile synchronously on a background thread.
+     *
+     * TODO: Migrate to ProfileRepository when this base class is refactored
+     * to use Hilt injection and coroutines. Currently using DB.get() directly
+     * because BaseDAO.runAsync() is not compatible with suspend functions.
+     */
     private fun initProfileSync(profileId: Long) {
         Logger.debug(TAG, String.format(Locale.US, "Loading profile %d", profileId))
         val dao = DB.get().getProfileDAO()

@@ -270,6 +270,10 @@ class ConcurrentFakeProfileRepository : ProfileRepository {
         MutableStateFlow(profiles.values.sortedBy { it.orderNo }.toList())
     }
 
+    override suspend fun getAllProfilesSync(): List<Profile> = synchronized(lock) {
+        profiles.values.sortedBy { it.orderNo }.toList()
+    }
+
     override fun getProfileById(profileId: Long): Flow<Profile?> = synchronized(lock) {
         MutableStateFlow(profiles[profileId])
     }

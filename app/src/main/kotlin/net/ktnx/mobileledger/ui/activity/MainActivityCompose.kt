@@ -29,12 +29,15 @@ import androidx.activity.viewModels
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.lifecycleScope
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import java.util.Date
 import java.util.Locale
 import net.ktnx.mobileledger.BackupsActivity
 import net.ktnx.mobileledger.R
-import net.ktnx.mobileledger.db.DB
+import javax.inject.Inject
+import net.ktnx.mobileledger.data.repository.OptionRepository
 import net.ktnx.mobileledger.db.Option
 import net.ktnx.mobileledger.db.Profile
 import net.ktnx.mobileledger.model.Data
@@ -53,6 +56,9 @@ import net.ktnx.mobileledger.utils.Logger
  */
 @AndroidEntryPoint
 class MainActivityCompose : ProfileThemedActivity() {
+
+    @Inject
+    lateinit var optionRepository: OptionRepository
 
     private val viewModel: MainViewModel by viewModels()
 
@@ -299,25 +305,25 @@ class MainActivityCompose : ProfileThemedActivity() {
     private fun updateLastUpdateTextFromDB() {
         val currentProfile = Data.getProfile() ?: return
 
-        DB.get()
-            .getOptionDAO()
-            .load(currentProfile.id, Option.OPT_LAST_SCRAPE)
-            .observe(this) { opt: Option? ->
-                var lastUpdate = 0L
-                if (opt != null) {
-                    try {
-                        lastUpdate = opt.value?.toLong() ?: 0L
-                    } catch (ex: NumberFormatException) {
-                        Logger.debug(TAG, "Error parsing '${opt.value}' as long", ex)
+        lifecycleScope.launch {
+            optionRepository.getOption(currentProfile.id, Option.OPT_LAST_SCRAPE)
+                .collect { opt: Option? ->
+                    var lastUpdate = 0L
+                    if (opt != null) {
+                        try {
+                            lastUpdate = opt.value?.toLong() ?: 0L
+                        } catch (ex: NumberFormatException) {
+                            Logger.debug(TAG, "Error parsing '${opt.value}' as long", ex)
+                        }
+                    }
+
+                    if (lastUpdate == 0L) {
+                        Data.lastUpdateDate.postValue(null)
+                    } else {
+                        Data.lastUpdateDate.postValue(Date(lastUpdate))
                     }
                 }
-
-                if (lastUpdate == 0L) {
-                    Data.lastUpdateDate.postValue(null)
-                } else {
-                    Data.lastUpdateDate.postValue(Date(lastUpdate))
-                }
-            }
+        }
     }
 
     private fun profileThemeChanged() {

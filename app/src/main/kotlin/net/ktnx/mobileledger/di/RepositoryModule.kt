@@ -26,6 +26,8 @@ import net.ktnx.mobileledger.data.repository.AccountRepository
 import net.ktnx.mobileledger.data.repository.AccountRepositoryImpl
 import net.ktnx.mobileledger.data.repository.CurrencyRepository
 import net.ktnx.mobileledger.data.repository.CurrencyRepositoryImpl
+import net.ktnx.mobileledger.data.repository.OptionRepository
+import net.ktnx.mobileledger.data.repository.OptionRepositoryImpl
 import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.data.repository.ProfileRepositoryImpl
 import net.ktnx.mobileledger.data.repository.TemplateRepository
@@ -92,4 +94,8 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindCurrencyRepository(impl: CurrencyRepositoryImpl): CurrencyRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindOptionRepository(impl: OptionRepositoryImpl): OptionRepository
 }

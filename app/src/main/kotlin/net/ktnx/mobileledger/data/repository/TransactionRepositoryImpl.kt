@@ -23,9 +23,18 @@ import javax.inject.Singleton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
+import java.util.Locale
+import net.ktnx.mobileledger.dao.AccountDAO
+import net.ktnx.mobileledger.dao.AccountValueDAO
+import net.ktnx.mobileledger.dao.TransactionAccountDAO
 import net.ktnx.mobileledger.dao.TransactionDAO
+import net.ktnx.mobileledger.db.Account
+import net.ktnx.mobileledger.db.AccountValue
 import net.ktnx.mobileledger.db.Transaction
 import net.ktnx.mobileledger.db.TransactionWithAccounts
+import net.ktnx.mobileledger.model.LedgerAccount
+import net.ktnx.mobileledger.utils.Logger
+import net.ktnx.mobileledger.utils.Misc
 
 /**
  * Implementation of [TransactionRepository] that wraps the existing [TransactionDAO].
@@ -38,8 +47,12 @@ import net.ktnx.mobileledger.db.TransactionWithAccounts
  * Thread-safety: All operations are safe to call from any coroutine context.
  */
 @Singleton
-class TransactionRepositoryImpl @Inject constructor(private val transactionDAO: TransactionDAO) :
-    TransactionRepository {
+class TransactionRepositoryImpl @Inject constructor(
+    private val transactionDAO: TransactionDAO,
+    private val transactionAccountDAO: TransactionAccountDAO,
+    private val accountDAO: AccountDAO,
+    private val accountValueDAO: AccountValueDAO
+) : TransactionRepository {
 
     // ========================================
     // Query Operations
@@ -86,13 +99,96 @@ class TransactionRepositoryImpl @Inject constructor(private val transactionDAO: 
 
     override suspend fun insertTransaction(transaction: TransactionWithAccounts) {
         withContext(Dispatchers.IO) {
-            transactionDAO.appendSync(transaction)
+            appendTransactionInternal(transaction)
+        }
+    }
+
+    /**
+     * Internal method to append a new transaction.
+     * Creates accounts and updates account values as needed.
+     */
+    private fun appendTransactionInternal(rec: TransactionWithAccounts) {
+        val transaction = rec.transaction
+        val profileId = transaction.profileId
+        transaction.generation = transactionDAO.getGenerationSync(profileId)
+        transaction.ledgerId = transactionDAO.getMaxLedgerIdSync(profileId) + 1
+        transaction.id = transactionDAO.insertSync(transaction)
+
+        for (trAcc in rec.accounts ?: emptyList()) {
+            trAcc.transactionId = transaction.id
+            trAcc.generation = transaction.generation
+            trAcc.id = transactionAccountDAO.insertSync(trAcc)
+
+            var accName: String? = trAcc.accountName
+            while (accName != null) {
+                var acc = accountDAO.getByNameSync(profileId, accName)
+                if (acc == null) {
+                    acc = Account()
+                    acc.profileId = profileId
+                    acc.name = accName
+                    acc.nameUpper = accName.uppercase()
+                    acc.parentName = LedgerAccount.extractParentName(accName)
+                    acc.level = LedgerAccount.determineLevel(acc.name)
+                    acc.generation = trAcc.generation
+
+                    acc.id = accountDAO.insertSync(acc)
+                }
+
+                var accVal = accountValueDAO.getByCurrencySync(acc.id, trAcc.currency)
+                if (accVal == null) {
+                    accVal = AccountValue()
+                    accVal.accountId = acc.id
+                    accVal.generation = trAcc.generation
+                    accVal.currency = trAcc.currency
+                    accVal.value = trAcc.amount
+                    accVal.id = accountValueDAO.insertSync(accVal)
+                } else {
+                    accVal.value = accVal.value + trAcc.amount
+                    accountValueDAO.updateSync(accVal)
+                }
+
+                accName = LedgerAccount.extractParentName(accName)
+            }
         }
     }
 
     override suspend fun storeTransaction(transaction: TransactionWithAccounts) {
         withContext(Dispatchers.IO) {
-            transactionDAO.storeSync(transaction)
+            storeTransactionInternal(transaction)
+        }
+    }
+
+    /**
+     * Internal method to store a transaction with its accounts.
+     * Handles both insert and update cases based on ledger ID.
+     */
+    private fun storeTransactionInternal(rec: TransactionWithAccounts) {
+        var transaction = rec.transaction
+        val existing = transactionDAO.getByLedgerId(transaction.profileId, transaction.ledgerId)
+        if (existing != null) {
+            if (Misc.equalStrings(transaction.dataHash, existing.dataHash)) {
+                transactionDAO.updateGenerationWithAccounts(existing.id, rec.transaction.generation)
+                return
+            }
+
+            existing.copyDataFrom(transaction)
+            transactionDAO.updateSync(existing)
+
+            transaction = existing
+        } else {
+            transaction.id = transactionDAO.insertSync(transaction)
+        }
+
+        for (trAcc in rec.accounts ?: emptyList()) {
+            trAcc.transactionId = transaction.id
+            trAcc.generation = transaction.generation
+            val existingAcc = transactionAccountDAO.getByOrderNoSync(trAcc.transactionId, trAcc.orderNo)
+            if (existingAcc != null) {
+                existingAcc.copyDataFrom(trAcc)
+                transactionAccountDAO.updateSync(existingAcc)
+            } else {
+                trAcc.id = transactionAccountDAO.insertSync(trAcc)
+            }
         }
     }
 
@@ -114,7 +210,20 @@ class TransactionRepositoryImpl @Inject constructor(private val transactionDAO: 
 
     override suspend fun storeTransactions(transactions: List<TransactionWithAccounts>, profileId: Long) {
         withContext(Dispatchers.IO) {
-            transactionDAO.storeTransactionsSync(transactions, profileId)
+            val generation = transactionDAO.getGenerationSync(profileId) + 1
+
+            for (tr in transactions) {
+                tr.transaction.generation = generation
+                tr.transaction.profileId = profileId
+                storeTransactionInternal(tr)
+            }
+
+            Logger.debug("Transaction", "Purging old transactions")
+            var removed = transactionDAO.purgeOldTransactionsSync(profileId, generation)
+            Logger.debug("Transaction", String.format(Locale.ROOT, "Purged %d transactions", removed))
+
+            removed = transactionDAO.purgeOldTransactionAccountsSync(profileId, generation)
+            Logger.debug("Transaction", String.format(Locale.ROOT, "Purged %d transaction accounts", removed))
         }
     }
 

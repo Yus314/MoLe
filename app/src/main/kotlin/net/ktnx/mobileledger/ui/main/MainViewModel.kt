@@ -39,6 +39,7 @@ import net.ktnx.mobileledger.App
 import net.ktnx.mobileledger.async.RetrieveTransactionsTask
 import net.ktnx.mobileledger.async.TransactionAccumulator
 import net.ktnx.mobileledger.data.repository.AccountRepository
+import net.ktnx.mobileledger.data.repository.OptionRepository
 import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.data.repository.TransactionRepository
 import net.ktnx.mobileledger.db.Profile
@@ -57,7 +58,8 @@ import net.ktnx.mobileledger.utils.SimpleDate
 class MainViewModel @Inject constructor(
     private val profileRepository: ProfileRepository,
     private val accountRepository: AccountRepository,
-    private val transactionRepository: TransactionRepository
+    private val transactionRepository: TransactionRepository,
+    private val optionRepository: OptionRepository
 ) : ViewModel() {
 
     private val _mainUiState = MutableStateFlow(MainUiState())
@@ -373,8 +375,10 @@ class MainViewModel @Inject constructor(
 
     // Data loading functions
     fun updateProfile(profile: Profile?) {
-        // ProfileRepository の currentProfile を同期（他の ViewModel が参照するため）
-        profileRepository.setCurrentProfile(profile)
+        // プロファイルは呼び出し元（MainActivityCompose.onProfileChanged）で既に設定済み。
+        // ここでは UI 状態のみを更新する。
+        // 注: ユーザーがドロワーからプロファイルを選択した場合は selectProfile() が
+        // profileRepository.setCurrentProfile() を呼ぶ。
         _mainUiState.update {
             it.copy(
                 currentProfileId = profile?.id,
@@ -700,7 +704,12 @@ class MainViewModel @Inject constructor(
         val profile = profileRepository.currentProfile.value
         checkNotNull(profile)
 
-        retrieveTransactionsTask = RetrieveTransactionsTask(profile)
+        retrieveTransactionsTask = RetrieveTransactionsTask(
+            profile,
+            accountRepository,
+            transactionRepository,
+            optionRepository
+        )
         Logger.debug("db", "Created a background transaction retrieval task")
 
         retrieveTransactionsTask?.start()

@@ -37,6 +37,7 @@ import net.ktnx.mobileledger.db.Account
 import net.ktnx.mobileledger.db.AccountWithAmounts
 import net.ktnx.mobileledger.db.Currency
 import net.ktnx.mobileledger.db.Profile
+import net.ktnx.mobileledger.db.TemplateAccount
 import net.ktnx.mobileledger.db.TemplateHeader
 import net.ktnx.mobileledger.db.TemplateWithAccounts
 import net.ktnx.mobileledger.db.Transaction
@@ -300,6 +301,8 @@ class FakeProfileRepositoryForTransaction : ProfileRepository {
 
     override fun getAllProfiles(): Flow<List<Profile>> = MutableStateFlow(profiles.values.sortedBy { it.orderNo })
 
+    override suspend fun getAllProfilesSync(): List<Profile> = profiles.values.sortedBy { it.orderNo }
+
     override fun getProfileById(profileId: Long): Flow<Profile?> = MutableStateFlow(profiles[profileId])
 
     override suspend fun getProfileByIdSync(profileId: Long): Profile? = profiles[profileId]
@@ -511,6 +514,17 @@ class FakeTemplateRepositoryForTransaction : TemplateRepository {
         }
         templates[copy.header.id] = copy
         return copy
+    }
+
+    override suspend fun saveTemplateWithAccounts(
+        header: TemplateHeader,
+        accounts: List<TemplateAccount>
+    ): Long {
+        val twa = TemplateWithAccounts()
+        twa.header = header
+        twa.accounts = accounts
+        templates[header.id] = twa
+        return header.id
     }
 
     override suspend fun deleteAllTemplates() {

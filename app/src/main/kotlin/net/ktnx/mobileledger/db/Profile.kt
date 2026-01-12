@@ -134,6 +134,11 @@ class Profile {
         return result
     }
 
+    /**
+     * @deprecated Use ProfileRepository.deleteProfileData() instead.
+     * This method violates the Repository pattern by accessing the database directly.
+     */
+    @Deprecated("Use ProfileRepository.deleteProfileData() instead", ReplaceWith(""))
     @Transaction
     fun wipeAllDataSync() {
         val optDao = DB.get().getOptionDAO()
@@ -146,6 +151,11 @@ class Profile {
         trnDao.deleteSync(trnDao.getAllForProfileUnorderedSync(id))
     }
 
+    /**
+     * @deprecated Use ProfileRepository.deleteProfileData() instead.
+     * This method violates the Repository pattern by accessing the database directly.
+     */
+    @Deprecated("Use ProfileRepository.deleteProfileData() instead", ReplaceWith(""))
     fun wipeAllData() {
         BaseDAO.runAsync { wipeAllDataSync() }
     }

@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import net.ktnx.mobileledger.dao.TemplateAccountDAO
 import net.ktnx.mobileledger.dao.TemplateHeaderDAO
+import net.ktnx.mobileledger.db.TemplateAccount
 import net.ktnx.mobileledger.db.TemplateHeader
 import net.ktnx.mobileledger.db.TemplateWithAccounts
 
@@ -82,7 +83,13 @@ class TemplateRepositoryImpl @Inject constructor(
 
     override suspend fun insertTemplateWithAccounts(templateWithAccounts: TemplateWithAccounts) {
         withContext(Dispatchers.IO) {
-            templateHeaderDAO.insertSync(templateWithAccounts)
+            // Insert header first
+            val templateId = templateHeaderDAO.insertSync(templateWithAccounts.header)
+            // Then insert each account with the new template ID
+            for (acc in templateWithAccounts.accounts) {
+                acc.templateId = templateId
+                templateAccountDAO.insertSync(acc)
+            }
         }
     }
 
@@ -115,5 +122,35 @@ class TemplateRepositoryImpl @Inject constructor(
         withContext(Dispatchers.IO) {
             templateHeaderDAO.deleteAllSync()
         }
+    }
+
+    override suspend fun saveTemplateWithAccounts(
+        header: TemplateHeader,
+        accounts: List<TemplateAccount>
+    ): Long = withContext(Dispatchers.IO) {
+        val isNew = header.id == 0L
+        val savedId = if (isNew) {
+            templateHeaderDAO.insertSync(header)
+        } else {
+            templateHeaderDAO.updateSync(header)
+            header.id
+        }
+
+        // Save accounts using the existing DAO pattern
+        templateAccountDAO.prepareForSave(savedId)
+
+        for (account in accounts) {
+            if (account.id <= 0) {
+                account.id = 0
+                account.templateId = savedId
+                templateAccountDAO.insertSync(account)
+            } else {
+                account.templateId = savedId
+                templateAccountDAO.updateSync(account)
+            }
+        }
+
+        templateAccountDAO.finishSave(savedId)
+        savedId
     }
 }

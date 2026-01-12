@@ -30,7 +30,6 @@ import java.util.concurrent.atomic.AtomicLong
 import java.util.regex.Pattern
 import java.util.regex.PatternSyntaxException
 import javax.inject.Inject
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -38,9 +37,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import net.ktnx.mobileledger.dao.TemplateAccountDAO
-import net.ktnx.mobileledger.dao.TemplateHeaderDAO
+import net.ktnx.mobileledger.data.repository.TemplateRepository
 import net.ktnx.mobileledger.db.TemplateAccount
 import net.ktnx.mobileledger.db.TemplateHeader
 import net.ktnx.mobileledger.utils.Logger
@@ -52,8 +49,7 @@ import net.ktnx.mobileledger.utils.Misc
  */
 @HiltViewModel
 class TemplateDetailViewModelCompose @Inject constructor(
-    private val templateHeaderDAO: TemplateHeaderDAO,
-    private val templateAccountDAO: TemplateAccountDAO
+    private val templateRepository: TemplateRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(TemplateDetailUiState())
@@ -78,9 +74,7 @@ class TemplateDetailViewModelCompose @Inject constructor(
             _uiState.update { it.copy(isLoading = true) }
 
             try {
-                val templateWithAccounts = withContext(Dispatchers.IO) {
-                    templateHeaderDAO.getTemplateWithAccountsSync(templateId)
-                }
+                val templateWithAccounts = templateRepository.getTemplateWithAccountsSync(templateId)
 
                 if (templateWithAccounts != null) {
                     val header = templateWithAccounts.header
@@ -514,35 +508,18 @@ class TemplateDetailViewModelCompose @Inject constructor(
             _uiState.update { it.copy(isSaving = true) }
 
             try {
-                withContext(Dispatchers.IO) {
-                    val isNew = state.isNewTemplate
-                    val header = buildTemplateHeader(state)
+                val header = buildTemplateHeader(state)
 
-                    val savedId = if (isNew) {
-                        header.id = 0
-                        templateHeaderDAO.insertSync(header)
-                    } else {
-                        templateHeaderDAO.updateSync(header)
-                        header.id
+                // Build list of accounts to save
+                val accounts = mutableListOf<TemplateAccount>()
+                state.accounts.forEachIndexed { index, row ->
+                    if (!row.isEmpty() || index < 2) {
+                        val account = buildTemplateAccount(row, header.id, index.toLong())
+                        accounts.add(account)
                     }
-
-                    // Save accounts
-                    templateAccountDAO.prepareForSave(savedId)
-
-                    state.accounts.forEachIndexed { index, row ->
-                        if (!row.isEmpty() || index < 2) {
-                            val account = buildTemplateAccount(row, savedId, index.toLong())
-                            if (account.id <= 0) {
-                                account.id = 0
-                                templateAccountDAO.insertSync(account)
-                            } else {
-                                templateAccountDAO.updateSync(account)
-                            }
-                        }
-                    }
-
-                    templateAccountDAO.finishSave(savedId)
                 }
+
+                templateRepository.saveTemplateWithAccounts(header, accounts)
 
                 _uiState.update { it.copy(isSaving = false, hasUnsavedChanges = false) }
                 _effects.send(TemplateDetailEffect.TemplateSaved)
@@ -662,13 +639,11 @@ class TemplateDetailViewModelCompose @Inject constructor(
             _uiState.update { it.copy(showDeleteConfirmDialog = false, isLoading = true) }
 
             try {
-                withContext(Dispatchers.IO) {
-                    val templateId = _uiState.value.templateId
-                    if (templateId != null && templateId > 0) {
-                        val template = templateHeaderDAO.getTemplateSync(templateId)
-                        if (template != null) {
-                            templateHeaderDAO.deleteSync(template)
-                        }
+                val templateId = _uiState.value.templateId
+                if (templateId != null && templateId > 0) {
+                    val template = templateRepository.getTemplateByIdSync(templateId)
+                    if (template != null) {
+                        templateRepository.deleteTemplate(template)
                     }
                 }
 

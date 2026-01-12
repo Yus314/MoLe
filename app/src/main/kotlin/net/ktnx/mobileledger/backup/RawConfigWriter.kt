@@ -22,11 +22,18 @@ import java.io.BufferedWriter
 import java.io.IOException
 import java.io.OutputStream
 import java.io.OutputStreamWriter
-import net.ktnx.mobileledger.db.DB
+import kotlinx.coroutines.runBlocking
+import net.ktnx.mobileledger.data.repository.CurrencyRepository
+import net.ktnx.mobileledger.data.repository.ProfileRepository
+import net.ktnx.mobileledger.data.repository.TemplateRepository
 import net.ktnx.mobileledger.json.API
-import net.ktnx.mobileledger.model.Data
 
-class RawConfigWriter(outputStream: OutputStream) {
+class RawConfigWriter(
+    outputStream: OutputStream,
+    private val profileRepository: ProfileRepository,
+    private val templateRepository: TemplateRepository,
+    private val currencyRepository: CurrencyRepository
+) {
     private val w: JsonWriter = JsonWriter(BufferedWriter(OutputStreamWriter(outputStream))).apply {
         setIndent("  ")
     }
@@ -69,7 +76,7 @@ class RawConfigWriter(outputStream: OutputStream) {
 
     @Throws(IOException::class)
     private fun writeConfigTemplates() {
-        val templates = DB.get().getTemplateDAO().getAllTemplatesWithAccountsSync()
+        val templates = runBlocking { templateRepository.getAllTemplatesWithAccountsSync() }
 
         if (templates.isEmpty()) return
 
@@ -117,7 +124,7 @@ class RawConfigWriter(outputStream: OutputStream) {
 
     @Throws(IOException::class)
     private fun writeCommodities() {
-        val list = DB.get().getCurrencyDAO().getAllSync()
+        val list = runBlocking { currencyRepository.getAllCurrenciesSync() }
         if (list.isEmpty()) return
 
         w.name(ConfigIO.Keys.COMMODITIES).beginArray()
@@ -133,7 +140,7 @@ class RawConfigWriter(outputStream: OutputStream) {
 
     @Throws(IOException::class)
     private fun writeProfiles() {
-        val profiles = DB.get().getProfileDAO().getAllOrderedSync()
+        val profiles = runBlocking { profileRepository.getAllProfilesSync() }
 
         if (profiles.isEmpty()) return
 
@@ -172,7 +179,7 @@ class RawConfigWriter(outputStream: OutputStream) {
 
     @Throws(IOException::class)
     private fun writeCurrentProfile() {
-        val currentProfile = Data.getProfile() ?: return
+        val currentProfile = profileRepository.currentProfile.value ?: return
         w.name(ConfigIO.Keys.CURRENT_PROFILE).value(currentProfile.uuid)
     }
 }

@@ -270,6 +270,8 @@ class FakeProfileRepositoryForViewModel : ProfileRepository {
 
     override fun getAllProfiles(): Flow<List<Profile>> = MutableStateFlow(profilesMap.values.sortedBy { it.orderNo })
 
+    override suspend fun getAllProfilesSync(): List<Profile> = profilesMap.values.sortedBy { it.orderNo }
+
     override fun getProfileById(profileId: Long): Flow<Profile?> = MutableStateFlow(profilesMap[profileId])
 
     override suspend fun getProfileByIdSync(profileId: Long): Profile? = profilesMap[profileId]

@@ -29,6 +29,7 @@ import net.ktnx.mobileledger.dao.OptionDAO
 import net.ktnx.mobileledger.dao.ProfileDAO
 import net.ktnx.mobileledger.dao.TemplateAccountDAO
 import net.ktnx.mobileledger.dao.TemplateHeaderDAO
+import net.ktnx.mobileledger.dao.TransactionAccountDAO
 import net.ktnx.mobileledger.dao.TransactionDAO
 import net.ktnx.mobileledger.db.DB
 
@@ -70,6 +71,9 @@ object DatabaseModule {
 
     @Provides
     fun provideTransactionDAO(db: DB): TransactionDAO = db.getTransactionDAO()
+
+    @Provides
+    fun provideTransactionAccountDAO(db: DB): TransactionAccountDAO = db.getTransactionAccountDAO()
 
     @Provides
     fun provideAccountDAO(db: DB): AccountDAO = db.getAccountDAO()

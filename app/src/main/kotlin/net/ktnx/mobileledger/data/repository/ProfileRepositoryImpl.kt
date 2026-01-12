@@ -29,6 +29,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import net.ktnx.mobileledger.dao.ProfileDAO
 import net.ktnx.mobileledger.db.Profile
+import net.ktnx.mobileledger.model.AppStateManager
 
 /**
  * Implementation of [ProfileRepository] that wraps the existing [ProfileDAO].
@@ -53,8 +54,13 @@ class ProfileRepositoryImpl @Inject constructor(private val profileDAO: ProfileD
 
     override val currentProfile: StateFlow<Profile?> = _currentProfile.asStateFlow()
 
+    @Suppress("DEPRECATION")
     override fun setCurrentProfile(profile: Profile?) {
         _currentProfile.value = profile
+        // Sync with AppStateManager for backward compatibility during migration.
+        // MainActivityCompose still observes Data.observeProfile() (AppStateManager.profile).
+        // TODO: Remove this once MainActivityCompose is migrated to use profileRepository.currentProfile
+        AppStateManager.setCurrentProfile(profile)
     }
 
     // ========================================
@@ -62,6 +68,10 @@ class ProfileRepositoryImpl @Inject constructor(private val profileDAO: ProfileD
     // ========================================
 
     override fun getAllProfiles(): Flow<List<Profile>> = profileDAO.getAllOrdered().asFlow()
+
+    override suspend fun getAllProfilesSync(): List<Profile> = withContext(Dispatchers.IO) {
+        profileDAO.getAllOrderedSync()
+    }
 
     override fun getProfileById(profileId: Long): Flow<Profile?> = profileDAO.getById(profileId).asFlow()
 

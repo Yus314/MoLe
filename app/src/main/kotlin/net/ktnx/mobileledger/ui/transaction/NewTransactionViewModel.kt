@@ -494,14 +494,17 @@ class NewTransactionViewModel @Inject constructor(
         }
     }
 
-    private fun applyTemplateWithAccounts(template: TemplateWithAccounts) {
+    private suspend fun applyTemplateWithAccounts(template: TemplateWithAccounts) {
         val defaultCurrency = profileRepository.currentProfile.value?.getDefaultCommodityOrEmpty() ?: ""
 
         val newAccounts = template.accounts.map { acc ->
+            val currencyName = acc.currency?.let { currencyId ->
+                currencyRepository.getCurrencyByIdSync(currencyId)?.name
+            } ?: defaultCurrency
             TransactionAccountRow(
                 accountName = acc.accountName ?: "",
                 amountText = if (acc.amount != null) AppStateManager.formatNumber(acc.amount!!) else "",
-                currency = acc.getCurrencyObject()?.name ?: defaultCurrency,
+                currency = currencyName,
                 comment = acc.accountComment ?: "",
                 isAmountValid = true
             )

@@ -18,6 +18,7 @@
 package net.ktnx.mobileledger.data.repository
 
 import kotlinx.coroutines.flow.Flow
+import net.ktnx.mobileledger.db.TemplateAccount
 import net.ktnx.mobileledger.db.TemplateHeader
 import net.ktnx.mobileledger.db.TemplateWithAccounts
 
@@ -146,4 +147,14 @@ interface TemplateRepository {
      * Delete all templates.
      */
     suspend fun deleteAllTemplates()
+
+    /**
+     * Save a template with its accounts.
+     * Handles insert/update of header and all accounts atomically.
+     *
+     * @param header The template header to save
+     * @param accounts The list of accounts to save
+     * @return The saved template ID
+     */
+    suspend fun saveTemplateWithAccounts(header: TemplateHeader, accounts: List<TemplateAccount>): Long
 }

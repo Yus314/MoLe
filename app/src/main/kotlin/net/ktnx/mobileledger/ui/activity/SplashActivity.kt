@@ -125,8 +125,18 @@ class SplashActivity : CrashReportingActivity() {
         }
     }
 
+    /**
+     * Thread to initialize the database on app startup.
+     *
+     * Note: DB.get() is intentionally used here to trigger Room database initialization.
+     * This is not a violation of the Repository pattern as this is specifically for
+     * database warm-up, not data access. The Repository layer is not suitable here
+     * because we need to ensure the database is initialized before any Repository
+     * can be used.
+     */
     private class DatabaseInitThread : Thread() {
         override fun run() {
+            // Trigger database initialization by making a simple query
             DB.get().getProfileDAO().getProfileCountSync()
 
             DB.initComplete.postValue(true)

@@ -32,9 +32,12 @@ import java.text.ParseException
 import java.util.Date
 import java.util.Locale
 import java.util.regex.Pattern
+import kotlinx.coroutines.runBlocking
+import net.ktnx.mobileledger.data.repository.AccountRepository
+import net.ktnx.mobileledger.data.repository.OptionRepository
+import net.ktnx.mobileledger.data.repository.TransactionRepository
 import net.ktnx.mobileledger.db.Account
 import net.ktnx.mobileledger.db.AccountWithAmounts
-import net.ktnx.mobileledger.db.DB
 import net.ktnx.mobileledger.db.Option
 import net.ktnx.mobileledger.db.Profile
 import net.ktnx.mobileledger.db.TransactionWithAccounts
@@ -51,7 +54,12 @@ import net.ktnx.mobileledger.utils.Logger
 import net.ktnx.mobileledger.utils.NetworkUtil
 import net.ktnx.mobileledger.utils.SimpleDate
 
-class RetrieveTransactionsTask(private val profile: Profile) : Thread() {
+class RetrieveTransactionsTask(
+    private val profile: Profile,
+    private val accountRepository: AccountRepository,
+    private val transactionRepository: TransactionRepository,
+    private val optionRepository: OptionRepository
+) : Thread() {
     private var expectedPostingsCount = -1
 
     private fun publishProgress(progress: Progress) {
@@ -674,14 +682,12 @@ class RetrieveTransactionsTask(private val profile: Profile) : Thread() {
         private val transactions: List<LedgerTransaction>
     ) : Thread() {
         override fun run() {
-            val accDao = DB.get().getAccountDAO()
-            val trDao = DB.get().getTransactionDAO()
-
+            runBlocking {
             Logger.debug(TAG, "Preparing account list")
             val list = ArrayList<AccountWithAmounts>()
             for (acc in accounts) {
                 val a = acc.toDBOWithAmounts()
-                val existing: Account? = accDao.getByNameSync(profile.id, acc.name)
+                val existing: Account? = accountRepository.getByNameSync(profile.id, acc.name)
                 if (existing != null) {
                     a.account.expanded = existing.expanded
                     a.account.amountsExpanded = existing.amountsExpanded
@@ -690,7 +696,7 @@ class RetrieveTransactionsTask(private val profile: Profile) : Thread() {
                 list.add(a)
             }
             Logger.debug(TAG, "Account list prepared. Storing")
-            accDao.storeAccountsSync(list, profile.id)
+            accountRepository.storeAccounts(list, profile.id)
             Logger.debug(TAG, "Account list stored")
 
             Logger.debug(TAG, "Preparing transaction list")
@@ -701,18 +707,18 @@ class RetrieveTransactionsTask(private val profile: Profile) : Thread() {
             }
 
             Logger.debug(TAG, "Storing transaction list")
-            trDao.storeTransactionsSync(tranList, profile.id)
+            transactionRepository.storeTransactions(tranList, profile.id)
 
             Logger.debug(TAG, "Transactions stored")
 
-            DB.get().getOptionDAO()
-                .insertSync(
-                    Option(
-                        profile.id,
-                        Option.OPT_LAST_SCRAPE,
-                        Date().time.toString()
-                    )
+            optionRepository.insertOption(
+                Option(
+                    profile.id,
+                    Option.OPT_LAST_SCRAPE,
+                    Date().time.toString()
                 )
+            )
+            }
         }
     }
 

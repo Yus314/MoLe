@@ -21,16 +21,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import net.ktnx.mobileledger.dao.TemplateHeaderDAO
+import net.ktnx.mobileledger.data.repository.TemplateRepository
 import net.ktnx.mobileledger.db.TemplateHeader
 import net.ktnx.mobileledger.utils.Logger
 
@@ -39,7 +38,9 @@ import net.ktnx.mobileledger.utils.Logger
  * Uses StateFlow for reactive UI updates.
  */
 @HiltViewModel
-class TemplateListViewModelCompose @Inject constructor(private val templateHeaderDAO: TemplateHeaderDAO) : ViewModel() {
+class TemplateListViewModelCompose @Inject constructor(
+    private val templateRepository: TemplateRepository
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(TemplateListUiState(isLoading = true))
     val uiState: StateFlow<TemplateListUiState> = _uiState.asStateFlow()
@@ -58,9 +59,17 @@ class TemplateListViewModelCompose @Inject constructor(private val templateHeade
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
 
-            try {
-                // Observe LiveData from DAO and convert to StateFlow
-                templateHeaderDAO.getTemplates().observeForever { templates ->
+            templateRepository.getAllTemplates()
+                .catch { e ->
+                    Logger.debug("template-list", "Error loading templates: ${e.message}")
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            error = "テンプレートの読み込みに失敗しました"
+                        )
+                    }
+                }
+                .collect { templates ->
                     _uiState.update { state ->
                         state.copy(
                             templates = templates.map { header ->
@@ -75,15 +84,6 @@ class TemplateListViewModelCompose @Inject constructor(private val templateHeade
                         )
                     }
                 }
-            } catch (e: Exception) {
-                Logger.debug("template-list", "Error loading templates: ${e.message}")
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        error = "テンプレートの読み込みに失敗しました"
-                    )
-                }
-            }
         }
     }
 
@@ -106,19 +106,11 @@ class TemplateListViewModelCompose @Inject constructor(private val templateHeade
     private fun deleteTemplate(templateId: Long) {
         viewModelScope.launch {
             try {
-                val templateName = withContext(Dispatchers.IO) {
-                    val template = templateHeaderDAO.getTemplateSync(templateId)
-                    if (template != null) {
-                        deletedTemplate = TemplateHeader(template)
-                        templateHeaderDAO.deleteSync(template)
-                        template.name
-                    } else {
-                        null
-                    }
-                }
-
-                if (templateName != null) {
-                    _effects.send(TemplateListEffect.ShowUndoSnackbar(templateName, templateId))
+                val template = templateRepository.getTemplateByIdSync(templateId)
+                if (template != null) {
+                    deletedTemplate = TemplateHeader(template)
+                    templateRepository.deleteTemplate(template)
+                    _effects.send(TemplateListEffect.ShowUndoSnackbar(template.name, templateId))
                 }
             } catch (e: Exception) {
                 Logger.debug("template-list", "Error deleting template: ${e.message}")
@@ -131,9 +123,7 @@ class TemplateListViewModelCompose @Inject constructor(private val templateHeade
         val template = deletedTemplate ?: return
         viewModelScope.launch {
             try {
-                withContext(Dispatchers.IO) {
-                    templateHeaderDAO.insertSync(template)
-                }
+                templateRepository.insertTemplate(template)
                 deletedTemplate = null
             } catch (e: Exception) {
                 Logger.debug("template-list", "Error restoring template: ${e.message}")
@@ -145,9 +135,7 @@ class TemplateListViewModelCompose @Inject constructor(private val templateHeade
     private fun duplicateTemplate(templateId: Long) {
         viewModelScope.launch {
             try {
-                withContext(Dispatchers.IO) {
-                    templateHeaderDAO.duplicateTemplateWithAccounts(templateId, null)
-                }
+                templateRepository.duplicateTemplate(templateId)
             } catch (e: Exception) {
                 Logger.debug("template-list", "Error duplicating template: ${e.message}")
                 _effects.send(TemplateListEffect.ShowError("テンプレートの複製に失敗しました"))
