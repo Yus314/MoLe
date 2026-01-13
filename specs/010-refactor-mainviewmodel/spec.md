@@ -165,7 +165,7 @@ End users experience zero changes in functionality. All existing features (profi
 - **FR-007**: The refactoring MUST be performed incrementally with verification at each step
 - **FR-008**: Each incremental step MUST maintain a working, testable application state
 - **FR-009**: Profile selection changes MUST continue to update all dependent components (accounts, transactions)
-- **FR-010**: Background data synchronization MUST continue to work [NEEDS CLARIFICATION: Should Thread-based sync be migrated to coroutines in this refactoring, or handled as a separate feature? Option A: Include coroutine migration. Option B: Keep existing Thread implementation and migrate in separate feature.]
+- **FR-010**: Background data synchronization MUST continue to work with the existing Thread-based implementation. Coroutine migration will be handled as a separate feature to keep this refactoring focused on ViewModel separation.
 - **FR-011**: Navigation between screens MUST continue to work with the same user flows
 - **FR-012**: Drawer (side menu) state management MUST remain consistent
 - **FR-013**: Tab switching (Accounts/Transactions) MUST work identically to current behavior
@@ -175,7 +175,7 @@ End users experience zero changes in functionality. All existing features (profi
 
 ### Organizational Requirements
 
-- **OR-001**: Profile management logic [NEEDS CLARIFICATION: Should profile management remain part of the main screen, or be extracted as an independent feature? Option A: Keep as part of main screen (current architecture). Option B: Extract to separate ProfileManagement feature with its own navigation.]
+- **OR-001**: Profile management logic MUST remain as part of the main screen (current architecture), with profile selection handled by a dedicated component within the main screen context
 - **OR-002**: Code organization MUST make it obvious where to add new features
 - **OR-003**: Component names MUST clearly indicate their responsibility (e.g., AccountSummaryViewModel, TransactionListViewModel)
 - **OR-004**: Each component MUST have its own dedicated test file
@@ -196,7 +196,7 @@ End users experience zero changes in functionality. All existing features (profi
 
 ### Measurable Outcomes
 
-- **SC-001**: Developers can locate feature-specific code in under 30 seconds (compared to 2-3 minutes currently) [NEEDS CLARIFICATION: Which metrics should we use to measure success? Option A: File size (each component under 300 lines). Option B: Test execution time (component tests under 1 second). Option C: Code coverage (each component above 80%). Option D: All of the above.]
+- **SC-001**: Developers can locate feature-specific code in under 30 seconds (compared to 2-3 minutes currently), measured by: (a) File size - each component under 300 lines, (b) Test execution time - component tests under 1 second, (c) Code coverage - each component above 80%
 
 - **SC-002**: Individual component test suites execute in under 1 second (compared to full test suite taking 5+ seconds)
 

@@ -13,7 +13,7 @@
 
 ## Requirement Completeness
 
-- [ ] No [NEEDS CLARIFICATION] markers remain (3 found - see notes below)
+- [x] No [NEEDS CLARIFICATION] markers remain (all 3 resolved - see notes below)
 - [x] Requirements are testable and unambiguous
 - [x] Success criteria are measurable
 - [x] Success criteria are technology-agnostic (no implementation details)
@@ -31,18 +31,21 @@
 
 ## Notes
 
-**NEEDS CLARIFICATION markers found:**
+**NEEDS CLARIFICATION markers resolved (2026-01-13):**
 
 1. **FR-010**: Thread-based sync migration
-   - Location: Requirements > Functional Requirements
-   - Question: Should Thread-based sync be migrated to coroutines in this refactoring, or handled as a separate feature?
+   - **Question**: Should Thread-based sync be migrated to coroutines in this refactoring?
+   - **Answer**: Option B - Keep existing Thread implementation, migrate in separate feature
+   - **Rationale**: Keeps refactoring scope focused on ViewModel separation
 
 2. **OR-001**: Profile management scope
-   - Location: Requirements > Organizational Requirements
-   - Question: Should profile management remain part of the main screen, or be extracted as an independent feature?
+   - **Question**: Should profile management remain part of the main screen?
+   - **Answer**: Option A - Keep as part of main screen (current architecture)
+   - **Rationale**: Maintains current navigation model while still splitting responsibilities
 
 3. **SC-001**: Success metrics selection
-   - Location: Success Criteria > Measurable Outcomes
-   - Question: Which metrics should we use to measure success?
+   - **Question**: Which metrics should we use to measure success?
+   - **Answer**: Option D - All metrics (file size, test time, code coverage)
+   - **Rationale**: Comprehensive measurement ensures quality across multiple dimensions
 
-**Action Required**: User must answer these 3 clarification questions before proceeding to /speckit.plan
+**Status**: ✅ All clarifications resolved. Specification is ready for `/speckit.plan`
