@@ -38,6 +38,9 @@ class AppStateServiceImpl @Inject constructor() : AppStateService {
     private val _drawerOpen = MutableStateFlow(false)
     override val drawerOpen: StateFlow<Boolean> = _drawerOpen.asStateFlow()
 
+    private val _dataVersion = MutableStateFlow(0L)
+    override val dataVersion: StateFlow<Long> = _dataVersion.asStateFlow()
+
     override fun updateSyncInfo(info: SyncInfo) {
         _lastSyncInfo.value = info
     }
@@ -52,5 +55,9 @@ class AppStateServiceImpl @Inject constructor() : AppStateService {
 
     override fun toggleDrawer() {
         _drawerOpen.value = !_drawerOpen.value
+    }
+
+    override fun signalDataChanged() {
+        _dataVersion.value = _dataVersion.value + 1
     }
 }

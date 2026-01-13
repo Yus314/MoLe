@@ -99,6 +99,7 @@ abstract class DB : RoomDatabase() {
 
         private fun buildDatabase(): DB {
             val builder = Room.databaseBuilder(App.instance, DB::class.java, DB_NAME)
+                .setJournalMode(JournalMode.WRITE_AHEAD_LOGGING)
 
             builder.addMigrations(
                 singleVersionMigration(17),

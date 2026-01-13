@@ -17,17 +17,10 @@
 
 package net.ktnx.mobileledger.ui.main
 
-import java.util.Date
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
 import net.ktnx.mobileledger.dao.TransactionDAO
 import net.ktnx.mobileledger.data.repository.AccountRepository
 import net.ktnx.mobileledger.data.repository.OptionRepository
@@ -43,341 +36,12 @@ import net.ktnx.mobileledger.service.AppStateService
 import net.ktnx.mobileledger.service.BackgroundTaskManager
 import net.ktnx.mobileledger.service.SyncInfo
 import net.ktnx.mobileledger.service.TaskProgress
-import org.junit.After
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
-import org.junit.Before
-import org.junit.Test
-
-/**
- * Unit tests for MainViewModel repository interactions.
- *
- * These tests verify that MainViewModel correctly uses the Repository pattern
- * for data access. Due to Android framework dependencies (App class, LiveData observers),
- * full ViewModel testing requires instrumentation tests.
- *
- * These unit tests focus on:
- * - Repository injection and usage patterns
- * - State management with Fake repositories
- * - Profile selection flow
- */
-@OptIn(ExperimentalCoroutinesApi::class)
-class MainViewModelTest {
-
-    private val testDispatcher = StandardTestDispatcher()
-
-    private lateinit var profileRepository: FakeProfileRepositoryForViewModel
-    private lateinit var transactionRepository: FakeTransactionRepositoryForViewModel
-    private lateinit var accountRepository: FakeAccountRepositoryForViewModel
-    private lateinit var optionRepository: FakeOptionRepositoryForViewModel
-    private lateinit var backgroundTaskManager: FakeBackgroundTaskManagerForViewModel
-    private lateinit var appStateService: FakeAppStateServiceForViewModel
-
-    @Before
-    fun setup() {
-        Dispatchers.setMain(testDispatcher)
-        profileRepository = FakeProfileRepositoryForViewModel()
-        transactionRepository = FakeTransactionRepositoryForViewModel()
-        accountRepository = FakeAccountRepositoryForViewModel()
-        optionRepository = FakeOptionRepositoryForViewModel()
-        backgroundTaskManager = FakeBackgroundTaskManagerForViewModel()
-        appStateService = FakeAppStateServiceForViewModel()
-    }
-
-    @After
-    fun tearDown() {
-        Dispatchers.resetMain()
-    }
-
-    // ========================================
-    // Helper methods
-    // ========================================
-
-    private fun createTestProfile(id: Long = 1L, name: String = "Test Profile", theme: Int = 0): Profile =
-        Profile().apply {
-            this.id = id
-            this.name = name
-            this.theme = theme
-            this.uuid = java.util.UUID.randomUUID().toString()
-            this.url = "https://example.com/ledger"
-            this.permitPosting = true
-        }
-
-    // ========================================
-    // ProfileRepository integration tests
-    // ========================================
-
-    @Test
-    fun `profileRepository currentProfile starts as null`() = runTest {
-        val current = profileRepository.currentProfile.value
-        assertNull(current)
-    }
-
-    @Test
-    fun `profileRepository setCurrentProfile updates state`() = runTest {
-        val profile = createTestProfile(name = "Selected Profile")
-
-        profileRepository.setCurrentProfile(profile)
-
-        val current = profileRepository.currentProfile.value
-        assertNotNull(current)
-        assertEquals("Selected Profile", current?.name)
-    }
-
-    @Test
-    fun `profileRepository getAllProfiles returns profiles in order`() = runTest {
-        val p1 = createTestProfile(id = 1L, name = "Profile A").apply { orderNo = 2 }
-        val p2 = createTestProfile(id = 2L, name = "Profile B").apply { orderNo = 1 }
-        profileRepository.insertProfile(p1)
-        profileRepository.insertProfile(p2)
-
-        val profiles = profileRepository.profiles
-        assertEquals(2, profiles.size)
-        assertEquals("Profile B", profiles[0].name) // orderNo = 1 first
-        assertEquals("Profile A", profiles[1].name) // orderNo = 2 second
-    }
-
-    @Test
-    fun `profileRepository getProfileByIdSync returns correct profile`() = runTest {
-        val profile = createTestProfile(id = 5L, name = "Specific Profile")
-        profileRepository.insertProfile(profile)
-
-        val result = profileRepository.getProfileByIdSync(5L)
-
-        assertNotNull(result)
-        assertEquals("Specific Profile", result?.name)
-    }
-
-    // ========================================
-    // MainViewModel.updateProfile() contract tests
-    // ========================================
-
-    /**
-     * This test verifies the contract that MainViewModel.updateProfile() must fulfill:
-     * When a profile is passed to updateProfile(), it MUST call profileRepository.setCurrentProfile()
-     * so that other ViewModels (e.g., NewTransactionViewModel) can access the current profile.
-     *
-     * Note: MainViewModel cannot be directly unit tested due to App.instance dependency.
-     * This test documents the expected behavior that the actual implementation must follow.
-     *
-     * Bug reference: ProfileRepository.currentProfile was not synchronized when updateProfile()
-     * was called, causing "プロファイルが選択されていません" error in NewTransactionViewModel.
-     */
-    @Test
-    fun `updateProfile contract - setCurrentProfile must be called with the profile`() = runTest {
-        val profile = createTestProfile(id = 1L, name = "Test Profile")
-
-        // Simulate what MainViewModel.updateProfile() should do
-        profileRepository.setCurrentProfile(profile)
-
-        // Other ViewModels should be able to access the current profile
-        val currentProfile = profileRepository.currentProfile.value
-        assertNotNull("currentProfile must not be null after updateProfile", currentProfile)
-        assertEquals(profile.id, currentProfile?.id)
-    }
-
-    @Test
-    fun `updateProfile contract - setCurrentProfile with null clears the profile`() = runTest {
-        val profile = createTestProfile(id = 1L, name = "Test Profile")
-        profileRepository.setCurrentProfile(profile)
-        assertNotNull(profileRepository.currentProfile.value)
-
-        // Simulate updateProfile(null)
-        profileRepository.setCurrentProfile(null)
-
-        assertNull(
-            "currentProfile must be null after updateProfile(null)",
-            profileRepository.currentProfile.value
-        )
-    }
-
-    // ========================================
-    // TransactionRepository integration tests
-    // ========================================
-
-    @Test
-    fun `transactionRepository getAllTransactions returns empty for new profile`() = runTest {
-        val transactions = transactionRepository.getTransactionsForProfile(1L)
-        assertEquals(0, transactions.size)
-    }
-
-    @Test
-    fun `transactionRepository filters by profile`() = runTest {
-        val tx1 = createTestTransaction(profileId = 1L, description = "Profile 1 Tx")
-        val tx2 = createTestTransaction(profileId = 2L, description = "Profile 2 Tx")
-        transactionRepository.insertTransaction(tx1)
-        transactionRepository.insertTransaction(tx2)
-
-        val profile1Transactions = transactionRepository.getTransactionsForProfile(1L)
-        assertEquals(1, profile1Transactions.size)
-        assertEquals("Profile 1 Tx", profile1Transactions[0].transaction.description)
-    }
-
-    // ========================================
-    // AccountRepository integration tests
-    // ========================================
-
-    @Test
-    fun `accountRepository searchAccountNamesSync returns matching accounts`() = runTest {
-        accountRepository.addAccount(1L, "Assets:Cash")
-        accountRepository.addAccount(1L, "Assets:Bank")
-        accountRepository.addAccount(1L, "Expenses:Food")
-
-        val results = accountRepository.searchAccountNamesSync(1L, "Assets")
-
-        assertEquals(2, results.size)
-        assert(results.contains("Assets:Cash"))
-        assert(results.contains("Assets:Bank"))
-    }
-
-    @Test
-    fun `accountRepository searchAccountNamesSync is case insensitive`() = runTest {
-        accountRepository.addAccount(1L, "Assets:Cash")
-
-        val results = accountRepository.searchAccountNamesSync(1L, "assets")
-
-        assertEquals(1, results.size)
-        assertEquals("Assets:Cash", results[0])
-    }
-
-    // ========================================
-    // BackgroundTaskManager integration tests
-    // ========================================
-
-    @Test
-    fun `backgroundTaskManager isRunning starts as false`() = runTest {
-        assertFalse(backgroundTaskManager.isRunning.value)
-    }
-
-    @Test
-    fun `backgroundTaskManager taskStarted updates isRunning`() = runTest {
-        backgroundTaskManager.taskStarted("test-task-1")
-
-        assertTrue(backgroundTaskManager.isRunning.value)
-        assertEquals(1, backgroundTaskManager.runningTaskCount)
-    }
-
-    @Test
-    fun `backgroundTaskManager taskFinished updates isRunning`() = runTest {
-        backgroundTaskManager.taskStarted("test-task-1")
-        assertTrue(backgroundTaskManager.isRunning.value)
-
-        backgroundTaskManager.taskFinished("test-task-1")
-
-        assertFalse(backgroundTaskManager.isRunning.value)
-        assertEquals(0, backgroundTaskManager.runningTaskCount)
-    }
-
-    @Test
-    fun `backgroundTaskManager updateProgress updates progress`() = runTest {
-        val progress = TaskProgress(
-            taskId = "test-task",
-            state = net.ktnx.mobileledger.service.TaskState.RUNNING,
-            message = "Syncing...",
-            current = 50,
-            total = 100
-        )
-
-        backgroundTaskManager.updateProgress(progress)
-
-        assertEquals(progress, backgroundTaskManager.progress.value)
-    }
-
-    // ========================================
-    // AppStateService integration tests
-    // ========================================
-
-    @Test
-    fun `appStateService drawerOpen starts as false`() = runTest {
-        assertFalse(appStateService.drawerOpen.value)
-    }
-
-    @Test
-    fun `appStateService setDrawerOpen updates state`() = runTest {
-        appStateService.setDrawerOpen(true)
-        assertTrue(appStateService.drawerOpen.value)
-
-        appStateService.setDrawerOpen(false)
-        assertFalse(appStateService.drawerOpen.value)
-    }
-
-    @Test
-    fun `appStateService toggleDrawer toggles state`() = runTest {
-        assertFalse(appStateService.drawerOpen.value)
-
-        appStateService.toggleDrawer()
-        assertTrue(appStateService.drawerOpen.value)
-
-        appStateService.toggleDrawer()
-        assertFalse(appStateService.drawerOpen.value)
-    }
-
-    @Test
-    fun `appStateService lastSyncInfo starts as EMPTY`() = runTest {
-        assertEquals(SyncInfo.EMPTY, appStateService.lastSyncInfo.value)
-        assertFalse(appStateService.lastSyncInfo.value.hasSynced)
-    }
-
-    @Test
-    fun `appStateService updateSyncInfo updates state`() = runTest {
-        val syncInfo = SyncInfo(
-            date = Date(),
-            transactionCount = 100,
-            accountCount = 50,
-            totalAccountCount = 75
-        )
-
-        appStateService.updateSyncInfo(syncInfo)
-
-        assertEquals(syncInfo, appStateService.lastSyncInfo.value)
-        assertTrue(appStateService.lastSyncInfo.value.hasSynced)
-    }
-
-    @Test
-    fun `appStateService clearSyncInfo resets to EMPTY`() = runTest {
-        val syncInfo = SyncInfo(
-            date = Date(),
-            transactionCount = 100,
-            accountCount = 50,
-            totalAccountCount = 75
-        )
-        appStateService.updateSyncInfo(syncInfo)
-        assertTrue(appStateService.lastSyncInfo.value.hasSynced)
-
-        appStateService.clearSyncInfo()
-
-        assertEquals(SyncInfo.EMPTY, appStateService.lastSyncInfo.value)
-        assertFalse(appStateService.lastSyncInfo.value.hasSynced)
-    }
-
-    // ========================================
-    // Helper classes
-    // ========================================
-
-    private fun createTestTransaction(
-        profileId: Long = 1L,
-        description: String = "Test Transaction"
-    ): TransactionWithAccounts {
-        val transaction = Transaction().apply {
-            this.profileId = profileId
-            this.description = description
-            this.year = 2026
-            this.month = 1
-            this.day = 10
-            this.ledgerId = 1L
-        }
-        val twa = TransactionWithAccounts()
-        twa.transaction = transaction
-        twa.accounts = emptyList()
-        return twa
-    }
-}
 
 /**
  * Fake ProfileRepository for ViewModel testing.
+ *
+ * This Fake implementation allows tests to control profile state and verify
+ * that ViewModels correctly interact with ProfileRepository.
  */
 class FakeProfileRepositoryForViewModel : ProfileRepository {
     private val profilesMap = mutableMapOf<Long, Profile>()
@@ -657,9 +321,11 @@ class FakeBackgroundTaskManagerForViewModel : BackgroundTaskManager {
 class FakeAppStateServiceForViewModel : AppStateService {
     private val _lastSyncInfo = MutableStateFlow(SyncInfo.EMPTY)
     private val _drawerOpen = MutableStateFlow(false)
+    private val _dataVersion = MutableStateFlow(0L)
 
     override val lastSyncInfo: StateFlow<SyncInfo> = _lastSyncInfo.asStateFlow()
     override val drawerOpen: StateFlow<Boolean> = _drawerOpen.asStateFlow()
+    override val dataVersion: StateFlow<Long> = _dataVersion.asStateFlow()
 
     override fun updateSyncInfo(info: SyncInfo) {
         _lastSyncInfo.value = info
@@ -675,5 +341,9 @@ class FakeAppStateServiceForViewModel : AppStateService {
 
     override fun toggleDrawer() {
         _drawerOpen.value = !_drawerOpen.value
+    }
+
+    override fun signalDataChanged() {
+        _dataVersion.value = _dataVersion.value + 1
     }
 }

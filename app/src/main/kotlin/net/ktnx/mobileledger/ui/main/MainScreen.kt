@@ -310,15 +310,11 @@ fun MainScreen(
                         )
                     }
 
-                    // Pull-to-refresh state with explicit control
+                    // Pull-to-refresh state
+                    // Note: PullToRefreshBox automatically hides the indicator when
+                    // isRefreshing becomes false. Explicit animateToHidden() calls can
+                    // cause race conditions with quick consecutive swipes.
                     val pullToRefreshState = rememberPullToRefreshState()
-
-                    // Hide the indicator when refresh completes
-                    LaunchedEffect(mainUiState.isRefreshing) {
-                        if (!mainUiState.isRefreshing) {
-                            pullToRefreshState.animateToHidden()
-                        }
-                    }
 
                     // Pager with pull-to-refresh
                     PullToRefreshBox(

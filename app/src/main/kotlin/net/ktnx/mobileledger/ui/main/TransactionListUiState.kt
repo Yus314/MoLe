@@ -35,7 +35,8 @@ data class TransactionListUiState(
     val foundTransactionIndex: Int? = null,
     val firstTransactionDate: SimpleDate? = null,
     val lastTransactionDate: SimpleDate? = null,
-    val headerText: String = "----"
+    val headerText: String = "----",
+    val error: String? = null
 )
 
 /**

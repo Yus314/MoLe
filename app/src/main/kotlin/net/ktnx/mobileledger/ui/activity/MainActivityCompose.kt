@@ -36,6 +36,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import java.util.Date
 import java.util.Locale
 import javax.inject.Inject
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import net.ktnx.mobileledger.BackupsActivity
 import net.ktnx.mobileledger.R
@@ -44,9 +45,13 @@ import net.ktnx.mobileledger.db.Option
 import net.ktnx.mobileledger.db.Profile
 import net.ktnx.mobileledger.service.TaskState
 import net.ktnx.mobileledger.ui.components.CrashReportDialog
-import net.ktnx.mobileledger.ui.main.MainEffect
+import net.ktnx.mobileledger.ui.main.AccountSummaryViewModel
+import net.ktnx.mobileledger.ui.main.MainCoordinatorEffect
+import net.ktnx.mobileledger.ui.main.MainCoordinatorViewModel
 import net.ktnx.mobileledger.ui.main.MainScreen
 import net.ktnx.mobileledger.ui.main.MainViewModel
+import net.ktnx.mobileledger.ui.main.ProfileSelectionViewModel
+import net.ktnx.mobileledger.ui.main.TransactionListViewModel
 import net.ktnx.mobileledger.ui.profiles.ProfileDetailActivity
 import net.ktnx.mobileledger.ui.templates.TemplatesActivity
 import net.ktnx.mobileledger.ui.theme.MoLeTheme
@@ -64,7 +69,13 @@ class MainActivityCompose : ProfileThemedActivity() {
 
     // profileRepository is inherited from ProfileThemedActivity
 
+    // Phase 8: Inject all 4 ViewModels
+    // MainViewModel is kept temporarily for compatibility during incremental migration
     private val viewModel: MainViewModel by viewModels()
+    private val coordinatorViewModel: MainCoordinatorViewModel by viewModels()
+    private val profileSelectionViewModel: ProfileSelectionViewModel by viewModels()
+    private val accountSummaryViewModel: AccountSummaryViewModel by viewModels()
+    private val transactionListViewModel: TransactionListViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         Logger.debug(TAG, "onCreate()/entry")
@@ -85,13 +96,23 @@ class MainActivityCompose : ProfileThemedActivity() {
                     }
                 }
                 // Observe task progress from BackgroundTaskManager via ViewModel
+                // Note: isRefreshing is now managed by MainViewModel.observeTaskRunning()
+                // which directly observes BackgroundTaskManager.isRunning StateFlow
                 launch {
+                    var wasRunning = false
                     viewModel.taskProgress.collect { progress ->
-                        val isRunning = viewModel.isTaskRunning.value
-                        viewModel.updateBackgroundTasksRunning(isRunning)
+                        if (progress != null) {
+                            wasRunning = true
+                        }
                         // Reset the task reference when finished so new refreshes can start
-                        if (progress?.state == TaskState.FINISHED || progress?.state == TaskState.ERROR) {
+                        // Note: BackgroundTaskManager sets progress to null (not FINISHED) when task ends,
+                        // so we need to check for null AND track if a task was previously running
+                        val taskEnded = progress == null ||
+                            progress.state == TaskState.FINISHED ||
+                            progress.state == TaskState.ERROR
+                        if (wasRunning && taskEnded) {
                             viewModel.transactionRetrievalDone()
+                            wasRunning = false
                         }
                     }
                 }
@@ -113,25 +134,43 @@ class MainActivityCompose : ProfileThemedActivity() {
                         }
                     }
                 }
+                // Observe data version changes to reload data after local changes
+                launch {
+                    var lastProcessedVersion = 0L
+                    viewModel.dataVersion.collect { version ->
+                        // Only reload if version changed (avoid duplicate reloads on lifecycle restart)
+                        if (version > 0 && version != lastProcessedVersion) {
+                            Logger.debug(TAG, "Data version changed to $version, reloading data")
+                            lastProcessedVersion = version
+                            viewModel.reloadDataAfterChange()
+                        }
+                    }
+                }
             }
         }
 
         setContent {
+            // Phase 8: MainViewModel handles main UI state (events and state must match)
+            // Specialized ViewModels are injected but not yet wired - to be completed in Phase 9
             val mainUiState by viewModel.mainUiState.collectAsState()
             val accountSummaryUiState by viewModel.accountSummaryUiState.collectAsState()
             val transactionListUiState by viewModel.transactionListUiState.collectAsState()
             val drawerOpen by viewModel.drawerOpen.collectAsState()
 
-            // Handle one-shot effects
+            // Coordinator state for navigation effects
+            val coordinatorUiState by coordinatorViewModel.uiState.collectAsState()
+
+            // Handle coordinator effects
             LaunchedEffect(Unit) {
-                viewModel.effects.collect { effect ->
+                coordinatorViewModel.effects.collect { effect ->
                     when (effect) {
-                        is MainEffect.NavigateToNewTransaction -> {
+                        is MainCoordinatorEffect.NavigateToNewTransaction -> {
                             navigateToNewTransaction(effect.profileId, effect.theme)
                         }
 
-                        is MainEffect.NavigateToProfileDetail -> {
+                        is MainCoordinatorEffect.NavigateToProfileDetail -> {
                             if (effect.profileId != null) {
+                                // Use legacy viewModel.allProfiles until fully migrated
                                 val profile = viewModel.allProfiles.value.find { it.id == effect.profileId }
                                 ProfileDetailActivity.start(this@MainActivityCompose, profile)
                             } else {
@@ -139,17 +178,17 @@ class MainActivityCompose : ProfileThemedActivity() {
                             }
                         }
 
-                        is MainEffect.NavigateToTemplates -> {
+                        is MainCoordinatorEffect.NavigateToTemplates -> {
                             startActivity(
                                 Intent(this@MainActivityCompose, TemplatesActivity::class.java)
                             )
                         }
 
-                        is MainEffect.NavigateToBackups -> {
+                        is MainCoordinatorEffect.NavigateToBackups -> {
                             BackupsActivity.start(this@MainActivityCompose)
                         }
 
-                        is MainEffect.ShowError -> {
+                        is MainCoordinatorEffect.ShowError -> {
                             // TODO: Show snackbar
                         }
                     }
@@ -321,35 +360,36 @@ class MainActivityCompose : ProfileThemedActivity() {
         val currentProfile = profileRepository.currentProfile.value ?: return
 
         lifecycleScope.launch {
-            optionRepository.getOption(currentProfile.id, Option.OPT_LAST_SCRAPE)
-                .collect { opt: Option? ->
-                    var lastUpdate = 0L
-                    if (opt != null) {
-                        try {
-                            lastUpdate = opt.value?.toLong() ?: 0L
-                        } catch (ex: NumberFormatException) {
-                            Logger.debug(TAG, "Error parsing '${opt.value}' as long", ex)
-                        }
-                    }
+            // Use .first() instead of .collect to avoid accumulating collectors
+            val opt = optionRepository.getOption(currentProfile.id, Option.OPT_LAST_SCRAPE)
+                .first()
 
-                    val syncInfo = viewModel.lastSyncInfo.value
-                    if (lastUpdate == 0L) {
-                        viewModel.updateLastUpdateInfo(null, 0, 0)
-                    } else {
-                        val date = Date(lastUpdate)
-                        viewModel.updateLastUpdateInfo(
-                            date,
-                            syncInfo?.transactionCount ?: 0,
-                            syncInfo?.accountCount ?: 0
-                        )
-                        updateLastUpdateText(
-                            date,
-                            syncInfo?.transactionCount ?: 0,
-                            syncInfo?.accountCount ?: 0,
-                            syncInfo?.totalAccountCount ?: 0
-                        )
-                    }
+            var lastUpdate = 0L
+            if (opt != null) {
+                try {
+                    lastUpdate = opt.value?.toLong() ?: 0L
+                } catch (ex: NumberFormatException) {
+                    Logger.debug(TAG, "Error parsing '${opt.value}' as long", ex)
                 }
+            }
+
+            val syncInfo = viewModel.lastSyncInfo.value
+            if (lastUpdate == 0L) {
+                viewModel.updateLastUpdateInfo(null, 0, 0)
+            } else {
+                val date = Date(lastUpdate)
+                viewModel.updateLastUpdateInfo(
+                    date,
+                    syncInfo?.transactionCount ?: 0,
+                    syncInfo?.accountCount ?: 0
+                )
+                updateLastUpdateText(
+                    date,
+                    syncInfo?.transactionCount ?: 0,
+                    syncInfo?.accountCount ?: 0,
+                    syncInfo?.totalAccountCount ?: 0
+                )
+            }
         }
     }
 

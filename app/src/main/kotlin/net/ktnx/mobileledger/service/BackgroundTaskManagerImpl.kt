@@ -46,41 +46,58 @@ class BackgroundTaskManagerImpl @Inject constructor() : BackgroundTaskManager {
         get() = synchronized(lock) { runningTasks.size }
 
     override fun taskStarted(taskId: String) {
+        // Update data structure under lock, but emit StateFlow OUTSIDE lock
+        // to avoid deadlock with Compose recomposition on main thread
+        val newProgress: TaskProgress
         synchronized(lock) {
             runningTasks.add(taskId)
             Logger.debug(
                 "BackgroundTaskManager",
                 "Task started: $taskId, running count: ${runningTasks.size}"
             )
-            _isRunning.value = true
-            _progress.value = TaskProgress(
+            newProgress = TaskProgress(
                 taskId = taskId,
                 state = TaskState.STARTING,
                 message = "Starting..."
             )
         }
+        // StateFlow updates outside synchronized block
+        _isRunning.value = true
+        _progress.value = newProgress
     }
 
     override fun taskFinished(taskId: String) {
+        // Update data structure under lock, but emit StateFlow OUTSIDE lock
+        // to avoid deadlock with Compose recomposition on main thread
+        val newIsRunning: Boolean
+        val shouldClearProgress: Boolean
         synchronized(lock) {
             runningTasks.remove(taskId)
             Logger.debug(
                 "BackgroundTaskManager",
                 "Task finished: $taskId, running count: ${runningTasks.size}"
             )
-            _isRunning.value = runningTasks.isNotEmpty()
-            if (runningTasks.isEmpty()) {
-                _progress.value = null
-            }
+            newIsRunning = runningTasks.isNotEmpty()
+            shouldClearProgress = runningTasks.isEmpty()
+        }
+        // StateFlow updates outside synchronized block
+        _isRunning.value = newIsRunning
+        if (shouldClearProgress) {
+            _progress.value = null
         }
     }
 
     override fun updateProgress(progress: TaskProgress) {
+        // Check under lock, but emit StateFlow OUTSIDE lock
+        // to avoid deadlock with Compose recomposition on main thread
+        val shouldUpdate: Boolean
         synchronized(lock) {
             // Only update if the task is still running
-            if (runningTasks.contains(progress.taskId)) {
-                _progress.value = progress
-            }
+            shouldUpdate = runningTasks.contains(progress.taskId)
+        }
+        // StateFlow update outside synchronized block
+        if (shouldUpdate) {
+            _progress.value = progress
         }
     }
 }

@@ -24,7 +24,8 @@ data class AccountSummaryUiState(
     val accounts: List<AccountSummaryListItem> = emptyList(),
     val showZeroBalanceAccounts: Boolean = true,
     val isLoading: Boolean = false,
-    val headerText: String = "----"
+    val headerText: String = "----",
+    val error: String? = null
 )
 
 /**
@@ -70,4 +71,16 @@ sealed class AccountSummaryEvent {
     data class ToggleAccountExpanded(val accountId: Long) : AccountSummaryEvent()
     data class ToggleAmountsExpanded(val accountId: Long) : AccountSummaryEvent()
     data class ShowAccountTransactions(val accountName: String) : AccountSummaryEvent()
+}
+
+/**
+ * Side effects from AccountSummaryViewModel.
+ * Effects are one-shot actions that happen once (navigation, showing dialogs).
+ */
+sealed class AccountSummaryEffect {
+    /**
+     * Request to show transactions filtered by account name.
+     * MainScreen should handle this by switching to Transactions tab with filter applied.
+     */
+    data class ShowAccountTransactions(val accountName: String) : AccountSummaryEffect()
 }
