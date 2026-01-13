@@ -30,11 +30,6 @@ data class SimpleDate(@JvmField val year: Int, @JvmField val month: Int, @JvmFie
 
     fun toDate(): Date = toCalendar().time
 
-    fun equals(date: SimpleDate?): Boolean {
-        if (date == null) return false
-        return year == date.year && month == date.month && day == date.day
-    }
-
     fun earlierThan(date: SimpleDate): Boolean {
         if (year < date.year) return true
         if (year > date.year) return false

@@ -653,7 +653,7 @@ class MainViewModel @Inject constructor(
                 }
 
                 val transactionItems = accumulator.getItems()
-                updateDisplayedTransactions(transactionItems, dbTransactions.size)
+                updateDisplayedTransactions(transactionItems)
             } catch (e: Exception) {
                 Logger.debug("MainViewModel", "Error loading transactions", e)
                 _transactionListUiState.update { it.copy(isLoading = false) }
@@ -661,7 +661,7 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    private fun updateDisplayedTransactions(items: List<TransactionListItem>, count: Int) {
+    private fun updateDisplayedTransactions(items: List<TransactionListItem>) {
         val displayItems = items.map { item ->
             when (item.type) {
                 TransactionListItem.Type.HEADER -> TransactionListDisplayItem.Header
@@ -793,7 +793,7 @@ class MainViewModel @Inject constructor(
             if (isInterrupted) return
 
             val items = acc.getItems()
-            viewModel.updateDisplayedTransactions(items, list.size)
+            viewModel.updateDisplayedTransactions(items)
             Logger.debug("dFilter", "transaction list updated")
         }
     }
