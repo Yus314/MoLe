@@ -50,6 +50,12 @@ Create a codebase that future developers can easily understand and extend. Clear
 - **Stability**: All existing features continue to work exactly as before (zero user-facing changes)
 - **Future improvements**: Faster delivery of new features and bug fixes due to improved code organization
 
+## Clarifications
+
+### Session 2026-01-13
+
+- Q: What happens when a component needs to react to changes in another component's state? (e.g., transaction list needs to update when profile changes) → A: Each component directly observes shared Repository state (Repository-based reactive updates)
+
 ## User Scenarios & Testing
 
 ### User Story 1 - Developer Adds New Feature to Isolated Component (Priority: P1)
@@ -146,7 +152,7 @@ End users experience zero changes in functionality. All existing features (profi
 
 ### Edge Cases
 
-- What happens when a component needs to react to changes in another component's state? (e.g., transaction list needs to update when profile changes)
+- **Cross-component state updates**: Components that need to react to changes in shared state (e.g., transaction list updating when profile changes) will directly observe the relevant Repository's StateFlow. No direct component-to-component communication is required; Repositories serve as the single source of truth.
 - How are shared concerns handled without creating new coupling? (e.g., loading states, error handling)
 - What happens during the migration if tests fail - how do we ensure we haven't introduced regressions?
 - How do we handle components that need to coordinate multiple responsibilities? (e.g., main coordinator managing tab state)
@@ -188,7 +194,7 @@ End users experience zero changes in functionality. All existing features (profi
 
 - **Component Responsibility Boundary**: The clear line defining what functionality belongs to which component. For example: profile selection is separate from account display, which is separate from transaction filtering. No component should handle concerns from another component's domain.
 
-- **Shared State**: Data that multiple components need to observe (e.g., currently selected profile). Managed centrally (e.g., in a Repository) and observed by components that need it, rather than duplicated across components.
+- **Shared State**: Data that multiple components need to observe (e.g., currently selected profile). Managed centrally in singleton-scoped Repositories and exposed as StateFlow. Components directly observe Repository state without component-to-component communication, ensuring Repository serves as the single source of truth.
 
 - **Test Component**: An isolated test file that verifies one component's behavior using mocked dependencies. Contains only the test setup needed for that specific component's functionality.
 
