@@ -58,6 +58,7 @@ Create a codebase that future developers can easily understand and extend. Clear
 - Q: How are shared concerns handled without creating new coupling? (e.g., loading states, error handling) → A: Each component manages its own loading/error state in its UiState
 - Q: What happens during the migration if tests fail - how do we ensure we haven't introduced regressions? → A: Discard changes and rollback to previous commit, then retry with alternative approach
 - Q: How do we handle components that need to coordinate multiple responsibilities? (e.g., main coordinator managing tab state) → A: Coordinator handles only UI orchestration (tab selection, drawer state, navigation); business logic stays in domain-specific components
+- Q: What if the split reveals hidden dependencies we didn't know about? → A: Document in Assumptions, resolve via Repository pattern where possible, or adjust component boundaries as needed
 
 ## User Scenarios & Testing
 
@@ -159,7 +160,7 @@ End users experience zero changes in functionality. All existing features (profi
 - **Shared concerns (loading/error states)**: Each component manages its own loading and error state within its UiState (e.g., `isLoading: Boolean`, `error: String?`). No shared base class or utility is used, ensuring components remain independently testable and self-contained.
 - **Test failure during migration**: If tests fail after any incremental step, discard the changes immediately (git reset/revert to previous commit) and retry with an alternative approach. All tests must pass before proceeding to the next phase, ensuring zero regression risk at each checkpoint.
 - **Coordinator component responsibilities**: The coordinator component (e.g., MainCoordinatorViewModel) handles ONLY UI orchestration concerns: tab selection state, drawer open/closed state, and navigation events. It does NOT contain business logic or data loading - those remain in domain-specific components (ProfileSelection, AccountSummary, TransactionList). This ensures the coordinator itself follows single-responsibility principle.
-- What if the split reveals hidden dependencies we didn't know about?
+- **Hidden dependencies discovered during refactoring**: When unexpected dependencies are found, first document them in the Assumptions section. Then attempt to resolve via Repository pattern (extract shared state to a Repository). If that's insufficient, adjust component boundaries to better reflect the actual dependency structure. The incremental approach allows discovery and adjustment without compromising the overall refactoring goal.
 
 ## Requirements
 
@@ -276,7 +277,7 @@ The following are explicitly NOT included in this refactoring:
 ## Risks
 
 - **Risk**: Hidden dependencies between responsibilities may be discovered during refactoring
-  - **Mitigation**: Incremental approach allows early detection; existing tests will catch breaking changes
+  - **Mitigation**: Incremental approach allows early detection; existing tests will catch breaking changes. When found, document in Assumptions, resolve via Repository pattern where possible, or adjust component boundaries. The flexibility to adjust boundaries ensures the refactoring can adapt to discovered realities
 
 - **Risk**: Shared state management may be complex with multiple ViewModels
   - **Mitigation**: Repository pattern already provides shared state via singleton-scoped repositories
