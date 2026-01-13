@@ -56,6 +56,59 @@ sealed class AccountSummaryListItem {
          */
         fun allAmountsAreZero(): Boolean = amounts.all { it.amount == 0f }
     }
+
+    companion object {
+        /**
+         * Remove zero balance accounts from the list, keeping parent accounts
+         * if they have non-zero children.
+         */
+        fun removeZeroAccounts(list: List<AccountSummaryListItem>): List<AccountSummaryListItem> {
+            var removed = true
+            var currentList = list.toMutableList()
+
+            while (removed) {
+                var last: AccountSummaryListItem? = null
+                removed = false
+                val newList = mutableListOf<AccountSummaryListItem>()
+
+                for (item in currentList) {
+                    if (last == null) {
+                        last = item
+                        continue
+                    }
+
+                    val isHeader = last is Header
+                    val hasNonZeroBalance = last is Account && !last.allAmountsAreZero()
+                    val isParentOfCurrent = last is Account &&
+                        item is Account &&
+                        isParentOf(last.name, item.name)
+                    if (isHeader || hasNonZeroBalance || isParentOfCurrent) {
+                        newList.add(last)
+                    } else {
+                        removed = true
+                    }
+
+                    last = item
+                }
+
+                if (last != null) {
+                    if (last is Header ||
+                        (last is Account && !last.allAmountsAreZero())
+                    ) {
+                        newList.add(last)
+                    } else {
+                        removed = true
+                    }
+                }
+
+                currentList = newList
+            }
+
+            return currentList
+        }
+
+        private fun isParentOf(parentName: String, childName: String): Boolean = childName.startsWith("$parentName:")
+    }
 }
 
 /**

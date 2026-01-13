@@ -588,7 +588,7 @@ class MainViewModel @Inject constructor(
 
                 // Filter zero balance accounts if needed
                 val filteredList = if (!showZeroBalances) {
-                    removeZeroAccounts(adapterList)
+                    AccountSummaryListItem.removeZeroAccounts(adapterList)
                 } else {
                     adapterList
                 }
@@ -606,51 +606,6 @@ class MainViewModel @Inject constructor(
                 _accountSummaryUiState.update { it.copy(isLoading = false) }
             }
         }
-    }
-
-    private fun removeZeroAccounts(list: MutableList<AccountSummaryListItem>): List<AccountSummaryListItem> {
-        var removed = true
-        var currentList = list.toMutableList()
-
-        while (removed) {
-            var last: AccountSummaryListItem? = null
-            removed = false
-            val newList = mutableListOf<AccountSummaryListItem>()
-
-            for (item in currentList) {
-                if (last == null) {
-                    last = item
-                    continue
-                }
-
-                val isHeader = last is AccountSummaryListItem.Header
-                val hasNonZeroBalance = last is AccountSummaryListItem.Account && !last.allAmountsAreZero()
-                val isParentOfCurrent = last is AccountSummaryListItem.Account &&
-                    item is AccountSummaryListItem.Account &&
-                    LedgerAccount.isParentOf(last.name, item.name)
-                if (isHeader || hasNonZeroBalance || isParentOfCurrent) {
-                    newList.add(last)
-                } else {
-                    removed = true
-                }
-
-                last = item
-            }
-
-            if (last != null) {
-                if (last is AccountSummaryListItem.Header ||
-                    (last is AccountSummaryListItem.Account && !last.allAmountsAreZero())
-                ) {
-                    newList.add(last)
-                } else {
-                    removed = true
-                }
-            }
-
-            currentList = newList
-        }
-
-        return currentList
     }
 
     private fun reloadTransactions() {
