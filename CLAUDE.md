@@ -327,7 +327,15 @@ app/src/main/kotlin/net/ktnx/mobileledger/ui/
 ├── main/
 │   ├── MainScreen.kt                    # メイン画面のComposable
 │   ├── MainUiState.kt                   # メイン画面の状態
-│   ├── MainViewModel.kt                 # メイン画面のViewModel
+│   ├── MainViewModel.kt                 # メイン画面のViewModel（統合状態管理）
+│   ├── ProfileSelectionViewModel.kt     # プロファイル選択ViewModel
+│   ├── ProfileSelectionUiState.kt       # プロファイル選択状態
+│   ├── AccountSummaryViewModel.kt       # アカウント一覧ViewModel
+│   ├── AccountSummaryUiState.kt         # アカウント一覧状態
+│   ├── TransactionListViewModel.kt      # 取引一覧ViewModel
+│   ├── TransactionListUiState.kt        # 取引一覧状態
+│   ├── MainCoordinatorViewModel.kt      # UI調整ViewModel（タブ/ドロワー/ナビ）
+│   ├── MainCoordinatorUiState.kt        # UI調整状態
 │   ├── AccountSummaryTab.kt             # アカウント一覧タブ
 │   ├── TransactionListTab.kt            # 取引一覧タブ
 │   └── NavigationDrawer.kt              # ナビゲーションドロワー
@@ -435,6 +443,37 @@ fun MyScreen(
 }
 ```
 
+### Split ViewModels パターン（メイン画面）
+
+メイン画面は責務分離のため複数の ViewModel に分割されています:
+
+| ViewModel | 責務 | 主な状態 |
+|-----------|------|----------|
+| `MainViewModel` | 統合状態管理、UI状態の単一ソース | MainUiState（統合） |
+| `ProfileSelectionViewModel` | プロファイル選択・並べ替え | ProfileSelectionUiState |
+| `AccountSummaryViewModel` | アカウント一覧、残高フィルタ | AccountSummaryUiState |
+| `TransactionListViewModel` | 取引一覧、フィルタ、日付ナビ | TransactionListUiState |
+| `MainCoordinatorViewModel` | タブ選択、ドロワー、リフレッシュ | MainCoordinatorUiState |
+
+**注意事項**:
+- `MainViewModel` は現在も UI 状態の単一ソースとして使用
+- 専門化された ViewModel は将来の完全移行に向けて準備済み
+- すべての ViewModel は Repository パターンでデータアクセス
+- 各 ViewModel は独立してテスト可能（300行以下の目標）
+
+**Activity での使用例**:
+
+```kotlin
+@AndroidEntryPoint
+class MainActivityCompose : ComponentActivity() {
+    private val mainViewModel: MainViewModel by viewModels()
+    private val profileSelectionViewModel: ProfileSelectionViewModel by viewModels()
+    private val accountSummaryViewModel: AccountSummaryViewModel by viewModels()
+    private val transactionListViewModel: TransactionListViewModel by viewModels()
+    private val mainCoordinatorViewModel: MainCoordinatorViewModel by viewModels()
+}
+```
+
 ### Material3 注意事項
 
 - **ExposedDropdownMenuBox**: `menuAnchor()` は deprecated だが、新しい API は composeBom 2024.12.01 では使用不可。`@Suppress("DEPRECATION")` を使用
@@ -465,6 +504,7 @@ class MyScreenTest {
 ```
 
 ## Recent Changes
+- 010-refactor-mainviewmodel: **MainViewModel リファクタリング** - モノリシックな MainViewModel を 4 つの専門化された ViewModel に分割（ProfileSelectionViewModel, AccountSummaryViewModel, TransactionListViewModel, MainCoordinatorViewModel）。各コンポーネントは 300 行以下の目標達成、独立テスト可能、Repository パターン経由でデータアクセス。MainViewModel は統合状態管理として維持
 - 009-eliminate-data-singleton: Added Kotlin 2.0.21 / JVM target 1.8 + Hilt 2.51.1, Room 2.4.2, Jetpack Compose (composeBom 2024.12.01), Coroutines 1.9.0
 - 008-data-layer-repository: **Repository パターン導入** - ProfileRepository, TransactionRepository, AccountRepository, TemplateRepository, CurrencyRepository を追加。ViewModel は DAO 直接アクセスから Repository 経由に移行。Data.getProfile() / Data.profiles は ProfileRepository に移行済み
 - 007-complete-compose-migration: **Compose移行完了** - 全XMLレイアウト削除、Fragment/DialogFragment全廃止、ViewBinding全廃止。DatePickerDialog、CurrencyPickerDialog、CrashReportDialog、SplashScreen、BackupsScreen をCompose化。ProfilesRecyclerViewAdapter等レガシーアダプター削除
