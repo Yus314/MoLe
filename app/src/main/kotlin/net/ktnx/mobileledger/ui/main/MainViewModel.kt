@@ -627,7 +627,7 @@ class MainViewModel @Inject constructor(
                 val hasNonZeroBalance = last is AccountSummaryListItem.Account && !last.allAmountsAreZero()
                 val isParentOfCurrent = last is AccountSummaryListItem.Account &&
                     item is AccountSummaryListItem.Account &&
-                    isParentOf(last.name, item.name)
+                    LedgerAccount.isParentOf(last.name, item.name)
                 if (isHeader || hasNonZeroBalance || isParentOfCurrent) {
                     newList.add(last)
                 } else {
@@ -652,8 +652,6 @@ class MainViewModel @Inject constructor(
 
         return currentList
     }
-
-    private fun isParentOf(parentName: String, childName: String) = childName.startsWith("$parentName:")
 
     private fun reloadTransactions() {
         val profileId = _mainUiState.value.currentProfileId ?: return
