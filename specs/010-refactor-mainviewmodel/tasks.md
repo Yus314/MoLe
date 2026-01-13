@@ -221,8 +221,9 @@
 - [ ] T073 [US1,US2,US5] Run `nix run .#verify` - build, test, install on device
 - [ ] T074 [US1,US2,US5] Manual device testing: profile selection, account list, transaction list, tab switching, drawer, refresh (all must work)
 - [ ] T075 [US1,US2,US5] Commit: "feat: Integrate all 4 ViewModels into MainActivityCompose and MainScreen"
+- [ ] T075a [US5] Verify FR-010: Confirm BackgroundTaskManager still uses Thread-based implementation (no coroutine migration) - Check `BackgroundTaskManager.kt` uses `Thread` class, verify `RetrieveTransactionsTask` extends `Thread`, confirm no coroutine-related imports (viewModelScope, launch, async) in background task code
 
-**Checkpoint**: Integration complete - all UI using new architecture, all tests passing, device testing successful
+**Checkpoint**: Integration complete - all UI using new architecture, all tests passing, device testing successful, Thread-based implementation preserved
 
 ---
 
@@ -256,9 +257,10 @@
 **Contributes to**: [US3] Understand codebase, [US4] Code review streamlined
 
 - [ ] T084 [P] [US3,US4] Update CLAUDE.md with new ViewModel structure (add section on split ViewModels pattern)
+- [ ] T084a [P] [US3,US4] Run `pre-commit run --all-files` to verify ktlint/detekt compliance on all modified files (Constitution principle IX: Static Analysis & Linting)
 - [ ] T085 [P] [US3,US4] Update architecture documentation (if exists) with new component boundaries
-- [ ] T086 [P] [US3,US4] Validate SC-001: Each component under 300 lines (`wc -l` on all 4 ViewModels)
-- [ ] T087 [P] [US3,US4] Validate SC-002: Component tests under 1 second (run `./gradlew test --tests *ViewModelTest`)
+- [ ] T086 [P] [US3,US4] Validate SC-001: Developers can locate feature-specific code in under 30 seconds - (a) File size: Each component under 300 lines (`wc -l app/src/main/kotlin/net/ktnx/mobileledger/ui/main/{ProfileSelection,AccountSummary,TransactionList,MainCoordinator}ViewModel.kt`), (b) Test execution time: Component tests under 1 second (measure with `time ./gradlew test --tests <TestClass>` for each ViewModel), (c) Code coverage: Each component above 80% (`./gradlew testDebugUnitTestCoverage` and check report at app/build/reports/coverage/test/debug/index.html)
+- [ ] T087 [P] [US3,US4] Validate SC-002: Individual component test suites execute in under 1 second - Run each test class individually and measure execution time: `time ./gradlew test --tests ProfileSelectionViewModelTest` (< 1000ms), `time ./gradlew test --tests AccountSummaryViewModelTest` (< 1000ms), `time ./gradlew test --tests TransactionListViewModelTest` (< 1000ms), `time ./gradlew test --tests MainCoordinatorViewModelTest` (< 1000ms)
 - [ ] T088 [P] [US3,US4] Validate SC-004: 100% functional parity (all existing tests pass, manual device testing checklist complete)
 - [ ] T089 [US3,US4] Run `nix run .#verify` - final full verification (test + build + install)
 - [ ] T090 [US3,US4] Manual device testing checklist: profile selection, account display, transaction list, tab switching, drawer, pull-to-refresh, navigation (all must work identically to pre-refactoring)
@@ -387,8 +389,13 @@ After completion, verify:
 - **Incremental verification**: Run `nix run .#test` and `nix run .#build` after EVERY phase
 - **Device testing**: Manual testing required at integration phase (T074) and final validation (T090)
 - **Constitution compliance**: All tasks follow Constitution principles (TDD, Hilt DI, incremental, Kotlin standards)
+- **Static analysis**: ktlint/detekt automatically run via pre-commit hooks on every commit; explicit verification in Phase 10 (T084a)
+- **Post-deployment observation metrics**: SC-003 (code review time reduction), SC-005 (80% single-component changes), and SC-007 (developer onboarding time) are observation metrics measured after deployment through:
+  - SC-003: Track PR review duration for main screen ViewModel changes (compare to pre-refactoring baseline)
+  - SC-005: Count PRs modifying only one ViewModel vs multiple (target: 80% single-component over 3-month observation period)
+  - SC-007: Conduct developer onboarding exercises with unfamiliar developers (measure time to locate specific functionality)
 
-**Total Tasks**: 92 tasks
+**Total Tasks**: 94 tasks
 - Phase 1: 4 tasks (Setup)
 - Phase 2: 13 tasks (Research & Design)
 - Phase 3: 7 tasks (PreferencesRepository)
@@ -396,11 +403,11 @@ After completion, verify:
 - Phase 5: 10 tasks (AccountSummaryViewModel)
 - Phase 6: 10 tasks (TransactionListViewModel)
 - Phase 7: 10 tasks (MainCoordinatorViewModel)
-- Phase 8: 11 tasks (Integration)
+- Phase 8: 12 tasks (Integration) ← +1 (T075a: Thread-based verification)
 - Phase 9: 8 tasks (Test Migration)
-- Phase 10: 9 tasks (Documentation & Validation)
+- Phase 10: 10 tasks (Documentation & Validation) ← +1 (T084a: Static analysis verification)
 
-**Parallel Opportunities**: 13 tasks marked [P] (5 in research, 5 in contracts, 5 in documentation)
+**Parallel Opportunities**: 14 tasks marked [P] (5 in research, 5 in contracts, 6 in documentation) ← +1 (T084a)
 
 **MVP Scope**: Phases 1-4 (35 tasks) - Foundation + ProfileSelectionViewModel extraction validates pattern
 
