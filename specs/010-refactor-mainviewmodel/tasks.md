@@ -25,9 +25,9 @@
 
 **Purpose**: Verify environment and document current state
 
-- [ ] T001 Run `nix run .#test` to establish baseline (all tests must pass)
-- [ ] T002 Run `nix run .#build` to verify build succeeds
-- [ ] T003 Document current MainViewModel line count in research.md (target: 800 lines)
+- [X] T001 Run `nix run .#test` to establish baseline (all tests must pass)
+- [X] T002 Run `nix run .#build` to verify build succeeds
+- [X] T003 Document current MainViewModel line count in research.md (target: 800 lines)
 - [ ] T004 Commit current working state before refactoring begins
 
 **Checkpoint**: Baseline established - all tests passing, build succeeds
@@ -42,22 +42,22 @@
 
 ### Research Tasks (Phase 0)
 
-- [ ] T005 [P] Analyze MainViewModel.kt lines 1-800 and create responsibility mapping table in specs/010-refactor-mainviewmodel/research.md (Decision 1: Component Boundaries)
-- [ ] T006 [P] Research SharedPreferences vs DataStore and document decision in specs/010-refactor-mainviewmodel/research.md (Decision 2: PreferencesRepository Implementation)
-- [ ] T007 [P] Research multi-ViewModel Activity patterns and document recommendation in specs/010-refactor-mainviewmodel/research.md (Decision 3: Multi-ViewModel Pattern)
-- [ ] T008 [P] Design testing strategy for shared Repository state and document in specs/010-refactor-mainviewmodel/research.md (Decision 4: Shared State Testing)
-- [ ] T009 [P] Create test migration mapping table in specs/010-refactor-mainviewmodel/research.md (Decision 5: Test Migration Strategy)
+- [X] T005 [P] Analyze MainViewModel.kt lines 1-800 and create responsibility mapping table in specs/010-refactor-mainviewmodel/research.md (Decision 1: Component Boundaries)
+- [X] T006 [P] Research SharedPreferences vs DataStore and document decision in specs/010-refactor-mainviewmodel/research.md (Decision 2: PreferencesRepository Implementation)
+- [X] T007 [P] Research multi-ViewModel Activity patterns and document recommendation in specs/010-refactor-mainviewmodel/research.md (Decision 3: Multi-ViewModel Pattern)
+- [X] T008 [P] Design testing strategy for shared Repository state and document in specs/010-refactor-mainviewmodel/research.md (Decision 4: Shared State Testing)
+- [X] T009 [P] Create test migration mapping table in specs/010-refactor-mainviewmodel/research.md (Decision 5: Test Migration Strategy)
 
 ### Design & Contracts Tasks (Phase 1)
 
-- [ ] T010 Create data-model.md with UiState structures for all 4 ViewModels in specs/010-refactor-mainviewmodel/data-model.md
-- [ ] T011 [P] Create ProfileSelectionViewModel contract in specs/010-refactor-mainviewmodel/contracts/ProfileSelectionViewModel.contract.md
-- [ ] T012 [P] Create AccountSummaryViewModel contract in specs/010-refactor-mainviewmodel/contracts/AccountSummaryViewModel.contract.md
-- [ ] T013 [P] Create TransactionListViewModel contract in specs/010-refactor-mainviewmodel/contracts/TransactionListViewModel.contract.md
-- [ ] T014 [P] Create MainCoordinatorViewModel contract in specs/010-refactor-mainviewmodel/contracts/MainCoordinatorViewModel.contract.md
-- [ ] T015 [P] Create PreferencesRepository contract in specs/010-refactor-mainviewmodel/contracts/PreferencesRepository.contract.md
-- [ ] T016 Create quickstart.md developer guide in specs/010-refactor-mainviewmodel/quickstart.md
-- [ ] T017 Run `.specify/scripts/bash/update-agent-context.sh claude` to update agent context
+- [X] T010 Create data-model.md with UiState structures for all 4 ViewModels in specs/010-refactor-mainviewmodel/data-model.md
+- [X] T011 [P] Create ProfileSelectionViewModel contract in specs/010-refactor-mainviewmodel/contracts/ProfileSelectionViewModel.contract.md
+- [X] T012 [P] Create AccountSummaryViewModel contract in specs/010-refactor-mainviewmodel/contracts/AccountSummaryViewModel.contract.md
+- [X] T013 [P] Create TransactionListViewModel contract in specs/010-refactor-mainviewmodel/contracts/TransactionListViewModel.contract.md
+- [X] T014 [P] Create MainCoordinatorViewModel contract in specs/010-refactor-mainviewmodel/contracts/MainCoordinatorViewModel.contract.md
+- [X] T015 [P] Create PreferencesRepository contract in specs/010-refactor-mainviewmodel/contracts/PreferencesRepository.contract.md
+- [X] T016 Create quickstart.md developer guide in specs/010-refactor-mainviewmodel/quickstart.md
+- [X] T017 Run `.specify/scripts/bash/update-agent-context.sh claude` to update agent context (skipped - script expects different directory structure)
 
 **GATE 2 (Post-Phase 1)**: Review design artifacts against Constitution ✅
 
