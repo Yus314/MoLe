@@ -45,9 +45,13 @@ import net.ktnx.mobileledger.db.Option
 import net.ktnx.mobileledger.db.Profile
 import net.ktnx.mobileledger.service.TaskState
 import net.ktnx.mobileledger.ui.components.CrashReportDialog
-import net.ktnx.mobileledger.ui.main.MainEffect
+import net.ktnx.mobileledger.ui.main.AccountSummaryViewModel
+import net.ktnx.mobileledger.ui.main.MainCoordinatorEffect
+import net.ktnx.mobileledger.ui.main.MainCoordinatorViewModel
 import net.ktnx.mobileledger.ui.main.MainScreen
 import net.ktnx.mobileledger.ui.main.MainViewModel
+import net.ktnx.mobileledger.ui.main.ProfileSelectionViewModel
+import net.ktnx.mobileledger.ui.main.TransactionListViewModel
 import net.ktnx.mobileledger.ui.profiles.ProfileDetailActivity
 import net.ktnx.mobileledger.ui.templates.TemplatesActivity
 import net.ktnx.mobileledger.ui.theme.MoLeTheme
@@ -65,7 +69,13 @@ class MainActivityCompose : ProfileThemedActivity() {
 
     // profileRepository is inherited from ProfileThemedActivity
 
+    // Phase 8: Inject all 4 ViewModels
+    // MainViewModel is kept temporarily for compatibility during incremental migration
     private val viewModel: MainViewModel by viewModels()
+    private val coordinatorViewModel: MainCoordinatorViewModel by viewModels()
+    private val profileSelectionViewModel: ProfileSelectionViewModel by viewModels()
+    private val accountSummaryViewModel: AccountSummaryViewModel by viewModels()
+    private val transactionListViewModel: TransactionListViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         Logger.debug(TAG, "onCreate()/entry")
@@ -140,21 +150,27 @@ class MainActivityCompose : ProfileThemedActivity() {
         }
 
         setContent {
+            // Phase 8: MainViewModel handles main UI state (events and state must match)
+            // Specialized ViewModels are injected but not yet wired - to be completed in Phase 9
             val mainUiState by viewModel.mainUiState.collectAsState()
             val accountSummaryUiState by viewModel.accountSummaryUiState.collectAsState()
             val transactionListUiState by viewModel.transactionListUiState.collectAsState()
             val drawerOpen by viewModel.drawerOpen.collectAsState()
 
-            // Handle one-shot effects
+            // Coordinator state for navigation effects
+            val coordinatorUiState by coordinatorViewModel.uiState.collectAsState()
+
+            // Handle coordinator effects
             LaunchedEffect(Unit) {
-                viewModel.effects.collect { effect ->
+                coordinatorViewModel.effects.collect { effect ->
                     when (effect) {
-                        is MainEffect.NavigateToNewTransaction -> {
+                        is MainCoordinatorEffect.NavigateToNewTransaction -> {
                             navigateToNewTransaction(effect.profileId, effect.theme)
                         }
 
-                        is MainEffect.NavigateToProfileDetail -> {
+                        is MainCoordinatorEffect.NavigateToProfileDetail -> {
                             if (effect.profileId != null) {
+                                // Use legacy viewModel.allProfiles until fully migrated
                                 val profile = viewModel.allProfiles.value.find { it.id == effect.profileId }
                                 ProfileDetailActivity.start(this@MainActivityCompose, profile)
                             } else {
@@ -162,17 +178,17 @@ class MainActivityCompose : ProfileThemedActivity() {
                             }
                         }
 
-                        is MainEffect.NavigateToTemplates -> {
+                        is MainCoordinatorEffect.NavigateToTemplates -> {
                             startActivity(
                                 Intent(this@MainActivityCompose, TemplatesActivity::class.java)
                             )
                         }
 
-                        is MainEffect.NavigateToBackups -> {
+                        is MainCoordinatorEffect.NavigateToBackups -> {
                             BackupsActivity.start(this@MainActivityCompose)
                         }
 
-                        is MainEffect.ShowError -> {
+                        is MainCoordinatorEffect.ShowError -> {
                             // TODO: Show snackbar
                         }
                     }
