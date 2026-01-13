@@ -57,6 +57,7 @@ Create a codebase that future developers can easily understand and extend. Clear
 - Q: What happens when a component needs to react to changes in another component's state? (e.g., transaction list needs to update when profile changes) → A: Each component directly observes shared Repository state (Repository-based reactive updates)
 - Q: How are shared concerns handled without creating new coupling? (e.g., loading states, error handling) → A: Each component manages its own loading/error state in its UiState
 - Q: What happens during the migration if tests fail - how do we ensure we haven't introduced regressions? → A: Discard changes and rollback to previous commit, then retry with alternative approach
+- Q: How do we handle components that need to coordinate multiple responsibilities? (e.g., main coordinator managing tab state) → A: Coordinator handles only UI orchestration (tab selection, drawer state, navigation); business logic stays in domain-specific components
 
 ## User Scenarios & Testing
 
@@ -157,7 +158,7 @@ End users experience zero changes in functionality. All existing features (profi
 - **Cross-component state updates**: Components that need to react to changes in shared state (e.g., transaction list updating when profile changes) will directly observe the relevant Repository's StateFlow. No direct component-to-component communication is required; Repositories serve as the single source of truth.
 - **Shared concerns (loading/error states)**: Each component manages its own loading and error state within its UiState (e.g., `isLoading: Boolean`, `error: String?`). No shared base class or utility is used, ensuring components remain independently testable and self-contained.
 - **Test failure during migration**: If tests fail after any incremental step, discard the changes immediately (git reset/revert to previous commit) and retry with an alternative approach. All tests must pass before proceeding to the next phase, ensuring zero regression risk at each checkpoint.
-- How do we handle components that need to coordinate multiple responsibilities? (e.g., main coordinator managing tab state)
+- **Coordinator component responsibilities**: The coordinator component (e.g., MainCoordinatorViewModel) handles ONLY UI orchestration concerns: tab selection state, drawer open/closed state, and navigation events. It does NOT contain business logic or data loading - those remain in domain-specific components (ProfileSelection, AccountSummary, TransactionList). This ensures the coordinator itself follows single-responsibility principle.
 - What if the split reveals hidden dependencies we didn't know about?
 
 ## Requirements
@@ -199,6 +200,8 @@ End users experience zero changes in functionality. All existing features (profi
 - **Shared State**: Data that multiple components need to observe (e.g., currently selected profile). Managed centrally in singleton-scoped Repositories and exposed as StateFlow. Components directly observe Repository state without component-to-component communication, ensuring Repository serves as the single source of truth.
 
 - **Test Component**: An isolated test file that verifies one component's behavior using mocked dependencies. Contains only the test setup needed for that specific component's functionality.
+
+- **Coordinator Component**: A specialized ViewModel responsible for UI orchestration only (tab selection, drawer state, navigation events). Does NOT contain business logic or data loading. Coordinates the display and interaction between multiple domain-specific ViewModels but delegates all domain logic to them.
 
 ## Success Criteria
 
