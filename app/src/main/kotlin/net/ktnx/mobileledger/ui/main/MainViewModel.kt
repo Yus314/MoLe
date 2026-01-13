@@ -25,8 +25,11 @@ import java.util.concurrent.atomic.AtomicReference
 import javax.inject.Inject
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -38,12 +41,13 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.yield
-import net.ktnx.mobileledger.App
 import net.ktnx.mobileledger.async.RetrieveTransactionsTask
 import net.ktnx.mobileledger.async.TransactionAccumulator
 import net.ktnx.mobileledger.data.repository.AccountRepository
 import net.ktnx.mobileledger.data.repository.OptionRepository
+import net.ktnx.mobileledger.data.repository.PreferencesRepository
 import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.data.repository.TransactionRepository
 import net.ktnx.mobileledger.db.Profile
@@ -69,7 +73,8 @@ class MainViewModel @Inject constructor(
     private val transactionRepository: TransactionRepository,
     private val optionRepository: OptionRepository,
     private val backgroundTaskManager: BackgroundTaskManager,
-    private val appStateService: AppStateService
+    private val appStateService: AppStateService,
+    private val preferencesRepository: PreferencesRepository
 ) : ViewModel() {
 
     // Profile state from ProfileRepository (replaces Data.observeProfile/Data.profiles)
@@ -107,7 +112,7 @@ class MainViewModel @Inject constructor(
     val effects = _effects.receiveAsFlow()
 
     private val retrieveTransactionsTask = AtomicReference<RetrieveTransactionsTask?>(null)
-    private var displayedTransactionsUpdater: TransactionsDisplayedFilter? = null
+    private var displayedTransactionsUpdaterJob: Job? = null
 
     var firstTransactionDate: SimpleDate? = null
         private set
@@ -140,7 +145,9 @@ class MainViewModel @Inject constructor(
     }
 
     private fun loadInitialData() {
-        _accountSummaryUiState.update { it.copy(showZeroBalanceAccounts = App.getShowZeroBalanceAccounts()) }
+        _accountSummaryUiState.update {
+            it.copy(showZeroBalanceAccounts = preferencesRepository.getShowZeroBalanceAccounts())
+        }
     }
 
     private fun observeDataChanges() {
@@ -339,7 +346,7 @@ class MainViewModel @Inject constructor(
     private fun toggleZeroBalanceAccounts() {
         val newValue = !_accountSummaryUiState.value.showZeroBalanceAccounts
         _accountSummaryUiState.update { it.copy(showZeroBalanceAccounts = newValue) }
-        App.storeShowZeroBalanceAccounts(newValue)
+        preferencesRepository.setShowZeroBalanceAccounts(newValue)
         reloadAccounts()
     }
 
@@ -766,40 +773,45 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    @Synchronized
     fun updateDisplayedTransactionsFromWeb(list: List<LedgerTransaction>) {
-        displayedTransactionsUpdater?.interrupt()
-        displayedTransactionsUpdater = TransactionsDisplayedFilter(this, list)
-        displayedTransactionsUpdater?.start()
+        // Cancel any running filter job
+        displayedTransactionsUpdaterJob?.cancel()
+
+        displayedTransactionsUpdaterJob = viewModelScope.launch {
+            filterAndDisplayTransactions(list)
+        }
     }
 
-    private class TransactionsDisplayedFilter(
-        private val viewModel: MainViewModel,
-        private val list: List<LedgerTransaction>
-    ) : Thread() {
-
-        override fun run() {
+    /**
+     * Filter and display transactions on a background dispatcher.
+     * This replaces the Thread-based TransactionsDisplayedFilter for better testability.
+     */
+    private suspend fun filterAndDisplayTransactions(list: List<LedgerTransaction>) {
+        withContext(Dispatchers.Default) {
             Logger.debug(
                 "dFilter",
-                "entered synchronized block (about to examine ${list.size} transactions)"
+                "entered coroutine filter (about to examine ${list.size} transactions)"
             )
-            val accNameFilter = viewModel._transactionListUiState.value.accountFilter
+            val accNameFilter = _transactionListUiState.value.accountFilter
 
             val acc = TransactionAccumulator(accNameFilter, accNameFilter)
             for (tr in list) {
-                if (isInterrupted) {
-                    return
-                }
+                // Check for cancellation - throws CancellationException if cancelled
+                ensureActive()
 
                 if (accNameFilter == null || tr.hasAccountNamedLike(accNameFilter)) {
                     tr.date?.let { date -> acc.put(tr, date) }
                 }
             }
 
-            if (isInterrupted) return
+            // Final cancellation check before updating UI
+            ensureActive()
 
             val items = acc.getItems()
-            viewModel.updateDisplayedTransactions(items)
+            // Switch back to main thread for UI update
+            withContext(Dispatchers.Main) {
+                updateDisplayedTransactions(items)
+            }
             Logger.debug("dFilter", "transaction list updated")
         }
     }

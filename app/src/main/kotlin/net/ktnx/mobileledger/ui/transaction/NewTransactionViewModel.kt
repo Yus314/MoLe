@@ -33,8 +33,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import net.ktnx.mobileledger.async.SendTransactionTask
-import net.ktnx.mobileledger.async.TaskCallback
 import net.ktnx.mobileledger.data.repository.AccountRepository
 import net.ktnx.mobileledger.data.repository.CurrencyRepository
 import net.ktnx.mobileledger.data.repository.ProfileRepository
@@ -43,6 +41,7 @@ import net.ktnx.mobileledger.data.repository.TransactionRepository
 import net.ktnx.mobileledger.db.TemplateAccount
 import net.ktnx.mobileledger.db.TemplateHeader
 import net.ktnx.mobileledger.db.TemplateWithAccounts
+import net.ktnx.mobileledger.domain.usecase.TransactionSender
 import net.ktnx.mobileledger.model.Currency
 import net.ktnx.mobileledger.model.FutureDates
 import net.ktnx.mobileledger.model.LedgerTransaction
@@ -61,17 +60,15 @@ class NewTransactionViewModel @Inject constructor(
     private val templateRepository: TemplateRepository,
     private val currencyRepository: CurrencyRepository,
     private val currencyFormatter: CurrencyFormatter,
-    private val appStateService: AppStateService
-) : ViewModel(),
-    TaskCallback {
+    private val appStateService: AppStateService,
+    private val transactionSender: TransactionSender
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(NewTransactionUiState())
     val uiState: StateFlow<NewTransactionUiState> = _uiState.asStateFlow()
 
     private val _effects = Channel<NewTransactionEffect>(Channel.BUFFERED)
     val effects = _effects.receiveAsFlow()
-
-    private var pendingTransaction: LedgerTransaction? = null
 
     // Job for account suggestion lookup (for cancellation during rapid input)
     private var accountSuggestionJob: Job? = null
@@ -752,22 +749,49 @@ class NewTransactionViewModel @Inject constructor(
 
         _uiState.update { it.copy(isSubmitting = true, isBusy = true) }
 
-        viewModelScope.launch {
-            _effects.send(NewTransactionEffect.HideKeyboard)
-        }
-
         // Build LedgerTransaction from UI state
         val transaction = constructLedgerTransaction()
-        pendingTransaction = transaction
 
-        // Start the async send task
-        val sendTask = SendTransactionTask(
-            this,
-            profile,
-            transaction,
-            state.isSimulateSave
-        )
-        sendTask.start()
+        viewModelScope.launch {
+            _effects.send(NewTransactionEffect.HideKeyboard)
+
+            val result = transactionSender.send(profile, transaction, state.isSimulateSave)
+            result.fold(
+                onSuccess = {
+                    handleTransactionSendSuccess(transaction)
+                },
+                onFailure = { exception ->
+                    handleTransactionSendFailure(exception.message ?: "送信に失敗しました")
+                }
+            )
+        }
+    }
+
+    private suspend fun handleTransactionSendSuccess(transaction: LedgerTransaction) {
+        try {
+            transactionRepository.storeTransaction(transaction.toDBO())
+            Logger.debug("new-trans", "Transaction saved to DB")
+            appStateService.signalDataChanged()
+        } catch (e: Exception) {
+            Logger.debug("new-trans", "Failed to save transaction: ${e.message}")
+        }
+
+        _uiState.update { it.copy(isSubmitting = false, isBusy = false) }
+        _effects.send(NewTransactionEffect.TransactionSaved)
+        reset()
+    }
+
+    private fun handleTransactionSendFailure(errorMessage: String) {
+        _uiState.update {
+            it.copy(
+                isSubmitting = false,
+                isBusy = false,
+                submitError = errorMessage
+            )
+        }
+        viewModelScope.launch {
+            _effects.send(NewTransactionEffect.ShowError(errorMessage))
+        }
     }
 
     private fun constructLedgerTransaction(): LedgerTransaction {
@@ -813,53 +837,6 @@ class NewTransactionViewModel @Inject constructor(
         }
 
         return transaction
-    }
-
-    override fun onTransactionSaveDone(error: String?, args: Any?) {
-        val transaction = args as? LedgerTransaction ?: pendingTransaction
-
-        if (error != null) {
-            _uiState.update {
-                it.copy(
-                    isSubmitting = false,
-                    isBusy = false,
-                    submitError = error
-                )
-            }
-            viewModelScope.launch {
-                _effects.send(NewTransactionEffect.ShowError(error))
-            }
-        } else {
-            // Save to local database
-            if (transaction != null) {
-                viewModelScope.launch {
-                    try {
-                        transactionRepository.storeTransaction(transaction.toDBO())
-                        Logger.debug("new-trans", "Transaction saved to DB")
-                        // Signal that data changed so MainActivityCompose can refresh
-                        appStateService.signalDataChanged()
-                    } catch (e: Exception) {
-                        Logger.debug("new-trans", "Failed to save transaction: ${e.message}")
-                    }
-
-                    _uiState.update {
-                        it.copy(isSubmitting = false, isBusy = false)
-                    }
-                    _effects.send(NewTransactionEffect.TransactionSaved)
-                    reset()
-                }
-            } else {
-                _uiState.update {
-                    it.copy(isSubmitting = false, isBusy = false)
-                }
-                viewModelScope.launch {
-                    _effects.send(NewTransactionEffect.TransactionSaved)
-                    reset()
-                }
-            }
-        }
-
-        pendingTransaction = null
     }
 
     private fun reset() {

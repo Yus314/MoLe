@@ -18,7 +18,6 @@
 package net.ktnx.mobileledger.model
 
 import android.content.res.Resources
-import android.util.SparseArray
 import net.ktnx.mobileledger.R
 
 enum class FutureDates(private val value: Int) {
@@ -47,15 +46,9 @@ enum class FutureDates(private val value: Int) {
     }
 
     companion object {
-        private val map = SparseArray<FutureDates>()
-
-        init {
-            for (item in values()) {
-                map.put(item.value, item)
-            }
-        }
+        private val map: Map<Int, FutureDates> = entries.associateBy { it.value }
 
         @JvmStatic
-        fun valueOf(i: Int): FutureDates = map.get(i, None)
+        fun valueOf(i: Int): FutureDates = map[i] ?: None
     }
 }
