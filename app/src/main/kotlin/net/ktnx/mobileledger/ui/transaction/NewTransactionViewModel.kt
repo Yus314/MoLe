@@ -40,6 +40,8 @@ import net.ktnx.mobileledger.data.repository.CurrencyRepository
 import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.data.repository.TemplateRepository
 import net.ktnx.mobileledger.data.repository.TransactionRepository
+import net.ktnx.mobileledger.db.TemplateAccount
+import net.ktnx.mobileledger.db.TemplateHeader
 import net.ktnx.mobileledger.db.TemplateWithAccounts
 import net.ktnx.mobileledger.model.Currency
 import net.ktnx.mobileledger.model.FutureDates
@@ -536,7 +538,7 @@ class NewTransactionViewModel @Inject constructor(
                 findMatchingTemplate(qrText)
             }
             if (matched != null) {
-                applyMatchedTemplate(matched, qrText)
+                applyMatchedTemplate(matched)
             }
         }
     }
@@ -564,15 +566,120 @@ class NewTransactionViewModel @Inject constructor(
         return null
     }
 
-    private fun applyMatchedTemplate(matched: MatchedTemplate, text: String) {
+    private fun applyMatchedTemplate(matched: MatchedTemplate) {
         viewModelScope.launch {
             val template = templateRepository.getTemplateWithAccountsSync(matched.templateHead.id)
-            if (template != null) {
-                // For now, just apply the template without regex substitution
-                // The existing NewTransactionModel.applyTemplate() has complex regex extraction logic
-                // which we'll simplify for the initial Compose implementation
-                applyTemplateWithAccounts(template)
+                ?: return@launch
+
+            val matchResult = matched.matchResult
+            val header = template.header
+            val defaultCurrency = profileRepository.currentProfile.value?.getDefaultCommodityOrEmpty() ?: ""
+
+            // Extract header fields from match groups or use static values
+            val description = extractFromMatchGroup(
+                matchResult,
+                header.transactionDescriptionMatchGroup,
+                header.transactionDescription
+            ) ?: ""
+
+            val comment = extractFromMatchGroup(
+                matchResult,
+                header.transactionCommentMatchGroup,
+                header.transactionComment
+            )
+
+            // Extract date from match groups
+            val date = extractDate(matchResult, header)
+
+            // Extract account rows from match groups
+            val newAccounts = template.accounts.map { acc ->
+                extractAccountRow(matchResult, acc, defaultCurrency)
             }
+
+            // Apply to UI state
+            _uiState.update { state ->
+                state.copy(
+                    description = description,
+                    transactionComment = comment ?: state.transactionComment,
+                    date = date ?: state.date,
+                    accounts = updateLastFlags(ensureMinimumAccounts(newAccounts, defaultCurrency))
+                )
+            }
+            recalculateAmountHints()
+        }
+    }
+
+    // Delegate to TemplateMatchGroupExtractor for testability
+    private fun extractFromMatchGroup(
+        matchResult: java.util.regex.MatchResult,
+        groupNumber: Int?,
+        fallback: String?
+    ): String? = TemplateMatchGroupExtractor.extractFromMatchGroup(matchResult, groupNumber, fallback)
+
+    private fun parseAmount(amountStr: String?, negate: Boolean): Float? =
+        TemplateMatchGroupExtractor.parseAmount(amountStr, negate)
+
+    private fun extractDate(matchResult: java.util.regex.MatchResult, header: TemplateHeader): SimpleDate? =
+        TemplateMatchGroupExtractor.extractDate(matchResult, header)
+
+    /**
+     * Extract an account row from match groups or static values.
+     */
+    private suspend fun extractAccountRow(
+        matchResult: java.util.regex.MatchResult,
+        acc: TemplateAccount,
+        defaultCurrency: String
+    ): TransactionAccountRow {
+        // Account name
+        val accountName = extractFromMatchGroup(
+            matchResult,
+            acc.accountNameMatchGroup,
+            acc.accountName
+        ) ?: ""
+
+        // Amount - extract from group or use static value
+        val amountStr = extractFromMatchGroup(
+            matchResult,
+            acc.amountMatchGroup,
+            acc.amount?.toString()
+        )
+        val amount = parseAmount(amountStr, acc.negateAmount ?: false)
+        val amountText = amount?.let { currencyFormatter.formatNumber(it) } ?: ""
+
+        // Currency - from match group or database lookup
+        val currencyName = if (acc.currencyMatchGroup != null && acc.currencyMatchGroup!! > 0) {
+            extractFromMatchGroup(matchResult, acc.currencyMatchGroup, null)
+        } else {
+            acc.currency?.let { currencyRepository.getCurrencyByIdSync(it)?.name }
+        } ?: defaultCurrency
+
+        // Account comment
+        val comment = extractFromMatchGroup(
+            matchResult,
+            acc.accountCommentMatchGroup,
+            acc.accountComment
+        ) ?: ""
+
+        return TransactionAccountRow(
+            accountName = accountName,
+            amountText = amountText,
+            currency = currencyName,
+            comment = comment,
+            isAmountValid = true
+        )
+    }
+
+    /**
+     * Ensure at least 2 account rows exist.
+     */
+    private fun ensureMinimumAccounts(
+        accounts: List<TransactionAccountRow>,
+        defaultCurrency: String
+    ): List<TransactionAccountRow> = if (accounts.size >= 2) {
+        accounts
+    } else {
+        accounts + List(2 - accounts.size) {
+            TransactionAccountRow(currency = defaultCurrency)
         }
     }
 
