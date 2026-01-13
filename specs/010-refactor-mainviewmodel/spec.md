@@ -56,6 +56,7 @@ Create a codebase that future developers can easily understand and extend. Clear
 
 - Q: What happens when a component needs to react to changes in another component's state? (e.g., transaction list needs to update when profile changes) → A: Each component directly observes shared Repository state (Repository-based reactive updates)
 - Q: How are shared concerns handled without creating new coupling? (e.g., loading states, error handling) → A: Each component manages its own loading/error state in its UiState
+- Q: What happens during the migration if tests fail - how do we ensure we haven't introduced regressions? → A: Discard changes and rollback to previous commit, then retry with alternative approach
 
 ## User Scenarios & Testing
 
@@ -155,7 +156,7 @@ End users experience zero changes in functionality. All existing features (profi
 
 - **Cross-component state updates**: Components that need to react to changes in shared state (e.g., transaction list updating when profile changes) will directly observe the relevant Repository's StateFlow. No direct component-to-component communication is required; Repositories serve as the single source of truth.
 - **Shared concerns (loading/error states)**: Each component manages its own loading and error state within its UiState (e.g., `isLoading: Boolean`, `error: String?`). No shared base class or utility is used, ensuring components remain independently testable and self-contained.
-- What happens during the migration if tests fail - how do we ensure we haven't introduced regressions?
+- **Test failure during migration**: If tests fail after any incremental step, discard the changes immediately (git reset/revert to previous commit) and retry with an alternative approach. All tests must pass before proceeding to the next phase, ensuring zero regression risk at each checkpoint.
 - How do we handle components that need to coordinate multiple responsibilities? (e.g., main coordinator managing tab state)
 - What if the split reveals hidden dependencies we didn't know about?
 
@@ -170,7 +171,7 @@ End users experience zero changes in functionality. All existing features (profi
 - **FR-005**: Each component MUST be independently testable without requiring full application context
 - **FR-006**: Components MUST have explicit dependencies visible in their constructors (no hidden global state)
 - **FR-007**: The refactoring MUST be performed incrementally with verification at each step
-- **FR-008**: Each incremental step MUST maintain a working, testable application state
+- **FR-008**: Each incremental step MUST maintain a working, testable application state. If tests fail at any checkpoint, changes MUST be discarded (rollback to previous commit) before retrying with a different approach
 - **FR-009**: Profile selection changes MUST continue to update all dependent components (accounts, transactions)
 - **FR-010**: Background data synchronization MUST continue to work with the existing Thread-based implementation. Coroutine migration will be handled as a separate feature to keep this refactoring focused on ViewModel separation.
 - **FR-011**: Navigation between screens MUST continue to work with the same user flows
@@ -281,7 +282,7 @@ The following are explicitly NOT included in this refactoring:
   - **Mitigation**: Start with clearest boundaries first (transaction vs account vs profile); defer ambiguous areas
 
 - **Risk**: Tests may need significant restructuring
-  - **Mitigation**: Migrate tests incrementally alongside component extraction; ensure tests pass at each step
+  - **Mitigation**: Migrate tests incrementally alongside component extraction; ensure tests pass at each step. If any test fails, immediately rollback changes to previous commit and retry with alternative approach
 
 - **Risk**: Build or runtime errors may occur during intermediate states
   - **Mitigation**: Each incremental step maintains a buildable, testable state; verify before moving to next step
