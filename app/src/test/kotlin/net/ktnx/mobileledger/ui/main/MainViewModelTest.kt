@@ -657,9 +657,11 @@ class FakeBackgroundTaskManagerForViewModel : BackgroundTaskManager {
 class FakeAppStateServiceForViewModel : AppStateService {
     private val _lastSyncInfo = MutableStateFlow(SyncInfo.EMPTY)
     private val _drawerOpen = MutableStateFlow(false)
+    private val _dataVersion = MutableStateFlow(0L)
 
     override val lastSyncInfo: StateFlow<SyncInfo> = _lastSyncInfo.asStateFlow()
     override val drawerOpen: StateFlow<Boolean> = _drawerOpen.asStateFlow()
+    override val dataVersion: StateFlow<Long> = _dataVersion.asStateFlow()
 
     override fun updateSyncInfo(info: SyncInfo) {
         _lastSyncInfo.value = info
@@ -675,5 +677,9 @@ class FakeAppStateServiceForViewModel : AppStateService {
 
     override fun toggleDrawer() {
         _drawerOpen.value = !_drawerOpen.value
+    }
+
+    override fun signalDataChanged() {
+        _dataVersion.value = _dataVersion.value + 1
     }
 }

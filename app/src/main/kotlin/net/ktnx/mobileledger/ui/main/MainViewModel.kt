@@ -21,6 +21,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.util.Date
+import java.util.concurrent.atomic.AtomicReference
 import javax.inject.Inject
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -37,6 +38,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.yield
 import net.ktnx.mobileledger.App
 import net.ktnx.mobileledger.async.RetrieveTransactionsTask
 import net.ktnx.mobileledger.async.TransactionAccumulator
@@ -87,6 +89,9 @@ class MainViewModel @Inject constructor(
     // Drawer state from AppStateService (T041)
     val drawerOpen: StateFlow<Boolean> = appStateService.drawerOpen
 
+    // Data version from AppStateService - increments when local data changes
+    val dataVersion: StateFlow<Long> = appStateService.dataVersion
+
     private val _mainUiState = MutableStateFlow(MainUiState())
     val mainUiState: StateFlow<MainUiState> = _mainUiState.asStateFlow()
 
@@ -101,7 +106,7 @@ class MainViewModel @Inject constructor(
     private val _effects = Channel<MainEffect>(Channel.BUFFERED)
     val effects = _effects.receiveAsFlow()
 
-    private var retrieveTransactionsTask: RetrieveTransactionsTask? = null
+    private val retrieveTransactionsTask = AtomicReference<RetrieveTransactionsTask?>(null)
     private var displayedTransactionsUpdater: TransactionsDisplayedFilter? = null
 
     var firstTransactionDate: SimpleDate? = null
@@ -113,6 +118,25 @@ class MainViewModel @Inject constructor(
         loadInitialData()
         observeDataChanges()
         observeAccountSearch()
+        observeTaskRunning()
+    }
+
+    /**
+     * Observe the BackgroundTaskManager's isRunning state and update isRefreshing accordingly.
+     * This direct observation approach is more robust than the previous 100ms delay job,
+     * which could be cancelled and leave isRefreshing stuck at true.
+     */
+    private fun observeTaskRunning() {
+        viewModelScope.launch {
+            backgroundTaskManager.isRunning.collect { running ->
+                _mainUiState.update {
+                    it.copy(
+                        backgroundTasksRunning = running,
+                        isRefreshing = running
+                    )
+                }
+            }
+        }
     }
 
     private fun loadInitialData() {
@@ -247,7 +271,13 @@ class MainViewModel @Inject constructor(
     }
 
     private fun refreshData() {
-        scheduleTransactionListRetrieval()
+        // Launch in viewModelScope with yield() to allow the current animation frame
+        // to complete before starting the sync task. This prevents freeze caused by
+        // recomposition during PullToRefreshBox animation.
+        viewModelScope.launch {
+            yield()
+            scheduleTransactionListRetrieval()
+        }
     }
 
     private fun cancelRefresh() {
@@ -467,15 +497,6 @@ class MainViewModel @Inject constructor(
         if (isFinished) {
             reloadAccounts()
             reloadTransactions()
-        }
-    }
-
-    fun updateBackgroundTasksRunning(running: Boolean) {
-        _mainUiState.update {
-            it.copy(
-                backgroundTasksRunning = running,
-                isRefreshing = running
-            )
         }
     }
 
@@ -725,16 +746,20 @@ class MainViewModel @Inject constructor(
         // Transaction count is now managed via AppStateService.lastSyncInfo
     }
 
-    @Synchronized
     fun scheduleTransactionListRetrieval() {
-        if (retrieveTransactionsTask != null) {
+        // Check if a task is already running (lock-free)
+        if (retrieveTransactionsTask.get() != null) {
             Logger.debug("db", "Ignoring request for transaction retrieval - already active")
             return
         }
-        val profile = profileRepository.currentProfile.value
-        checkNotNull(profile)
 
-        retrieveTransactionsTask = RetrieveTransactionsTask(
+        val profile = profileRepository.currentProfile.value
+        if (profile == null) {
+            Logger.debug("db", "No current profile, skipping transaction retrieval")
+            return
+        }
+
+        val task = RetrieveTransactionsTask(
             profile,
             accountRepository,
             transactionRepository,
@@ -742,22 +767,50 @@ class MainViewModel @Inject constructor(
             backgroundTaskManager,
             appStateService
         )
-        Logger.debug("db", "Created a background transaction retrieval task")
 
-        retrieveTransactionsTask?.start()
+        // CAS (Compare-And-Swap) to atomically set the task
+        // If another thread set a task first, this will fail and we skip
+        if (!retrieveTransactionsTask.compareAndSet(null, task)) {
+            Logger.debug("db", "Another task was started concurrently, skipping")
+            return
+        }
+
+        Logger.debug("db", "Created a background transaction retrieval task")
+        task.start()
     }
 
-    @Synchronized
     fun stopTransactionsRetrieval() {
-        if (retrieveTransactionsTask != null) {
-            retrieveTransactionsTask?.interrupt()
+        val task = retrieveTransactionsTask.get()
+        if (task != null) {
+            task.interrupt()
         } else {
             backgroundTaskManager.updateProgress(TaskProgress("cancel", TaskState.FINISHED, "Cancelled"))
         }
     }
 
     fun transactionRetrievalDone() {
-        retrieveTransactionsTask = null
+        retrieveTransactionsTask.set(null)
+    }
+
+    /**
+     * Reload data when local changes are detected.
+     * Only reloads transactions if the Transactions tab is currently selected
+     * to avoid unnecessary work.
+     */
+    fun reloadDataAfterChange() {
+        // Always reload accounts (they appear in the drawer and Accounts tab)
+        reloadAccounts()
+
+        // Only reload transactions if currently viewing the Transactions tab
+        // Otherwise, they'll be reloaded when the tab is selected (existing logic)
+        if (_mainUiState.value.selectedTab == MainTab.Transactions) {
+            reloadTransactions()
+        } else {
+            // Clear transactions so they'll be reloaded when tab is selected
+            _transactionListUiState.update {
+                it.copy(transactions = persistentListOf())
+            }
+        }
     }
 
     @Synchronized

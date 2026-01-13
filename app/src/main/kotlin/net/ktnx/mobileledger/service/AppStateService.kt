@@ -95,4 +95,19 @@ interface AppStateService {
      * Toggle drawer state.
      */
     fun toggleDrawer()
+
+    /**
+     * Data version counter.
+     *
+     * Increments when local data changes (transaction added, etc).
+     * Observers can watch this to know when to refresh their data.
+     */
+    val dataVersion: StateFlow<Long>
+
+    /**
+     * Signal that local data has changed.
+     *
+     * Call this when transactions, accounts, or other data is modified locally.
+     */
+    fun signalDataChanged()
 }

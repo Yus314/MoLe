@@ -46,6 +46,7 @@ import net.ktnx.mobileledger.model.FutureDates
 import net.ktnx.mobileledger.model.LedgerTransaction
 import net.ktnx.mobileledger.model.LedgerTransactionAccount
 import net.ktnx.mobileledger.model.MatchedTemplate
+import net.ktnx.mobileledger.service.AppStateService
 import net.ktnx.mobileledger.service.CurrencyFormatter
 import net.ktnx.mobileledger.utils.Logger
 import net.ktnx.mobileledger.utils.SimpleDate
@@ -57,7 +58,8 @@ class NewTransactionViewModel @Inject constructor(
     private val accountRepository: AccountRepository,
     private val templateRepository: TemplateRepository,
     private val currencyRepository: CurrencyRepository,
-    private val currencyFormatter: CurrencyFormatter
+    private val currencyFormatter: CurrencyFormatter,
+    private val appStateService: AppStateService
 ) : ViewModel(),
     TaskCallback {
 
@@ -727,6 +729,8 @@ class NewTransactionViewModel @Inject constructor(
                     try {
                         transactionRepository.storeTransaction(transaction.toDBO())
                         Logger.debug("new-trans", "Transaction saved to DB")
+                        // Signal that data changed so MainActivityCompose can refresh
+                        appStateService.signalDataChanged()
                     } catch (e: Exception) {
                         Logger.debug("new-trans", "Failed to save transaction: ${e.message}")
                     }

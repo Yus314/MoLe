@@ -36,6 +36,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import java.util.Date
 import java.util.Locale
 import javax.inject.Inject
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import net.ktnx.mobileledger.BackupsActivity
 import net.ktnx.mobileledger.R
@@ -85,13 +86,23 @@ class MainActivityCompose : ProfileThemedActivity() {
                     }
                 }
                 // Observe task progress from BackgroundTaskManager via ViewModel
+                // Note: isRefreshing is now managed by MainViewModel.observeTaskRunning()
+                // which directly observes BackgroundTaskManager.isRunning StateFlow
                 launch {
+                    var wasRunning = false
                     viewModel.taskProgress.collect { progress ->
-                        val isRunning = viewModel.isTaskRunning.value
-                        viewModel.updateBackgroundTasksRunning(isRunning)
+                        if (progress != null) {
+                            wasRunning = true
+                        }
                         // Reset the task reference when finished so new refreshes can start
-                        if (progress?.state == TaskState.FINISHED || progress?.state == TaskState.ERROR) {
+                        // Note: BackgroundTaskManager sets progress to null (not FINISHED) when task ends,
+                        // so we need to check for null AND track if a task was previously running
+                        val taskEnded = progress == null ||
+                            progress.state == TaskState.FINISHED ||
+                            progress.state == TaskState.ERROR
+                        if (wasRunning && taskEnded) {
                             viewModel.transactionRetrievalDone()
+                            wasRunning = false
                         }
                     }
                 }
@@ -110,6 +121,18 @@ class MainActivityCompose : ProfileThemedActivity() {
                                 syncInfo.accountCount,
                                 syncInfo.totalAccountCount
                             )
+                        }
+                    }
+                }
+                // Observe data version changes to reload data after local changes
+                launch {
+                    var lastProcessedVersion = 0L
+                    viewModel.dataVersion.collect { version ->
+                        // Only reload if version changed (avoid duplicate reloads on lifecycle restart)
+                        if (version > 0 && version != lastProcessedVersion) {
+                            Logger.debug(TAG, "Data version changed to $version, reloading data")
+                            lastProcessedVersion = version
+                            viewModel.reloadDataAfterChange()
                         }
                     }
                 }
@@ -321,35 +344,36 @@ class MainActivityCompose : ProfileThemedActivity() {
         val currentProfile = profileRepository.currentProfile.value ?: return
 
         lifecycleScope.launch {
-            optionRepository.getOption(currentProfile.id, Option.OPT_LAST_SCRAPE)
-                .collect { opt: Option? ->
-                    var lastUpdate = 0L
-                    if (opt != null) {
-                        try {
-                            lastUpdate = opt.value?.toLong() ?: 0L
-                        } catch (ex: NumberFormatException) {
-                            Logger.debug(TAG, "Error parsing '${opt.value}' as long", ex)
-                        }
-                    }
+            // Use .first() instead of .collect to avoid accumulating collectors
+            val opt = optionRepository.getOption(currentProfile.id, Option.OPT_LAST_SCRAPE)
+                .first()
 
-                    val syncInfo = viewModel.lastSyncInfo.value
-                    if (lastUpdate == 0L) {
-                        viewModel.updateLastUpdateInfo(null, 0, 0)
-                    } else {
-                        val date = Date(lastUpdate)
-                        viewModel.updateLastUpdateInfo(
-                            date,
-                            syncInfo?.transactionCount ?: 0,
-                            syncInfo?.accountCount ?: 0
-                        )
-                        updateLastUpdateText(
-                            date,
-                            syncInfo?.transactionCount ?: 0,
-                            syncInfo?.accountCount ?: 0,
-                            syncInfo?.totalAccountCount ?: 0
-                        )
-                    }
+            var lastUpdate = 0L
+            if (opt != null) {
+                try {
+                    lastUpdate = opt.value?.toLong() ?: 0L
+                } catch (ex: NumberFormatException) {
+                    Logger.debug(TAG, "Error parsing '${opt.value}' as long", ex)
                 }
+            }
+
+            val syncInfo = viewModel.lastSyncInfo.value
+            if (lastUpdate == 0L) {
+                viewModel.updateLastUpdateInfo(null, 0, 0)
+            } else {
+                val date = Date(lastUpdate)
+                viewModel.updateLastUpdateInfo(
+                    date,
+                    syncInfo?.transactionCount ?: 0,
+                    syncInfo?.accountCount ?: 0
+                )
+                updateLastUpdateText(
+                    date,
+                    syncInfo?.transactionCount ?: 0,
+                    syncInfo?.accountCount ?: 0,
+                    syncInfo?.totalAccountCount ?: 0
+                )
+            }
         }
     }
 
