@@ -92,14 +92,12 @@ class NewTransactionViewModelTest {
         id: Long = 1L,
         name: String = "Test Profile",
         defaultCommodity: String = "USD"
-    ): Profile = Profile().apply {
-        this.id = id
-        this.name = name
-        this.uuid = java.util.UUID.randomUUID().toString()
-        this.url = "https://example.com/ledger"
-        this.defaultCommodity = defaultCommodity
+    ): Profile = net.ktnx.mobileledger.util.createTestProfile(
+        id = id,
+        name = name,
+        defaultCommodity = defaultCommodity
+    ).apply {
         this.showCommodityByDefault = true
-        this.futureDates = "All"
     }
 
     private suspend fun createViewModelWithProfile(profile: Profile? = null): NewTransactionViewModel {
@@ -126,18 +124,13 @@ class NewTransactionViewModelTest {
         description: String = "Template Description",
         accounts: List<Pair<String, Float?>> = listOf("Assets:Bank" to 100.0f, "Expenses:Food" to null)
     ): TemplateWithAccounts {
-        val header = TemplateHeader().apply {
-            this.id = id
-            this.name = name
+        val header = TemplateHeader(id, name, "").apply {
             this.transactionDescription = description
-            this.uuid = java.util.UUID.randomUUID().toString()
         }
         val templateAccounts = accounts.mapIndexed { index, (accountName, amount) ->
-            TemplateAccount().apply {
-                this.templateId = id
+            TemplateAccount(0L, id, (index + 1).toLong()).apply {
                 this.accountName = accountName
                 this.amount = amount
-                this.position = index + 1
             }
         }
         return TemplateWithAccounts().apply {

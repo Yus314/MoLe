@@ -390,6 +390,28 @@
           echo "Lint complete! Check app/build/reports/lint-results-debug.html for details."
         '';
 
+        # コードカバレッジスクリプト (nix run .#coverage で実行可能)
+        # Kover: Kotlin専用カバレッジツール (JetBrains製)
+        coverageScript = pkgs.writeShellScriptBin "coverage-mole" ''
+          set -e
+          echo "================================================="
+          echo "Running ${appName} Test Coverage Report (v${version})"
+          echo "Using Kover (Kotlin-optimized coverage)"
+          echo "================================================="
+
+          ${runInFhs ''
+            ${makeLocalProperties}
+            ./gradlew --no-daemon koverHtmlReportDebug koverXmlReportDebug
+          ''}
+
+          echo ""
+          echo "✅ Coverage report generated!"
+          echo ""
+          echo "📊 Report locations:"
+          echo "  HTML: app/build/reports/kover/htmlDebug/index.html"
+          echo "  XML:  app/build/reports/kover/reportDebug.xml"
+        '';
+
       in
       {
         # パッケージ定義
@@ -450,6 +472,13 @@
             program = "${lintScript}/bin/lint-mole";
             meta = {
               description = "Run Android Lint checks via Gradle";
+            };
+          };
+          coverage = {
+            type = "app";
+            program = "${coverageScript}/bin/coverage-mole";
+            meta = {
+              description = "Generate test coverage report with Kover (Kotlin-optimized)";
             };
           };
         };

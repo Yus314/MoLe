@@ -32,11 +32,15 @@ nix develop .#fhs
 ### カバレッジレポート生成
 
 ```bash
-# JaCoCo カバレッジレポート生成
-./gradlew testDebugUnitTestCoverage
+# Kover カバレッジレポート生成 (Kotlin専用、JetBrains製)
+nix run .#coverage
+
+# または FHS 環境内で
+./gradlew koverHtmlReportDebug koverXmlReportDebug
 
 # レポート場所
-# app/build/reports/jacoco/testDebugUnitTestCoverage/html/index.html
+# HTML: app/build/reports/kover/htmlDebug/index.html
+# XML:  app/build/reports/kover/reportDebug.xml
 ```
 
 ## テスト構造
@@ -232,20 +236,25 @@ class MainViewModelTest {
 - name: Run unit tests
   run: nix run .#test
 
-- name: Generate coverage report
-  run: |
-    nix develop .#fhs --command bash -c "./gradlew testDebugUnitTestCoverage"
+- name: Generate coverage report (Kover)
+  run: nix run .#coverage
 
 - name: Upload coverage
   uses: codecov/codecov-action@v3
   with:
-    files: app/build/reports/jacoco/testDebugUnitTestCoverage/testDebugUnitTestCoverage.xml
+    files: app/build/reports/kover/reportDebug.xml
 ```
 
 ## 目標カバレッジ
 
-| コンポーネント | 現在 | 目標 |
-|---------------|------|------|
-| MainViewModel | 0% | 70%+ |
-| NewTransactionViewModel | 0% | 70%+ |
-| 全体 | 9% | 30%+ |
+| コンポーネント | 現在 | 目標 | 状態 |
+|---------------|------|------|------|
+| MainViewModel | 58% (line) | 70%+ | 進行中 |
+| NewTransactionViewModel | 0% | 70%+ | @Ignore (FutureDates修正必要) |
+| 全体 | 11% | 30%+ | 進行中 |
+
+### カバレッジツール
+
+- **Kover** (JetBrains製、Kotlin専用)
+  - `inline` 関数、`suspend` 関数を正確に計測
+  - Kotlin 構文（`when`、`sealed class`）の分岐を正確にカウント
