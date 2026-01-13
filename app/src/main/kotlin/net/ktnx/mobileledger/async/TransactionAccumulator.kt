@@ -23,7 +23,6 @@ import net.ktnx.mobileledger.App
 import net.ktnx.mobileledger.model.LedgerAccount
 import net.ktnx.mobileledger.model.LedgerTransaction
 import net.ktnx.mobileledger.model.TransactionListItem
-import net.ktnx.mobileledger.ui.MainModel
 import net.ktnx.mobileledger.utils.Misc
 import net.ktnx.mobileledger.utils.SimpleDate
 
@@ -97,36 +96,9 @@ class TransactionAccumulator(private val boldAccountName: String?, private val a
         return b.toString()
     }
 
-    fun publishResults(model: MainModel) {
-        lastDate?.let { last ->
-            val today = SimpleDate.today()
-            if (last != today) {
-                val showMonth = today.month != last.month || today.year != last.year
-                list.add(TransactionListItem(last, showMonth))
-            }
-        }
-
-        // Return header + reversed items (to show newest first)
-        val orderedList = if (list.size <= 1) {
-            list
-        } else {
-            val header = list[0]
-            val items = list.subList(1, list.size).reversed()
-            ArrayList<TransactionListItem>().apply {
-                add(header)
-                addAll(items)
-            }
-        }
-
-        model.setDisplayedTransactions(orderedList, transactionCount)
-        model.firstTransactionDate = earliestDate
-        model.lastTransactionDate = latestDate
-    }
-
     /**
      * Get the accumulated list of transaction items.
      * This method finalizes the list by adding the last date delimiter if needed.
-     * Use this method instead of publishResults when you need direct access to the items.
      */
     fun getItems(): List<TransactionListItem> {
         lastDate?.let { last ->
