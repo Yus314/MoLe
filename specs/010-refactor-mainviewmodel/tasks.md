@@ -28,7 +28,7 @@
 - [X] T001 Run `nix run .#test` to establish baseline (all tests must pass)
 - [X] T002 Run `nix run .#build` to verify build succeeds
 - [X] T003 Document current MainViewModel line count in research.md (target: 800 lines)
-- [ ] T004 Commit current working state before refactoring begins
+- [X] T004 Commit current working state before refactoring begins
 
 **Checkpoint**: Baseline established - all tests passing, build succeeds
 
@@ -75,16 +75,16 @@
 
 ### Tests First (TDD)
 
-- [ ] T018 [US5] Create PreferencesRepositoryTest in app/src/test/kotlin/net/ktnx/mobileledger/data/repository/PreferencesRepositoryTest.kt (write tests, ensure they FAIL)
+- [X] T018 [US5] Create PreferencesRepositoryTest in app/src/test/kotlin/net/ktnx/mobileledger/data/repository/PreferencesRepositoryTest.kt (write tests, ensure they FAIL)
 
 ### Implementation
 
-- [ ] T019 [US5] Create PreferencesRepository interface in app/src/main/kotlin/net/ktnx/mobileledger/data/repository/PreferencesRepository.kt
-- [ ] T020 [US5] Implement PreferencesRepositoryImpl using SharedPreferences in app/src/main/kotlin/net/ktnx/mobileledger/data/repository/PreferencesRepositoryImpl.kt
-- [ ] T021 [US5] Add PreferencesRepository binding to RepositoryModule in app/src/main/kotlin/net/ktnx/mobileledger/di/RepositoryModule.kt
-- [ ] T022 [US5] Run `nix run .#test` - PreferencesRepositoryTest must now PASS
-- [ ] T023 [US5] Run `nix run .#build` to verify build succeeds
-- [ ] T024 [US5] Commit: "feat: Add PreferencesRepository for preference management"
+- [X] T019 [US5] Create PreferencesRepository interface in app/src/main/kotlin/net/ktnx/mobileledger/data/repository/PreferencesRepository.kt
+- [X] T020 [US5] Implement PreferencesRepositoryImpl using SharedPreferences in app/src/main/kotlin/net/ktnx/mobileledger/data/repository/PreferencesRepositoryImpl.kt
+- [X] T021 [US5] Add PreferencesRepository binding to RepositoryModule in app/src/main/kotlin/net/ktnx/mobileledger/di/RepositoryModule.kt
+- [X] T022 [US5] Run `nix run .#test` - PreferencesRepositoryTest must now PASS
+- [X] T023 [US5] Run `nix run .#build` to verify build succeeds
+- [X] T024 [US5] Commit: "feat: Add PreferencesRepository for preference management"
 
 **Checkpoint**: PreferencesRepository complete and tested
 
