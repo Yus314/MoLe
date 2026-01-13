@@ -55,6 +55,7 @@ Create a codebase that future developers can easily understand and extend. Clear
 ### Session 2026-01-13
 
 - Q: What happens when a component needs to react to changes in another component's state? (e.g., transaction list needs to update when profile changes) → A: Each component directly observes shared Repository state (Repository-based reactive updates)
+- Q: How are shared concerns handled without creating new coupling? (e.g., loading states, error handling) → A: Each component manages its own loading/error state in its UiState
 
 ## User Scenarios & Testing
 
@@ -153,7 +154,7 @@ End users experience zero changes in functionality. All existing features (profi
 ### Edge Cases
 
 - **Cross-component state updates**: Components that need to react to changes in shared state (e.g., transaction list updating when profile changes) will directly observe the relevant Repository's StateFlow. No direct component-to-component communication is required; Repositories serve as the single source of truth.
-- How are shared concerns handled without creating new coupling? (e.g., loading states, error handling)
+- **Shared concerns (loading/error states)**: Each component manages its own loading and error state within its UiState (e.g., `isLoading: Boolean`, `error: String?`). No shared base class or utility is used, ensuring components remain independently testable and self-contained.
 - What happens during the migration if tests fail - how do we ensure we haven't introduced regressions?
 - How do we handle components that need to coordinate multiple responsibilities? (e.g., main coordinator managing tab state)
 - What if the split reveals hidden dependencies we didn't know about?
@@ -190,7 +191,7 @@ End users experience zero changes in functionality. All existing features (profi
 
 ### Key Entities
 
-- **ViewModel Component**: A single-responsibility class that manages state and business logic for one specific area of functionality. Contains explicit dependencies injected via constructor. Exposes state via observable streams. Handles events specific to its responsibility area.
+- **ViewModel Component**: A single-responsibility class that manages state and business logic for one specific area of functionality. Contains explicit dependencies injected via constructor. Exposes state via observable streams (typically UiState containing data, isLoading, and error fields). Handles events specific to its responsibility area. Each component independently manages its own loading and error states without shared base classes.
 
 - **Component Responsibility Boundary**: The clear line defining what functionality belongs to which component. For example: profile selection is separate from account display, which is separate from transaction filtering. No component should handle concerns from another component's domain.
 
