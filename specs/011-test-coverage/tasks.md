@@ -97,10 +97,10 @@
 
 ### リファクタリング（テスト可能化）
 
-- [ ] T025 [US2] NewTransactionViewModel に TransactionSender を注入: `app/src/main/kotlin/net/ktnx/mobileledger/ui/transaction/NewTransactionViewModel.kt`
+- [X] T025 [US2] NewTransactionViewModel に TransactionSender を注入: `app/src/main/kotlin/net/ktnx/mobileledger/ui/transaction/NewTransactionViewModel.kt`
   - コンストラクタに `transactionSender: TransactionSender` パラメータを追加
   - `@Inject constructor` に含める
-- [ ] T026 [US2] SendTransactionTask 直接インスタンス化を TransactionSender.send() に置換: `app/src/main/kotlin/net/ktnx/mobileledger/ui/transaction/NewTransactionViewModel.kt`
+- [X] T026 [US2] SendTransactionTask 直接インスタンス化を TransactionSender.send() に置換: `app/src/main/kotlin/net/ktnx/mobileledger/ui/transaction/NewTransactionViewModel.kt`
   - `SendTransactionTask()` の `new` / インスタンス化をすべて削除
   - `Thread.start()` 呼び出しを `viewModelScope.launch { transactionSender.send(...) }` に置換
   - コールバック/リスナーベースの結果処理を `Result.fold()` パターンに移行
@@ -110,15 +110,15 @@
 
 ### テスト作成（TDD: テストを先に作成し、失敗を確認）
 
-- [ ] T027 [US2] NewTransactionViewModelTest 基本構造を作成: `app/src/test/kotlin/net/ktnx/mobileledger/ui/transaction/NewTransactionViewModelTest.kt`
-- [ ] T028 [P] [US2] 初期化テスト（デフォルト通貨設定）を追加: `app/src/test/kotlin/net/ktnx/mobileledger/ui/transaction/NewTransactionViewModelTest.kt`
-- [ ] T029 [P] [US2] 金額入力と残高ヒント再計算テストを追加: `app/src/test/kotlin/net/ktnx/mobileledger/ui/transaction/NewTransactionViewModelTest.kt`
-- [ ] T030 [P] [US2] テンプレート適用テストを追加: `app/src/test/kotlin/net/ktnx/mobileledger/ui/transaction/NewTransactionViewModelTest.kt`
-- [ ] T031 [P] [US2] 取引送信成功テストを追加: `app/src/test/kotlin/net/ktnx/mobileledger/ui/transaction/NewTransactionViewModelTest.kt`
-- [ ] T032 [P] [US2] 取引送信失敗テストを追加: `app/src/test/kotlin/net/ktnx/mobileledger/ui/transaction/NewTransactionViewModelTest.kt`
-- [ ] T033 [P] [US2] フォームバリデーションテストを追加: `app/src/test/kotlin/net/ktnx/mobileledger/ui/transaction/NewTransactionViewModelTest.kt`
-- [ ] T034 [P] [US2] アカウント検索サジェストテストを追加: `app/src/test/kotlin/net/ktnx/mobileledger/ui/transaction/NewTransactionViewModelTest.kt`
-- [ ] T035 [US2] テスト実行で既存機能が壊れていないことを確認: `nix run .#test`
+- [X] T027 [US2] NewTransactionViewModelTest 基本構造を作成: `app/src/test/kotlin/net/ktnx/mobileledger/ui/transaction/NewTransactionViewModelTest.kt`
+- [X] T028 [P] [US2] 初期化テスト（デフォルト通貨設定）を追加: `app/src/test/kotlin/net/ktnx/mobileledger/ui/transaction/NewTransactionViewModelTest.kt`
+- [X] T029 [P] [US2] 金額入力と残高ヒント再計算テストを追加: `app/src/test/kotlin/net/ktnx/mobileledger/ui/transaction/NewTransactionViewModelTest.kt`
+- [X] T030 [P] [US2] テンプレート適用テストを追加: `app/src/test/kotlin/net/ktnx/mobileledger/ui/transaction/NewTransactionViewModelTest.kt`
+- [X] T031 [P] [US2] 取引送信成功テストを追加: `app/src/test/kotlin/net/ktnx/mobileledger/ui/transaction/NewTransactionViewModelTest.kt`
+- [X] T032 [P] [US2] 取引送信失敗テストを追加: `app/src/test/kotlin/net/ktnx/mobileledger/ui/transaction/NewTransactionViewModelTest.kt`
+- [X] T033 [P] [US2] フォームバリデーションテストを追加: `app/src/test/kotlin/net/ktnx/mobileledger/ui/transaction/NewTransactionViewModelTest.kt`
+- [X] T034 [P] [US2] アカウント検索サジェストテストを追加: `app/src/test/kotlin/net/ktnx/mobileledger/ui/transaction/NewTransactionViewModelTest.kt`
+- [X] T035 [US2] テスト実行で既存機能が壊れていないことを確認: `nix run .#test`
 
 **Checkpoint**: User Stories 1 AND 2 が両方とも独立して動作
 

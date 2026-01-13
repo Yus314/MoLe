@@ -17,566 +17,826 @@
 
 package net.ktnx.mobileledger.ui.transaction
 
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
-import net.ktnx.mobileledger.dao.TransactionDAO
-import net.ktnx.mobileledger.data.repository.AccountRepository
-import net.ktnx.mobileledger.data.repository.CurrencyRepository
-import net.ktnx.mobileledger.data.repository.ProfileRepository
-import net.ktnx.mobileledger.data.repository.TemplateRepository
-import net.ktnx.mobileledger.data.repository.TransactionRepository
-import net.ktnx.mobileledger.db.Account
-import net.ktnx.mobileledger.db.AccountWithAmounts
-import net.ktnx.mobileledger.db.Currency
 import net.ktnx.mobileledger.db.Profile
 import net.ktnx.mobileledger.db.TemplateAccount
 import net.ktnx.mobileledger.db.TemplateHeader
 import net.ktnx.mobileledger.db.TemplateWithAccounts
-import net.ktnx.mobileledger.db.Transaction
-import net.ktnx.mobileledger.db.TransactionWithAccounts
-import org.junit.After
+import net.ktnx.mobileledger.fake.FakeCurrencyFormatter
+import net.ktnx.mobileledger.fake.FakeCurrencyRepository
+import net.ktnx.mobileledger.fake.FakeTemplateRepository
+import net.ktnx.mobileledger.fake.FakeTransactionSender
+import net.ktnx.mobileledger.ui.main.FakeAccountRepositoryForViewModel
+import net.ktnx.mobileledger.ui.main.FakeAppStateServiceForViewModel
+import net.ktnx.mobileledger.ui.main.FakeProfileRepositoryForViewModel
+import net.ktnx.mobileledger.ui.main.FakeTransactionRepositoryForViewModel
+import net.ktnx.mobileledger.util.MainDispatcherRule
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 
 /**
- * Unit tests for NewTransactionViewModel repository interactions.
+ * Unit tests for NewTransactionViewModel.
  *
- * These tests verify that NewTransactionViewModel correctly uses:
- * - ProfileRepository for current profile and settings
- * - TransactionRepository for saving transactions and description lookup
- * - AccountRepository for account name autocomplete
- * - TemplateRepository for template application
- * - CurrencyRepository for currency list
+ * Tests cover:
+ * - Initialization with default currency from profile
+ * - Amount input and balance hint recalculation
+ * - Template application
+ * - Transaction submission (success and failure)
+ * - Form validation
+ * - Account name suggestions
  *
- * Note: Full ViewModel testing with UI state and effects requires instrumentation tests.
+ * Following TDD approach for test-first development.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class NewTransactionViewModelTest {
 
-    private val testDispatcher = StandardTestDispatcher()
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
 
-    private lateinit var profileRepository: FakeProfileRepositoryForTransaction
-    private lateinit var transactionRepository: FakeTransactionRepositoryForTransaction
-    private lateinit var accountRepository: FakeAccountRepositoryForTransaction
-    private lateinit var templateRepository: FakeTemplateRepositoryForTransaction
-    private lateinit var currencyRepository: FakeCurrencyRepositoryForTransaction
+    private lateinit var profileRepository: FakeProfileRepositoryForViewModel
+    private lateinit var transactionRepository: FakeTransactionRepositoryForViewModel
+    private lateinit var accountRepository: FakeAccountRepositoryForViewModel
+    private lateinit var templateRepository: FakeTemplateRepository
+    private lateinit var currencyRepository: FakeCurrencyRepository
+    private lateinit var currencyFormatter: FakeCurrencyFormatter
+    private lateinit var appStateService: FakeAppStateServiceForViewModel
+    private lateinit var transactionSender: FakeTransactionSender
+
+    private lateinit var viewModel: NewTransactionViewModel
 
     @Before
     fun setup() {
-        Dispatchers.setMain(testDispatcher)
-        profileRepository = FakeProfileRepositoryForTransaction()
-        transactionRepository = FakeTransactionRepositoryForTransaction()
-        accountRepository = FakeAccountRepositoryForTransaction()
-        templateRepository = FakeTemplateRepositoryForTransaction()
-        currencyRepository = FakeCurrencyRepositoryForTransaction()
-    }
-
-    @After
-    fun tearDown() {
-        Dispatchers.resetMain()
+        profileRepository = FakeProfileRepositoryForViewModel()
+        transactionRepository = FakeTransactionRepositoryForViewModel()
+        accountRepository = FakeAccountRepositoryForViewModel()
+        templateRepository = FakeTemplateRepository()
+        currencyRepository = FakeCurrencyRepository()
+        currencyFormatter = FakeCurrencyFormatter()
+        appStateService = FakeAppStateServiceForViewModel()
+        transactionSender = FakeTransactionSender()
     }
 
     // ========================================
     // Helper methods
     // ========================================
 
-    private fun createTestProfile(id: Long = 1L, name: String = "Test Profile"): Profile = Profile().apply {
+    private fun createTestProfile(
+        id: Long = 1L,
+        name: String = "Test Profile",
+        defaultCommodity: String = "USD"
+    ): Profile = Profile().apply {
         this.id = id
         this.name = name
         this.uuid = java.util.UUID.randomUUID().toString()
         this.url = "https://example.com/ledger"
-        this.permitPosting = true
+        this.defaultCommodity = defaultCommodity
         this.showCommodityByDefault = true
+        this.futureDates = "All"
     }
 
-    private fun createTestTransaction(
-        profileId: Long = 1L,
-        description: String = "Test Transaction"
-    ): TransactionWithAccounts {
-        val transaction = Transaction().apply {
-            this.profileId = profileId
-            this.description = description
-            this.year = 2026
-            this.month = 1
-            this.day = 10
+    private suspend fun createViewModelWithProfile(profile: Profile? = null): NewTransactionViewModel {
+        if (profile != null) {
+            profileRepository.insertProfile(profile)
+            profileRepository.setCurrentProfile(profile)
         }
-        val twa = TransactionWithAccounts()
-        twa.transaction = transaction
-        twa.accounts = emptyList()
-        return twa
-    }
 
-    // ========================================
-    // ProfileRepository tests
-    // ========================================
-
-    @Test
-    fun `currentProfile provides profile settings`() = runTest {
-        val profile = createTestProfile(name = "Active Profile")
-        profileRepository.setCurrentProfile(profile)
-
-        val current = profileRepository.currentProfile.value
-        assertNotNull(current)
-        assertEquals("Active Profile", current?.name)
-        assertTrue(current?.permitPosting == true)
-    }
-
-    @Test
-    fun `currentProfile null when no profile selected`() = runTest {
-        val current = profileRepository.currentProfile.value
-        assertNull(current)
-    }
-
-    // ========================================
-    // TransactionRepository tests
-    // ========================================
-
-    @Test
-    fun `searchByDescription returns matching transactions`() = runTest {
-        transactionRepository.insertTransaction(createTestTransaction(description = "Grocery shopping"))
-        transactionRepository.insertTransaction(createTestTransaction(description = "Gas station"))
-        transactionRepository.insertTransaction(createTestTransaction(description = "Groceries"))
-
-        val results = transactionRepository.searchByDescription("groc")
-
-        assertEquals(2, results.size)
-        assertTrue(results.any { it.description == "Grocery shopping" })
-        assertTrue(results.any { it.description == "Groceries" })
-    }
-
-    @Test
-    fun `getFirstByDescription returns most recent match`() = runTest {
-        val tx1 = createTestTransaction(description = "Coffee").apply {
-            transaction.year = 2025
-            transaction.month = 12
-        }
-        val tx2 = createTestTransaction(description = "Coffee").apply {
-            transaction.year = 2026
-            transaction.month = 1
-        }
-        transactionRepository.insertTransaction(tx1)
-        transactionRepository.insertTransaction(tx2)
-
-        val result = transactionRepository.getFirstByDescription("Coffee")
-
-        assertNotNull(result)
-        assertEquals(2026, result?.transaction?.year)
-    }
-
-    @Test
-    fun `storeTransaction saves new transaction`() = runTest {
-        val tx = createTestTransaction(description = "New Transaction")
-
-        transactionRepository.storeTransaction(tx)
-
-        val stored = transactionRepository.getFirstByDescription("New Transaction")
-        assertNotNull(stored)
-    }
-
-    // ========================================
-    // AccountRepository tests
-    // ========================================
-
-    @Test
-    fun `searchAccountNamesSync returns matching accounts`() = runTest {
-        accountRepository.addAccount(1L, "Assets:Cash")
-        accountRepository.addAccount(1L, "Assets:Bank:Checking")
-        accountRepository.addAccount(1L, "Expenses:Food")
-
-        val results = accountRepository.searchAccountNamesSync(1L, "Assets")
-
-        assertEquals(2, results.size)
-        assertTrue(results.contains("Assets:Cash"))
-        assertTrue(results.contains("Assets:Bank:Checking"))
-    }
-
-    @Test
-    fun `searchAccountNamesSync is case insensitive`() = runTest {
-        accountRepository.addAccount(1L, "Assets:Cash")
-
-        val results = accountRepository.searchAccountNamesSync(1L, "ASSETS")
-
-        assertEquals(1, results.size)
-        assertEquals("Assets:Cash", results[0])
-    }
-
-    @Test
-    fun `searchAccountNamesSync returns empty for no matches`() = runTest {
-        accountRepository.addAccount(1L, "Assets:Cash")
-
-        val results = accountRepository.searchAccountNamesSync(1L, "Liabilities")
-
-        assertTrue(results.isEmpty())
-    }
-
-    // ========================================
-    // TemplateRepository tests
-    // ========================================
-
-    @Test
-    fun `getAllTemplatesWithAccountsSync returns all templates`() = runTest {
-        templateRepository.addTemplate(1L, "Rent Payment")
-        templateRepository.addTemplate(2L, "Grocery Shopping")
-
-        val templates = templateRepository.getAllTemplatesWithAccountsSync()
-
-        assertEquals(2, templates.size)
-    }
-
-    @Test
-    fun `getTemplateWithAccountsSync returns specific template`() = runTest {
-        templateRepository.addTemplate(1L, "Rent Payment")
-
-        val template = templateRepository.getTemplateWithAccountsSync(1L)
-
-        assertNotNull(template)
-        assertEquals("Rent Payment", template?.header?.name)
-    }
-
-    @Test
-    fun `getTemplateWithAccountsSync returns null for non-existent template`() = runTest {
-        val template = templateRepository.getTemplateWithAccountsSync(999L)
-        assertNull(template)
-    }
-
-    // ========================================
-    // CurrencyRepository tests
-    // ========================================
-
-    @Test
-    fun `getAllCurrenciesSync returns all currencies`() = runTest {
-        currencyRepository.addCurrency("USD")
-        currencyRepository.addCurrency("EUR")
-        currencyRepository.addCurrency("JPY")
-
-        val currencies = currencyRepository.getAllCurrenciesSync()
-
-        assertEquals(3, currencies.size)
-    }
-
-    @Test
-    fun `getCurrencyByNameSync returns matching currency`() = runTest {
-        currencyRepository.addCurrency("USD")
-        currencyRepository.addCurrency("EUR")
-
-        val currency = currencyRepository.getCurrencyByNameSync("USD")
-
-        assertNotNull(currency)
-        assertEquals("USD", currency?.name)
-    }
-
-    @Test
-    fun `getCurrencyByNameSync returns null for non-existent currency`() = runTest {
-        val currency = currencyRepository.getCurrencyByNameSync("XYZ")
-        assertNull(currency)
-    }
-}
-
-// ========================================
-// Fake Repository Implementations
-// ========================================
-
-class FakeProfileRepositoryForTransaction : ProfileRepository {
-    private val profiles = mutableMapOf<Long, Profile>()
-    private var nextId = 1L
-    private val _currentProfile = MutableStateFlow<Profile?>(null)
-
-    override val currentProfile: StateFlow<Profile?> = _currentProfile.asStateFlow()
-
-    override fun setCurrentProfile(profile: Profile?) {
-        _currentProfile.value = profile
-    }
-
-    override fun getAllProfiles(): Flow<List<Profile>> = MutableStateFlow(profiles.values.sortedBy { it.orderNo })
-
-    override suspend fun getAllProfilesSync(): List<Profile> = profiles.values.sortedBy { it.orderNo }
-
-    override fun getProfileById(profileId: Long): Flow<Profile?> = MutableStateFlow(profiles[profileId])
-
-    override suspend fun getProfileByIdSync(profileId: Long): Profile? = profiles[profileId]
-
-    override fun getProfileByUuid(uuid: String): Flow<Profile?> =
-        MutableStateFlow(profiles.values.find { it.uuid == uuid })
-
-    override suspend fun getProfileByUuidSync(uuid: String): Profile? = profiles.values.find { it.uuid == uuid }
-
-    override suspend fun getAnyProfile(): Profile? = profiles.values.firstOrNull()
-    override suspend fun getProfileCount(): Int = profiles.size
-
-    override suspend fun insertProfile(profile: Profile): Long {
-        val id = if (profile.id == 0L) nextId++ else profile.id
-        profile.id = id
-        profiles[id] = profile
-        return id
-    }
-
-    override suspend fun updateProfile(profile: Profile) {
-        profiles[profile.id] = profile
-    }
-
-    override suspend fun deleteProfile(profile: Profile) {
-        profiles.remove(profile.id)
-    }
-
-    override suspend fun updateProfileOrder(profiles: List<Profile>) { /* not needed for test */ }
-    override suspend fun deleteAllProfiles() {
-        profiles.clear()
-        _currentProfile.value = null
-    }
-}
-
-class FakeTransactionRepositoryForTransaction : TransactionRepository {
-    private val transactions = mutableListOf<TransactionWithAccounts>()
-    private var nextId = 1L
-
-    override fun getAllTransactions(profileId: Long): Flow<List<TransactionWithAccounts>> =
-        MutableStateFlow(transactions.filter { it.transaction.profileId == profileId })
-
-    override fun getTransactionsFiltered(profileId: Long, accountName: String?): Flow<List<TransactionWithAccounts>> =
-        MutableStateFlow(
-            transactions.filter { it.transaction.profileId == profileId }
+        return NewTransactionViewModel(
+            profileRepository = profileRepository,
+            transactionRepository = transactionRepository,
+            accountRepository = accountRepository,
+            templateRepository = templateRepository,
+            currencyRepository = currencyRepository,
+            currencyFormatter = currencyFormatter,
+            appStateService = appStateService,
+            transactionSender = transactionSender
         )
-
-    override fun getTransactionById(transactionId: Long): Flow<TransactionWithAccounts?> =
-        MutableStateFlow(transactions.find { it.transaction.id == transactionId })
-
-    override suspend fun getTransactionByIdSync(transactionId: Long): TransactionWithAccounts? =
-        transactions.find { it.transaction.id == transactionId }
-
-    override suspend fun searchByDescription(term: String): List<TransactionDAO.DescriptionContainer> = transactions
-        .filter { it.transaction.description.contains(term, ignoreCase = true) }
-        .distinctBy { it.transaction.description }
-        .map { TransactionDAO.DescriptionContainer().apply { description = it.transaction.description } }
-
-    override suspend fun getFirstByDescription(description: String): TransactionWithAccounts? = transactions
-        .filter { it.transaction.description == description }
-        .maxByOrNull { it.transaction.year * 10000 + it.transaction.month * 100 + it.transaction.day }
-
-    override suspend fun getFirstByDescriptionHavingAccount(
-        description: String,
-        accountTerm: String
-    ): TransactionWithAccounts? = transactions.find { twa ->
-        twa.transaction.description == description &&
-            twa.accounts.any { it.accountName.contains(accountTerm, ignoreCase = true) }
     }
 
-    override suspend fun insertTransaction(transaction: TransactionWithAccounts) {
-        if (transaction.transaction.id == 0L) {
-            transaction.transaction.id = nextId++
+    private fun createTemplateWithAccounts(
+        id: Long = 1L,
+        name: String = "Test Template",
+        description: String = "Template Description",
+        accounts: List<Pair<String, Float?>> = listOf("Assets:Bank" to 100.0f, "Expenses:Food" to null)
+    ): TemplateWithAccounts {
+        val header = TemplateHeader().apply {
+            this.id = id
+            this.name = name
+            this.transactionDescription = description
+            this.uuid = java.util.UUID.randomUUID().toString()
         }
-        transactions.add(transaction)
-    }
-
-    override suspend fun storeTransaction(transaction: TransactionWithAccounts) {
-        insertTransaction(transaction)
-    }
-
-    override suspend fun deleteTransaction(transaction: Transaction) {
-        transactions.removeAll { it.transaction.id == transaction.id }
-    }
-
-    override suspend fun deleteTransactions(transactions: List<Transaction>) {
-        val ids = transactions.map { it.id }.toSet()
-        this.transactions.removeAll { it.transaction.id in ids }
-    }
-
-    override suspend fun storeTransactions(transactions: List<TransactionWithAccounts>, profileId: Long) {
-        transactions.forEach { insertTransaction(it) }
-    }
-
-    override suspend fun deleteAllForProfile(profileId: Long): Int {
-        val count = transactions.count { it.transaction.profileId == profileId }
-        transactions.removeAll { it.transaction.profileId == profileId }
-        return count
-    }
-
-    override suspend fun getMaxLedgerId(profileId: Long): Long? =
-        transactions.filter { it.transaction.profileId == profileId }
-            .maxOfOrNull { it.transaction.ledgerId }
-}
-
-class FakeAccountRepositoryForTransaction : AccountRepository {
-    private val accounts = mutableMapOf<Long, MutableList<String>>()
-
-    fun addAccount(profileId: Long, name: String) {
-        accounts.getOrPut(profileId) { mutableListOf() }.add(name)
-    }
-
-    override fun getAllWithAmounts(profileId: Long, includeZeroBalances: Boolean): Flow<List<AccountWithAmounts>> =
-        MutableStateFlow(emptyList())
-
-    override suspend fun getAllWithAmountsSync(
-        profileId: Long,
-        includeZeroBalances: Boolean
-    ): List<AccountWithAmounts> = emptyList()
-
-    override fun getAll(profileId: Long, includeZeroBalances: Boolean): Flow<List<Account>> =
-        MutableStateFlow(emptyList())
-
-    override suspend fun getByIdSync(id: Long): Account? = null
-    override fun getByName(profileId: Long, accountName: String): Flow<Account?> = MutableStateFlow(null)
-
-    override suspend fun getByNameSync(profileId: Long, accountName: String): Account? = null
-    override fun getByNameWithAmounts(profileId: Long, accountName: String): Flow<AccountWithAmounts?> =
-        MutableStateFlow(null)
-
-    override fun searchAccountNames(profileId: Long, term: String): Flow<List<String>> =
-        MutableStateFlow(accounts[profileId]?.filter { it.contains(term, ignoreCase = true) } ?: emptyList())
-
-    override suspend fun searchAccountNamesSync(profileId: Long, term: String): List<String> =
-        accounts[profileId]?.filter { it.contains(term, ignoreCase = true) } ?: emptyList()
-
-    override suspend fun searchAccountsWithAmountsSync(profileId: Long, term: String): List<AccountWithAmounts> =
-        emptyList()
-
-    override fun searchAccountNamesGlobal(term: String): Flow<List<String>> =
-        MutableStateFlow(accounts.values.flatten().filter { it.contains(term, ignoreCase = true) })
-
-    override suspend fun searchAccountNamesGlobalSync(term: String): List<String> =
-        accounts.values.flatten().filter { it.contains(term, ignoreCase = true) }
-
-    override suspend fun insertAccount(account: Account): Long = 0L
-    override suspend fun insertAccountWithAmounts(accountWithAmounts: AccountWithAmounts) { /* not needed for test */ }
-    override suspend fun updateAccount(account: Account) { /* not needed for test */ }
-    override suspend fun deleteAccount(account: Account) { /* not needed for test */ }
-    override suspend fun storeAccounts(accounts: List<AccountWithAmounts>, profileId: Long) {
-        // not needed for test
-    }
-    override suspend fun getCountForProfile(profileId: Long): Int = accounts[profileId]?.size ?: 0
-    override suspend fun deleteAllAccounts() {
-        accounts.clear()
-    }
-}
-
-class FakeTemplateRepositoryForTransaction : TemplateRepository {
-    private val templates = mutableMapOf<Long, TemplateWithAccounts>()
-
-    fun addTemplate(id: Long, name: String) {
-        val header = TemplateHeader(id, name, "")
-        val twa = TemplateWithAccounts()
-        twa.header = header
-        twa.accounts = emptyList()
-        templates[id] = twa
-    }
-
-    override fun getAllTemplates(): Flow<List<TemplateHeader>> = MutableStateFlow(templates.values.map { it.header })
-
-    override fun getTemplateById(id: Long): Flow<TemplateHeader?> = MutableStateFlow(templates[id]?.header)
-
-    override suspend fun getTemplateByIdSync(id: Long): TemplateHeader? = templates[id]?.header
-
-    override fun getTemplateWithAccounts(id: Long): Flow<TemplateWithAccounts?> = MutableStateFlow(templates[id])
-
-    override suspend fun getTemplateWithAccountsSync(id: Long): TemplateWithAccounts? = templates[id]
-
-    override suspend fun getTemplateWithAccountsByUuidSync(uuid: String): TemplateWithAccounts? =
-        templates.values.find { it.header.uuid == uuid }
-
-    override suspend fun getAllTemplatesWithAccountsSync(): List<TemplateWithAccounts> = templates.values.toList()
-
-    override suspend fun insertTemplate(template: TemplateHeader): Long {
-        val twa = TemplateWithAccounts()
-        twa.header = template
-        twa.accounts = emptyList()
-        templates[template.id] = twa
-        return template.id
-    }
-
-    override suspend fun insertTemplateWithAccounts(templateWithAccounts: TemplateWithAccounts) {
-        templates[templateWithAccounts.header.id] = templateWithAccounts
-    }
-
-    override suspend fun updateTemplate(template: TemplateHeader) {
-        templates[template.id]?.header = template
-    }
-
-    override suspend fun deleteTemplate(template: TemplateHeader) {
-        templates.remove(template.id)
-    }
-
-    override suspend fun duplicateTemplate(id: Long): TemplateWithAccounts? {
-        val original = templates[id] ?: return null
-        val newId = (templates.keys.maxOrNull() ?: 0) + 1
-        val newHeader = TemplateHeader(newId, "${original.header.name} (copy)", "")
-        val copy = TemplateWithAccounts().apply {
-            header = newHeader
-            accounts = original.accounts
-        }
-        templates[copy.header.id] = copy
-        return copy
-    }
-
-    override suspend fun saveTemplateWithAccounts(header: TemplateHeader, accounts: List<TemplateAccount>): Long {
-        val twa = TemplateWithAccounts()
-        twa.header = header
-        twa.accounts = accounts
-        templates[header.id] = twa
-        return header.id
-    }
-
-    override suspend fun deleteAllTemplates() {
-        templates.clear()
-    }
-}
-
-class FakeCurrencyRepositoryForTransaction : CurrencyRepository {
-    private val currencies = mutableListOf<Currency>()
-    private var nextId = 1L
-
-    fun addCurrency(name: String) {
-        currencies.add(
-            Currency().apply {
-                this.id = nextId++
-                this.name = name
-                this.position = "after"
-                this.hasGap = true
+        val templateAccounts = accounts.mapIndexed { index, (accountName, amount) ->
+            TemplateAccount().apply {
+                this.templateId = id
+                this.accountName = accountName
+                this.amount = amount
+                this.position = index + 1
             }
-        )
-    }
-
-    override fun getAllCurrencies(): Flow<List<Currency>> = MutableStateFlow(currencies.toList())
-
-    override suspend fun getAllCurrenciesSync(): List<Currency> = currencies.toList()
-
-    override fun getCurrencyById(id: Long): Flow<Currency?> = MutableStateFlow(currencies.find { it.id == id })
-
-    override suspend fun getCurrencyByIdSync(id: Long): Currency? = currencies.find { it.id == id }
-
-    override fun getCurrencyByName(name: String): Flow<Currency?> =
-        MutableStateFlow(currencies.find { it.name == name })
-
-    override suspend fun getCurrencyByNameSync(name: String): Currency? = currencies.find { it.name == name }
-
-    override suspend fun insertCurrency(currency: Currency): Long {
-        currency.id = nextId++
-        currencies.add(currency)
-        return currency.id
-    }
-
-    override suspend fun updateCurrency(currency: Currency) {
-        val index = currencies.indexOfFirst { it.id == currency.id }
-        if (index >= 0) {
-            currencies[index] = currency
+        }
+        return TemplateWithAccounts().apply {
+            this.header = header
+            this.accounts = templateAccounts
         }
     }
 
-    override suspend fun deleteCurrency(currency: Currency) {
-        currencies.removeAll { it.name == currency.name }
+    // ========================================
+    // T028: Initialization tests
+    // ========================================
+
+    @Test
+    fun `initialization sets default currency from profile`() = runTest {
+        // Given
+        val profile = createTestProfile(defaultCommodity = "EUR")
+
+        // When
+        viewModel = createViewModelWithProfile(profile)
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.uiState.value
+        assertEquals("EUR", state.accounts.firstOrNull()?.currency)
+        assertEquals(profile.id, state.profileId)
     }
 
-    override suspend fun deleteAllCurrencies() {
-        currencies.clear()
+    @Test
+    fun `initialization creates minimum two account rows`() = runTest {
+        // Given
+        val profile = createTestProfile()
+
+        // When
+        viewModel = createViewModelWithProfile(profile)
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.uiState.value
+        assertTrue("Should have at least 2 account rows", state.accounts.size >= 2)
+    }
+
+    @Test
+    fun `initialization sets showCurrency from profile`() = runTest {
+        // Given
+        val profile = createTestProfile().apply {
+            showCommodityByDefault = true
+        }
+
+        // When
+        viewModel = createViewModelWithProfile(profile)
+        advanceUntilIdle()
+
+        // Then
+        assertTrue(viewModel.uiState.value.showCurrency)
+    }
+
+    // ========================================
+    // T029: Amount input and balance hint tests
+    // ========================================
+
+    @Test
+    fun `amount hint shows negative of balance for empty amount row`() = runTest {
+        // Given
+        val profile = createTestProfile(defaultCommodity = "USD")
+        viewModel = createViewModelWithProfile(profile)
+        advanceUntilIdle()
+
+        val row1Id = viewModel.uiState.value.accounts[0].id
+        val row2Id = viewModel.uiState.value.accounts[1].id
+
+        // When - Set amount on first row, account names on both
+        viewModel.onEvent(NewTransactionEvent.UpdateAccountName(row1Id, "Assets:Bank"))
+        viewModel.onEvent(NewTransactionEvent.UpdateAmount(row1Id, "100.00"))
+        viewModel.onEvent(NewTransactionEvent.UpdateAccountName(row2Id, "Expenses:Food"))
+        advanceUntilIdle()
+
+        // Then - Second row should show hint of -100.00
+        val state = viewModel.uiState.value
+        val row2 = state.accounts.find { it.id == row2Id }
+        assertNotNull("Row 2 should exist", row2)
+        assertEquals("-100.00", row2!!.amountHint)
+    }
+
+    @Test
+    fun `amount hint updates when amount changes`() = runTest {
+        // Given
+        val profile = createTestProfile()
+        viewModel = createViewModelWithProfile(profile)
+        advanceUntilIdle()
+
+        val row1Id = viewModel.uiState.value.accounts[0].id
+        val row2Id = viewModel.uiState.value.accounts[1].id
+
+        viewModel.onEvent(NewTransactionEvent.UpdateAccountName(row1Id, "Assets:Bank"))
+        viewModel.onEvent(NewTransactionEvent.UpdateAccountName(row2Id, "Expenses:Food"))
+        viewModel.onEvent(NewTransactionEvent.UpdateAmount(row1Id, "50.00"))
+        advanceUntilIdle()
+
+        // When - Change amount
+        viewModel.onEvent(NewTransactionEvent.UpdateAmount(row1Id, "75.00"))
+        advanceUntilIdle()
+
+        // Then
+        val row2 = viewModel.uiState.value.accounts.find { it.id == row2Id }
+        assertEquals("-75.00", row2?.amountHint)
+    }
+
+    @Test
+    fun `invalid amount format is detected`() = runTest {
+        // Given
+        val profile = createTestProfile()
+        viewModel = createViewModelWithProfile(profile)
+        advanceUntilIdle()
+
+        val rowId = viewModel.uiState.value.accounts[0].id
+
+        // When - Enter invalid amount
+        viewModel.onEvent(NewTransactionEvent.UpdateAmount(rowId, "not-a-number"))
+        advanceUntilIdle()
+
+        // Then
+        val row = viewModel.uiState.value.accounts.find { it.id == rowId }
+        assertFalse("Amount should be invalid", row?.isAmountValid ?: true)
+    }
+
+    // ========================================
+    // T030: Template application tests
+    // ========================================
+
+    @Test
+    fun `template application sets description and accounts`() = runTest {
+        // Given
+        val profile = createTestProfile()
+        viewModel = createViewModelWithProfile(profile)
+        advanceUntilIdle()
+
+        val template = createTemplateWithAccounts(
+            name = "Lunch",
+            description = "Lunch expense",
+            accounts = listOf("Expenses:Food" to 15.0f, "Assets:Cash" to null)
+        )
+        templateRepository.insertTemplateWithAccounts(template)
+
+        // When
+        viewModel.onEvent(NewTransactionEvent.ApplyTemplate(template.header.id))
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.uiState.value
+        assertEquals("Lunch expense", state.description)
+        assertEquals("Expenses:Food", state.accounts[0].accountName)
+        assertEquals("15.00", state.accounts[0].amountText)
+        assertEquals("Assets:Cash", state.accounts[1].accountName)
+    }
+
+    @Test
+    fun `template selector shows available templates`() = runTest {
+        // Given
+        val profile = createTestProfile()
+        viewModel = createViewModelWithProfile(profile)
+        advanceUntilIdle()
+
+        val template1 = createTemplateWithAccounts(id = 1, name = "Template 1")
+        val template2 = createTemplateWithAccounts(id = 2, name = "Template 2")
+        templateRepository.insertTemplateWithAccounts(template1)
+        templateRepository.insertTemplateWithAccounts(template2)
+
+        // When
+        viewModel.onEvent(NewTransactionEvent.ShowTemplateSelector)
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.uiState.value
+        assertTrue(state.showTemplateSelector)
+        assertEquals(2, state.availableTemplates.size)
+    }
+
+    // ========================================
+    // T031: Transaction submission success tests
+    // ========================================
+
+    @Test
+    fun `submit calls transactionSender with correct parameters`() = runTest {
+        // Given
+        val profile = createTestProfile()
+        viewModel = createViewModelWithProfile(profile)
+        advanceUntilIdle()
+
+        val row1Id = viewModel.uiState.value.accounts[0].id
+        val row2Id = viewModel.uiState.value.accounts[1].id
+
+        viewModel.onEvent(NewTransactionEvent.UpdateDescription("Test transaction"))
+        viewModel.onEvent(NewTransactionEvent.UpdateAccountName(row1Id, "Assets:Bank"))
+        viewModel.onEvent(NewTransactionEvent.UpdateAmount(row1Id, "100.00"))
+        viewModel.onEvent(NewTransactionEvent.UpdateAccountName(row2Id, "Expenses:Food"))
+        advanceUntilIdle()
+
+        // When
+        viewModel.onEvent(NewTransactionEvent.Submit)
+        advanceUntilIdle()
+
+        // Then
+        assertEquals(1, transactionSender.sentTransactions.size)
+        val sent = transactionSender.sentTransactions[0]
+        assertEquals(profile.id, sent.profile.id)
+        assertEquals("Test transaction", sent.transaction.description)
+        assertFalse(sent.simulate)
+    }
+
+    @Test
+    fun `submit with simulate flag calls transactionSender with simulate true`() = runTest {
+        // Given
+        val profile = createTestProfile()
+        viewModel = createViewModelWithProfile(profile)
+        advanceUntilIdle()
+
+        val row1Id = viewModel.uiState.value.accounts[0].id
+        val row2Id = viewModel.uiState.value.accounts[1].id
+
+        viewModel.onEvent(NewTransactionEvent.UpdateDescription("Test transaction"))
+        viewModel.onEvent(NewTransactionEvent.UpdateAccountName(row1Id, "Assets:Bank"))
+        viewModel.onEvent(NewTransactionEvent.UpdateAmount(row1Id, "100.00"))
+        viewModel.onEvent(NewTransactionEvent.UpdateAccountName(row2Id, "Expenses:Food"))
+        viewModel.onEvent(NewTransactionEvent.ToggleSimulateSave)
+        advanceUntilIdle()
+
+        // When
+        viewModel.onEvent(NewTransactionEvent.Submit)
+        advanceUntilIdle()
+
+        // Then
+        assertTrue(transactionSender.sentTransactions[0].simulate)
+    }
+
+    @Test
+    fun `successful submit saves transaction to repository`() = runTest {
+        // Given
+        val profile = createTestProfile()
+        viewModel = createViewModelWithProfile(profile)
+        advanceUntilIdle()
+
+        val row1Id = viewModel.uiState.value.accounts[0].id
+        val row2Id = viewModel.uiState.value.accounts[1].id
+
+        viewModel.onEvent(NewTransactionEvent.UpdateDescription("Test transaction"))
+        viewModel.onEvent(NewTransactionEvent.UpdateAccountName(row1Id, "Assets:Bank"))
+        viewModel.onEvent(NewTransactionEvent.UpdateAmount(row1Id, "100.00"))
+        viewModel.onEvent(NewTransactionEvent.UpdateAccountName(row2Id, "Expenses:Food"))
+        advanceUntilIdle()
+
+        // When
+        viewModel.onEvent(NewTransactionEvent.Submit)
+        advanceUntilIdle()
+
+        // Then - Check transaction was stored
+        val storedTransactions = transactionRepository.getTransactionsForProfile(profile.id)
+        assertEquals(1, storedTransactions.size)
+        assertEquals("Test transaction", storedTransactions[0].transaction.description)
+    }
+
+    @Test
+    fun `successful submit resets form`() = runTest {
+        // Given
+        val profile = createTestProfile()
+        viewModel = createViewModelWithProfile(profile)
+        advanceUntilIdle()
+
+        val row1Id = viewModel.uiState.value.accounts[0].id
+        val row2Id = viewModel.uiState.value.accounts[1].id
+
+        viewModel.onEvent(NewTransactionEvent.UpdateDescription("Test transaction"))
+        viewModel.onEvent(NewTransactionEvent.UpdateAccountName(row1Id, "Assets:Bank"))
+        viewModel.onEvent(NewTransactionEvent.UpdateAmount(row1Id, "100.00"))
+        viewModel.onEvent(NewTransactionEvent.UpdateAccountName(row2Id, "Expenses:Food"))
+        advanceUntilIdle()
+
+        // When
+        viewModel.onEvent(NewTransactionEvent.Submit)
+        advanceUntilIdle()
+
+        // Then - Form should be reset
+        val state = viewModel.uiState.value
+        assertEquals("", state.description)
+        assertTrue(state.accounts.all { it.accountName.isBlank() && it.amountText.isBlank() })
+        assertFalse(state.isSubmitting)
+    }
+
+    @Test
+    fun `successful submit signals data changed`() = runTest {
+        // Given
+        val profile = createTestProfile()
+        viewModel = createViewModelWithProfile(profile)
+        advanceUntilIdle()
+
+        val initialVersion = appStateService.dataVersion.first()
+
+        val row1Id = viewModel.uiState.value.accounts[0].id
+        val row2Id = viewModel.uiState.value.accounts[1].id
+
+        viewModel.onEvent(NewTransactionEvent.UpdateDescription("Test transaction"))
+        viewModel.onEvent(NewTransactionEvent.UpdateAccountName(row1Id, "Assets:Bank"))
+        viewModel.onEvent(NewTransactionEvent.UpdateAmount(row1Id, "100.00"))
+        viewModel.onEvent(NewTransactionEvent.UpdateAccountName(row2Id, "Expenses:Food"))
+        advanceUntilIdle()
+
+        // When
+        viewModel.onEvent(NewTransactionEvent.Submit)
+        advanceUntilIdle()
+
+        // Then
+        assertTrue(appStateService.dataVersion.first() > initialVersion)
+    }
+
+    // ========================================
+    // T032: Transaction submission failure tests
+    // ========================================
+
+    @Test
+    fun `failed submit sets error in ui state`() = runTest {
+        // Given
+        val profile = createTestProfile()
+        viewModel = createViewModelWithProfile(profile)
+        advanceUntilIdle()
+
+        transactionSender.shouldSucceed = false
+        transactionSender.errorMessage = "Network error"
+
+        val row1Id = viewModel.uiState.value.accounts[0].id
+        val row2Id = viewModel.uiState.value.accounts[1].id
+
+        viewModel.onEvent(NewTransactionEvent.UpdateDescription("Test transaction"))
+        viewModel.onEvent(NewTransactionEvent.UpdateAccountName(row1Id, "Assets:Bank"))
+        viewModel.onEvent(NewTransactionEvent.UpdateAmount(row1Id, "100.00"))
+        viewModel.onEvent(NewTransactionEvent.UpdateAccountName(row2Id, "Expenses:Food"))
+        advanceUntilIdle()
+
+        // When
+        viewModel.onEvent(NewTransactionEvent.Submit)
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.uiState.value
+        assertEquals("Network error", state.submitError)
+        assertFalse(state.isSubmitting)
+    }
+
+    @Test
+    fun `failed submit does not reset form`() = runTest {
+        // Given
+        val profile = createTestProfile()
+        viewModel = createViewModelWithProfile(profile)
+        advanceUntilIdle()
+
+        transactionSender.shouldSucceed = false
+
+        val row1Id = viewModel.uiState.value.accounts[0].id
+        val row2Id = viewModel.uiState.value.accounts[1].id
+
+        viewModel.onEvent(NewTransactionEvent.UpdateDescription("Test transaction"))
+        viewModel.onEvent(NewTransactionEvent.UpdateAccountName(row1Id, "Assets:Bank"))
+        viewModel.onEvent(NewTransactionEvent.UpdateAmount(row1Id, "100.00"))
+        viewModel.onEvent(NewTransactionEvent.UpdateAccountName(row2Id, "Expenses:Food"))
+        advanceUntilIdle()
+
+        // When
+        viewModel.onEvent(NewTransactionEvent.Submit)
+        advanceUntilIdle()
+
+        // Then - Form should NOT be reset
+        val state = viewModel.uiState.value
+        assertEquals("Test transaction", state.description)
+        assertEquals("Assets:Bank", state.accounts[0].accountName)
+    }
+
+    @Test
+    fun `failed submit does not save to repository`() = runTest {
+        // Given
+        val profile = createTestProfile()
+        viewModel = createViewModelWithProfile(profile)
+        advanceUntilIdle()
+
+        transactionSender.shouldSucceed = false
+
+        val row1Id = viewModel.uiState.value.accounts[0].id
+        val row2Id = viewModel.uiState.value.accounts[1].id
+
+        viewModel.onEvent(NewTransactionEvent.UpdateDescription("Test transaction"))
+        viewModel.onEvent(NewTransactionEvent.UpdateAccountName(row1Id, "Assets:Bank"))
+        viewModel.onEvent(NewTransactionEvent.UpdateAmount(row1Id, "100.00"))
+        viewModel.onEvent(NewTransactionEvent.UpdateAccountName(row2Id, "Expenses:Food"))
+        advanceUntilIdle()
+
+        // When
+        viewModel.onEvent(NewTransactionEvent.Submit)
+        advanceUntilIdle()
+
+        // Then
+        val storedTransactions = transactionRepository.getTransactionsForProfile(profile.id)
+        assertTrue(storedTransactions.isEmpty())
+    }
+
+    // ========================================
+    // T033: Form validation tests
+    // ========================================
+
+    @Test
+    fun `isSubmittable false when description is empty`() = runTest {
+        // Given
+        val profile = createTestProfile()
+        viewModel = createViewModelWithProfile(profile)
+        advanceUntilIdle()
+
+        val row1Id = viewModel.uiState.value.accounts[0].id
+        val row2Id = viewModel.uiState.value.accounts[1].id
+
+        viewModel.onEvent(NewTransactionEvent.UpdateAccountName(row1Id, "Assets:Bank"))
+        viewModel.onEvent(NewTransactionEvent.UpdateAmount(row1Id, "100.00"))
+        viewModel.onEvent(NewTransactionEvent.UpdateAccountName(row2Id, "Expenses:Food"))
+        advanceUntilIdle()
+
+        // Then - No description, should not be submittable
+        assertFalse(viewModel.uiState.value.isSubmittable)
+    }
+
+    @Test
+    fun `isSubmittable false when less than two accounts`() = runTest {
+        // Given
+        val profile = createTestProfile()
+        viewModel = createViewModelWithProfile(profile)
+        advanceUntilIdle()
+
+        val row1Id = viewModel.uiState.value.accounts[0].id
+
+        viewModel.onEvent(NewTransactionEvent.UpdateDescription("Test"))
+        viewModel.onEvent(NewTransactionEvent.UpdateAccountName(row1Id, "Assets:Bank"))
+        viewModel.onEvent(NewTransactionEvent.UpdateAmount(row1Id, "100.00"))
+        advanceUntilIdle()
+
+        // Then - Only one account, should not be submittable
+        assertFalse(viewModel.uiState.value.isSubmittable)
+    }
+
+    @Test
+    fun `isSubmittable true when form is valid with balanced amounts`() = runTest {
+        // Given
+        val profile = createTestProfile()
+        viewModel = createViewModelWithProfile(profile)
+        advanceUntilIdle()
+
+        val row1Id = viewModel.uiState.value.accounts[0].id
+        val row2Id = viewModel.uiState.value.accounts[1].id
+
+        viewModel.onEvent(NewTransactionEvent.UpdateDescription("Test"))
+        viewModel.onEvent(NewTransactionEvent.UpdateAccountName(row1Id, "Assets:Bank"))
+        viewModel.onEvent(NewTransactionEvent.UpdateAmount(row1Id, "100.00"))
+        viewModel.onEvent(NewTransactionEvent.UpdateAccountName(row2Id, "Expenses:Food"))
+        viewModel.onEvent(NewTransactionEvent.UpdateAmount(row2Id, "-100.00"))
+        advanceUntilIdle()
+
+        // Then
+        assertTrue(viewModel.uiState.value.isSubmittable)
+    }
+
+    @Test
+    fun `isSubmittable true when one account has empty amount for balance`() = runTest {
+        // Given
+        val profile = createTestProfile()
+        viewModel = createViewModelWithProfile(profile)
+        advanceUntilIdle()
+
+        val row1Id = viewModel.uiState.value.accounts[0].id
+        val row2Id = viewModel.uiState.value.accounts[1].id
+
+        viewModel.onEvent(NewTransactionEvent.UpdateDescription("Test"))
+        viewModel.onEvent(NewTransactionEvent.UpdateAccountName(row1Id, "Assets:Bank"))
+        viewModel.onEvent(NewTransactionEvent.UpdateAmount(row1Id, "100.00"))
+        viewModel.onEvent(NewTransactionEvent.UpdateAccountName(row2Id, "Expenses:Food"))
+        // No amount on row2 - should be balance receiver
+        advanceUntilIdle()
+
+        // Then
+        assertTrue(viewModel.uiState.value.isSubmittable)
+    }
+
+    @Test
+    fun `isSubmittable false when amounts do not balance and multiple empty`() = runTest {
+        // Given
+        val profile = createTestProfile()
+        viewModel = createViewModelWithProfile(profile)
+        advanceUntilIdle()
+
+        viewModel.onEvent(NewTransactionEvent.AddAccountRow(null))
+        advanceUntilIdle()
+
+        val row1Id = viewModel.uiState.value.accounts[0].id
+        val row2Id = viewModel.uiState.value.accounts[1].id
+        val row3Id = viewModel.uiState.value.accounts[2].id
+
+        viewModel.onEvent(NewTransactionEvent.UpdateDescription("Test"))
+        viewModel.onEvent(NewTransactionEvent.UpdateAccountName(row1Id, "Assets:Bank"))
+        viewModel.onEvent(NewTransactionEvent.UpdateAmount(row1Id, "100.00"))
+        viewModel.onEvent(NewTransactionEvent.UpdateAccountName(row2Id, "Expenses:Food"))
+        // No amount on row2
+        viewModel.onEvent(NewTransactionEvent.UpdateAccountName(row3Id, "Expenses:Drinks"))
+        // No amount on row3 - two empty amounts, can't determine which gets balance
+        advanceUntilIdle()
+
+        // Then
+        assertFalse(viewModel.uiState.value.isSubmittable)
+    }
+
+    @Test
+    fun `submit does nothing when form is not submittable`() = runTest {
+        // Given
+        val profile = createTestProfile()
+        viewModel = createViewModelWithProfile(profile)
+        advanceUntilIdle()
+
+        // Empty form, not submittable
+        assertFalse(viewModel.uiState.value.isSubmittable)
+
+        // When
+        viewModel.onEvent(NewTransactionEvent.Submit)
+        advanceUntilIdle()
+
+        // Then - No transaction sent
+        assertTrue(transactionSender.sentTransactions.isEmpty())
+    }
+
+    // ========================================
+    // T034: Account search suggestion tests
+    // ========================================
+
+    @Test
+    fun `account name input triggers suggestions lookup`() = runTest {
+        // Given
+        val profile = createTestProfile()
+        viewModel = createViewModelWithProfile(profile)
+        advanceUntilIdle()
+
+        accountRepository.addAccount(profile.id, "Assets:Bank:Checking")
+        accountRepository.addAccount(profile.id, "Assets:Bank:Savings")
+        accountRepository.addAccount(profile.id, "Expenses:Food")
+
+        val rowId = viewModel.uiState.value.accounts[0].id
+
+        // When - Type enough characters to trigger suggestion
+        viewModel.onEvent(NewTransactionEvent.UpdateAccountName(rowId, "Assets:Bank"))
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.uiState.value
+        assertTrue(state.accountSuggestions.isNotEmpty())
+        assertTrue(state.accountSuggestions.any { it.contains("Checking") })
+        assertTrue(state.accountSuggestions.any { it.contains("Savings") })
+        assertEquals(rowId, state.accountSuggestionsForRowId)
+    }
+
+    @Test
+    fun `short input clears suggestions`() = runTest {
+        // Given
+        val profile = createTestProfile()
+        viewModel = createViewModelWithProfile(profile)
+        advanceUntilIdle()
+
+        accountRepository.addAccount(profile.id, "Assets:Bank")
+        val rowId = viewModel.uiState.value.accounts[0].id
+
+        // First, trigger suggestions
+        viewModel.onEvent(NewTransactionEvent.UpdateAccountName(rowId, "Assets"))
+        advanceUntilIdle()
+        assertTrue(viewModel.uiState.value.accountSuggestions.isNotEmpty())
+
+        // When - Type short input
+        viewModel.onEvent(NewTransactionEvent.UpdateAccountName(rowId, "A"))
+        advanceUntilIdle()
+
+        // Then - Suggestions should be cleared
+        assertTrue(viewModel.uiState.value.accountSuggestions.isEmpty())
+    }
+
+    @Test
+    fun `description input triggers description suggestions`() = runTest {
+        // Given
+        val profile = createTestProfile()
+        viewModel = createViewModelWithProfile(profile)
+        advanceUntilIdle()
+
+        // Add some transactions with descriptions
+        val twa = net.ktnx.mobileledger.db.TransactionWithAccounts().apply {
+            transaction = net.ktnx.mobileledger.db.Transaction().apply {
+                this.id = 1L
+                this.profileId = profile.id
+                this.description = "Grocery Store"
+            }
+            accounts = emptyList()
+        }
+        transactionRepository.insertTransaction(twa)
+
+        // When
+        viewModel.onEvent(NewTransactionEvent.UpdateDescription("Groc"))
+        advanceUntilIdle()
+
+        // Then
+        assertTrue(viewModel.uiState.value.descriptionSuggestions.isNotEmpty())
+        assertTrue(viewModel.uiState.value.descriptionSuggestions.any { it.contains("Grocery") })
+    }
+
+    // ========================================
+    // Additional edge case tests
+    // ========================================
+
+    @Test
+    fun `adding account row maintains minimum rows`() = runTest {
+        // Given
+        val profile = createTestProfile()
+        viewModel = createViewModelWithProfile(profile)
+        advanceUntilIdle()
+
+        val initialCount = viewModel.uiState.value.accounts.size
+
+        // When
+        viewModel.onEvent(NewTransactionEvent.AddAccountRow(null))
+        advanceUntilIdle()
+
+        // Then
+        assertEquals(initialCount + 1, viewModel.uiState.value.accounts.size)
+    }
+
+    @Test
+    fun `removing account row maintains minimum two rows`() = runTest {
+        // Given
+        val profile = createTestProfile()
+        viewModel = createViewModelWithProfile(profile)
+        advanceUntilIdle()
+
+        // Start with exactly 2 rows
+        assertEquals(2, viewModel.uiState.value.accounts.size)
+        val rowId = viewModel.uiState.value.accounts[0].id
+
+        // When - Try to remove a row
+        viewModel.onEvent(NewTransactionEvent.RemoveAccountRow(rowId))
+        advanceUntilIdle()
+
+        // Then - Should still have 2 rows
+        assertEquals(2, viewModel.uiState.value.accounts.size)
+    }
+
+    @Test
+    fun `reset clears all form data`() = runTest {
+        // Given
+        val profile = createTestProfile()
+        viewModel = createViewModelWithProfile(profile)
+        advanceUntilIdle()
+
+        val row1Id = viewModel.uiState.value.accounts[0].id
+
+        viewModel.onEvent(NewTransactionEvent.UpdateDescription("Test"))
+        viewModel.onEvent(NewTransactionEvent.UpdateAccountName(row1Id, "Assets:Bank"))
+        advanceUntilIdle()
+
+        // When
+        viewModel.onEvent(NewTransactionEvent.Reset)
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.uiState.value
+        assertEquals("", state.description)
+        assertTrue(state.accounts.all { it.accountName.isBlank() })
+    }
+
+    @Test
+    fun `clearError removes submit error`() = runTest {
+        // Given
+        val profile = createTestProfile()
+        viewModel = createViewModelWithProfile(profile)
+        advanceUntilIdle()
+
+        transactionSender.shouldSucceed = false
+        transactionSender.errorMessage = "Test error"
+
+        val row1Id = viewModel.uiState.value.accounts[0].id
+        val row2Id = viewModel.uiState.value.accounts[1].id
+
+        viewModel.onEvent(NewTransactionEvent.UpdateDescription("Test"))
+        viewModel.onEvent(NewTransactionEvent.UpdateAccountName(row1Id, "Assets:Bank"))
+        viewModel.onEvent(NewTransactionEvent.UpdateAmount(row1Id, "100.00"))
+        viewModel.onEvent(NewTransactionEvent.UpdateAccountName(row2Id, "Expenses:Food"))
+        advanceUntilIdle()
+
+        viewModel.onEvent(NewTransactionEvent.Submit)
+        advanceUntilIdle()
+        assertNotNull(viewModel.uiState.value.submitError)
+
+        // When
+        viewModel.onEvent(NewTransactionEvent.ClearError)
+        advanceUntilIdle()
+
+        // Then
+        assertEquals(null, viewModel.uiState.value.submitError)
     }
 }
