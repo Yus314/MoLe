@@ -61,13 +61,13 @@ class BackupsActivity : ComponentActivity() {
         backupChooserLauncher = registerForActivityResult(
             ActivityResultContracts.CreateDocument("application/json")
         ) { uri ->
-            uri?.let { viewModel.performBackup(baseContext, it) }
+            uri?.let { viewModel.performBackup(it) }
         }
 
         restoreChooserLauncher = registerForActivityResult(
             ActivityResultContracts.OpenDocument()
         ) { uri ->
-            uri?.let { viewModel.performRestore(baseContext, it) }
+            uri?.let { viewModel.performRestore(it) }
         }
 
         // Observe profile changes for backup button state

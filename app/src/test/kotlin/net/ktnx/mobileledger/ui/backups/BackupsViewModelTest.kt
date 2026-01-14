@@ -17,18 +17,25 @@
 
 package net.ktnx.mobileledger.ui.backups
 
+import android.net.Uri
+import io.mockk.mockk
+import java.io.FileNotFoundException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import net.ktnx.mobileledger.R
 import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.db.Profile
+import net.ktnx.mobileledger.fake.FakeConfigBackup
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -39,24 +46,30 @@ import org.junit.Before
 import org.junit.Test
 
 /**
- * Unit tests for BackupsViewModel repository interactions.
+ * Unit tests for BackupsViewModel.
  *
- * These tests verify that BackupsViewModel correctly uses ProfileRepository
- * to determine backup availability (based on current profile).
- *
- * Note: Backup/restore operations require Android Context and are tested
- * in instrumentation tests.
+ * Tests cover:
+ * - ProfileRepository interactions for backup availability
+ * - Backup/restore operations using FakeConfigBackup
+ * - Error handling for backup/restore failures
+ * - UI state transitions during backup/restore
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class BackupsViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var profileRepository: FakeProfileRepositoryForBackups
+    private lateinit var fakeConfigBackup: FakeConfigBackup
+    private lateinit var viewModel: BackupsViewModel
+    private lateinit var testUri: Uri
 
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         profileRepository = FakeProfileRepositoryForBackups()
+        fakeConfigBackup = FakeConfigBackup()
+        viewModel = BackupsViewModel(profileRepository, fakeConfigBackup)
+        testUri = mockk(relaxed = true)
     }
 
     @After
@@ -77,7 +90,7 @@ class BackupsViewModelTest {
     }
 
     // ========================================
-    // currentProfile availability tests
+    // ProfileRepository tests (existing)
     // ========================================
 
     @Test
@@ -88,11 +101,9 @@ class BackupsViewModelTest {
 
     @Test
     fun `backup availability depends on currentProfile`() = runTest {
-        // Initially no profile selected - backup should be disabled
         val hasProfileInitially = profileRepository.currentProfile.value != null
         assertFalse(hasProfileInitially)
 
-        // Select a profile - backup should be enabled
         val profile = createTestProfile()
         profileRepository.setCurrentProfile(profile)
 
@@ -122,10 +133,6 @@ class BackupsViewModelTest {
         assertNull(profileRepository.currentProfile.value)
     }
 
-    // ========================================
-    // Profile count tests (for restore validation)
-    // ========================================
-
     @Test
     fun `getProfileCount returns zero when no profiles`() = runTest {
         val count = profileRepository.getProfileCount()
@@ -151,6 +158,155 @@ class BackupsViewModelTest {
 
         assertEquals(0, profileRepository.getProfileCount())
         assertNull(profileRepository.currentProfile.value)
+    }
+
+    // ========================================
+    // T059: BackupsViewModel tests with FakeConfigBackup
+    // ========================================
+
+    @Test
+    fun `performBackup success updates UI state and sends effect`() = runTest {
+        // Given
+        fakeConfigBackup.shouldSucceed = true
+
+        // When
+        viewModel.performBackup(testUri)
+        advanceUntilIdle()
+
+        // Then
+        assertFalse("isBackingUp should be false after completion", viewModel.uiState.value.isBackingUp)
+        assertEquals(1, fakeConfigBackup.backupCallCount)
+        assertEquals(testUri, fakeConfigBackup.lastBackupUri)
+
+        // Check effect
+        val effect = viewModel.effects.first()
+        assertTrue("Effect should be ShowSnackbar", effect is BackupsEffect.ShowSnackbar)
+        val message = (effect as BackupsEffect.ShowSnackbar).message
+        assertTrue("Message should be Success", message is BackupsMessage.Success)
+        assertEquals(R.string.config_saved, (message as BackupsMessage.Success).messageResId)
+    }
+
+    @Test
+    fun `performBackup failure updates UI state and sends error effect`() = runTest {
+        // Given
+        fakeConfigBackup.shouldSucceed = false
+        fakeConfigBackup.backupError = FileNotFoundException("Cannot create file")
+
+        // When
+        viewModel.performBackup(testUri)
+        advanceUntilIdle()
+
+        // Then
+        assertFalse("isBackingUp should be false after failure", viewModel.uiState.value.isBackingUp)
+        assertEquals(1, fakeConfigBackup.backupCallCount)
+
+        // Check error effect
+        val effect = viewModel.effects.first()
+        assertTrue("Effect should be ShowSnackbar", effect is BackupsEffect.ShowSnackbar)
+        val message = (effect as BackupsEffect.ShowSnackbar).message
+        assertTrue("Message should be Error", message is BackupsMessage.Error)
+        assertTrue(
+            "Error message should contain exception info",
+            (message as BackupsMessage.Error).message.contains("Cannot create file")
+        )
+    }
+
+    @Test
+    fun `performRestore success updates UI state and sends effect`() = runTest {
+        // Given
+        fakeConfigBackup.shouldSucceed = true
+
+        // When
+        viewModel.performRestore(testUri)
+        advanceUntilIdle()
+
+        // Then
+        assertFalse("isRestoring should be false after completion", viewModel.uiState.value.isRestoring)
+        assertEquals(1, fakeConfigBackup.restoreCallCount)
+        assertEquals(testUri, fakeConfigBackup.lastRestoreUri)
+
+        // Check effect
+        val effect = viewModel.effects.first()
+        assertTrue("Effect should be ShowSnackbar", effect is BackupsEffect.ShowSnackbar)
+        val message = (effect as BackupsEffect.ShowSnackbar).message
+        assertTrue("Message should be Success", message is BackupsMessage.Success)
+        assertEquals(R.string.config_restored, (message as BackupsMessage.Success).messageResId)
+    }
+
+    @Test
+    fun `performRestore failure updates UI state and sends error effect`() = runTest {
+        // Given
+        fakeConfigBackup.shouldSucceed = false
+        fakeConfigBackup.restoreError = IllegalArgumentException("Invalid JSON format")
+
+        // When
+        viewModel.performRestore(testUri)
+        advanceUntilIdle()
+
+        // Then
+        assertFalse("isRestoring should be false after failure", viewModel.uiState.value.isRestoring)
+        assertEquals(1, fakeConfigBackup.restoreCallCount)
+
+        // Check error effect
+        val effect = viewModel.effects.first()
+        assertTrue("Effect should be ShowSnackbar", effect is BackupsEffect.ShowSnackbar)
+        val message = (effect as BackupsEffect.ShowSnackbar).message
+        assertTrue("Message should be Error", message is BackupsMessage.Error)
+        assertTrue(
+            "Error message should contain exception info",
+            (message as BackupsMessage.Error).message.contains("Invalid JSON format")
+        )
+    }
+
+    @Test
+    fun `isBackingUp is true during backup operation`() = runTest {
+        // Given
+        fakeConfigBackup.shouldSucceed = true
+
+        // When
+        viewModel.performBackup(testUri)
+
+        // Then - check state immediately before advanceUntilIdle
+        assertTrue("isBackingUp should be true during operation", viewModel.uiState.value.isBackingUp)
+
+        advanceUntilIdle()
+        assertFalse("isBackingUp should be false after completion", viewModel.uiState.value.isBackingUp)
+    }
+
+    @Test
+    fun `isRestoring is true during restore operation`() = runTest {
+        // Given
+        fakeConfigBackup.shouldSucceed = true
+
+        // When
+        viewModel.performRestore(testUri)
+
+        // Then - check state immediately before advanceUntilIdle
+        assertTrue("isRestoring should be true during operation", viewModel.uiState.value.isRestoring)
+
+        advanceUntilIdle()
+        assertFalse("isRestoring should be false after completion", viewModel.uiState.value.isRestoring)
+    }
+
+    @Test
+    fun `backup enabled state updates when profile changes`() = runTest {
+        // Given - no profile
+        assertFalse("backupEnabled should be false initially", viewModel.uiState.value.backupEnabled)
+
+        // When - set a profile
+        val profile = createTestProfile()
+        profileRepository.setCurrentProfile(profile)
+        viewModel.updateBackupEnabled(true)
+
+        // Then
+        assertTrue("backupEnabled should be true with profile", viewModel.uiState.value.backupEnabled)
+
+        // When - clear profile
+        profileRepository.setCurrentProfile(null)
+        viewModel.updateBackupEnabled(false)
+
+        // Then
+        assertFalse("backupEnabled should be false without profile", viewModel.uiState.value.backupEnabled)
     }
 }
 
