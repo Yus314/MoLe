@@ -24,6 +24,8 @@ import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 import net.ktnx.mobileledger.domain.usecase.TransactionSender
 import net.ktnx.mobileledger.domain.usecase.TransactionSenderImpl
+import net.ktnx.mobileledger.domain.usecase.TransactionSyncer
+import net.ktnx.mobileledger.domain.usecase.TransactionSyncerImpl
 
 /**
  * Hilt module for providing use case dependencies.
@@ -37,4 +39,8 @@ abstract class UseCaseModule {
     @Binds
     @Singleton
     abstract fun bindTransactionSender(impl: TransactionSenderImpl): TransactionSender
+
+    @Binds
+    @Singleton
+    abstract fun bindTransactionSyncer(impl: TransactionSyncerImpl): TransactionSyncer
 }
