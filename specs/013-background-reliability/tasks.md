@@ -50,7 +50,7 @@
 - [X] T013 [P] Create FakeConfigBackup in app/src/test/kotlin/net/ktnx/mobileledger/fake/FakeConfigBackup.kt
 - [X] T014 [P] Create FakeVersionDetector in app/src/test/kotlin/net/ktnx/mobileledger/fake/FakeVersionDetector.kt
 - [X] T015 [P] Create FakeDatabaseInitializer in app/src/test/kotlin/net/ktnx/mobileledger/fake/FakeDatabaseInitializer.kt
-- [ ] T016 Extend UseCaseModule with new interface bindings in app/src/main/kotlin/net/ktnx/mobileledger/di/UseCaseModule.kt
+- [X] T016 Extend UseCaseModule with new interface bindings in app/src/main/kotlin/net/ktnx/mobileledger/di/UseCaseModule.kt (TransactionSyncer binding added in T025; other bindings added in T057, T066, T075)
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -170,12 +170,12 @@
 
 ### Implementation for User Story 5
 
-- [ ] T054 [US5] Create ConfigBackupImpl wrapping ConfigIO in app/src/main/kotlin/net/ktnx/mobileledger/domain/usecase/ConfigBackupImpl.kt
-- [ ] T055 [US5] Implement backup() with suspendCancellableCoroutine in ConfigBackupImpl.kt
-- [ ] T056 [US5] Implement restore() with suspendCancellableCoroutine in ConfigBackupImpl.kt
-- [ ] T057 [US5] Add @Binds for ConfigBackup in UseCaseModule.kt
-- [ ] T058 [US5] Update BackupsViewModel to inject ConfigBackup in app/src/main/kotlin/net/ktnx/mobileledger/ui/backups/BackupsViewModel.kt
-- [ ] T059 [US5] Add BackupsViewModel tests using FakeConfigBackup in app/src/test/kotlin/net/ktnx/mobileledger/ui/backups/BackupsViewModelTest.kt
+- [X] T054 [US5] Create ConfigBackupImpl wrapping ConfigIO in app/src/main/kotlin/net/ktnx/mobileledger/domain/usecase/ConfigBackupImpl.kt
+- [X] T055 [US5] Implement backup() with suspendCancellableCoroutine in ConfigBackupImpl.kt
+- [X] T056 [US5] Implement restore() with suspendCancellableCoroutine in ConfigBackupImpl.kt
+- [X] T057 [US5] Add @Binds for ConfigBackup in UseCaseModule.kt
+- [X] T058 [US5] Update BackupsViewModel to inject ConfigBackup in app/src/main/kotlin/net/ktnx/mobileledger/ui/backups/BackupsViewModel.kt
+- [X] T059 [US5] Add BackupsViewModel tests using FakeConfigBackup in app/src/test/kotlin/net/ktnx/mobileledger/ui/backups/BackupsViewModelTest.kt
 
 **Checkpoint**: ConfigBackup が DI 経由で利用可能。BackupsViewModel のテストが可能。
 
@@ -189,19 +189,19 @@
 
 ### Tests for User Story 6
 
-- [ ] T060 [P] [US6] Create DatabaseInitializerImplTest in app/src/test/kotlin/net/ktnx/mobileledger/domain/usecase/DatabaseInitializerImplTest.kt
-- [ ] T061 [P] [US6] Add initialization success test case (hasProfiles=true) in DatabaseInitializerImplTest.kt
-- [ ] T062 [P] [US6] Add initialization success test case (hasProfiles=false) in DatabaseInitializerImplTest.kt
-- [ ] T063 [P] [US6] Add initialization failure test case in DatabaseInitializerImplTest.kt
+- [X] T060 [P] [US6] Create DatabaseInitializerImplTest in app/src/test/kotlin/net/ktnx/mobileledger/domain/usecase/DatabaseInitializerImplTest.kt
+- [X] T061 [P] [US6] Add initialization success test case (hasProfiles=true) in DatabaseInitializerImplTest.kt
+- [X] T062 [P] [US6] Add initialization success test case (hasProfiles=false) in DatabaseInitializerImplTest.kt
+- [X] T063 [P] [US6] Add initialization failure test case in DatabaseInitializerImplTest.kt
 
 ### Implementation for User Story 6
 
-- [ ] T064 [US6] Create DatabaseInitializerImpl in app/src/main/kotlin/net/ktnx/mobileledger/domain/usecase/DatabaseInitializerImpl.kt
-- [ ] T065 [US6] Implement initialize() with Room DB access in DatabaseInitializerImpl.kt
-- [ ] T066 [US6] Add @Binds for DatabaseInitializer in UseCaseModule.kt
-- [ ] T067 [US6] Create SplashViewModel with DatabaseInitializer injection in app/src/main/kotlin/net/ktnx/mobileledger/ui/splash/SplashViewModel.kt
-- [ ] T068 [US6] Update SplashActivity to use SplashViewModel in app/src/main/kotlin/net/ktnx/mobileledger/ui/activity/SplashActivity.kt
-- [ ] T069 [US6] Add SplashViewModel tests using FakeDatabaseInitializer in app/src/test/kotlin/net/ktnx/mobileledger/ui/splash/SplashViewModelTest.kt
+- [X] T064 [US6] Create DatabaseInitializerImpl in app/src/main/kotlin/net/ktnx/mobileledger/domain/usecase/DatabaseInitializerImpl.kt
+- [X] T065 [US6] Implement initialize() with Room DB access in DatabaseInitializerImpl.kt
+- [X] T066 [US6] Add @Binds for DatabaseInitializer in UseCaseModule.kt
+- [X] T067 [US6] Create SplashViewModel with DatabaseInitializer injection in app/src/main/kotlin/net/ktnx/mobileledger/ui/splash/SplashViewModel.kt
+- [X] T068 [US6] Update SplashActivity to use SplashViewModel in app/src/main/kotlin/net/ktnx/mobileledger/ui/activity/SplashActivity.kt
+- [X] T069 [US6] Add SplashViewModel tests using FakeDatabaseInitializer in app/src/test/kotlin/net/ktnx/mobileledger/ui/splash/SplashViewModelTest.kt
 
 **Checkpoint**: DatabaseInitializer が DI 経由で利用可能。SplashActivity が構造化並行性で初期化待ち。
 
@@ -213,16 +213,16 @@
 
 ### Tests for VersionDetector
 
-- [ ] T070 [P] Create VersionDetectorImplTest in app/src/test/kotlin/net/ktnx/mobileledger/domain/usecase/VersionDetectorImplTest.kt
-- [ ] T071 [P] Add version detection success test case in VersionDetectorImplTest.kt
-- [ ] T072 [P] Add version detection failure test cases in VersionDetectorImplTest.kt
+- [X] T070 [P] Create VersionDetectorImplTest in app/src/test/kotlin/net/ktnx/mobileledger/domain/usecase/VersionDetectorImplTest.kt
+- [X] T071 [P] Add version detection success test case in VersionDetectorImplTest.kt
+- [X] T072 [P] Add version detection failure test cases in VersionDetectorImplTest.kt
 
 ### Implementation for VersionDetector
 
-- [ ] T073 Create VersionDetectorImpl in app/src/main/kotlin/net/ktnx/mobileledger/domain/usecase/VersionDetectorImpl.kt
-- [ ] T074 Implement detect() with HttpURLConnection in VersionDetectorImpl.kt
-- [ ] T075 Add @Binds for VersionDetector in UseCaseModule.kt
-- [ ] T076 Update ProfileDetailViewModel to use VersionDetector (if applicable)
+- [X] T073 Create VersionDetectorImpl in app/src/main/kotlin/net/ktnx/mobileledger/domain/usecase/VersionDetectorImpl.kt
+- [X] T074 Implement detect() with HttpURLConnection in VersionDetectorImpl.kt
+- [X] T075 Add @Binds for VersionDetector in UseCaseModule.kt
+- [X] T076 (DEFERRED: ProfileDetailModel uses LiveData, not HiltViewModel - migration out of scope) Update ProfileDetailViewModel to use VersionDetector (if applicable)
 
 **Checkpoint**: VersionDetector が DI 経由で利用可能。
 
@@ -232,13 +232,13 @@
 
 **Purpose**: ドキュメント更新とカバレッジ確認
 
-- [ ] T077 [P] Update CLAUDE.md with new usecase interfaces and patterns
-- [ ] T078 [P] Run Kover coverage report and verify 50% coverage target (SC-004)
-- [ ] T079 Run full test suite with `nix run .#test` and verify all tests pass
-- [ ] T080 Run quickstart.md validation (実機でのビルド・インストール確認)
-- [ ] T081 Code cleanup: Remove deprecated thread-based code comments
-- [ ] T082 [P] Verify BackgroundTaskManager interface compatibility with new TransactionSyncer implementation (FR-016)
-- [ ] T083 [P] Verify AppStateService interface compatibility with new implementations (FR-017)
+- [x] T077 [P] Update CLAUDE.md with new usecase interfaces and patterns
+- [x] T078 [P] Run Kover coverage report and verify 50% coverage target (SC-004)
+- [x] T079 Run full test suite with `nix run .#test` and verify all tests pass
+- [x] T080 Run quickstart.md validation (実機でのビルド・インストール確認)
+- [x] T081 Code cleanup: Remove deprecated thread-based code comments
+- [x] T082 [P] Verify BackgroundTaskManager interface compatibility with new TransactionSyncer implementation (FR-016)
+- [x] T083 [P] Verify AppStateService interface compatibility with new implementations (FR-017)
 
 ---
 
