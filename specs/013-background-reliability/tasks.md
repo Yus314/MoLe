@@ -24,13 +24,13 @@
 
 **Purpose**: ドメインモデルと共通エラー型の作成
 
-- [ ] T001 [P] Create SyncError sealed class in app/src/main/kotlin/net/ktnx/mobileledger/domain/model/SyncError.kt
-- [ ] T002 [P] Create SyncProgress sealed class in app/src/main/kotlin/net/ktnx/mobileledger/domain/model/SyncProgress.kt
-- [ ] T003 [P] Create SyncResult data class in app/src/main/kotlin/net/ktnx/mobileledger/domain/model/SyncResult.kt
-- [ ] T004 [P] Create SyncState sealed class in app/src/main/kotlin/net/ktnx/mobileledger/domain/model/SyncState.kt
-- [ ] T005 [P] Create SendState sealed class in app/src/main/kotlin/net/ktnx/mobileledger/domain/model/SendState.kt
-- [ ] T006 [P] Create BackupState sealed class in app/src/main/kotlin/net/ktnx/mobileledger/domain/model/BackupState.kt
-- [ ] T007 Create SyncException wrapper class in app/src/main/kotlin/net/ktnx/mobileledger/domain/model/SyncException.kt
+- [X] T001 [P] Create SyncError sealed class in app/src/main/kotlin/net/ktnx/mobileledger/domain/model/SyncError.kt
+- [X] T002 [P] Create SyncProgress sealed class in app/src/main/kotlin/net/ktnx/mobileledger/domain/model/SyncProgress.kt
+- [X] T003 [P] Create SyncResult data class in app/src/main/kotlin/net/ktnox/mobileledger/domain/model/SyncResult.kt
+- [X] T004 [P] Create SyncState sealed class in app/src/main/kotlin/net/ktnx/mobileledger/domain/model/SyncState.kt
+- [X] T005 [P] Create SendState sealed class in app/src/main/kotlin/net/ktnox/mobileledger/domain/model/SendState.kt
+- [X] T006 [P] Create BackupState sealed class in app/src/main/kotlin/net/ktnx/mobileledger/domain/model/BackupState.kt
+- [X] T007 Create SyncException wrapper class in app/src/main/kotlin/net/ktnx/mobileledger/domain/model/SyncException.kt
 
 **Checkpoint**: ドメインモデルが完成し、インターフェース定義の準備完了
 
@@ -42,14 +42,14 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T008 [P] Create TransactionSyncer interface in app/src/main/kotlin/net/ktnx/mobileledger/domain/usecase/TransactionSyncer.kt
-- [ ] T009 [P] Create ConfigBackup interface in app/src/main/kotlin/net/ktnx/mobileledger/domain/usecase/ConfigBackup.kt
-- [ ] T010 [P] Create VersionDetector interface in app/src/main/kotlin/net/ktnx/mobileledger/domain/usecase/VersionDetector.kt
-- [ ] T011 [P] Create DatabaseInitializer interface in app/src/main/kotlin/net/ktnx/mobileledger/domain/usecase/DatabaseInitializer.kt
-- [ ] T012 [P] Create FakeTransactionSyncer in app/src/test/kotlin/net/ktnx/mobileledger/fake/FakeTransactionSyncer.kt
-- [ ] T013 [P] Create FakeConfigBackup in app/src/test/kotlin/net/ktnx/mobileledger/fake/FakeConfigBackup.kt
-- [ ] T014 [P] Create FakeVersionDetector in app/src/test/kotlin/net/ktnx/mobileledger/fake/FakeVersionDetector.kt
-- [ ] T015 [P] Create FakeDatabaseInitializer in app/src/test/kotlin/net/ktnx/mobileledger/fake/FakeDatabaseInitializer.kt
+- [X] T008 [P] Create TransactionSyncer interface in app/src/main/kotlin/net/ktnx/mobileledger/domain/usecase/TransactionSyncer.kt
+- [X] T009 [P] Create ConfigBackup interface in app/src/main/kotlin/net/ktnx/mobileledger/domain/usecase/ConfigBackup.kt
+- [X] T010 [P] Create VersionDetector interface in app/src/main/kotlin/net/ktnx/mobileledger/domain/usecase/VersionDetector.kt
+- [X] T011 [P] Create DatabaseInitializer interface in app/src/main/kotlin/net/ktnx/mobileledger/domain/usecase/DatabaseInitializer.kt
+- [X] T012 [P] Create FakeTransactionSyncer in app/src/test/kotlin/net/ktnx/mobileledger/fake/FakeTransactionSyncer.kt
+- [X] T013 [P] Create FakeConfigBackup in app/src/test/kotlin/net/ktnx/mobileledger/fake/FakeConfigBackup.kt
+- [X] T014 [P] Create FakeVersionDetector in app/src/test/kotlin/net/ktnx/mobileledger/fake/FakeVersionDetector.kt
+- [X] T015 [P] Create FakeDatabaseInitializer in app/src/test/kotlin/net/ktnx/mobileledger/fake/FakeDatabaseInitializer.kt
 - [ ] T016 Extend UseCaseModule with new interface bindings in app/src/main/kotlin/net/ktnx/mobileledger/di/UseCaseModule.kt
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
@@ -66,20 +66,20 @@
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T017 [P] [US1] Create TransactionSyncerImplTest in app/src/test/kotlin/net/ktnx/mobileledger/domain/usecase/TransactionSyncerImplTest.kt
-- [ ] T018 [P] [US1] Add sync success test case with FakeTransactionSyncer in TransactionSyncerImplTest.kt
-- [ ] T019 [P] [US1] Add sync error handling test cases (NetworkError, AuthenticationError, TimeoutError) in TransactionSyncerImplTest.kt
-- [ ] T020 [P] [US1] Add sync progress emission test cases in TransactionSyncerImplTest.kt
+- [X] T017 [P] [US1] Create TransactionSyncerImplTest in app/src/test/kotlin/net/ktnx/mobileledger/domain/usecase/TransactionSyncerImplTest.kt
+- [X] T018 [P] [US1] Add sync success test case with FakeTransactionSyncer in TransactionSyncerImplTest.kt
+- [X] T019 [P] [US1] Add sync error handling test cases (NetworkError, AuthenticationError, TimeoutError) in TransactionSyncerImplTest.kt
+- [X] T020 [P] [US1] Add sync progress emission test cases in TransactionSyncerImplTest.kt
 
 ### Implementation for User Story 1
 
-- [ ] T021 [US1] Create TransactionSyncerImpl wrapping RetrieveTransactionsTask with suspendCancellableCoroutine in app/src/main/kotlin/net/ktnx/mobileledger/domain/usecase/TransactionSyncerImpl.kt
-- [ ] T022 [US1] Implement Flow<SyncProgress> emission in TransactionSyncerImpl.kt
-- [ ] T023 [US1] Implement error mapping from Thread exceptions to SyncError in TransactionSyncerImpl.kt
-- [ ] T024 [US1] Add invokeOnCancellation for connection cleanup in TransactionSyncerImpl.kt
-- [ ] T025 [US1] Add @Binds for TransactionSyncer in UseCaseModule.kt
-- [ ] T026 [US1] Update MainViewModel to inject TransactionSyncer in app/src/main/kotlin/net/ktnx/mobileledger/ui/main/MainViewModel.kt
-- [ ] T027 [US1] Add MainViewModel sync tests using FakeTransactionSyncer in app/src/test/kotlin/net/ktnx/mobileledger/ui/main/MainViewModelTest.kt
+- [X] T021 [US1] Create TransactionSyncerImpl wrapping RetrieveTransactionsTask with suspendCancellableCoroutine in app/src/main/kotlin/net/ktnox/mobileledger/domain/usecase/TransactionSyncerImpl.kt
+- [X] T022 [US1] Implement Flow<SyncProgress> emission in TransactionSyncerImpl.kt
+- [X] T023 [US1] Implement error mapping from Thread exceptions to SyncError in TransactionSyncerImpl.kt
+- [X] T024 [US1] Add invokeOnCancellation for connection cleanup in TransactionSyncerImpl.kt
+- [X] T025 [US1] Add @Binds for TransactionSyncer in UseCaseModule.kt
+- [X] T026 [US1] Update MainViewModel to inject TransactionSyncer in app/src/main/kotlin/net/ktnx/mobileledger/ui/main/MainViewModel.kt
+- [X] T027 [US1] Add MainViewModel sync tests using FakeTransactionSyncer in app/src/test/kotlin/net/ktnox/mobileledger/ui/main/MainViewModelTest.kt
 
 **Checkpoint**: TransactionSyncer が Hilt DI 経由で利用可能。MainViewModel で同期処理のテストが可能。
 

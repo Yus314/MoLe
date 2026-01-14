@@ -26,8 +26,13 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import net.ktnx.mobileledger.db.Profile
+import net.ktnx.mobileledger.domain.model.SyncError
+import net.ktnx.mobileledger.domain.model.SyncProgress
+import net.ktnx.mobileledger.domain.model.SyncResult
+import net.ktnx.mobileledger.domain.model.SyncState
 import net.ktnx.mobileledger.fake.FakeCurrencyFormatter
 import net.ktnx.mobileledger.fake.FakePreferencesRepository
+import net.ktnx.mobileledger.fake.FakeTransactionSyncer
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -65,6 +70,7 @@ class MainViewModelTest {
     private lateinit var appStateService: FakeAppStateServiceForViewModel
     private lateinit var preferencesRepository: FakePreferencesRepository
     private lateinit var currencyFormatter: FakeCurrencyFormatter
+    private lateinit var transactionSyncer: FakeTransactionSyncer
     private lateinit var viewModel: MainViewModel
 
     @Before
@@ -78,6 +84,7 @@ class MainViewModelTest {
         appStateService = FakeAppStateServiceForViewModel()
         preferencesRepository = FakePreferencesRepository()
         currencyFormatter = FakeCurrencyFormatter()
+        transactionSyncer = FakeTransactionSyncer()
     }
 
     @After
@@ -112,7 +119,8 @@ class MainViewModelTest {
         backgroundTaskManager,
         appStateService,
         preferencesRepository,
-        currencyFormatter
+        currencyFormatter,
+        transactionSyncer
     )
 
     // ========================================
@@ -731,5 +739,201 @@ class MainViewModelTest {
 
         // Then
         assertEquals("50 transactions", viewModel.transactionListUiState.value.headerText)
+    }
+
+    // ========================================
+    // T027: Sync tests using FakeTransactionSyncer
+    // ========================================
+
+    @Test
+    fun `startSync with no profile does nothing`() = runTest {
+        // Given - no profile set
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.startSync()
+        advanceUntilIdle()
+
+        // Then - sync was not called
+        assertEquals(0, transactionSyncer.syncCallCount)
+        assertTrue(viewModel.syncState.value is SyncState.Idle)
+    }
+
+    @Test
+    fun `startSync with profile triggers sync`() = runTest {
+        // Given
+        val profile = createTestProfile(id = 1L)
+        profileRepository.insertProfile(profile)
+        profileRepository.setCurrentProfile(profile)
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.startSync()
+        advanceUntilIdle()
+
+        // Then - sync was called
+        assertEquals(1, transactionSyncer.syncCallCount)
+        assertEquals(profile, transactionSyncer.lastSyncedProfile)
+    }
+
+    @Test
+    fun `startSync success updates syncState to Completed`() = runTest {
+        // Given
+        val profile = createTestProfile(id = 1L)
+        profileRepository.insertProfile(profile)
+        profileRepository.setCurrentProfile(profile)
+
+        transactionSyncer.shouldSucceed = true
+        transactionSyncer.result = SyncResult(transactionCount = 20, accountCount = 10, duration = 500)
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.startSync()
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.syncState.value
+        assertTrue(state is SyncState.Completed)
+        val result = (state as SyncState.Completed).result
+        assertEquals(20, result.transactionCount)
+        assertEquals(10, result.accountCount)
+    }
+
+    @Test
+    fun `startSync network error updates syncState to Failed`() = runTest {
+        // Given
+        val profile = createTestProfile(id = 1L)
+        profileRepository.insertProfile(profile)
+        profileRepository.setCurrentProfile(profile)
+
+        transactionSyncer.shouldSucceed = false
+        transactionSyncer.errorToThrow = SyncError.NetworkError("Connection failed")
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.startSync()
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.syncState.value
+        assertTrue(state is SyncState.Failed)
+        val error = (state as SyncState.Failed).error
+        assertTrue(error is SyncError.NetworkError)
+        assertEquals("Connection failed", error.message)
+    }
+
+    @Test
+    fun `startSync authentication error updates syncState to Failed`() = runTest {
+        // Given
+        val profile = createTestProfile(id = 1L)
+        profileRepository.insertProfile(profile)
+        profileRepository.setCurrentProfile(profile)
+
+        transactionSyncer.shouldSucceed = false
+        transactionSyncer.errorToThrow = SyncError.AuthenticationError("Invalid credentials")
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.startSync()
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.syncState.value
+        assertTrue(state is SyncState.Failed)
+        val error = (state as SyncState.Failed).error
+        assertTrue(error is SyncError.AuthenticationError)
+    }
+
+    @Test
+    fun `cancelSync updates syncState to Cancelled`() = runTest {
+        // Given
+        val profile = createTestProfile(id = 1L)
+        profileRepository.insertProfile(profile)
+        profileRepository.setCurrentProfile(profile)
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.cancelSync()
+        advanceUntilIdle()
+
+        // Then
+        assertTrue(viewModel.syncState.value is SyncState.Cancelled)
+    }
+
+    @Test
+    fun `clearSyncState resets to Idle`() = runTest {
+        // Given
+        val profile = createTestProfile(id = 1L)
+        profileRepository.insertProfile(profile)
+        profileRepository.setCurrentProfile(profile)
+
+        transactionSyncer.shouldSucceed = true
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.startSync()
+        advanceUntilIdle()
+        assertTrue(viewModel.syncState.value is SyncState.Completed)
+
+        // When
+        viewModel.clearSyncState()
+        advanceUntilIdle()
+
+        // Then
+        assertTrue(viewModel.syncState.value is SyncState.Idle)
+    }
+
+    @Test
+    fun `startSync with explicit profile uses provided profile`() = runTest {
+        // Given
+        val profile1 = createTestProfile(id = 1L, name = "Profile 1")
+        val profile2 = createTestProfile(id = 2L, name = "Profile 2")
+        profileRepository.insertProfile(profile1)
+        profileRepository.insertProfile(profile2)
+        profileRepository.setCurrentProfile(profile1)
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When - sync with explicit profile2
+        viewModel.startSync(profile2)
+        advanceUntilIdle()
+
+        // Then
+        assertEquals(profile2, transactionSyncer.lastSyncedProfile)
+    }
+
+    @Test
+    fun `startSync emits progress during sync`() = runTest {
+        // Given
+        val profile = createTestProfile(id = 1L)
+        profileRepository.insertProfile(profile)
+        profileRepository.setCurrentProfile(profile)
+
+        transactionSyncer.shouldSucceed = true
+        transactionSyncer.progressSteps = 3
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When - start sync and wait
+        viewModel.startSync()
+        advanceUntilIdle()
+
+        // Then - should complete successfully with progress updates
+        val state = viewModel.syncState.value
+        assertTrue(state is SyncState.Completed)
     }
 }

@@ -51,6 +51,10 @@ import net.ktnx.mobileledger.data.repository.PreferencesRepository
 import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.data.repository.TransactionRepository
 import net.ktnx.mobileledger.db.Profile
+import net.ktnx.mobileledger.domain.model.SyncException
+import net.ktnx.mobileledger.domain.model.SyncProgress
+import net.ktnx.mobileledger.domain.model.SyncState
+import net.ktnx.mobileledger.domain.usecase.TransactionSyncer
 import net.ktnx.mobileledger.model.LedgerAccount
 import net.ktnx.mobileledger.model.LedgerTransaction
 import net.ktnx.mobileledger.model.TransactionListItem
@@ -76,7 +80,8 @@ class MainViewModel @Inject constructor(
     private val backgroundTaskManager: BackgroundTaskManager,
     private val appStateService: AppStateService,
     private val preferencesRepository: PreferencesRepository,
-    private val currencyFormatter: CurrencyFormatter
+    private val currencyFormatter: CurrencyFormatter,
+    private val transactionSyncer: TransactionSyncer
 ) : ViewModel() {
 
     // Profile state from ProfileRepository (replaces Data.observeProfile/Data.profiles)
@@ -115,6 +120,11 @@ class MainViewModel @Inject constructor(
 
     private val retrieveTransactionsTask = AtomicReference<RetrieveTransactionsTask?>(null)
     private var displayedTransactionsUpdaterJob: Job? = null
+    private var syncJob: Job? = null
+
+    // Sync state for TransactionSyncer-based synchronization
+    private val _syncState = MutableStateFlow<SyncState>(SyncState.Idle)
+    val syncState: StateFlow<SyncState> = _syncState.asStateFlow()
 
     var firstTransactionDate: SimpleDate? = null
         private set
@@ -752,6 +762,74 @@ class MainViewModel @Inject constructor(
 
     fun transactionRetrievalDone() {
         retrieveTransactionsTask.set(null)
+    }
+
+    /**
+     * Start synchronization using TransactionSyncer.
+     *
+     * This method provides a Coroutines-based alternative to scheduleTransactionListRetrieval().
+     * It uses the TransactionSyncer interface which can be easily mocked in tests.
+     *
+     * @param profile The profile to sync. If null, uses the current profile.
+     */
+    fun startSync(profile: Profile? = null) {
+        val syncProfile = profile ?: profileRepository.currentProfile.value
+        if (syncProfile == null) {
+            Logger.debug("sync", "No profile to sync")
+            return
+        }
+
+        // Cancel any existing sync
+        syncJob?.cancel()
+
+        syncJob = viewModelScope.launch {
+            _syncState.value = SyncState.InProgress(SyncProgress.Starting("同期開始..."))
+
+            try {
+                transactionSyncer.sync(syncProfile)
+                    .collect { progress ->
+                        _syncState.value = SyncState.InProgress(progress)
+                    }
+
+                // Sync completed successfully
+                val result = transactionSyncer.getLastResult()
+                if (result != null) {
+                    _syncState.value = SyncState.Completed(result)
+                } else {
+                    _syncState.value = SyncState.Idle
+                }
+
+                // Reload data after successful sync
+                reloadAccounts()
+                reloadTransactions()
+            } catch (e: SyncException) {
+                _syncState.value = SyncState.Failed(e.syncError)
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                _syncState.value = SyncState.Cancelled
+            } catch (e: Exception) {
+                _syncState.value = SyncState.Failed(
+                    net.ktnx.mobileledger.domain.model.SyncError.UnknownError(
+                        message = e.message ?: "予期しないエラーが発生しました",
+                        cause = e
+                    )
+                )
+            }
+        }
+    }
+
+    /**
+     * Cancel the current sync operation.
+     */
+    fun cancelSync() {
+        syncJob?.cancel()
+        _syncState.value = SyncState.Cancelled
+    }
+
+    /**
+     * Clear the sync state to idle.
+     */
+    fun clearSyncState() {
+        _syncState.value = SyncState.Idle
     }
 
     /**
