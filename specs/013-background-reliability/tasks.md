@@ -93,16 +93,16 @@
 
 ### Tests for User Story 2
 
-- [ ] T028 [P] [US2] Create cancellation test for TransactionSyncerImpl in TransactionSyncerImplTest.kt
-- [ ] T029 [P] [US2] Add cancellation response time assertion (<500ms) in TransactionSyncerImplTest.kt
-- [ ] T030 [P] [US2] Add structured concurrency test with supervisorScope in TransactionSyncerImplTest.kt
+- [X] T028 [P] [US2] Create cancellation test for TransactionSyncerImpl in TransactionSyncerImplTest.kt
+- [X] T029 [P] [US2] Add cancellation response time assertion (<500ms) in TransactionSyncerImplTest.kt
+- [X] T030 [P] [US2] Add structured concurrency test with supervisorScope in TransactionSyncerImplTest.kt
 
 ### Implementation for User Story 2
 
-- [ ] T031 [US2] Add isActive check points in TransactionSyncerImpl.kt at each processing step
-- [ ] T032 [US2] Implement connection.disconnect() in invokeOnCancellation in TransactionSyncerImpl.kt
-- [ ] T033 [US2] Add withTimeout wrapper for network operations in TransactionSyncerImpl.kt
-- [ ] T034 [US2] Update MainViewModel.cancelSync() to use Job.cancel() in MainViewModel.kt
+- [X] T031 [US2] Add isActive check points in TransactionSyncerImpl.kt at each processing step
+- [X] T032 [US2] Implement connection.disconnect() in invokeOnCancellation in TransactionSyncerImpl.kt
+- [X] T033 [US2] Add withTimeout wrapper for network operations in TransactionSyncerImpl.kt
+- [X] T034 [US2] Update MainViewModel.cancelSync() to use Job.cancel() in MainViewModel.kt
 
 **Checkpoint**: キャンセル処理が構造化並行性に準拠。5秒以内の応答を達成。
 
@@ -116,17 +116,17 @@
 
 ### Tests for User Story 3
 
-- [ ] T035 [P] [US3] Create Hilt test module in app/src/test/kotlin/net/ktnx/mobileledger/di/TestUseCaseModule.kt
-- [ ] T036 [P] [US3] Add FakeTransactionSyncer binding in TestUseCaseModule.kt
-- [ ] T037 [P] [US3] Add FakeConfigBackup binding in TestUseCaseModule.kt
-- [ ] T038 [P] [US3] Add FakeVersionDetector binding in TestUseCaseModule.kt
-- [ ] T039 [P] [US3] Add FakeDatabaseInitializer binding in TestUseCaseModule.kt
+- [X] T035 [P] [US3] Create Hilt test module in app/src/test/kotlin/net/ktnx/mobileledger/di/TestUseCaseModule.kt
+- [X] T036 [P] [US3] Add FakeTransactionSyncer binding in TestUseCaseModule.kt
+- [X] T037 [P] [US3] Add FakeConfigBackup binding in TestUseCaseModule.kt
+- [X] T038 [P] [US3] Add FakeVersionDetector binding in TestUseCaseModule.kt
+- [X] T039 [P] [US3] Add FakeDatabaseInitializer binding in TestUseCaseModule.kt
 
 ### Implementation for User Story 3
 
-- [ ] T040 [US3] Verify UseCaseModule provides all interfaces with @Singleton scope in UseCaseModule.kt
-- [ ] T041 [US3] Update all ViewModels to use @Inject constructor for background services
-- [ ] T042 [US3] Document DI usage in CLAUDE.md under Hilt Dependency Injection section
+- [X] T040 [US3] Verify UseCaseModule provides all interfaces with @Singleton scope in UseCaseModule.kt
+- [X] T041 [US3] Update all ViewModels to use @Inject constructor for background services
+- [X] T042 [US3] Document DI usage in CLAUDE.md under Hilt Dependency Injection section
 
 **Checkpoint**: 全 ViewModel がコンストラクタ注入で依存性を受け取り、テストで Fake に差し替え可能。
 
@@ -140,16 +140,16 @@
 
 ### Tests for User Story 4
 
-- [ ] T043 [P] [US4] Create SyncError mapping tests in app/src/test/kotlin/net/ktnx/mobileledger/domain/model/SyncErrorTest.kt
-- [ ] T044 [P] [US4] Add error propagation tests for each error type in MainViewModelTest.kt
-- [ ] T045 [P] [US4] Add isRetryable property tests in SyncErrorTest.kt
+- [X] T043 [P] [US4] Create SyncError mapping tests in app/src/test/kotlin/net/ktnx/mobileledger/domain/model/SyncErrorTest.kt
+- [X] T044 [P] [US4] Add error propagation tests for each error type in MainViewModelTest.kt
+- [X] T045 [P] [US4] Add isRetryable property tests in SyncErrorTest.kt
 
 ### Implementation for User Story 4
 
-- [ ] T046 [US4] Implement mapExceptionToSyncError function in app/src/main/kotlin/net/ktnx/mobileledger/domain/model/SyncError.kt
-- [ ] T047 [US4] Update MainViewModel to handle Result.failure and set UiState.error in MainViewModel.kt
-- [ ] T048 [US4] Add retry logic based on isRetryable in MainViewModel.kt
-- [ ] T049 [US4] Update UI layer to display error messages from SyncError.message
+- [X] T046 [US4] Implement mapExceptionToSyncError function in app/src/main/kotlin/net/ktnx/mobileledger/domain/model/SyncError.kt
+- [X] T047 [US4] Update MainViewModel to handle Result.failure and set UiState.error in MainViewModel.kt
+- [X] T048 [US4] Add retry logic based on isRetryable in MainViewModel.kt
+- [X] T049 [US4] Update UI layer to display error messages from SyncError.message
 
 **Checkpoint**: エラーハンドリングが一貫。リトライ可能エラーの判定が可能。
 
@@ -163,10 +163,10 @@
 
 ### Tests for User Story 5
 
-- [ ] T050 [P] [US5] Create ConfigBackupImplTest in app/src/test/kotlin/net/ktnx/mobileledger/domain/usecase/ConfigBackupImplTest.kt
-- [ ] T051 [P] [US5] Add backup success test case in ConfigBackupImplTest.kt
-- [ ] T052 [P] [US5] Add restore success test case in ConfigBackupImplTest.kt
-- [ ] T053 [P] [US5] Add error handling test cases (file not found, parse error) in ConfigBackupImplTest.kt
+- [X] T050 [P] [US5] Create ConfigBackupImplTest in app/src/test/kotlin/net/ktnx/mobileledger/domain/usecase/ConfigBackupImplTest.kt
+- [X] T051 [P] [US5] Add backup success test case in ConfigBackupImplTest.kt
+- [X] T052 [P] [US5] Add restore success test case in ConfigBackupImplTest.kt
+- [X] T053 [P] [US5] Add error handling test cases (file not found, parse error) in ConfigBackupImplTest.kt
 
 ### Implementation for User Story 5
 

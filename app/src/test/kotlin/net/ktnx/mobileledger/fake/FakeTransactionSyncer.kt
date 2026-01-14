@@ -17,7 +17,10 @@
 
 package net.ktnx.mobileledger.fake
 
+import kotlin.coroutines.cancellation.CancellationException
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import net.ktnx.mobileledger.db.Profile
@@ -38,18 +41,38 @@ class FakeTransactionSyncer : TransactionSyncer {
     var lastSyncedProfile: Profile? = null
         private set
     private var _lastResult: SyncResult? = null
+    var wasCancelled: Boolean = false
+        private set
+    var cancellationTimeMs: Long = 0
+        private set
+    private var syncStartTime: Long = 0
 
     override fun sync(profile: Profile): Flow<SyncProgress> = flow {
         syncCallCount++
         lastSyncedProfile = profile
-        emit(SyncProgress.Starting("接続中..."))
-        if (delayPerStepMs > 0) delay(delayPerStepMs)
-        if (!shouldSucceed) throw SyncException(errorToThrow ?: SyncError.NetworkError())
-        for (i in 1..progressSteps) {
-            emit(SyncProgress.Running(current = i, total = progressSteps, message = "処理中..."))
+        syncStartTime = System.currentTimeMillis()
+
+        try {
+            emit(SyncProgress.Starting("接続中..."))
             if (delayPerStepMs > 0) delay(delayPerStepMs)
+
+            // Check for cancellation before proceeding
+            currentCoroutineContext().ensureActive()
+
+            if (!shouldSucceed) throw SyncException(errorToThrow ?: SyncError.NetworkError())
+            for (i in 1..progressSteps) {
+                // Check for cancellation at each step - responds to cancellation quickly
+                currentCoroutineContext().ensureActive()
+
+                emit(SyncProgress.Running(current = i, total = progressSteps, message = "処理中..."))
+                if (delayPerStepMs > 0) delay(delayPerStepMs)
+            }
+            _lastResult = result
+        } catch (e: CancellationException) {
+            wasCancelled = true
+            cancellationTimeMs = System.currentTimeMillis() - syncStartTime
+            throw e
         }
-        _lastResult = result
     }
 
     override fun getLastResult(): SyncResult? = _lastResult
@@ -62,5 +85,7 @@ class FakeTransactionSyncer : TransactionSyncer {
         errorToThrow = null
         progressSteps = 5
         delayPerStepMs = 0
+        wasCancelled = false
+        cancellationTimeMs = 0
     }
 }

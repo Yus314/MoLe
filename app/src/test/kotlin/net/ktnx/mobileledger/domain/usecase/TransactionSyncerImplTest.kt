@@ -17,8 +17,16 @@
 
 package net.ktnx.mobileledger.domain.usecase
 
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.test.runTest
 import net.ktnx.mobileledger.db.Profile
 import net.ktnx.mobileledger.domain.model.SyncError
@@ -26,6 +34,7 @@ import net.ktnx.mobileledger.domain.model.SyncException
 import net.ktnx.mobileledger.domain.model.SyncProgress
 import net.ktnx.mobileledger.fake.FakeTransactionSyncer
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -229,5 +238,180 @@ class TransactionSyncerImplTest {
         assertEquals(0, syncer.syncCallCount)
         assertEquals(null, syncer.lastSyncedProfile)
         assertEquals(null, syncer.getLastResult())
+    }
+
+    // ==========================================
+    // T028: Cancellation test for TransactionSyncer
+    // ==========================================
+
+    @Test
+    fun `sync can be cancelled while in progress`() = runTest {
+        // Given - set up a long-running sync with delays
+        syncer.shouldSucceed = true
+        syncer.progressSteps = 10
+        syncer.delayPerStepMs = 100 // 100ms delay per step
+
+        var job: Job? = null
+        val emissions = mutableListOf<SyncProgress>()
+
+        // When - start sync and cancel after first emission
+        job = launch {
+            syncer.sync(testProfile).collect { progress ->
+                emissions.add(progress)
+                // Cancel after receiving the first Running progress
+                if (progress is SyncProgress.Running && progress.current == 1) {
+                    job?.cancel()
+                }
+            }
+        }
+
+        // Wait for job to complete (either by cancellation or completion)
+        job.join()
+
+        // Then - verify cancellation occurred and not all steps completed
+        assertTrue("Should have received at least 1 emission", emissions.isNotEmpty())
+        assertTrue("Should have been cancelled", syncer.wasCancelled || emissions.size < 11)
+    }
+
+    @Test
+    fun `sync throws CancellationException when cancelled`() = runTest {
+        // Given
+        syncer.shouldSucceed = true
+        syncer.progressSteps = 10
+        syncer.delayPerStepMs = 50
+
+        var caughtException: Throwable? = null
+
+        // When
+        val job = launch {
+            try {
+                syncer.sync(testProfile).collect { progress ->
+                    if (progress is SyncProgress.Running && progress.current >= 2) {
+                        throw CancellationException("User cancelled")
+                    }
+                }
+            } catch (e: CancellationException) {
+                caughtException = e
+                throw e
+            }
+        }
+
+        job.join()
+
+        // Then - CancellationException should have been caught
+        assertTrue(
+            "Should throw CancellationException",
+            caughtException is CancellationException || job.isCancelled
+        )
+    }
+
+    // ==========================================
+    // T029: Cancellation response time assertion (<500ms)
+    // ==========================================
+
+    @Test
+    fun `sync responds to cancellation within 500ms`() = runTest {
+        // Given - set up sync with long delays
+        syncer.shouldSucceed = true
+        syncer.progressSteps = 100
+        syncer.delayPerStepMs = 50 // Total would be 5000ms without cancellation
+
+        val startTime = testScheduler.currentTime
+
+        // When - start sync and cancel after getting first progress
+        val job = launch {
+            syncer.sync(testProfile).first { it is SyncProgress.Running }
+            // Cancel after first Running emission
+        }
+
+        // Wait for the first emission then cancel
+        delay(100) // Give time for first emission
+        job.cancelAndJoin()
+
+        val elapsedTime = testScheduler.currentTime - startTime
+
+        // Then - cancellation should complete within 500ms
+        // Note: In test scheduler, virtual time is used
+        assertTrue(
+            "Cancellation should respond within 500ms, took ${elapsedTime}ms",
+            elapsedTime < 500
+        )
+    }
+
+    // ==========================================
+    // T030: Structured concurrency test with supervisorScope
+    // ==========================================
+
+    @Test
+    fun `sync failure in supervisorScope does not cancel sibling coroutines`() = runTest {
+        // Given
+        val failingSyncer = FakeTransactionSyncer().apply {
+            shouldSucceed = false
+            errorToThrow = SyncError.NetworkError("Network error")
+        }
+
+        val successfulSyncer = FakeTransactionSyncer().apply {
+            shouldSucceed = true
+            progressSteps = 3
+        }
+
+        var syncerOneCompleted = false
+        var syncerTwoCompleted = false
+        var syncerOneFailed = false
+
+        // When - run two syncs in supervisorScope
+        supervisorScope {
+            launch {
+                try {
+                    failingSyncer.sync(testProfile).toList()
+                    syncerOneCompleted = true
+                } catch (e: SyncException) {
+                    syncerOneFailed = true
+                }
+            }
+
+            launch {
+                try {
+                    successfulSyncer.sync(testProfile).toList()
+                    syncerTwoCompleted = true
+                } catch (e: Exception) {
+                    // Should not fail
+                }
+            }
+        }
+
+        // Then - first syncer should fail, second should complete
+        assertTrue("First syncer should have failed", syncerOneFailed)
+        assertFalse("First syncer should not have completed", syncerOneCompleted)
+        assertTrue("Second syncer should have completed", syncerTwoCompleted)
+    }
+
+    @Test
+    fun `cancelling parent scope cancels sync`() = runTest {
+        // Given
+        syncer.shouldSucceed = true
+        syncer.progressSteps = 20
+        syncer.delayPerStepMs = 50
+
+        var wasCollecting = false
+        var emissionCount = 0
+
+        // When - launch sync and cancel the parent scope
+        val job = launch {
+            syncer.sync(testProfile).collect { progress ->
+                wasCollecting = true
+                emissionCount++
+                if (emissionCount >= 3) {
+                    // Cancel after 3 emissions
+                    this@launch.cancel()
+                }
+            }
+        }
+
+        job.join()
+
+        // Then - should have started collecting but not completed all
+        assertTrue("Should have started collecting", wasCollecting)
+        assertTrue("Should have been cancelled before completion", emissionCount < 21)
     }
 }

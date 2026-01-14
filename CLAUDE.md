@@ -242,7 +242,39 @@ class MyActivity : AppCompatActivity() {
 ### 利用可能な依存関係
 
 - **RepositoryModule**: ProfileRepository, TransactionRepository, AccountRepository, TemplateRepository, CurrencyRepository
+- **UseCaseModule**: TransactionSender, TransactionSyncer (バックグラウンド処理用)
+- **ServiceModule**: BackgroundTaskManager, CurrencyFormatter, AppStateService
 - **DatabaseModule**: DB, ProfileDAO, TransactionDAO, AccountDAO, AccountValueDAO, TemplateHeaderDAO, TemplateAccountDAO, CurrencyDAO, OptionDAO （レガシー、新規コードでは Repository を使用）
+
+### バックグラウンド処理のテスト (013-background-reliability)
+
+テストで Fake 実装を使用する場合:
+
+```kotlin
+class MyViewModelTest {
+    private lateinit var fakeTransactionSyncer: FakeTransactionSyncer
+
+    @Before
+    fun setup() {
+        fakeTransactionSyncer = FakeTransactionSyncer()
+        // ViewModel にFakeを注入
+        viewModel = MyViewModel(fakeTransactionSyncer)
+    }
+
+    @Test
+    fun `sync success updates UI state`() = runTest {
+        // Given
+        fakeTransactionSyncer.shouldSucceed = true
+        fakeTransactionSyncer.progressSteps = 3
+
+        // When
+        viewModel.startSync(profile)
+
+        // Then
+        assertEquals(SyncState.Completed, viewModel.syncState.value)
+    }
+}
+```
 
 ### DI ベストプラクティス
 

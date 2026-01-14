@@ -936,4 +936,234 @@ class MainViewModelTest {
         val state = viewModel.syncState.value
         assertTrue(state is SyncState.Completed)
     }
+
+    // ========================================
+    // T044: Error propagation tests for each error type
+    // ========================================
+
+    @Test
+    fun `startSync timeout error updates syncState to Failed`() = runTest {
+        // Given
+        val profile = createTestProfile(id = 1L)
+        profileRepository.insertProfile(profile)
+        profileRepository.setCurrentProfile(profile)
+
+        transactionSyncer.shouldSucceed = false
+        transactionSyncer.errorToThrow = SyncError.TimeoutError("Request timed out")
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.startSync()
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.syncState.value
+        assertTrue(state is SyncState.Failed)
+        val error = (state as SyncState.Failed).error
+        assertTrue(error is SyncError.TimeoutError)
+        assertEquals("Request timed out", error.message)
+        assertTrue("TimeoutError should be retryable", error.isRetryable)
+    }
+
+    @Test
+    fun `startSync server error updates syncState to Failed with correct isRetryable`() = runTest {
+        // Given
+        val profile = createTestProfile(id = 1L)
+        profileRepository.insertProfile(profile)
+        profileRepository.setCurrentProfile(profile)
+
+        transactionSyncer.shouldSucceed = false
+        transactionSyncer.errorToThrow = SyncError.ServerError("Service Unavailable", 503)
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.startSync()
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.syncState.value
+        assertTrue(state is SyncState.Failed)
+        val error = (state as SyncState.Failed).error
+        assertTrue(error is SyncError.ServerError)
+        assertTrue("5xx errors should be retryable", error.isRetryable)
+    }
+
+    @Test
+    fun `startSync 4xx server error is not retryable`() = runTest {
+        // Given
+        val profile = createTestProfile(id = 1L)
+        profileRepository.insertProfile(profile)
+        profileRepository.setCurrentProfile(profile)
+
+        transactionSyncer.shouldSucceed = false
+        transactionSyncer.errorToThrow = SyncError.ServerError("Not Found", 404)
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.startSync()
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.syncState.value
+        assertTrue(state is SyncState.Failed)
+        val error = (state as SyncState.Failed).error
+        assertTrue(error is SyncError.ServerError)
+        assertFalse("4xx errors should not be retryable", error.isRetryable)
+    }
+
+    @Test
+    fun `startSync validation error updates syncState to Failed`() = runTest {
+        // Given
+        val profile = createTestProfile(id = 1L)
+        profileRepository.insertProfile(profile)
+        profileRepository.setCurrentProfile(profile)
+
+        transactionSyncer.shouldSucceed = false
+        transactionSyncer.errorToThrow = SyncError.ValidationError(
+            message = "Invalid data",
+            field = "amount",
+            details = listOf("Amount must be positive")
+        )
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.startSync()
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.syncState.value
+        assertTrue(state is SyncState.Failed)
+        val error = (state as SyncState.Failed).error
+        assertTrue(error is SyncError.ValidationError)
+        assertFalse("ValidationError should not be retryable", error.isRetryable)
+    }
+
+    @Test
+    fun `startSync parse error updates syncState to Failed`() = runTest {
+        // Given
+        val profile = createTestProfile(id = 1L)
+        profileRepository.insertProfile(profile)
+        profileRepository.setCurrentProfile(profile)
+
+        transactionSyncer.shouldSucceed = false
+        transactionSyncer.errorToThrow = SyncError.ParseError("JSON parse failed")
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.startSync()
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.syncState.value
+        assertTrue(state is SyncState.Failed)
+        val error = (state as SyncState.Failed).error
+        assertTrue(error is SyncError.ParseError)
+        assertFalse("ParseError should not be retryable", error.isRetryable)
+    }
+
+    @Test
+    fun `startSync api version error updates syncState to Failed`() = runTest {
+        // Given
+        val profile = createTestProfile(id = 1L)
+        profileRepository.insertProfile(profile)
+        profileRepository.setCurrentProfile(profile)
+
+        transactionSyncer.shouldSucceed = false
+        transactionSyncer.errorToThrow = SyncError.ApiVersionError(
+            message = "Unsupported API version",
+            detectedVersion = "1.0",
+            supportedVersions = listOf("1.19", "1.26")
+        )
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.startSync()
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.syncState.value
+        assertTrue(state is SyncState.Failed)
+        val error = (state as SyncState.Failed).error
+        assertTrue(error is SyncError.ApiVersionError)
+        assertFalse("ApiVersionError should not be retryable", error.isRetryable)
+    }
+
+    @Test
+    fun `startSync unknown error updates syncState to Failed`() = runTest {
+        // Given
+        val profile = createTestProfile(id = 1L)
+        profileRepository.insertProfile(profile)
+        profileRepository.setCurrentProfile(profile)
+
+        transactionSyncer.shouldSucceed = false
+        transactionSyncer.errorToThrow = SyncError.UnknownError(
+            message = "Unexpected error occurred",
+            cause = RuntimeException("test exception")
+        )
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.startSync()
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.syncState.value
+        assertTrue(state is SyncState.Failed)
+        val error = (state as SyncState.Failed).error
+        assertTrue(error is SyncError.UnknownError)
+        assertFalse("UnknownError should not be retryable", error.isRetryable)
+    }
+
+    @Test
+    fun `retryable error can be identified from Failed state`() = runTest {
+        // Given
+        val profile = createTestProfile(id = 1L)
+        profileRepository.insertProfile(profile)
+        profileRepository.setCurrentProfile(profile)
+
+        transactionSyncer.shouldSucceed = false
+        transactionSyncer.errorToThrow = SyncError.NetworkError("No connection")
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.startSync()
+        advanceUntilIdle()
+
+        // Then - error is retryable
+        val state = viewModel.syncState.value
+        assertTrue(state is SyncState.Failed)
+        val error = (state as SyncState.Failed).error
+        assertTrue("NetworkError should be retryable", error.isRetryable)
+
+        // Can retry based on this flag
+        viewModel.clearSyncState()
+        advanceUntilIdle()
+
+        // Now set up for success
+        transactionSyncer.reset()
+        transactionSyncer.shouldSucceed = true
+
+        // Retry
+        viewModel.startSync()
+        advanceUntilIdle()
+
+        // Then - succeeds
+        assertTrue(viewModel.syncState.value is SyncState.Completed)
+    }
 }
