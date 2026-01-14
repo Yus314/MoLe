@@ -17,12 +17,10 @@
 
 package net.ktnx.mobileledger.ui.backups
 
-import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -35,13 +33,14 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import net.ktnx.mobileledger.R
-import net.ktnx.mobileledger.backup.ConfigIO
-import net.ktnx.mobileledger.backup.ConfigReader
-import net.ktnx.mobileledger.backup.ConfigWriter
 import net.ktnx.mobileledger.data.repository.ProfileRepository
+import net.ktnx.mobileledger.domain.usecase.ConfigBackup
 
 @HiltViewModel
-class BackupsViewModel @Inject constructor(private val profileRepository: ProfileRepository) : ViewModel() {
+class BackupsViewModel @Inject constructor(
+    private val profileRepository: ProfileRepository,
+    private val configBackup: ConfigBackup
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(BackupsUiState())
     val uiState: StateFlow<BackupsUiState> = _uiState.asStateFlow()
@@ -81,94 +80,58 @@ class BackupsViewModel @Inject constructor(private val profileRepository: Profil
     }
 
     /**
-     * Performs the backup operation. Called from Activity with Context.
-     * @param context Application context
+     * Performs the backup operation using ConfigBackup interface.
      * @param uri Target URI for the backup file
      */
-    fun performBackup(context: Context, uri: Uri) {
+    fun performBackup(uri: Uri) {
         _uiState.update { it.copy(isBackingUp = true) }
 
-        try {
-            val writer = ConfigWriter(
-                context,
-                uri,
-                object : ConfigIO.OnErrorListener() {
-                    override fun error(e: Exception) {
-                        _uiState.update { it.copy(isBackingUp = false) }
-                        viewModelScope.launch {
-                            _effects.send(
-                                BackupsEffect.ShowSnackbar(
-                                    BackupsMessage.Error(e.toString())
-                                )
-                            )
-                        }
-                    }
-                },
-                object : ConfigWriter.OnDoneListener() {
-                    override fun done() {
-                        _uiState.update { it.copy(isBackingUp = false) }
-                        viewModelScope.launch {
-                            _effects.send(
-                                BackupsEffect.ShowSnackbar(
-                                    BackupsMessage.Success(R.string.config_saved)
-                                )
-                            )
-                        }
-                    }
+        viewModelScope.launch {
+            configBackup.backup(uri)
+                .onSuccess {
+                    _uiState.update { it.copy(isBackingUp = false) }
+                    _effects.send(
+                        BackupsEffect.ShowSnackbar(
+                            BackupsMessage.Success(R.string.config_saved)
+                        )
+                    )
                 }
-            )
-            writer.start()
-        } catch (e: IOException) {
-            _uiState.update { it.copy(isBackingUp = false) }
-            viewModelScope.launch {
-                _effects.send(BackupsEffect.ShowSnackbar(BackupsMessage.Error(e.toString())))
-            }
+                .onFailure { e ->
+                    _uiState.update { it.copy(isBackingUp = false) }
+                    _effects.send(
+                        BackupsEffect.ShowSnackbar(
+                            BackupsMessage.Error(e.toString())
+                        )
+                    )
+                }
         }
     }
 
     /**
-     * Performs the restore operation. Called from Activity with Context.
-     * @param context Application context
+     * Performs the restore operation using ConfigBackup interface.
      * @param uri Source URI of the backup file
      */
-    fun performRestore(context: Context, uri: Uri) {
+    fun performRestore(uri: Uri) {
         _uiState.update { it.copy(isRestoring = true) }
 
-        try {
-            val reader = ConfigReader(
-                context,
-                uri,
-                object : ConfigIO.OnErrorListener() {
-                    override fun error(e: Exception) {
-                        _uiState.update { it.copy(isRestoring = false) }
-                        viewModelScope.launch {
-                            _effects.send(
-                                BackupsEffect.ShowSnackbar(
-                                    BackupsMessage.Error(e.toString())
-                                )
-                            )
-                        }
-                    }
-                },
-                object : ConfigReader.OnDoneListener() {
-                    override fun done() {
-                        _uiState.update { it.copy(isRestoring = false) }
-                        viewModelScope.launch {
-                            _effects.send(
-                                BackupsEffect.ShowSnackbar(
-                                    BackupsMessage.Success(R.string.config_restored)
-                                )
-                            )
-                        }
-                    }
+        viewModelScope.launch {
+            configBackup.restore(uri)
+                .onSuccess {
+                    _uiState.update { it.copy(isRestoring = false) }
+                    _effects.send(
+                        BackupsEffect.ShowSnackbar(
+                            BackupsMessage.Success(R.string.config_restored)
+                        )
+                    )
                 }
-            )
-            reader.start()
-        } catch (e: IOException) {
-            _uiState.update { it.copy(isRestoring = false) }
-            viewModelScope.launch {
-                _effects.send(BackupsEffect.ShowSnackbar(BackupsMessage.Error(e.toString())))
-            }
+                .onFailure { e ->
+                    _uiState.update { it.copy(isRestoring = false) }
+                    _effects.send(
+                        BackupsEffect.ShowSnackbar(
+                            BackupsMessage.Error(e.toString())
+                        )
+                    )
+                }
         }
     }
 

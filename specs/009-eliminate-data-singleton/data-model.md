@@ -66,7 +66,7 @@ data class TaskProgress(
 タスクの状態を表す列挙型。
 
 ```kotlin
-package net.ktnox.mobileledger.service
+package net.ktnx.mobileledger.service
 
 /**
  * バックグラウンドタスクの状態
@@ -91,7 +91,7 @@ enum class TaskState {
 同期結果の情報を保持する。
 
 ```kotlin
-package net.ktnox.mobileledger.service
+package net.ktnx.mobileledger.service
 
 import java.util.Date
 
@@ -134,7 +134,7 @@ data class SyncInfo(
 通貨フォーマット設定を保持する。
 
 ```kotlin
-package net.ktnox.mobileledger.service
+package net.ktnx.mobileledger.service
 
 import net.ktnx.mobileledger.model.Currency
 import java.util.Locale

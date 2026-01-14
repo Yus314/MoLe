@@ -93,7 +93,7 @@ app/src/test/kotlin/net/ktnx/mobileledger/
 
 - [X] T019 [US2] Implement BackgroundTaskManagerImpl at `app/src/main/kotlin/net/ktnx/mobileledger/service/BackgroundTaskManagerImpl.kt`
 - [X] T020 [US2] Add BackgroundTaskManager binding to ServiceModule at `app/src/main/kotlin/net/ktnx/mobileledger/di/ServiceModule.kt`
-- [X] T021 [US2] Create BackgroundTaskManagerTest at `app/src/test/kotlin/net/ktnox/mobileledger/service/BackgroundTaskManagerTest.kt`
+- [X] T021 [US2] Create BackgroundTaskManagerTest at `app/src/test/kotlin/net/ktnx/mobileledger/service/BackgroundTaskManagerTest.kt`
 - [X] T022 [US2] Update SendTransactionTask to use BackgroundTaskManager at `app/src/main/kotlin/net/ktnx/mobileledger/async/SendTransactionTask.kt` (verified: no Data references, already receives profile via constructor)
 - [X] T023 [US2] Implement AppStateServiceImpl at `app/src/main/kotlin/net/ktnx/mobileledger/service/AppStateServiceImpl.kt`
 - [X] T024 [US2] Add AppStateService binding to ServiceModule at `app/src/main/kotlin/net/ktnx/mobileledger/di/ServiceModule.kt`
@@ -102,7 +102,7 @@ app/src/test/kotlin/net/ktnx/mobileledger/
 - [X] T027 [US2] Update MainViewModel to inject AppStateService (provides lastSyncInfo and drawerOpen) at `app/src/main/kotlin/net/ktnx/mobileledger/ui/main/MainViewModel.kt`
 - [X] T028 [US2] Update MainScreen to display task progress from ViewModel at `app/src/main/kotlin/net/ktnx/mobileledger/ui/main/MainScreen.kt`
 - [X] T029 [US2] Update MainScreen to display lastSyncInfo from ViewModel at `app/src/main/kotlin/net/ktnx/mobileledger/ui/main/MainScreen.kt`
-- [X] T029a [US2] Add unit test for sync-during-profile-switch edge case (spec Edge Case 3) at `app/src/test/kotlin/net/ktnox/mobileledger/service/BackgroundTaskManagerTest.kt`
+- [X] T029a [US2] Add unit test for sync-during-profile-switch edge case (spec Edge Case 3) at `app/src/test/kotlin/net/ktnx/mobileledger/service/BackgroundTaskManagerTest.kt`
 - [X] T030 [US2] Run verification: `nix run .#verify` and test data sync manually (include profile switch during sync)
 
 **Checkpoint**: Data sync works entirely through BackgroundTaskManager and AppStateService
@@ -154,7 +154,7 @@ app/src/test/kotlin/net/ktnx/mobileledger/
 ### Implementation for User Story 5
 
 - [X] T041 [US5] Expose drawerOpen StateFlow from MainViewModel using AppStateService (injected in T027) at `app/src/main/kotlin/net/ktnx/mobileledger/ui/main/MainViewModel.kt`
-- [X] T042 [US5] Add openDrawer(), closeDrawer(), toggleDrawer() methods to MainViewModel at `app/src/main/kotlin/net/ktnox/mobileledger/ui/main/MainViewModel.kt`
+- [X] T042 [US5] Add openDrawer(), closeDrawer(), toggleDrawer() methods to MainViewModel at `app/src/main/kotlin/net/ktnx/mobileledger/ui/main/MainViewModel.kt`
 - [X] T043 [US5] Update MainScreen to use drawerOpen from ViewModel at `app/src/main/kotlin/net/ktnx/mobileledger/ui/main/MainScreen.kt` and MainActivityCompose.kt
 - [X] T044 [US5] Run verification: `nix run .#test` passed
 

@@ -22,8 +22,16 @@ import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
+import net.ktnx.mobileledger.domain.usecase.ConfigBackup
+import net.ktnx.mobileledger.domain.usecase.ConfigBackupImpl
+import net.ktnx.mobileledger.domain.usecase.DatabaseInitializer
+import net.ktnx.mobileledger.domain.usecase.DatabaseInitializerImpl
 import net.ktnx.mobileledger.domain.usecase.TransactionSender
 import net.ktnx.mobileledger.domain.usecase.TransactionSenderImpl
+import net.ktnx.mobileledger.domain.usecase.TransactionSyncer
+import net.ktnx.mobileledger.domain.usecase.TransactionSyncerImpl
+import net.ktnx.mobileledger.domain.usecase.VersionDetector
+import net.ktnx.mobileledger.domain.usecase.VersionDetectorImpl
 
 /**
  * Hilt module for providing use case dependencies.
@@ -37,4 +45,20 @@ abstract class UseCaseModule {
     @Binds
     @Singleton
     abstract fun bindTransactionSender(impl: TransactionSenderImpl): TransactionSender
+
+    @Binds
+    @Singleton
+    abstract fun bindTransactionSyncer(impl: TransactionSyncerImpl): TransactionSyncer
+
+    @Binds
+    @Singleton
+    abstract fun bindConfigBackup(impl: ConfigBackupImpl): ConfigBackup
+
+    @Binds
+    @Singleton
+    abstract fun bindDatabaseInitializer(impl: DatabaseInitializerImpl): DatabaseInitializer
+
+    @Binds
+    @Singleton
+    abstract fun bindVersionDetector(impl: VersionDetectorImpl): VersionDetector
 }

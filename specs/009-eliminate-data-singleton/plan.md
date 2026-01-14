@@ -67,7 +67,7 @@ specs/009-eliminate-data-singleton/
 ### Source Code (repository root)
 
 ```text
-app/src/main/kotlin/net/ktnox/mobileledger/
+app/src/main/kotlin/net/ktnx/mobileledger/
 ├── di/                              # Hilt DI モジュール
 │   ├── DatabaseModule.kt            # 既存 - DAO 提供
 │   ├── RepositoryModule.kt          # 既存 - Repository 提供
@@ -101,7 +101,7 @@ app/src/main/kotlin/net/ktnox/mobileledger/
     └── main/
         └── MainViewModel.kt         # 要変更 - AppStateManager注入あり
 
-app/src/test/kotlin/net/ktnox/mobileledger/
+app/src/test/kotlin/net/ktnx/mobileledger/
 ├── service/                         # 新規サービスのテスト
 │   ├── BackgroundTaskManagerTest.kt
 │   ├── CurrencyFormatterTest.kt

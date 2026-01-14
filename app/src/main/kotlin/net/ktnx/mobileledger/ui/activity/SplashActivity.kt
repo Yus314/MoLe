@@ -19,20 +19,22 @@ package net.ktnx.mobileledger.ui.activity
 
 import android.content.Intent
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import androidx.activity.compose.setContent
-import java.util.Locale
+import androidx.activity.viewModels
+import androidx.compose.runtime.LaunchedEffect
+import dagger.hilt.android.AndroidEntryPoint
 import net.ktnx.mobileledger.App
 import net.ktnx.mobileledger.R
-import net.ktnx.mobileledger.db.DB
 import net.ktnx.mobileledger.ui.components.CrashReportDialog
+import net.ktnx.mobileledger.ui.splash.SplashEffect
 import net.ktnx.mobileledger.ui.splash.SplashScreen
+import net.ktnx.mobileledger.ui.splash.SplashViewModel
 import net.ktnx.mobileledger.ui.theme.MoLeTheme
 import net.ktnx.mobileledger.utils.Logger
 
+@AndroidEntryPoint
 class SplashActivity : CrashReportingActivity() {
-    private var startupTime: Long = 0
+    private val viewModel: SplashViewModel by viewModels()
     private var running = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -50,25 +52,25 @@ class SplashActivity : CrashReportingActivity() {
                         onDismiss = { dismissCrashReport() }
                     )
                 }
+
+                // Handle navigation effects
+                LaunchedEffect(Unit) {
+                    viewModel.effects.collect { effect ->
+                        when (effect) {
+                            SplashEffect.NavigateToMain -> startMainActivity()
+                        }
+                    }
+                }
             }
         }
 
         Logger.debug("splash", "onCreate()")
-
-        DB.initComplete.setValue(false)
-        DB.initComplete.observe(this) { done -> onDbInitDoneChanged(done) }
     }
 
     override fun onStart() {
         super.onStart()
         Logger.debug("splash", "onStart()")
         running = true
-
-        startupTime = System.currentTimeMillis()
-
-        val dbInitThread = DatabaseInitThread()
-        Logger.debug("splash", "starting dbInit task")
-        dbInitThread.start()
     }
 
     override fun onPause() {
@@ -81,30 +83,6 @@ class SplashActivity : CrashReportingActivity() {
         super.onResume()
         Logger.debug("splash", "onResume()")
         running = true
-    }
-
-    private fun onDbInitDoneChanged(done: Boolean) {
-        if (!done) {
-            Logger.debug("splash", "DB not yet initialized")
-            return
-        }
-
-        Logger.debug("splash", "DB init done")
-        val now = System.currentTimeMillis()
-        if (now > startupTime + KEEP_ACTIVE_FOR_MS) {
-            startMainActivity()
-        } else {
-            val delay = KEEP_ACTIVE_FOR_MS - (now - startupTime)
-            Logger.debug(
-                "splash",
-                String.format(
-                    Locale.ROOT,
-                    "Scheduling main activity start in %d milliseconds",
-                    delay
-                )
-            )
-            Handler(Looper.getMainLooper()).postDelayed({ startMainActivity() }, delay)
-        }
     }
 
     private fun startMainActivity() {
@@ -123,27 +101,5 @@ class SplashActivity : CrashReportingActivity() {
             Logger.debug("splash", "Not running, finish and go away")
             finish()
         }
-    }
-
-    /**
-     * Thread to initialize the database on app startup.
-     *
-     * Note: DB.get() is intentionally used here to trigger Room database initialization.
-     * This is not a violation of the Repository pattern as this is specifically for
-     * database warm-up, not data access. The Repository layer is not suitable here
-     * because we need to ensure the database is initialized before any Repository
-     * can be used.
-     */
-    private class DatabaseInitThread : Thread() {
-        override fun run() {
-            // Trigger database initialization by making a simple query
-            DB.get().getProfileDAO().getProfileCountSync()
-
-            DB.initComplete.postValue(true)
-        }
-    }
-
-    companion object {
-        private const val KEEP_ACTIVE_FOR_MS = 400L
     }
 }

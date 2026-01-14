@@ -242,7 +242,61 @@ class MyActivity : AppCompatActivity() {
 ### 利用可能な依存関係
 
 - **RepositoryModule**: ProfileRepository, TransactionRepository, AccountRepository, TemplateRepository, CurrencyRepository
+- **UseCaseModule**: TransactionSender, TransactionSyncer, ConfigBackup, DatabaseInitializer, VersionDetector (バックグラウンド処理用)
+- **ServiceModule**: BackgroundTaskManager, CurrencyFormatter, AppStateService
 - **DatabaseModule**: DB, ProfileDAO, TransactionDAO, AccountDAO, AccountValueDAO, TemplateHeaderDAO, TemplateAccountDAO, CurrencyDAO, OptionDAO （レガシー、新規コードでは Repository を使用）
+
+### バックグラウンド処理のテスト (013-background-reliability)
+
+テストで Fake 実装を使用する場合:
+
+**利用可能な Fake 実装:**
+- `FakeTransactionSyncer`: 同期処理のテスト用
+- `FakeTransactionSender`: 取引送信のテスト用
+- `FakeConfigBackup`: バックアップ/リストアのテスト用
+- `FakeDatabaseInitializer`: データベース初期化のテスト用
+- `FakeVersionDetector`: バージョン検出のテスト用
+
+```kotlin
+class MyViewModelTest {
+    private lateinit var fakeTransactionSyncer: FakeTransactionSyncer
+    private lateinit var fakeConfigBackup: FakeConfigBackup
+
+    @Before
+    fun setup() {
+        fakeTransactionSyncer = FakeTransactionSyncer()
+        fakeConfigBackup = FakeConfigBackup()
+        // ViewModel にFakeを注入
+        viewModel = MyViewModel(fakeTransactionSyncer, fakeConfigBackup)
+    }
+
+    @Test
+    fun `sync success updates UI state`() = runTest {
+        // Given
+        fakeTransactionSyncer.shouldSucceed = true
+        fakeTransactionSyncer.progressSteps = 3
+
+        // When
+        viewModel.startSync(profile)
+
+        // Then
+        assertEquals(SyncState.Completed, viewModel.syncState.value)
+    }
+
+    @Test
+    fun `backup success shows message`() = runTest {
+        // Given
+        fakeConfigBackup.shouldSucceed = true
+
+        // When
+        viewModel.performBackup(uri)
+        advanceUntilIdle()
+
+        // Then
+        assertEquals(1, fakeConfigBackup.backupCallCount)
+    }
+}
+```
 
 ### DI ベストプラクティス
 

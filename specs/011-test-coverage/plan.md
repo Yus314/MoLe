@@ -58,7 +58,7 @@ specs/011-test-coverage/
 
 ```text
 app/src/
-├── main/kotlin/net/ktnox/mobileledger/
+├── main/kotlin/net/ktnx/mobileledger/
 │   ├── data/repository/          # 既存 Repository
 │   │   ├── PreferencesRepository.kt      # 既存（App シングルトン置換用）
 │   │   └── PreferencesRepositoryImpl.kt  # 既存（SharedPreferences 実装）
@@ -77,7 +77,7 @@ app/src/
 │       └── transaction/
 │           └── NewTransactionViewModel.kt # リファクタリング対象
 │
-├── test/kotlin/net/ktnox/mobileledger/
+├── test/kotlin/net/ktnx/mobileledger/
 │   ├── ui/main/
 │   │   ├── MainViewModelTest.kt          # 新規テスト
 │   │   └── TestFakes.kt                  # 既存 Fake 拡張

@@ -2,12 +2,12 @@
  * CurrencyFormatter - 通貨・数値フォーマットサービスの契約
  *
  * このファイルは実装の契約（インターフェース）を定義する。
- * 実際の実装は app/src/main/kotlin/net/ktnox/mobileledger/service/ に配置する。
+ * 実際の実装は app/src/main/kotlin/net/ktnx/mobileledger/service/ に配置する。
  *
  * Date: 2026-01-12
  * Feature: 009-eliminate-data-singleton
  */
-package net.ktnox.mobileledger.service
+package net.ktnx.mobileledger.service
 
 import java.util.Locale
 import kotlinx.coroutines.flow.StateFlow
