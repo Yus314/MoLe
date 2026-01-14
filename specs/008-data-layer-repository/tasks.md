@@ -376,7 +376,7 @@ app/src/test/kotlin/net/ktnx/mobileledger/
 
 ### Edge Case Testing (from spec.md)
 
-- [X] T052 [P] Create `RepositoryConcurrencyTest.kt` in `app/src/test/kotlin/net/ktnox/mobileledger/data/repository/RepositoryConcurrencyTest.kt`
+- [X] T052 [P] Create `RepositoryConcurrencyTest.kt` in `app/src/test/kotlin/net/ktnx/mobileledger/data/repository/RepositoryConcurrencyTest.kt`
   - Test: Multiple coroutines accessing TransactionRepository simultaneously
   - Test: Concurrent read/write operations on ProfileRepository
   - Test: StateFlow thread-safety for currentProfile updates

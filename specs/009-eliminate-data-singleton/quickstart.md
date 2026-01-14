@@ -63,7 +63,7 @@ git branch --show-current
 ## ファイル作成場所
 
 ```
-app/src/main/kotlin/net/ktnox/mobileledger/
+app/src/main/kotlin/net/ktnx/mobileledger/
 ├── service/                          # 新規ディレクトリ
 │   ├── BackgroundTaskManager.kt      # Interface + Impl
 │   ├── CurrencyFormatter.kt          # Interface + Impl
@@ -78,7 +78,7 @@ app/src/main/kotlin/net/ktnox/mobileledger/
 ### Step 1.1: MainViewModel の更新
 
 ```kotlin
-// app/src/main/kotlin/net/ktnox/mobileledger/ui/main/MainViewModel.kt
+// app/src/main/kotlin/net/ktnx/mobileledger/ui/main/MainViewModel.kt
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
@@ -157,7 +157,7 @@ nix run .#verify
 ### Step 2.1: BackgroundTaskManager 作成
 
 ```kotlin
-// app/src/main/kotlin/net/ktnox/mobileledger/service/BackgroundTaskManager.kt
+// app/src/main/kotlin/net/ktnx/mobileledger/service/BackgroundTaskManager.kt
 
 interface BackgroundTaskManager {
     val isRunning: StateFlow<Boolean>
@@ -201,7 +201,7 @@ class BackgroundTaskManagerImpl @Inject constructor() : BackgroundTaskManager {
 ### Step 2.2: ServiceModule 作成
 
 ```kotlin
-// app/src/main/kotlin/net/ktnox/mobileledger/di/ServiceModule.kt
+// app/src/main/kotlin/net/ktnx/mobileledger/di/ServiceModule.kt
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -244,7 +244,7 @@ nix run .#verify
 ### Step 3.1: CurrencyFormatter 作成
 
 ```kotlin
-// app/src/main/kotlin/net/ktnox/mobileledger/service/CurrencyFormatter.kt
+// app/src/main/kotlin/net/ktnx/mobileledger/service/CurrencyFormatter.kt
 
 @Singleton
 class CurrencyFormatterImpl @Inject constructor() : CurrencyFormatter {
@@ -291,7 +291,7 @@ grep -r "AppStateManager" app/src/main/kotlin/
 
 # 参照がゼロなら削除
 rm app/src/main/kotlin/net/ktnx/mobileledger/model/AppStateManager.kt
-rm app/src/main/kotlin/net/ktnox/mobileledger/di/AppStateModule.kt
+rm app/src/main/kotlin/net/ktnx/mobileledger/di/AppStateModule.kt
 ```
 
 ### Step 3.4: 最終検証

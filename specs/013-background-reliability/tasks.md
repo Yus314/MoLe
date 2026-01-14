@@ -26,9 +26,9 @@
 
 - [X] T001 [P] Create SyncError sealed class in app/src/main/kotlin/net/ktnx/mobileledger/domain/model/SyncError.kt
 - [X] T002 [P] Create SyncProgress sealed class in app/src/main/kotlin/net/ktnx/mobileledger/domain/model/SyncProgress.kt
-- [X] T003 [P] Create SyncResult data class in app/src/main/kotlin/net/ktnox/mobileledger/domain/model/SyncResult.kt
+- [X] T003 [P] Create SyncResult data class in app/src/main/kotlin/net/ktnx/mobileledger/domain/model/SyncResult.kt
 - [X] T004 [P] Create SyncState sealed class in app/src/main/kotlin/net/ktnx/mobileledger/domain/model/SyncState.kt
-- [X] T005 [P] Create SendState sealed class in app/src/main/kotlin/net/ktnox/mobileledger/domain/model/SendState.kt
+- [X] T005 [P] Create SendState sealed class in app/src/main/kotlin/net/ktnx/mobileledger/domain/model/SendState.kt
 - [X] T006 [P] Create BackupState sealed class in app/src/main/kotlin/net/ktnx/mobileledger/domain/model/BackupState.kt
 - [X] T007 Create SyncException wrapper class in app/src/main/kotlin/net/ktnx/mobileledger/domain/model/SyncException.kt
 
@@ -73,13 +73,13 @@
 
 ### Implementation for User Story 1
 
-- [X] T021 [US1] Create TransactionSyncerImpl wrapping RetrieveTransactionsTask with suspendCancellableCoroutine in app/src/main/kotlin/net/ktnox/mobileledger/domain/usecase/TransactionSyncerImpl.kt
+- [X] T021 [US1] Create TransactionSyncerImpl wrapping RetrieveTransactionsTask with suspendCancellableCoroutine in app/src/main/kotlin/net/ktnx/mobileledger/domain/usecase/TransactionSyncerImpl.kt
 - [X] T022 [US1] Implement Flow<SyncProgress> emission in TransactionSyncerImpl.kt
 - [X] T023 [US1] Implement error mapping from Thread exceptions to SyncError in TransactionSyncerImpl.kt
 - [X] T024 [US1] Add invokeOnCancellation for connection cleanup in TransactionSyncerImpl.kt
 - [X] T025 [US1] Add @Binds for TransactionSyncer in UseCaseModule.kt
 - [X] T026 [US1] Update MainViewModel to inject TransactionSyncer in app/src/main/kotlin/net/ktnx/mobileledger/ui/main/MainViewModel.kt
-- [X] T027 [US1] Add MainViewModel sync tests using FakeTransactionSyncer in app/src/test/kotlin/net/ktnox/mobileledger/ui/main/MainViewModelTest.kt
+- [X] T027 [US1] Add MainViewModel sync tests using FakeTransactionSyncer in app/src/test/kotlin/net/ktnx/mobileledger/ui/main/MainViewModelTest.kt
 
 **Checkpoint**: TransactionSyncer が Hilt DI 経由で利用可能。MainViewModel で同期処理のテストが可能。
 

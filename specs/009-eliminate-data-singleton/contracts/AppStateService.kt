@@ -7,7 +7,7 @@
  * Date: 2026-01-12
  * Feature: 009-eliminate-data-singleton
  */
-package net.ktnox.mobileledger.service
+package net.ktnx.mobileledger.service
 
 import java.util.Date
 import kotlinx.coroutines.flow.StateFlow

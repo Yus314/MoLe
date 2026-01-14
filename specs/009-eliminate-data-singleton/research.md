@@ -37,7 +37,7 @@ AppStateManager（Data.kt）シングルトンを 3 つの専用サービスに�
 
 ### 2.1 AppStateManager の構造
 
-**Location**: `app/src/main/kotlin/net/ktnox/mobileledger/model/AppStateManager.kt`
+**Location**: `app/src/main/kotlin/net/ktnx/mobileledger/model/AppStateManager.kt`
 
 ```kotlin
 // Data は AppStateManager のエイリアス
