@@ -19,14 +19,18 @@ package net.ktnx.mobileledger.async
 
 import java.math.BigDecimal
 import java.math.RoundingMode
-import net.ktnx.mobileledger.App
 import net.ktnx.mobileledger.model.LedgerAccount
 import net.ktnx.mobileledger.model.LedgerTransaction
 import net.ktnx.mobileledger.model.TransactionListItem
+import net.ktnx.mobileledger.service.CurrencyFormatter
 import net.ktnx.mobileledger.utils.Misc
 import net.ktnx.mobileledger.utils.SimpleDate
 
-class TransactionAccumulator(private val boldAccountName: String?, private val accumulateAccount: String?) {
+class TransactionAccumulator(
+    private val boldAccountName: String?,
+    private val accumulateAccount: String?,
+    private val currencyFormatter: CurrencyFormatter
+) {
     private val list = ArrayList<TransactionListItem>()
     private val runningTotal = HashMap<String, BigDecimal>()
     private var earliestDate: SimpleDate? = null
@@ -82,7 +86,6 @@ class TransactionAccumulator(private val boldAccountName: String?, private val a
 
     private fun summarizeRunningTotal(runningTotal: HashMap<String, BigDecimal>): String {
         val b = StringBuilder()
-        val currencyFormatter = App.currencyFormatter()
         for (currency in runningTotal.keys) {
             if (b.isNotEmpty()) {
                 b.append('\n')

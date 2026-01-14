@@ -56,6 +56,7 @@ import net.ktnx.mobileledger.model.LedgerTransaction
 import net.ktnx.mobileledger.model.TransactionListItem
 import net.ktnx.mobileledger.service.AppStateService
 import net.ktnx.mobileledger.service.BackgroundTaskManager
+import net.ktnx.mobileledger.service.CurrencyFormatter
 import net.ktnx.mobileledger.service.SyncInfo
 import net.ktnx.mobileledger.service.TaskProgress
 import net.ktnx.mobileledger.service.TaskState
@@ -74,7 +75,8 @@ class MainViewModel @Inject constructor(
     private val optionRepository: OptionRepository,
     private val backgroundTaskManager: BackgroundTaskManager,
     private val appStateService: AppStateService,
-    private val preferencesRepository: PreferencesRepository
+    private val preferencesRepository: PreferencesRepository,
+    private val currencyFormatter: CurrencyFormatter
 ) : ViewModel() {
 
     // Profile state from ProfileRepository (replaces Data.observeProfile/Data.profiles)
@@ -628,7 +630,7 @@ class MainViewModel @Inject constructor(
                     accountFilter
                 ).first()
 
-                val accumulator = TransactionAccumulator(accountFilter, accountFilter)
+                val accumulator = TransactionAccumulator(accountFilter, accountFilter, currencyFormatter)
                 for (tr in dbTransactions) {
                     accumulator.put(LedgerTransaction(tr))
                 }
@@ -794,7 +796,7 @@ class MainViewModel @Inject constructor(
             )
             val accNameFilter = _transactionListUiState.value.accountFilter
 
-            val acc = TransactionAccumulator(accNameFilter, accNameFilter)
+            val acc = TransactionAccumulator(accNameFilter, accNameFilter, currencyFormatter)
             for (tr in list) {
                 // Check for cancellation - throws CancellationException if cancelled
                 ensureActive()
