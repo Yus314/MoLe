@@ -26,6 +26,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import net.ktnx.mobileledger.db.Profile
+import net.ktnx.mobileledger.fake.FakeCurrencyFormatter
 import net.ktnx.mobileledger.fake.FakePreferencesRepository
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -63,6 +64,7 @@ class MainViewModelTest {
     private lateinit var backgroundTaskManager: FakeBackgroundTaskManagerForViewModel
     private lateinit var appStateService: FakeAppStateServiceForViewModel
     private lateinit var preferencesRepository: FakePreferencesRepository
+    private lateinit var currencyFormatter: FakeCurrencyFormatter
     private lateinit var viewModel: MainViewModel
 
     @Before
@@ -75,6 +77,7 @@ class MainViewModelTest {
         backgroundTaskManager = FakeBackgroundTaskManagerForViewModel()
         appStateService = FakeAppStateServiceForViewModel()
         preferencesRepository = FakePreferencesRepository()
+        currencyFormatter = FakeCurrencyFormatter()
     }
 
     @After
@@ -108,7 +111,8 @@ class MainViewModelTest {
         optionRepository,
         backgroundTaskManager,
         appStateService,
-        preferencesRepository
+        preferencesRepository,
+        currencyFormatter
     )
 
     // ========================================

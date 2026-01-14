@@ -39,6 +39,7 @@ import net.ktnx.mobileledger.data.repository.TransactionRepository
 import net.ktnx.mobileledger.db.TransactionWithAccounts
 import net.ktnx.mobileledger.model.LedgerTransaction
 import net.ktnx.mobileledger.model.TransactionListItem
+import net.ktnx.mobileledger.service.CurrencyFormatter
 import net.ktnx.mobileledger.utils.Logger
 import net.ktnx.mobileledger.utils.SimpleDate
 
@@ -54,7 +55,8 @@ import net.ktnx.mobileledger.utils.SimpleDate
 class TransactionListViewModel @Inject constructor(
     private val profileRepository: ProfileRepository,
     private val transactionRepository: TransactionRepository,
-    private val accountRepository: AccountRepository
+    private val accountRepository: AccountRepository,
+    private val currencyFormatter: CurrencyFormatter
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(TransactionListUiState())
@@ -409,7 +411,7 @@ class TransactionListViewModel @Inject constructor(
             )
             val accNameFilter = viewModel._uiState.value.accountFilter
 
-            val acc = TransactionAccumulator(accNameFilter, accNameFilter)
+            val acc = TransactionAccumulator(accNameFilter, accNameFilter, viewModel.currencyFormatter)
             for (tr in list) {
                 if (isInterrupted) {
                     return

@@ -32,6 +32,7 @@ import net.ktnx.mobileledger.db.Profile
 import net.ktnx.mobileledger.db.Transaction
 import net.ktnx.mobileledger.db.TransactionAccount
 import net.ktnx.mobileledger.db.TransactionWithAccounts
+import net.ktnx.mobileledger.fake.FakeCurrencyFormatter
 import net.ktnx.mobileledger.utils.SimpleDate
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -64,6 +65,7 @@ class TransactionListViewModelTest {
     private lateinit var profileRepository: FakeProfileRepositoryForViewModel
     private lateinit var transactionRepository: FakeTransactionRepositoryForTransactionList
     private lateinit var accountRepository: FakeAccountRepositoryForTransactionList
+    private lateinit var currencyFormatter: FakeCurrencyFormatter
     private lateinit var viewModel: TransactionListViewModel
 
     @Before
@@ -72,6 +74,7 @@ class TransactionListViewModelTest {
         profileRepository = FakeProfileRepositoryForViewModel()
         transactionRepository = FakeTransactionRepositoryForTransactionList()
         accountRepository = FakeAccountRepositoryForTransactionList()
+        currencyFormatter = FakeCurrencyFormatter()
     }
 
     @After
@@ -136,7 +139,8 @@ class TransactionListViewModelTest {
     private fun createViewModel() = TransactionListViewModel(
         profileRepository,
         transactionRepository,
-        accountRepository
+        accountRepository,
+        currencyFormatter
     )
 
     // ========================================

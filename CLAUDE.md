@@ -14,6 +14,8 @@ Auto-generated from all feature plans. Last updated: 2026-01-10
 - Kotlin 2.0.21 / JVM target 1.8 + Hilt 2.51.1, Room 2.4.2, Jetpack Compose (composeBom 2024.12.01), Coroutines 1.9.0 (009-eliminate-data-singleton)
 - Room Database (SQLite) - 既存、変更なし (009-eliminate-data-singleton)
 - Kotlin 2.0.21 (JVM target 1.8) + Hilt 2.51.1, Jetpack Compose (composeBom 2024.12.01), Room 2.4.2, Coroutines 1.9.0 (011-test-coverage)
+- Kotlin 2.0.21 / JVM target 1.8 + Hilt 2.51.1, Jetpack Compose (composeBom 2024.12.01), Coroutines 1.9.0 (012-accumulator-testability)
+- Room 2.4.2 (既存、本機能では変更なし) (012-accumulator-testability)
 
 ## Project Structure
 
@@ -589,9 +591,9 @@ class MyViewModelTest {
 ```
 
 ## Recent Changes
+- 012-accumulator-testability: Added Kotlin 2.0.21 / JVM target 1.8 + Hilt 2.51.1, Jetpack Compose (composeBom 2024.12.01), Coroutines 1.9.0
 - 011-test-coverage: **テストカバレッジ向上** - Kover (JetBrains製Kotlin専用カバレッジツール) を導入。MainViewModelTest、TransactionParser/AccountParserTest を追加。TransactionSender インターフェースで非同期処理をテスト可能に。MainViewModel カバレッジ約58%達成
 - 010-refactor-mainviewmodel: **MainViewModel リファクタリング** - モノリシックな MainViewModel を 4 つの専門化された ViewModel に分割（ProfileSelectionViewModel, AccountSummaryViewModel, TransactionListViewModel, MainCoordinatorViewModel）。各コンポーネントは 300 行以下の目標達成、独立テスト可能、Repository パターン経由でデータアクセス。MainViewModel は統合状態管理として維持
-- 009-eliminate-data-singleton: Added Kotlin 2.0.21 / JVM target 1.8 + Hilt 2.51.1, Room 2.4.2, Jetpack Compose (composeBom 2024.12.01), Coroutines 1.9.0
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->
