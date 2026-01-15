@@ -29,7 +29,7 @@ import net.ktnx.mobileledger.ui.components.CrashReportDialog
 import net.ktnx.mobileledger.ui.profile.ProfileDetailScreen
 import net.ktnx.mobileledger.ui.theme.MoLeTheme
 import net.ktnx.mobileledger.utils.Colors
-import net.ktnx.mobileledger.utils.Logger
+import timber.log.Timber
 
 /**
  * An activity representing a single Profile detail screen.
@@ -74,7 +74,6 @@ class ProfileDetailActivity : CrashReportingActivity() {
     }
 
     companion object {
-        private const val TAG = "profile-det-act"
         const val ARG_ITEM_ID = "item_id"
         const val ARG_HUE = "hue"
 
@@ -84,17 +83,13 @@ class ProfileDetailActivity : CrashReportingActivity() {
             if (profile != null) {
                 starter.putExtra(ARG_ITEM_ID, profile.id)
                 starter.putExtra(ARG_HUE, profile.theme)
-                Logger.debug(
-                    TAG,
-                    String.format(
-                        Locale.ROOT,
-                        "Starting profile editor for profile %d, theme %d",
-                        profile.id,
-                        profile.theme
-                    )
+                Timber.d(
+                    "Starting profile editor for profile %d, theme %d",
+                    profile.id,
+                    profile.theme
                 )
             } else {
-                Logger.debug(TAG, "Starting empty profile editor")
+                Timber.d("Starting empty profile editor")
             }
             context.startActivity(starter)
         }

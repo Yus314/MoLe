@@ -61,9 +61,9 @@ import net.ktnx.mobileledger.model.LedgerTransaction
 import net.ktnx.mobileledger.model.LedgerTransactionAccount
 import net.ktnx.mobileledger.service.AppStateService
 import net.ktnx.mobileledger.service.SyncInfo
-import net.ktnx.mobileledger.utils.Logger
 import net.ktnx.mobileledger.utils.NetworkUtil
 import net.ktnx.mobileledger.utils.SimpleDate
+import timber.log.Timber
 
 /**
  * TransactionSyncer の Pure Coroutines 実装
@@ -161,7 +161,7 @@ class TransactionSyncerImpl @Inject constructor(
             apiVersion == API.auto -> retrieveAccountListAnyVersion(profile)
 
             apiVersion == API.html -> {
-                Logger.debug("json", "Declining using JSON API for /accounts with configured legacy API version")
+                Timber.d("Declining using JSON API for /accounts with configured legacy API version")
                 null
             }
 
@@ -174,9 +174,9 @@ class TransactionSyncerImpl @Inject constructor(
             try {
                 return retrieveAccountListForVersion(profile, ver)
             } catch (e: JsonParseException) {
-                Logger.debug("json", "Error during account list retrieval using API ${ver.description}", e)
+                Timber.d("Error during account list retrieval using API ${ver.description}", e)
             } catch (e: RuntimeJsonMappingException) {
-                Logger.debug("json", "Error during account list retrieval using API ${ver.description}", e)
+                Timber.d("Error during account list retrieval using API ${ver.description}", e)
             }
         }
         throw ApiNotSupportedException()
@@ -209,7 +209,7 @@ class TransactionSyncerImpl @Inject constructor(
                     expectedPostingsCount += acc.amountCount
                 }
 
-                Logger.warn("accounts", "Got ${list.size} accounts using protocol ${version.description}")
+                Timber.w("Got ${list.size} accounts using protocol ${version.description}")
             }
             list
         } finally {
@@ -229,7 +229,7 @@ class TransactionSyncerImpl @Inject constructor(
             apiVersion == API.auto -> retrieveTransactionListAnyVersion(profile, onProgress)
 
             apiVersion == API.html -> {
-                Logger.debug("json", "Declining using JSON API for /transactions with configured legacy API version")
+                Timber.d("Declining using JSON API for /transactions with configured legacy API version")
                 null
             }
 
@@ -245,7 +245,7 @@ class TransactionSyncerImpl @Inject constructor(
             try {
                 return retrieveTransactionListForVersion(profile, ver, onProgress)
             } catch (e: Exception) {
-                Logger.debug("json", "Error during transaction list retrieval using API ${ver.description}", e)
+                Timber.d("Error during transaction list retrieval using API ${ver.description}", e)
             }
         }
         throw ApiNotSupportedException()
@@ -284,7 +284,7 @@ class TransactionSyncerImpl @Inject constructor(
                     }
                 }
 
-                Logger.warn("transactions", "Got ${trList.size} transactions using protocol ${apiVersion.description}")
+                Timber.w("Got ${trList.size} transactions using protocol ${apiVersion.description}")
             }
 
             // Sort transactions in reverse chronological order
@@ -453,7 +453,7 @@ class TransactionSyncerImpl @Inject constructor(
         accounts: List<LedgerAccount>,
         transactions: List<LedgerTransaction>
     ) {
-        Logger.debug(TAG, "Preparing account list")
+        Timber.d("Preparing account list")
         val list = ArrayList<AccountWithAmounts>()
         for (acc in accounts) {
             coroutineContext.ensureActive()
@@ -466,20 +466,20 @@ class TransactionSyncerImpl @Inject constructor(
             }
             list.add(a)
         }
-        Logger.debug(TAG, "Account list prepared. Storing")
+        Timber.d("Account list prepared. Storing")
         accountRepository.storeAccounts(list, profile.id)
-        Logger.debug(TAG, "Account list stored")
+        Timber.d("Account list stored")
 
-        Logger.debug(TAG, "Preparing transaction list")
+        Timber.d("Preparing transaction list")
         val tranList = ArrayList<TransactionWithAccounts>()
         for (tr in transactions) {
             coroutineContext.ensureActive()
             tranList.add(tr.toDBO())
         }
 
-        Logger.debug(TAG, "Storing transaction list")
+        Timber.d("Storing transaction list")
         transactionRepository.storeTransactions(tranList, profile.id)
-        Logger.debug(TAG, "Transactions stored")
+        Timber.d("Transactions stored")
 
         optionRepository.insertOption(
             Option(profile.id, Option.OPT_LAST_SCRAPE, Date().time.toString())
@@ -551,7 +551,6 @@ class TransactionSyncerImpl @Inject constructor(
     }
 
     companion object {
-        private const val TAG = "TransactionSyncerImpl"
         private val reComment = Pattern.compile("^\\s*;")
         private val reTransactionStart = Pattern.compile(
             "<tr class=\"title\" id=\"transaction-(\\d+)\"><td class=\"date\"[^\"]*>([\\d.-]+)</td>"

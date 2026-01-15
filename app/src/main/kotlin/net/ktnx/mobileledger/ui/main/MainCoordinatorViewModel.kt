@@ -40,7 +40,7 @@ import net.ktnx.mobileledger.service.AppStateService
 import net.ktnx.mobileledger.service.BackgroundTaskManager
 import net.ktnx.mobileledger.service.SyncInfo
 import net.ktnx.mobileledger.service.TaskProgress
-import net.ktnx.mobileledger.utils.Logger
+import timber.log.Timber
 
 /**
  * ViewModel for coordinating the main screen UI.
@@ -189,7 +189,7 @@ class MainCoordinatorViewModel @Inject constructor(
     fun startSync(profile: Profile? = null) {
         val syncProfile = profile ?: profileRepository.currentProfile.value
         if (syncProfile == null) {
-            Logger.debug("sync", "No profile to sync")
+            Timber.d("No profile to sync")
             return
         }
 

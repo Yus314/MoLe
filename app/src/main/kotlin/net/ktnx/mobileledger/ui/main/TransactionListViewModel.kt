@@ -42,8 +42,8 @@ import net.ktnx.mobileledger.db.TransactionWithAccounts
 import net.ktnx.mobileledger.model.LedgerTransaction
 import net.ktnx.mobileledger.model.TransactionListItem
 import net.ktnx.mobileledger.service.CurrencyFormatter
-import net.ktnx.mobileledger.utils.Logger
 import net.ktnx.mobileledger.utils.SimpleDate
+import timber.log.Timber
 
 /**
  * ViewModel for the transaction list tab.
@@ -150,7 +150,7 @@ class TransactionListViewModel @Inject constructor(
                 val displayItems = convertToDisplayItems(dbTransactions, accountFilter)
                 updateDisplayedTransactionsDirectly(displayItems)
             } catch (e: Exception) {
-                Logger.debug("TransactionListViewModel", "Error loading transactions", e)
+                Timber.d("Error loading transactions", e)
                 _uiState.update {
                     it.copy(
                         isLoading = false,
@@ -400,10 +400,7 @@ class TransactionListViewModel @Inject constructor(
         displayedTransactionsFilterJob?.cancel()
 
         displayedTransactionsFilterJob = viewModelScope.launch {
-            Logger.debug(
-                "dFilter",
-                "entered coroutine (about to examine ${list.size} transactions)"
-            )
+            Timber.d("entered coroutine (about to examine ${list.size} transactions)")
             val accNameFilter = _uiState.value.accountFilter
 
             val acc = TransactionAccumulator(accNameFilter, accNameFilter, currencyFormatter)
@@ -419,7 +416,7 @@ class TransactionListViewModel @Inject constructor(
 
             val items = acc.getItems()
             updateDisplayedTransactions(items)
-            Logger.debug("dFilter", "transaction list updated")
+            Timber.d("transaction list updated")
         }
     }
 }

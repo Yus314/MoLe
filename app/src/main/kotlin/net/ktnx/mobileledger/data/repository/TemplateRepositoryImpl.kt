@@ -124,33 +124,31 @@ class TemplateRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun saveTemplateWithAccounts(
-        header: TemplateHeader,
-        accounts: List<TemplateAccount>
-    ): Long = withContext(Dispatchers.IO) {
-        val isNew = header.id == 0L
-        val savedId = if (isNew) {
-            templateHeaderDAO.insertSync(header)
-        } else {
-            templateHeaderDAO.updateSync(header)
-            header.id
-        }
-
-        // Save accounts using the existing DAO pattern
-        templateAccountDAO.prepareForSave(savedId)
-
-        for (account in accounts) {
-            if (account.id <= 0) {
-                account.id = 0
-                account.templateId = savedId
-                templateAccountDAO.insertSync(account)
+    override suspend fun saveTemplateWithAccounts(header: TemplateHeader, accounts: List<TemplateAccount>): Long =
+        withContext(Dispatchers.IO) {
+            val isNew = header.id == 0L
+            val savedId = if (isNew) {
+                templateHeaderDAO.insertSync(header)
             } else {
-                account.templateId = savedId
-                templateAccountDAO.updateSync(account)
+                templateHeaderDAO.updateSync(header)
+                header.id
             }
-        }
 
-        templateAccountDAO.finishSave(savedId)
-        savedId
-    }
+            // Save accounts using the existing DAO pattern
+            templateAccountDAO.prepareForSave(savedId)
+
+            for (account in accounts) {
+                if (account.id <= 0) {
+                    account.id = 0
+                    account.templateId = savedId
+                    templateAccountDAO.insertSync(account)
+                } else {
+                    account.templateId = savedId
+                    templateAccountDAO.updateSync(account)
+                }
+            }
+
+            templateAccountDAO.finishSave(savedId)
+            savedId
+        }
 }

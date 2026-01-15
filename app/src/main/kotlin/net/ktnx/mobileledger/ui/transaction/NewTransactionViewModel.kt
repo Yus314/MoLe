@@ -49,8 +49,8 @@ import net.ktnx.mobileledger.model.LedgerTransactionAccount
 import net.ktnx.mobileledger.model.MatchedTemplate
 import net.ktnx.mobileledger.service.AppStateService
 import net.ktnx.mobileledger.service.CurrencyFormatter
-import net.ktnx.mobileledger.utils.Logger
 import net.ktnx.mobileledger.utils.SimpleDate
+import timber.log.Timber
 
 @HiltViewModel
 class NewTransactionViewModel @Inject constructor(
@@ -232,13 +232,13 @@ class NewTransactionViewModel @Inject constructor(
     }
 
     private fun lookupAccountSuggestions(rowId: Int, term: String) {
-        Logger.debug("autocomplete", "lookupAccountSuggestions: rowId=$rowId, term='$term'")
+        Timber.d("lookupAccountSuggestions: rowId=$rowId, term='$term'")
 
         // Cancel previous suggestion job to prevent race conditions during rapid input
         accountSuggestionJob?.cancel()
 
         if (term.length < 2) {
-            Logger.debug("autocomplete", "term too short (${term.length}), clearing suggestions")
+            Timber.d("term too short (${term.length}), clearing suggestions")
             _uiState.update {
                 it.copy(
                     accountSuggestions = emptyList(),
@@ -254,23 +254,20 @@ class NewTransactionViewModel @Inject constructor(
             delay(50)
 
             val profileId = _uiState.value.profileId
-            Logger.debug("autocomplete", "profileId=$profileId")
+            Timber.d("profileId=$profileId")
 
             if (profileId == null) {
-                Logger.debug("autocomplete", "profileId is null, returning")
+                Timber.d("profileId is null, returning")
                 return@launch
             }
 
             val termUpper = term.uppercase()
-            Logger.debug("autocomplete", "querying DB: profileId=$profileId, term='$termUpper'")
+            Timber.d("querying DB: profileId=$profileId, term='$termUpper'")
             val suggestions = accountRepository.searchAccountNamesSync(profileId, termUpper)
 
             // Only update if this job is still active (not cancelled by a newer input)
             if (isActive) {
-                Logger.debug(
-                    "autocomplete",
-                    "got ${suggestions.size} suggestions for row $rowId: ${suggestions.take(3)}"
-                )
+                Timber.d("got ${suggestions.size} suggestions for row $rowId: ${suggestions.take(3)}")
                 _uiState.update {
                     it.copy(
                         accountSuggestions = suggestions,
@@ -279,13 +276,13 @@ class NewTransactionViewModel @Inject constructor(
                     )
                 }
             } else {
-                Logger.debug("autocomplete", "job cancelled, discarding ${suggestions.size} suggestions")
+                Timber.d("job cancelled, discarding ${suggestions.size} suggestions")
             }
         }
     }
 
     fun setProfile(profileId: Long) {
-        Logger.debug("autocomplete", "setProfile: profileId=$profileId")
+        Timber.d("setProfile: profileId=$profileId")
         _uiState.update { it.copy(profileId = profileId) }
     }
 
@@ -559,7 +556,7 @@ class NewTransactionViewModel @Inject constructor(
                     }
                 }
             } catch (e: Exception) {
-                Logger.debug("qr", "Invalid regex in template: $regex - ${e.message}")
+                Timber.d("Invalid regex in template: $regex - ${e.message}")
             }
         }
         return null
@@ -770,10 +767,10 @@ class NewTransactionViewModel @Inject constructor(
     private suspend fun handleTransactionSendSuccess(transaction: LedgerTransaction) {
         try {
             transactionRepository.storeTransaction(transaction.toDBO())
-            Logger.debug("new-trans", "Transaction saved to DB")
+            Timber.d("Transaction saved to DB")
             appStateService.signalDataChanged()
         } catch (e: Exception) {
-            Logger.debug("new-trans", "Failed to save transaction: ${e.message}")
+            Timber.d("Failed to save transaction: ${e.message}")
         }
 
         _uiState.update { it.copy(isSubmitting = false, isBusy = false) }

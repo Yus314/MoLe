@@ -20,7 +20,6 @@ package net.ktnx.mobileledger
 import android.app.Application
 import android.content.Context
 import android.content.res.Configuration
-import android.util.Log
 import dagger.hilt.android.HiltAndroidApp
 import java.net.Authenticator
 import java.net.MalformedURLException
@@ -33,7 +32,7 @@ import net.ktnx.mobileledger.service.CurrencyFormatter
 import net.ktnx.mobileledger.ui.profiles.ProfileDetailModel
 import net.ktnx.mobileledger.utils.Colors
 import net.ktnx.mobileledger.utils.Globals
-import net.ktnx.mobileledger.utils.Logger
+import timber.log.Timber
 
 @HiltAndroidApp
 class App : Application() {
@@ -59,9 +58,15 @@ class App : Application() {
         profileModel?.getUseAuthentication() ?: profileRepository.currentProfile.value?.isAuthEnabled() ?: false
 
     override fun onCreate() {
-        Logger.debug("flow", "App onCreate()")
         instance = this
         super.onCreate()
+
+        // Initialize Timber for logging (only in debug builds)
+        if (BuildConfig.DEBUG) {
+            Timber.plant(Timber.DebugTree())
+        }
+
+        Timber.d("App onCreate()")
         currencyFormatter.refresh(Locale.getDefault())
         Authenticator.setDefault(object : Authenticator() {
             override fun getPasswordAuthentication(): PasswordAuthentication? {
@@ -76,18 +81,14 @@ class App : Application() {
                                 getAuthPassword().toCharArray()
                             )
                         } else {
-                            Log.w(
-                                "http-auth",
-                                String.format(
-                                    Locale.ROOT,
-                                    "Requesting host [%s] differs from expected [%s]",
-                                    requestingHost,
-                                    expectedHost
-                                )
+                            Timber.w(
+                                "Requesting host [%s] differs from expected [%s]",
+                                requestingHost,
+                                expectedHost
                             )
                         }
                     } catch (e: MalformedURLException) {
-                        Logger.debug("http-auth", "Malformed URL for authentication", e)
+                        Timber.d(e, "Malformed URL for authentication")
                     }
                 }
 

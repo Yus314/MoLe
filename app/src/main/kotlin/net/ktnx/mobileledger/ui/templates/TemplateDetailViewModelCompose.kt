@@ -40,8 +40,8 @@ import kotlinx.coroutines.launch
 import net.ktnx.mobileledger.data.repository.TemplateRepository
 import net.ktnx.mobileledger.db.TemplateAccount
 import net.ktnx.mobileledger.db.TemplateHeader
-import net.ktnx.mobileledger.utils.Logger
 import net.ktnx.mobileledger.utils.Misc
+import timber.log.Timber
 
 /**
  * ViewModel for the template detail screen using Compose.
@@ -147,7 +147,7 @@ class TemplateDetailViewModelCompose @Inject constructor(
                     _uiState.update { it.copy(isLoading = false) }
                 }
             } catch (e: Exception) {
-                Logger.debug(TAG, "Error loading template: ${e.message}")
+                Timber.d("Error loading template: ${e.message}")
                 _uiState.update { it.copy(isLoading = false) }
                 _effects.send(TemplateDetailEffect.ShowError("テンプレートの読み込みに失敗しました"))
             }
@@ -525,7 +525,7 @@ class TemplateDetailViewModelCompose @Inject constructor(
                 _effects.send(TemplateDetailEffect.TemplateSaved)
                 _effects.send(TemplateDetailEffect.NavigateBack)
             } catch (e: Exception) {
-                Logger.debug(TAG, "Error saving template: ${e.message}")
+                Timber.d("Error saving template: ${e.message}")
                 _uiState.update { it.copy(isSaving = false) }
                 _effects.send(TemplateDetailEffect.ShowError("テンプレートの保存に失敗しました"))
             }
@@ -651,7 +651,7 @@ class TemplateDetailViewModelCompose @Inject constructor(
                 _effects.send(TemplateDetailEffect.TemplateDeleted)
                 _effects.send(TemplateDetailEffect.NavigateBack)
             } catch (e: Exception) {
-                Logger.debug(TAG, "Error deleting template: ${e.message}")
+                Timber.d("Error deleting template: ${e.message}")
                 _uiState.update { it.copy(isLoading = false) }
                 _effects.send(TemplateDetailEffect.ShowError("テンプレートの削除に失敗しました"))
             }
@@ -659,6 +659,5 @@ class TemplateDetailViewModelCompose @Inject constructor(
     }
 
     companion object {
-        private const val TAG = "template-detail-vm"
     }
 }

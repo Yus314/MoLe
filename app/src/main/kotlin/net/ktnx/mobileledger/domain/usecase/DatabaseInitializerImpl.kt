@@ -23,7 +23,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.di.IoDispatcher
-import net.ktnx.mobileledger.utils.Logger
+import timber.log.Timber
 
 /**
  * DatabaseInitializer の実装
@@ -45,19 +45,19 @@ class DatabaseInitializerImpl @Inject constructor(
 
     override suspend fun initialize(): Result<Boolean> = withContext(ioDispatcher) {
         try {
-            Logger.debug(TAG, "Starting database initialization")
+            Timber.d("Starting database initialization")
 
             // ProfileRepository を通じてデータベースにアクセス
             // これにより Room データベースが初期化される
             val profileCount = profileRepository.getProfileCount()
             val hasProfiles = profileCount > 0
 
-            Logger.debug(TAG, "Database initialization complete. Profile count: $profileCount")
+            Timber.d("Database initialization complete. Profile count: $profileCount")
 
             _isInitialized = true
             Result.success(hasProfiles)
         } catch (e: Exception) {
-            Logger.warn(TAG, "Database initialization failed", e)
+            Timber.w("Database initialization failed", e)
             Result.failure(e)
         }
     }

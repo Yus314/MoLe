@@ -35,7 +35,7 @@ import kotlin.math.min
 import kotlin.math.sin
 import net.ktnx.mobileledger.utils.Colors
 import net.ktnx.mobileledger.utils.DimensionUtils
-import net.ktnx.mobileledger.utils.Logger
+import timber.log.Timber
 
 class HueRing : View {
     private lateinit var ringPaint: Paint
@@ -255,16 +255,12 @@ class HueRing : View {
                     if (hue < 0) {
                         hue += 1
                     }
-                    Logger.debug(
-                        "TMP",
-                        String.format(
-                            Locale.US,
-                            "x=%1.3f, y=%1.3f, angle=%1.3f rad, hueDegrees=%1.3f",
-                            x,
-                            y,
-                            angleRad,
-                            hue
-                        )
+                    Timber.d(
+                        "x=%1.3f, y=%1.3f, angle=%1.3f rad, hueDegrees=%1.3f",
+                        x,
+                        y,
+                        angleRad,
+                        hue
                     )
                     setHue(hue)
                 }

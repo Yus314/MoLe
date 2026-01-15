@@ -27,8 +27,8 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 import net.ktnx.mobileledger.di.IoDispatcher
-import net.ktnx.mobileledger.utils.Logger
 import net.ktnx.mobileledger.utils.NetworkUtil
+import timber.log.Timber
 
 /**
  * VersionDetector の実装
@@ -44,7 +44,7 @@ class VersionDetectorImpl @Inject constructor(
     override suspend fun detect(url: String, useAuth: Boolean, user: String?, password: String?): Result<String> =
         withContext(ioDispatcher) {
             try {
-                Logger.debug(TAG, "Detecting version for URL: $url")
+                Timber.d("Detecting version for URL: $url")
 
                 ensureActive()
 
@@ -57,22 +57,22 @@ class VersionDetectorImpl @Inject constructor(
                             ensureActive()
                             val version = parseVersionFromStream(http)
                             if (version != null) {
-                                Logger.debug(TAG, "Detected version: $version")
+                                Timber.d("Detected version: $version")
                                 Result.success(version)
                             } else {
-                                Logger.warn(TAG, "Could not parse version from response")
+                                Timber.w("Could not parse version from response")
                                 Result.failure(Exception("Could not parse version from response"))
                             }
                         }
 
                         HttpURLConnection.HTTP_NOT_FOUND -> {
                             // 404 means old hledger-web version (pre-1.19)
-                            Logger.debug(TAG, "Version endpoint not found, assuming pre-1.19")
+                            Timber.d("Version endpoint not found, assuming pre-1.19")
                             Result.success("pre-1.19")
                         }
 
                         else -> {
-                            Logger.warn(TAG, "HTTP error: [$responseCode] ${http.responseMessage}")
+                            Timber.w("HTTP error: [$responseCode] ${http.responseMessage}")
                             Result.failure(Exception("HTTP error: $responseCode ${http.responseMessage}"))
                         }
                     }
@@ -80,7 +80,7 @@ class VersionDetectorImpl @Inject constructor(
                     http.disconnect()
                 }
             } catch (e: Exception) {
-                Logger.warn(TAG, "Version detection failed", e)
+                Timber.w("Version detection failed", e)
                 Result.failure(e)
             }
         }
@@ -104,12 +104,12 @@ class VersionDetectorImpl @Inject constructor(
                     val minor = unquotedMatcher.group(2)
                     "$major.$minor"
                 } else {
-                    Logger.warn(TAG, "Version string format not recognized: $versionLine")
+                    Timber.w("Version string format not recognized: $versionLine")
                     null
                 }
             }
         } catch (e: Exception) {
-            Logger.warn(TAG, "Error parsing version", e)
+            Timber.w("Error parsing version", e)
             null
         }
     }

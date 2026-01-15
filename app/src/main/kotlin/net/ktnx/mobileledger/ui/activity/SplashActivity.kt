@@ -30,7 +30,7 @@ import net.ktnx.mobileledger.ui.splash.SplashEffect
 import net.ktnx.mobileledger.ui.splash.SplashScreen
 import net.ktnx.mobileledger.ui.splash.SplashViewModel
 import net.ktnx.mobileledger.ui.theme.MoLeTheme
-import net.ktnx.mobileledger.utils.Logger
+import timber.log.Timber
 
 @AndroidEntryPoint
 class SplashActivity : CrashReportingActivity() {
@@ -64,30 +64,30 @@ class SplashActivity : CrashReportingActivity() {
             }
         }
 
-        Logger.debug("splash", "onCreate()")
+        Timber.d("onCreate()")
     }
 
     override fun onStart() {
         super.onStart()
-        Logger.debug("splash", "onStart()")
+        Timber.d("onStart()")
         running = true
     }
 
     override fun onPause() {
         super.onPause()
-        Logger.debug("splash", "onPause()")
+        Timber.d("onPause()")
         running = false
     }
 
     override fun onResume() {
         super.onResume()
-        Logger.debug("splash", "onResume()")
+        Timber.d("onResume()")
         running = true
     }
 
     private fun startMainActivity() {
         if (running) {
-            Logger.debug("splash", "still running, launching main activity")
+            Timber.d("still running, launching main activity")
             val intent = Intent(this, MainActivityCompose::class.java).apply {
                 addFlags(
                     Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NO_USER_ACTION or
@@ -98,7 +98,7 @@ class SplashActivity : CrashReportingActivity() {
             @Suppress("DEPRECATION")
             overridePendingTransition(R.anim.fade_in_slowly, R.anim.fade_out_slowly)
         } else {
-            Logger.debug("splash", "Not running, finish and go away")
+            Timber.d("Not running, finish and go away")
             finish()
         }
     }

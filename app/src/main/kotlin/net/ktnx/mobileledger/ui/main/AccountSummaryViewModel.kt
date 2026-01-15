@@ -32,7 +32,7 @@ import net.ktnx.mobileledger.data.repository.AccountRepository
 import net.ktnx.mobileledger.data.repository.PreferencesRepository
 import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.model.LedgerAccount
-import net.ktnx.mobileledger.utils.Logger
+import timber.log.Timber
 
 /**
  * ViewModel for the Account Summary tab.
@@ -180,7 +180,7 @@ class AccountSummaryViewModel @Inject constructor(
                     )
                 }
             } catch (e: Exception) {
-                Logger.debug("AccountSummaryViewModel", "Error loading accounts", e)
+                Timber.d("Error loading accounts", e)
                 _uiState.update {
                     it.copy(
                         isLoading = false,

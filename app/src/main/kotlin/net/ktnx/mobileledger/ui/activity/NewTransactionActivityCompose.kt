@@ -34,7 +34,7 @@ import net.ktnx.mobileledger.ui.QR
 import net.ktnx.mobileledger.ui.theme.MoLeTheme
 import net.ktnx.mobileledger.ui.transaction.NewTransactionScreen
 import net.ktnx.mobileledger.ui.transaction.NewTransactionViewModel
-import net.ktnx.mobileledger.utils.Logger
+import timber.log.Timber
 
 /**
  * New Transaction Activity using Jetpack Compose for the UI.
@@ -70,7 +70,7 @@ class NewTransactionActivityCompose :
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 profileRepository.currentProfile.collect { profile ->
                     if (profile == null) {
-                        Logger.debug("new-trans-compose", "No active profile. Redirecting to SplashActivity")
+                        Timber.d("No active profile. Redirecting to SplashActivity")
                         val intent = Intent(this@NewTransactionActivityCompose, SplashActivity::class.java)
                         intent.flags = Intent.FLAG_ACTIVITY_TASK_ON_HOME or Intent.FLAG_ACTIVITY_NEW_TASK
                         startActivity(intent)
@@ -98,13 +98,13 @@ class NewTransactionActivityCompose :
         profileTheme = intent.getIntExtra(PARAM_THEME, -1)
 
         if (profileTheme < 0) {
-            Logger.debug(TAG, "Started with invalid/missing theme; quitting")
+            Timber.d("Started with invalid/missing theme; quitting")
             finish()
             return
         }
 
         if (profileId <= 0) {
-            Logger.debug(TAG, "Started with invalid/missing profile_id; quitting")
+            Timber.d("Started with invalid/missing profile_id; quitting")
             finish()
             return
         }
@@ -120,7 +120,7 @@ class NewTransactionActivityCompose :
     }
 
     override fun onQRScanResult(text: String?) {
-        Logger.debug("qr", "Got QR scan result [$text]")
+        Timber.d("Got QR scan result [$text]")
         // QR result handling is now done through the ViewModel
         // The ViewModel will process the QR code and apply matching templates
     }
@@ -130,7 +130,6 @@ class NewTransactionActivityCompose :
     }
 
     companion object {
-        private const val TAG = "new-trans-compose"
 
         /**
          * Start the new transaction activity for the given profile.

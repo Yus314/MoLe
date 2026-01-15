@@ -21,7 +21,7 @@ import com.fasterxml.jackson.databind.MappingIterator
 import java.io.IOException
 import java.io.InputStream
 import net.ktnx.mobileledger.model.LedgerAccount
-import net.ktnx.mobileledger.utils.Logger.debug
+import timber.log.Timber
 
 abstract class AccountListParser {
     protected lateinit var iterator: MappingIterator<ParsedLedgerAccount>
@@ -43,10 +43,7 @@ abstract class AccountListParser {
             return nextAccount(map)
         }
 
-        debug(
-            "accounts",
-            String.format("Got account '%s' [%s]", next.name, apiVersion.description)
-        )
+        Timber.d("Got account '%s' [%s]", next.name, apiVersion.description)
         return next
     }
 

@@ -51,8 +51,8 @@ import net.ktnx.mobileledger.model.FutureDates
 import net.ktnx.mobileledger.model.HledgerVersion
 import net.ktnx.mobileledger.ui.profiles.ProfileDetailModel
 import net.ktnx.mobileledger.utils.Colors
-import net.ktnx.mobileledger.utils.Logger
 import net.ktnx.mobileledger.utils.NetworkUtil
+import timber.log.Timber
 
 @HiltViewModel
 class ProfileDetailViewModel @Inject constructor(
@@ -370,10 +370,10 @@ class ProfileDetailViewModel @Inject constructor(
 
                 if (profile.id > 0) {
                     profileRepository.updateProfile(profile)
-                    Logger.debug("profiles", "Profile updated in DB")
+                    Timber.d("Profile updated in DB")
                 } else {
                     profileRepository.insertProfile(profile)
-                    Logger.debug("profiles", "Profile inserted in DB")
+                    Timber.d("Profile inserted in DB")
                 }
 
                 BackupManager.dataChanged(BuildConfig.APPLICATION_ID)
@@ -382,7 +382,7 @@ class ProfileDetailViewModel @Inject constructor(
                 _effects.send(ProfileDetailEffect.ProfileSaved)
                 _effects.send(ProfileDetailEffect.NavigateBack)
             } catch (e: Exception) {
-                Logger.debug("profiles", "Error saving profile: ${e.message}")
+                Timber.d("Error saving profile: ${e.message}")
                 _uiState.update { it.copy(isSaving = false) }
                 _effects.send(ProfileDetailEffect.ShowError("プロファイルの保存に失敗しました"))
             }
@@ -448,14 +448,10 @@ class ProfileDetailViewModel @Inject constructor(
                     404 -> return HledgerVersion(true)
 
                     else -> {
-                        Logger.debug(
-                            "profile",
-                            String.format(
-                                Locale.US,
-                                "HTTP error detecting hledger-web version: [%d] %s",
-                                http.responseCode,
-                                http.responseMessage
-                            )
+                        Timber.d(
+                            "HTTP error detecting hledger-web version: [%d] %s",
+                            http.responseCode,
+                            http.responseMessage
                         )
                         return null
                     }
@@ -477,14 +473,14 @@ class ProfileDetailViewModel @Inject constructor(
                         HledgerVersion(major, minor)
                     }
                 } else {
-                    Logger.debug("profile", String.format(Locale.ROOT, "Unrecognised version string '%s'", version))
+                    Timber.d(String.format(Locale.ROOT, "Unrecognised version string '%s'", version))
                     return null
                 }
             } finally {
                 resetAuthenticationData()
             }
         } catch (e: IOException) {
-            Logger.debug("profile", "IOException during version detection: ${e.message}")
+            Timber.d("IOException during version detection: ${e.message}")
             return null
         }
     }
@@ -545,7 +541,7 @@ class ProfileDetailViewModel @Inject constructor(
                     if (profile != null) {
                         profileRepository.deleteProfile(profile)
                         // Repository handles order updates internally
-                        Logger.debug("profiles", "Profile deleted from DB")
+                        Timber.d("Profile deleted from DB")
                     }
                 }
 
@@ -553,7 +549,7 @@ class ProfileDetailViewModel @Inject constructor(
                 _effects.send(ProfileDetailEffect.ProfileDeleted)
                 _effects.send(ProfileDetailEffect.NavigateBack)
             } catch (e: Exception) {
-                Logger.debug("profiles", "Error deleting profile: ${e.message}")
+                Timber.d("Error deleting profile: ${e.message}")
                 _uiState.update { it.copy(isLoading = false) }
                 _effects.send(ProfileDetailEffect.ShowError("プロファイルの削除に失敗しました"))
             }

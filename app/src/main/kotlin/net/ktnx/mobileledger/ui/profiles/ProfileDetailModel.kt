@@ -39,9 +39,9 @@ import net.ktnx.mobileledger.json.API
 import net.ktnx.mobileledger.model.FutureDates
 import net.ktnx.mobileledger.model.HledgerVersion
 import net.ktnx.mobileledger.utils.Colors
-import net.ktnx.mobileledger.utils.Logger
 import net.ktnx.mobileledger.utils.Misc
 import net.ktnx.mobileledger.utils.NetworkUtil
+import timber.log.Timber
 
 class ProfileDetailModel : ViewModel() {
     private val profileName = MutableLiveData<String?>()
@@ -345,7 +345,7 @@ class ProfileDetailModel : ViewModel() {
                 App.resetAuthenticationData()
 
                 val elapsed = System.currentTimeMillis() - startTime
-                Logger.debug("profile", "Detection duration $elapsed")
+                Timber.d("Detection duration $elapsed")
 
                 // Ensure minimum UI feedback time using delay() instead of Thread.sleep()
                 if (elapsed < TARGET_PROCESS_DURATION) {
@@ -372,14 +372,10 @@ class ProfileDetailModel : ViewModel() {
                 404 -> return HledgerVersion(true)
 
                 else -> {
-                    Logger.debug(
-                        "profile",
-                        String.format(
-                            Locale.US,
-                            "HTTP error detecting hledger-web version: [%d] %s",
-                            http.responseCode,
-                            http.responseMessage
-                        )
+                    Timber.d(
+                        "HTTP error detecting hledger-web version: [%d] %s",
+                        http.responseCode,
+                        http.responseMessage
                     )
                     return null
                 }
@@ -402,7 +398,7 @@ class ProfileDetailModel : ViewModel() {
                     HledgerVersion(major, minor)
                 }
             } else {
-                Logger.debug("profile", String.format("Unrecognised version string '%s'", version))
+                Timber.d(String.format("Unrecognised version string '%s'", version))
                 return null
             }
         } catch (e: IOException) {

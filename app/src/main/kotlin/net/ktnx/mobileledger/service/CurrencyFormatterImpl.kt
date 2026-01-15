@@ -28,7 +28,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import net.ktnx.mobileledger.model.Currency
-import net.ktnx.mobileledger.utils.Logger
+import timber.log.Timber
 
 /**
  * Implementation of [CurrencyFormatter].
@@ -94,14 +94,13 @@ class CurrencyFormatterImpl @Inject constructor() : CurrencyFormatter {
         val currency = formatter.currency
         val symbol = currency?.symbol ?: ""
 
-        Logger.debug(
-            "CurrencyFormatter",
+        Timber.d(
             "Discovering currency symbol position for locale $locale " +
                 "(currency: $currency, symbol: $symbol)"
         )
 
         val formatted = formatter.format(1234.56f)
-        Logger.debug("CurrencyFormatter", "1234.56 formats as '$formatted'")
+        Timber.d("1234.56 formats as '$formatted'")
 
         when {
             formatted.startsWith(symbol) -> {

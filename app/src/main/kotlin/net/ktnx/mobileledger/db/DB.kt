@@ -41,7 +41,7 @@ import net.ktnx.mobileledger.dao.TemplateAccountDAO
 import net.ktnx.mobileledger.dao.TemplateHeaderDAO
 import net.ktnx.mobileledger.dao.TransactionAccountDAO
 import net.ktnx.mobileledger.dao.TransactionDAO
-import net.ktnx.mobileledger.utils.Logger
+import timber.log.Timber
 
 @Database(
     version = DB.REVISION,
@@ -226,7 +226,7 @@ abstract class DB : RoomDatabase() {
 
             try {
                 rm.openRawResource(resId).use { res ->
-                    Logger.debug("db", "Applying $fileName")
+                    Timber.d("Applying $fileName")
                     val reader = BufferedReader(InputStreamReader(res))
 
                     val endOfStatement = Pattern.compile(";\\s*(?:--.*)?$")

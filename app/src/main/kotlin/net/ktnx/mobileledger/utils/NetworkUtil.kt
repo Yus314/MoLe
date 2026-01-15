@@ -21,6 +21,7 @@ import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
 import net.ktnx.mobileledger.db.Profile
+import timber.log.Timber
 
 object NetworkUtil {
     private const val THIRTY_SECONDS = 30000
@@ -38,7 +39,7 @@ object NetworkUtil {
             connectURL += "/"
         }
         connectURL += path
-        Logger.debug("network", "Connecting to $connectURL")
+        Timber.d("Connecting to $connectURL")
         val http = URL(connectURL).openConnection() as HttpURLConnection
         http.allowUserInteraction = true
         http.setRequestProperty("Accept-Charset", "UTF-8")

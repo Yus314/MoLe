@@ -31,7 +31,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import net.ktnx.mobileledger.data.repository.TemplateRepository
 import net.ktnx.mobileledger.db.TemplateHeader
-import net.ktnx.mobileledger.utils.Logger
+import timber.log.Timber
 
 /**
  * ViewModel for the template list screen using Compose.
@@ -61,7 +61,7 @@ class TemplateListViewModelCompose @Inject constructor(
 
             templateRepository.getAllTemplates()
                 .catch { e ->
-                    Logger.debug("template-list", "Error loading templates: ${e.message}")
+                    Timber.d("Error loading templates: ${e.message}")
                     _uiState.update {
                         it.copy(
                             isLoading = false,
@@ -113,7 +113,7 @@ class TemplateListViewModelCompose @Inject constructor(
                     _effects.send(TemplateListEffect.ShowUndoSnackbar(template.name, templateId))
                 }
             } catch (e: Exception) {
-                Logger.debug("template-list", "Error deleting template: ${e.message}")
+                Timber.d("Error deleting template: ${e.message}")
                 _effects.send(TemplateListEffect.ShowError("テンプレートの削除に失敗しました"))
             }
         }
@@ -126,7 +126,7 @@ class TemplateListViewModelCompose @Inject constructor(
                 templateRepository.insertTemplate(template)
                 deletedTemplate = null
             } catch (e: Exception) {
-                Logger.debug("template-list", "Error restoring template: ${e.message}")
+                Timber.d("Error restoring template: ${e.message}")
                 _effects.send(TemplateListEffect.ShowError("テンプレートの復元に失敗しました"))
             }
         }
@@ -137,13 +137,12 @@ class TemplateListViewModelCompose @Inject constructor(
             try {
                 templateRepository.duplicateTemplate(templateId)
             } catch (e: Exception) {
-                Logger.debug("template-list", "Error duplicating template: ${e.message}")
+                Timber.d("Error duplicating template: ${e.message}")
                 _effects.send(TemplateListEffect.ShowError("テンプレートの複製に失敗しました"))
             }
         }
     }
 
     companion object {
-        private const val TAG = "template-list-vm"
     }
 }

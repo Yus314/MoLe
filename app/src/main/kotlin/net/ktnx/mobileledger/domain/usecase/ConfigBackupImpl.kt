@@ -34,7 +34,7 @@ import net.ktnx.mobileledger.data.repository.CurrencyRepository
 import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.data.repository.TemplateRepository
 import net.ktnx.mobileledger.di.IoDispatcher
-import net.ktnx.mobileledger.utils.Logger
+import timber.log.Timber
 
 /**
  * Pure Coroutines implementation of [ConfigBackup].
@@ -81,10 +81,10 @@ class ConfigBackupImpl @Inject constructor(
                 writer.writeConfig()
             }
 
-            Logger.debug(TAG, "Backup completed successfully")
+            Timber.d("Backup completed successfully")
             Result.success(Unit)
         } catch (e: Exception) {
-            Logger.warn(TAG, "Error during backup", e)
+            Timber.w("Error during backup", e)
             Result.failure(e)
         }
     }
@@ -127,15 +127,14 @@ class ConfigBackupImpl @Inject constructor(
                 }
             }
 
-            Logger.debug(TAG, "Restore completed successfully")
+            Timber.d("Restore completed successfully")
             Result.success(Unit)
         } catch (e: Exception) {
-            Logger.warn(TAG, "Error during restore", e)
+            Timber.w("Error during restore", e)
             Result.failure(e)
         }
     }
 
     companion object {
-        private const val TAG = "ConfigBackupImpl"
     }
 }

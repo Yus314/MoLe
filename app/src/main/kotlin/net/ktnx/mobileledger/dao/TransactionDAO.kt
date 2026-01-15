@@ -32,8 +32,8 @@ import net.ktnx.mobileledger.db.DB
 import net.ktnx.mobileledger.db.Transaction
 import net.ktnx.mobileledger.db.TransactionWithAccounts
 import net.ktnx.mobileledger.model.LedgerAccount
-import net.ktnx.mobileledger.utils.Logger
 import net.ktnx.mobileledger.utils.Misc
+import timber.log.Timber
 
 @Dao
 abstract class TransactionDAO : BaseDAO<Transaction>() {
@@ -190,12 +190,12 @@ abstract class TransactionDAO : BaseDAO<Transaction>() {
             storeSync(tr)
         }
 
-        Logger.debug("Transaction", "Purging old transactions")
+        Timber.d("Purging old transactions")
         var removed = purgeOldTransactionsSync(profileId, generation)
-        Logger.debug("Transaction", String.format(Locale.ROOT, "Purged %d transactions", removed))
+        Timber.d(String.format(Locale.ROOT, "Purged %d transactions", removed))
 
         removed = purgeOldTransactionAccountsSync(profileId, generation)
-        Logger.debug("Transaction", String.format(Locale.ROOT, "Purged %d transaction accounts", removed))
+        Timber.d(String.format(Locale.ROOT, "Purged %d transaction accounts", removed))
     }
 
     @androidx.room.Transaction

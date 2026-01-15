@@ -34,7 +34,7 @@ import net.ktnx.mobileledger.db.Profile
 import net.ktnx.mobileledger.db.TemplateAccount
 import net.ktnx.mobileledger.db.TemplateHeader
 import net.ktnx.mobileledger.db.TemplateWithAccounts
-import net.ktnx.mobileledger.utils.Logger
+import timber.log.Timber
 
 class RawConfigReader(inputStream: InputStream) {
     private val r: JsonReader = JsonReader(BufferedReader(InputStreamReader(inputStream)))
@@ -292,7 +292,7 @@ class RawConfigReader(inputStream: InputStream) {
 
     private suspend fun restoreCurrentProfile(profileRepository: ProfileRepository) {
         if (currentProfile == null) {
-            Logger.debug("backup", "Not restoring current profile (not present in backup)")
+            Timber.d("Not restoring current profile (not present in backup)")
             return
         }
 
@@ -300,11 +300,11 @@ class RawConfigReader(inputStream: InputStream) {
         val p = profileRepository.getProfileByUuidSync(currentProfileUuid)
 
         if (p != null) {
-            Logger.debug("backup", "Restoring current profile ${p.name}")
+            Timber.d("Restoring current profile ${p.name}")
             profileRepository.setCurrentProfile(p)
             App.storeStartupProfileAndTheme(p.id, p.theme)
         } else {
-            Logger.debug("backup", "Not restoring profile $currentProfile: not found in DB")
+            Timber.d("Not restoring profile $currentProfile: not found in DB")
         }
     }
 }

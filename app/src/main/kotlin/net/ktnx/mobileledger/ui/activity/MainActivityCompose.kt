@@ -55,7 +55,7 @@ import net.ktnx.mobileledger.ui.profiles.ProfileDetailActivity
 import net.ktnx.mobileledger.ui.templates.TemplatesActivity
 import net.ktnx.mobileledger.ui.theme.MoLeTheme
 import net.ktnx.mobileledger.utils.Colors
-import net.ktnx.mobileledger.utils.Logger
+import timber.log.Timber
 
 /**
  * Main activity using Jetpack Compose for the UI.
@@ -77,9 +77,9 @@ class MainActivityCompose : ProfileThemedActivity() {
     private val transactionListViewModel: TransactionListViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        Logger.debug(TAG, "onCreate()/entry")
+        Timber.d("onCreate()/entry")
         super.onCreate(savedInstanceState)
-        Logger.debug(TAG, "onCreate()/after super")
+        Timber.d("onCreate()/after super")
 
         // Observe profile changes from ProfileRepository (via ViewModel)
         lifecycleScope.launch {
@@ -118,7 +118,7 @@ class MainActivityCompose : ProfileThemedActivity() {
                     viewModel.dataVersion.collect { version ->
                         // Only reload if version changed (avoid duplicate reloads on lifecycle restart)
                         if (version > 0 && version != lastProcessedVersion) {
-                            Logger.debug(TAG, "Data version changed to $version, reloading data")
+                            Timber.d("Data version changed to $version, reloading data")
                             lastProcessedVersion = version
                             viewModel.reloadDataAfterChange()
                         }
@@ -231,10 +231,7 @@ class MainActivityCompose : ProfileThemedActivity() {
     private fun onProfileChanged(newProfile: Profile?) {
         val newProfileTheme = newProfile?.theme ?: Colors.DEFAULT_HUE_DEG
         if (newProfileTheme != Colors.profileThemeId) {
-            Logger.debug(
-                "profiles",
-                "profile theme ${Colors.profileThemeId} → $newProfileTheme"
-            )
+            Timber.d("profile theme ${Colors.profileThemeId} → $newProfileTheme")
             Colors.profileThemeId = newProfileTheme
             profileThemeChanged()
             return
@@ -260,7 +257,7 @@ class MainActivityCompose : ProfileThemedActivity() {
         }
 
         if (newList.isNotEmpty() && replacementProfile == null) {
-            Logger.debug(TAG, "Switching profile because the current is no longer available")
+            Timber.d("Switching profile because the current is no longer available")
             profileRepository.setCurrentProfile(newList[0])
         } else if (replacementProfile != null) {
             profileRepository.setCurrentProfile(replacementProfile)
@@ -347,7 +344,7 @@ class MainActivityCompose : ProfileThemedActivity() {
                 try {
                     lastUpdate = opt.value?.toLong() ?: 0L
                 } catch (ex: NumberFormatException) {
-                    Logger.debug(TAG, "Error parsing '${opt.value}' as long", ex)
+                    Timber.d("Error parsing '${opt.value}' as long", ex)
                 }
             }
 
@@ -372,11 +369,10 @@ class MainActivityCompose : ProfileThemedActivity() {
     }
 
     private fun profileThemeChanged() {
-        Logger.debug(TAG, "profileThemeChanged(): recreating activity")
+        Timber.d("profileThemeChanged(): recreating activity")
         recreate()
     }
 
     companion object {
-        const val TAG = "main-compose"
     }
 }

@@ -31,7 +31,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.animation.AnimationUtils
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import net.ktnx.mobileledger.utils.DimensionUtils
-import net.ktnx.mobileledger.utils.Logger
+import timber.log.Timber
 
 class FabManager(private val fab: FloatingActionButton) {
     private var wantedFabState = FAB_SHOWN
@@ -60,7 +60,7 @@ class FabManager(private val fab: FloatingActionButton) {
             fab.clearAnimation()
         }
 
-        Logger.debug("fab", "Showing FAB")
+        Timber.d("Showing FAB")
         wantedFabState = FAB_SHOWN
         slideFabTo(0, 200L, AnimationUtils.LINEAR_OUT_SLOW_IN_INTERPOLATOR)
     }
@@ -77,7 +77,7 @@ class FabManager(private val fab: FloatingActionButton) {
             fab.clearAnimation()
         }
 
-        Logger.debug("fab", "Hiding FAB")
+        Timber.d("Hiding FAB")
         wantedFabState = FAB_HIDDEN
         slideFabTo(fabVerticalOffset, 150L, AnimationUtils.FAST_OUT_LINEAR_IN_INTERPOLATOR)
     }

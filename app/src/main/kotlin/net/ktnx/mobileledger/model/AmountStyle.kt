@@ -21,8 +21,8 @@ import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.round
 import net.ktnx.mobileledger.App
-import net.ktnx.mobileledger.utils.Logger
 import net.ktnx.mobileledger.utils.Misc
+import timber.log.Timber
 
 /**
  * Represents the display style for currency amounts.
@@ -258,7 +258,7 @@ data class AmountStyle(
 
                 AmountStyle(position, spaced, precision, decimalMark)
             } catch (e: Exception) {
-                Logger.debug("AmountStyle", "Deserialization failed: ${e.message}")
+                Timber.d("Deserialization failed: ${e.message}")
                 null
             }
         }

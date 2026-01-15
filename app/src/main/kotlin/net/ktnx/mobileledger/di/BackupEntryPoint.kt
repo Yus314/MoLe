@@ -56,11 +56,9 @@ interface BackupEntryPoint {
          * @param context Any Android context (Activity, Service, Application, etc.)
          * @return The BackupEntryPoint instance
          */
-        fun get(context: Context): BackupEntryPoint {
-            return EntryPointAccessors.fromApplication(
-                context.applicationContext,
-                BackupEntryPoint::class.java
-            )
-        }
+        fun get(context: Context): BackupEntryPoint = EntryPointAccessors.fromApplication(
+            context.applicationContext,
+            BackupEntryPoint::class.java
+        )
     }
 }

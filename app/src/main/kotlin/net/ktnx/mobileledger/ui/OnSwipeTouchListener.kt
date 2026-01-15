@@ -23,7 +23,7 @@ import android.view.GestureDetector.SimpleOnGestureListener
 import android.view.MotionEvent
 import android.view.View
 import kotlin.math.abs
-import net.ktnx.mobileledger.utils.Logger
+import timber.log.Timber
 
 abstract class OnSwipeTouchListener(ctx: Context) : View.OnTouchListener {
     @JvmField
@@ -31,14 +31,14 @@ abstract class OnSwipeTouchListener(ctx: Context) : View.OnTouchListener {
 
     private inner class GestureListener : SimpleOnGestureListener() {
         override fun onDown(e: MotionEvent): Boolean {
-            Logger.debug("sw-l", "onDown")
+            Timber.d("onDown")
             return false
         }
 
         override fun onFling(e1: MotionEvent?, e2: MotionEvent, velocityX: Float, velocityY: Float): Boolean {
             var result = false
 
-            Logger.debug("sw-l", "onFling")
+            Timber.d("onFling")
 
             try {
                 if (e1 == null) return false
@@ -47,10 +47,10 @@ abstract class OnSwipeTouchListener(ctx: Context) : View.OnTouchListener {
                 if (abs(diffX) > abs(diffY)) {
                     if (abs(diffX) > SWIPE_THRESHOLD && abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
                         if (diffX > 0) {
-                            Logger.debug("sw-l", "calling onSwipeRight")
+                            Timber.d("calling onSwipeRight")
                             onSwipeRight()
                         } else {
-                            Logger.debug("sw-l", "calling onSwipeLeft")
+                            Timber.d("calling onSwipeLeft")
                             onSwipeLeft()
                         }
                     }
@@ -64,7 +64,7 @@ abstract class OnSwipeTouchListener(ctx: Context) : View.OnTouchListener {
                     result = true
                 }
             } catch (e: Exception) {
-                Logger.debug("sw-l", "Error during fling gesture", e)
+                Timber.d("Error during fling gesture", e)
             }
 
             return result
@@ -73,7 +73,7 @@ abstract class OnSwipeTouchListener(ctx: Context) : View.OnTouchListener {
 
     open fun onSwipeRight() {}
     open fun onSwipeLeft() {
-        Logger.debug("sw-l", "LEFT")
+        Timber.d("LEFT")
     }
     open fun onSwipeUp() {}
     open fun onSwipeDown() {}

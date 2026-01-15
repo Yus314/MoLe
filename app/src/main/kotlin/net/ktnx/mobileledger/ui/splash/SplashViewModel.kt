@@ -30,7 +30,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import net.ktnx.mobileledger.domain.usecase.DatabaseInitializer
-import net.ktnx.mobileledger.utils.Logger
+import timber.log.Timber
 
 /**
  * SplashScreen のための ViewModel
@@ -57,17 +57,17 @@ class SplashViewModel @Inject constructor(
 
     private fun startInitialization() {
         viewModelScope.launch {
-            Logger.debug(TAG, "Starting database initialization")
+            Timber.d("Starting database initialization")
 
             databaseInitializer.initialize()
                 .onSuccess { hasProfiles ->
-                    Logger.debug(TAG, "Database initialized. hasProfiles=$hasProfiles")
+                    Timber.d("Database initialized. hasProfiles=$hasProfiles")
                     _uiState.update { it.copy(isInitialized = true) }
                     checkNavigation()
                 }
                 .onFailure { error ->
                     // 初期化失敗でも続行（エラーは通常発生しない）
-                    Logger.warn(TAG, "Database initialization failed", error)
+                    Timber.w("Database initialization failed", error)
                     _uiState.update { it.copy(isInitialized = true) }
                     checkNavigation()
                 }
@@ -86,14 +86,13 @@ class SplashViewModel @Inject constructor(
         val state = _uiState.value
         if (state.canNavigate) {
             viewModelScope.launch {
-                Logger.debug(TAG, "Ready to navigate to main activity")
+                Timber.d("Ready to navigate to main activity")
                 _effects.send(SplashEffect.NavigateToMain)
             }
         }
     }
 
     companion object {
-        private const val TAG = "SplashViewModel"
         private const val KEEP_ACTIVE_FOR_MS = 400L
     }
 }

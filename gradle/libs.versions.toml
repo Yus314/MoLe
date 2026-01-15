@@ -27,6 +27,7 @@ turbine = "1.0.0"
 composeBom = "2024.12.01"
 composeNavigation = "2.8.5"
 reorderable = "0.9.6"
+timber = "5.0.1"
 
 [libraries]
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
@@ -81,6 +82,7 @@ compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
 compose-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version = "1.9.3" }
 reorderable = { module = "org.burnoutcrew.composereorderable:reorderable", version.ref = "reorderable" }
+timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
