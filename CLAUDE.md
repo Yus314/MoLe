@@ -1,6 +1,6 @@
 # MoLe Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-01-10
+Auto-generated from all feature plans. Last updated: 2026-01-15
 
 ## Active Technologies
 - AGP 8.7.3 / Gradle 8.9 (002-agp-update)
@@ -18,6 +18,7 @@ Auto-generated from all feature plans. Last updated: 2026-01-10
 - Room 2.4.2 (既存、本機能では変更なし) (012-accumulator-testability)
 - Kotlin 2.0.21 / JVM target 1.8 + Kotlin Coroutines 1.9.0, Hilt 2.51.1, Jetpack Compose (composeBom 2024.12.01) (014-async-pattern-unification)
 - Room Database 2.4.2 (SQLite) (014-async-pattern-unification)
+- Pure Coroutines for async operations, TestDispatcher for testing (015-thread-wrapper-coroutines)
 
 ## Project Structure
 
@@ -647,9 +648,9 @@ class MyViewModelTest {
 ```
 
 ## Recent Changes
+- 015-thread-wrapper-coroutines: Completed - Converted Thread wrappers to pure Coroutines. TransactionSenderImpl, ConfigBackupImpl, ViewModels now use viewModelScope.launch + delay() instead of Thread + Thread.sleep(). Removed GeneralBackgroundTasks, TaskCallback, AsyncResultCallback, BaseDAO async methods.
 - 014-async-pattern-unification: Added Kotlin 2.0.21 / JVM target 1.8 + Kotlin Coroutines 1.9.0, Hilt 2.51.1, Jetpack Compose (composeBom 2024.12.01)
 - 012-accumulator-testability: Added Kotlin 2.0.21 / JVM target 1.8 + Hilt 2.51.1, Jetpack Compose (composeBom 2024.12.01), Coroutines 1.9.0
-- 011-test-coverage: **テストカバレッジ向上** - Kover (JetBrains製Kotlin専用カバレッジツール) を導入。MainViewModelTest、TransactionParser/AccountParserTest を追加。TransactionSender インターフェースで非同期処理をテスト可能に。MainViewModel カバレッジ約58%達成
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->
