@@ -231,10 +231,6 @@ abstract class TransactionDAO : BaseDAO<Transaction>() {
         }
     }
 
-    fun storeLast(rec: TransactionWithAccounts) {
-        runAsync { appendSync(rec) }
-    }
-
     @androidx.room.Transaction
     open fun appendSync(rec: TransactionWithAccounts) {
         val trAccDao = DB.get().getTransactionAccountDAO()

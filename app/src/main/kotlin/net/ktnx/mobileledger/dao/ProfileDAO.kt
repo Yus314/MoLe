@@ -39,13 +39,6 @@ abstract class ProfileDAO : BaseDAO<Profile>() {
         return insertSync(item)
     }
 
-    fun insertLast(item: Profile, onInsertedReceiver: OnInsertedReceiver?) {
-        runAsync {
-            val id = insertLastSync(item)
-            onInsertedReceiver?.onInsert(id)
-        }
-    }
-
     @Update
     abstract override fun updateSync(item: Profile)
 
@@ -85,13 +78,6 @@ abstract class ProfileDAO : BaseDAO<Profile>() {
         for (p in profileList) {
             p.orderNo = order++
             updateSync(p)
-        }
-    }
-
-    fun updateOrder(list: List<Profile>?, onDone: Runnable?) {
-        runAsync {
-            updateOrderSync(list)
-            onDone?.run()
         }
     }
 }

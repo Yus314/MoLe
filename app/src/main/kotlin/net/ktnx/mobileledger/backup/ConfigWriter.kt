@@ -22,6 +22,7 @@ import android.net.Uri
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
 import java.io.IOException
+import kotlinx.coroutines.runBlocking
 import net.ktnx.mobileledger.data.repository.CurrencyRepository
 import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.data.repository.TemplateRepository
@@ -58,7 +59,10 @@ constructor(
 
     @Throws(IOException::class)
     override fun processStream() {
-        w.writeConfig()
+        // runBlocking is required here because processStream() is called from
+        // Thread.run() in ConfigIO base class. ConfigBackupImpl uses pure coroutines
+        // and bypasses this class entirely.
+        runBlocking { w.writeConfig() }
         onDoneListener?.let { Misc.onMainThread { it.done() } }
     }
 

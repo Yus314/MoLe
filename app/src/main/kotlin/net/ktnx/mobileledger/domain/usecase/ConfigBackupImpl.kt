@@ -20,99 +20,118 @@ package net.ktnx.mobileledger.domain.usecase
 import android.content.Context
 import android.net.Uri
 import dagger.hilt.android.qualifiers.ApplicationContext
+import java.io.FileInputStream
+import java.io.FileOutputStream
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.suspendCancellableCoroutine
-import net.ktnx.mobileledger.backup.ConfigIO
-import net.ktnx.mobileledger.backup.ConfigReader
-import net.ktnx.mobileledger.backup.ConfigWriter
+import kotlin.coroutines.coroutineContext
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.withContext
+import net.ktnx.mobileledger.backup.RawConfigReader
+import net.ktnx.mobileledger.backup.RawConfigWriter
+import net.ktnx.mobileledger.data.repository.CurrencyRepository
+import net.ktnx.mobileledger.data.repository.ProfileRepository
+import net.ktnx.mobileledger.data.repository.TemplateRepository
+import net.ktnx.mobileledger.di.IoDispatcher
 import net.ktnx.mobileledger.utils.Logger
 
 /**
- * ConfigBackup の実装
+ * Pure Coroutines implementation of [ConfigBackup].
  *
- * ConfigWriter と ConfigReader をラップし、suspend 関数として提供する。
- * キャンセル対応: invokeOnCancellation でスレッドを interrupt する。
+ * This implementation converts ConfigWriter/ConfigReader's Thread logic to pure suspend functions,
+ * enabling proper integration with ViewModels and deterministic testing via TestDispatcher.
+ *
+ * ## Key Features
+ * - No Thread usage (Thread.start(), Thread.join() not used)
+ * - No runBlocking calls in production code
+ * - All I/O runs via withContext(ioDispatcher)
+ * - Fast cancellation via ensureActive()
+ * - Result<Unit> for success/failure handling
  */
 @Singleton
 class ConfigBackupImpl @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val profileRepository: ProfileRepository,
+    private val templateRepository: TemplateRepository,
+    private val currencyRepository: CurrencyRepository,
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : ConfigBackup {
 
-    override suspend fun backup(uri: Uri): Result<Unit> = suspendCancellableCoroutine { cont ->
+    override suspend fun backup(uri: Uri): Result<Unit> = withContext(ioDispatcher) {
         try {
-            val writer = ConfigWriter(
-                context,
-                uri,
-                object : ConfigIO.OnErrorListener() {
-                    override fun error(e: Exception) {
-                        if (cont.isActive) {
-                            cont.resumeWithException(e)
-                        }
-                    }
-                },
-                object : ConfigWriter.OnDoneListener() {
-                    override fun done() {
-                        if (cont.isActive) {
-                            cont.resume(Result.success(Unit))
-                        }
-                    }
-                }
-            )
+            coroutineContext.ensureActive()
 
-            cont.invokeOnCancellation {
-                Logger.debug(TAG, "Cancelling backup task")
-                writer.interrupt()
+            val pfd = context.contentResolver.openFileDescriptor(uri, "w")
+                ?: return@withContext Result.failure(Exception("Cannot open file for writing"))
+
+            pfd.use { descriptor ->
+                val fd = descriptor.fileDescriptor
+                    ?: return@withContext Result.failure(Exception("File descriptor not available"))
+
+                coroutineContext.ensureActive()
+
+                val writer = RawConfigWriter(
+                    FileOutputStream(fd),
+                    profileRepository,
+                    templateRepository,
+                    currencyRepository
+                )
+
+                writer.writeConfig()
             }
 
-            writer.start()
-        } catch (e: CancellationException) {
-            throw e
+            Logger.debug(TAG, "Backup completed successfully")
+            Result.success(Unit)
         } catch (e: Exception) {
-            Logger.warn(TAG, "Error starting backup", e)
-            if (cont.isActive) {
-                cont.resume(Result.failure(e))
-            }
+            Logger.warn(TAG, "Error during backup", e)
+            Result.failure(e)
         }
     }
 
-    override suspend fun restore(uri: Uri): Result<Unit> = suspendCancellableCoroutine { cont ->
+    override suspend fun restore(uri: Uri): Result<Unit> = withContext(ioDispatcher) {
         try {
-            val reader = ConfigReader(
-                context,
-                uri,
-                object : ConfigIO.OnErrorListener() {
-                    override fun error(e: Exception) {
-                        if (cont.isActive) {
-                            cont.resumeWithException(e)
-                        }
+            coroutineContext.ensureActive()
+
+            val pfd = context.contentResolver.openFileDescriptor(uri, "r")
+                ?: return@withContext Result.failure(Exception("Cannot open file for reading"))
+
+            pfd.use { descriptor ->
+                val fd = descriptor.fileDescriptor
+                    ?: return@withContext Result.failure(Exception("File descriptor not available"))
+
+                coroutineContext.ensureActive()
+
+                val reader = RawConfigReader(FileInputStream(fd))
+                reader.readConfig()
+
+                coroutineContext.ensureActive()
+
+                reader.restoreAll(profileRepository, templateRepository, currencyRepository)
+
+                // Handle current profile if needed
+                val currentProfileUuid = reader.currentProfile
+                if (profileRepository.currentProfile.value == null) {
+                    coroutineContext.ensureActive()
+                    var p = if (currentProfileUuid != null) {
+                        profileRepository.getProfileByUuidSync(currentProfileUuid)
+                    } else {
+                        null
                     }
-                },
-                object : ConfigReader.OnDoneListener() {
-                    override fun done() {
-                        if (cont.isActive) {
-                            cont.resume(Result.success(Unit))
-                        }
+
+                    if (p == null) {
+                        p = profileRepository.getAnyProfile()
                     }
+
+                    p?.let { profileRepository.setCurrentProfile(it) }
                 }
-            )
-
-            cont.invokeOnCancellation {
-                Logger.debug(TAG, "Cancelling restore task")
-                reader.interrupt()
             }
 
-            reader.start()
-        } catch (e: CancellationException) {
-            throw e
+            Logger.debug(TAG, "Restore completed successfully")
+            Result.success(Unit)
         } catch (e: Exception) {
-            Logger.warn(TAG, "Error starting restore", e)
-            if (cont.isActive) {
-                cont.resume(Result.failure(e))
-            }
+            Logger.warn(TAG, "Error during restore", e)
+            Result.failure(e)
         }
     }
 

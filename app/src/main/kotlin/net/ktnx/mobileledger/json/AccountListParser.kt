@@ -45,6 +45,29 @@ abstract class AccountListParser {
         return next
     }
 
+    /**
+     * Parse next account without RetrieveTransactionsTask dependency.
+     * This method is used by the pure Coroutines implementation of TransactionSyncerImpl.
+     *
+     * @param map Map of account names to LedgerAccount instances for parent lookup
+     * @return The next LedgerAccount or null if no more accounts
+     */
+    open fun nextAccountWithoutTask(map: HashMap<String, LedgerAccount>): LedgerAccount? {
+        if (!iterator.hasNext()) return null
+
+        val next = iterator.next().toLedgerAccountWithoutTask(map)
+
+        if (next.name.equals("root", ignoreCase = true)) {
+            return nextAccountWithoutTask(map)
+        }
+
+        debug(
+            "accounts",
+            String.format("Got account '%s' [%s]", next.name, apiVersion.description)
+        )
+        return next
+    }
+
     companion object {
         @JvmStatic
         @Throws(IOException::class)

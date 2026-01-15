@@ -24,6 +24,7 @@ import android.os.ParcelFileDescriptor
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.IOException
+import kotlinx.coroutines.runBlocking
 import net.ktnx.mobileledger.di.BackupEntryPoint
 import net.ktnx.mobileledger.utils.Logger
 
@@ -47,7 +48,9 @@ class MobileLedgerBackupAgent : BackupAgent() {
             entryPoint.templateRepository(),
             entryPoint.currencyRepository()
         )
-        saver.writeConfig()
+        // runBlocking is required here because BackupAgent.onBackup() is called
+        // synchronously by the Android system and cannot be made a suspend function
+        runBlocking { saver.writeConfig() }
         val bytes = output.toByteArray()
         data.writeEntityHeader(SETTINGS_KEY, bytes.size)
         data.writeEntityData(bytes, bytes.size)
@@ -75,11 +78,15 @@ class MobileLedgerBackupAgent : BackupAgent() {
         Logger.debug("restore", "Successfully read restore data. Wiping database")
         entryPoint.db().deleteAllSync()
         Logger.debug("restore", "Database wiped")
-        reader.restoreAll(
-            entryPoint.profileRepository(),
-            entryPoint.templateRepository(),
-            entryPoint.currencyRepository()
-        )
+        // runBlocking is required here because BackupAgent.onRestore() is called
+        // synchronously by the Android system and cannot be made a suspend function
+        runBlocking {
+            reader.restoreAll(
+                entryPoint.profileRepository(),
+                entryPoint.templateRepository(),
+                entryPoint.currencyRepository()
+            )
+        }
         Logger.debug("restore", "All data restored from the cloud")
     }
 

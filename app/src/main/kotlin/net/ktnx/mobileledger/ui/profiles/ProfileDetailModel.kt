@@ -23,12 +23,15 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
-import java.net.HttpURLConnection
 import java.util.Locale
 import java.util.regex.Pattern
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import net.ktnx.mobileledger.App
 import net.ktnx.mobileledger.db.Profile
 import net.ktnx.mobileledger.db.Profile.Companion.NO_PROFILE_ID
@@ -62,7 +65,10 @@ class ProfileDetailModel : ViewModel() {
     @JvmField
     var initialThemeHue = Colors.DEFAULT_HUE_DEG
 
-    private var versionDetectionThread: VersionDetectionThread? = null
+    // Job for managing version detection cancellation
+    private var versionDetectionJob: Job? = null
+
+    private val versionPattern = Pattern.compile("^\"(\\d+)\\.(\\d+)(?:\\.(\\d+))?\"$")
 
     fun getProfileName(): String? = profileName.value
 
@@ -319,99 +325,96 @@ class ProfileDetailModel : ViewModel() {
         mProfile.detectedVersionMinor = version?.minor ?: -1
     }
 
-    @Synchronized
+    /**
+     * Trigger hledger-web version detection.
+     *
+     * Uses viewModelScope.launch instead of Thread for proper lifecycle management
+     * and deterministic testing with TestDispatcher.
+     */
     fun triggerVersionDetection() {
-        versionDetectionThread?.interrupt()
-        versionDetectionThread = VersionDetectionThread(this)
-        versionDetectionThread?.start()
+        // Cancel any previously running detection job
+        versionDetectionJob?.cancel()
+
+        versionDetectionJob = viewModelScope.launch {
+            detectingHledgerVersion.value = true
+            try {
+                val startTime = System.currentTimeMillis()
+
+                App.setAuthenticationDataFromProfileModel(this@ProfileDetailModel)
+                val version = detectVersion()
+                App.resetAuthenticationData()
+
+                val elapsed = System.currentTimeMillis() - startTime
+                Logger.debug("profile", "Detection duration $elapsed")
+
+                // Ensure minimum UI feedback time using delay() instead of Thread.sleep()
+                if (elapsed < TARGET_PROCESS_DURATION) {
+                    delay(TARGET_PROCESS_DURATION - elapsed)
+                }
+
+                detectedVersion.value = version
+            } finally {
+                detectingHledgerVersion.value = false
+            }
+        }
+    }
+
+    private fun detectVersion(): HledgerVersion? {
+        try {
+            val http = NetworkUtil.prepareConnection(
+                getUrl(),
+                "version",
+                getUseAuthentication()
+            )
+            when (http.responseCode) {
+                200 -> { /* continue */ }
+
+                404 -> return HledgerVersion(true)
+
+                else -> {
+                    Logger.debug(
+                        "profile",
+                        String.format(
+                            Locale.US,
+                            "HTTP error detecting hledger-web version: [%d] %s",
+                            http.responseCode,
+                            http.responseMessage
+                        )
+                    )
+                    return null
+                }
+            }
+            val stream = http.inputStream
+            val reader = BufferedReader(InputStreamReader(stream))
+            val version = reader.readLine()
+            val m = versionPattern.matcher(version)
+            if (m.matches()) {
+                // Groups are guaranteed to exist when matches() returns true
+                val major = m.group(1)?.toIntOrNull() ?: return null
+                val minor = m.group(2)?.toIntOrNull() ?: return null
+                val patchText = m.group(3)
+                val hasPatch = patchText != null
+                val patch = if (hasPatch) patchText?.toIntOrNull() ?: 0 else 0
+
+                return if (hasPatch) {
+                    HledgerVersion(major, minor, patch)
+                } else {
+                    HledgerVersion(major, minor)
+                }
+            } else {
+                Logger.debug("profile", String.format("Unrecognised version string '%s'", version))
+                return null
+            }
+        } catch (e: IOException) {
+            e.printStackTrace()
+            return null
+        }
     }
 
     fun getProfileId(): LiveData<Long> = profileId
 
-    private class VersionDetectionThread(private val model: ProfileDetailModel) : Thread() {
-        private val versionPattern = Pattern.compile("^\"(\\d+)\\.(\\d+)(?:\\.(\\d+))?\"$")
-
-        private fun detectVersion(): HledgerVersion? {
-            App.setAuthenticationDataFromProfileModel(model)
-            try {
-                val http: HttpURLConnection = NetworkUtil.prepareConnection(
-                    model.getUrl(),
-                    "version",
-                    model.getUseAuthentication()
-                )
-                when (http.responseCode) {
-                    200 -> { /* continue */ }
-
-                    404 -> return HledgerVersion(true)
-
-                    else -> {
-                        Logger.debug(
-                            "profile",
-                            String.format(
-                                Locale.US,
-                                "HTTP error detecting hledger-web version: [%d] %s",
-                                http.responseCode,
-                                http.responseMessage
-                            )
-                        )
-                        return null
-                    }
-                }
-                val stream = http.inputStream
-                val reader = BufferedReader(InputStreamReader(stream))
-                val version = reader.readLine()
-                val m = versionPattern.matcher(version)
-                if (m.matches()) {
-                    // Groups are guaranteed to exist when matches() returns true
-                    val major = m.group(1)?.toIntOrNull() ?: return null
-                    val minor = m.group(2)?.toIntOrNull() ?: return null
-                    val patchText = m.group(3)
-                    val hasPatch = patchText != null
-                    val patch = if (hasPatch) patchText?.toIntOrNull() ?: 0 else 0
-
-                    return if (hasPatch) {
-                        HledgerVersion(major, minor, patch)
-                    } else {
-                        HledgerVersion(major, minor)
-                    }
-                } else {
-                    Logger.debug("profile", String.format("Unrecognised version string '%s'", version))
-                    return null
-                }
-            } catch (e: IOException) {
-                e.printStackTrace()
-                return null
-            } finally {
-                App.resetAuthenticationData()
-            }
-        }
-
-        override fun run() {
-            model.detectingHledgerVersion.postValue(true)
-            try {
-                val startTime = System.currentTimeMillis()
-                val version = detectVersion()
-                val elapsed = System.currentTimeMillis() - startTime
-                Logger.debug("profile", "Detection duration $elapsed")
-                if (elapsed < TARGET_PROCESS_DURATION) {
-                    try {
-                        sleep((TARGET_PROCESS_DURATION - elapsed))
-                    } catch (e: InterruptedException) {
-                        e.printStackTrace()
-                    }
-                }
-                model.detectedVersion.postValue(version)
-            } finally {
-                model.detectingHledgerVersion.postValue(false)
-            }
-        }
-
-        companion object {
-            const val TARGET_PROCESS_DURATION = 1000L
-        }
-    }
-
     companion object {
         private const val HTTPS_URL_START = "https://"
+        private const val TARGET_PROCESS_DURATION = 1000L
     }
 }
