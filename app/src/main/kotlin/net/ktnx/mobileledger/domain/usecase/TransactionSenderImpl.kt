@@ -20,13 +20,13 @@ package net.ktnx.mobileledger.domain.usecase
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import net.ktnx.mobileledger.async.SendTransactionTask
 import net.ktnx.mobileledger.async.TaskCallback
 import net.ktnx.mobileledger.db.Profile
+import net.ktnx.mobileledger.di.IoDispatcher
 import net.ktnx.mobileledger.model.LedgerTransaction
 
 /**
@@ -34,13 +34,15 @@ import net.ktnx.mobileledger.model.LedgerTransaction
  *
  * This implementation converts the callback-based [SendTransactionTask] into a
  * coroutine-based suspend function, enabling proper integration with ViewModels
- * and easier testing.
+ * and easier testing via IoDispatcher injection.
  */
 @Singleton
-class TransactionSenderImpl @Inject constructor() : TransactionSender {
+class TransactionSenderImpl @Inject constructor(
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
+) : TransactionSender {
 
     override suspend fun send(profile: Profile, transaction: LedgerTransaction, simulate: Boolean): Result<Unit> =
-        withContext(Dispatchers.IO) {
+        withContext(ioDispatcher) {
             suspendCancellableCoroutine { continuation ->
                 val callback = TaskCallback { error, _ ->
                     if (error == null) {

@@ -37,6 +37,18 @@ import net.ktnx.mobileledger.utils.NetworkUtil
 import net.ktnx.mobileledger.utils.SimpleDate
 import net.ktnx.mobileledger.utils.UrlEncodedFormData
 
+/**
+ * @deprecated Use [net.ktnx.mobileledger.domain.usecase.TransactionSenderImpl] instead.
+ * This Thread-based implementation is replaced by pure Coroutines implementation.
+ * Will be removed in a future release.
+ */
+@Deprecated(
+    message = "Use TransactionSenderImpl instead",
+    replaceWith = ReplaceWith(
+        "TransactionSenderImpl",
+        "net.ktnx.mobileledger.domain.usecase.TransactionSenderImpl"
+    )
+)
 class SendTransactionTask(
     private val taskCallback: TaskCallback,
     private val mProfile: Profile,
