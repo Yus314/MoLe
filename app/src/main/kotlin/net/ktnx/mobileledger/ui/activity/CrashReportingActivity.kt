@@ -27,7 +27,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import java.io.PrintWriter
 import java.io.StringWriter
-import timber.log.Timber
+import logcat.LogPriority
+import logcat.logcat
 
 abstract class CrashReportingActivity : AppCompatActivity() {
     protected var crashReportText: String? by mutableStateOf(null)
@@ -69,6 +70,6 @@ abstract class CrashReportingActivity : AppCompatActivity() {
 
             crashReportText = sw.toString()
         }
-        Timber.d("Uncaught exception handler set")
+        logcat { "Uncaught exception handler set" }
     }
 }

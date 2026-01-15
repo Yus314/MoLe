@@ -21,9 +21,11 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
+import logcat.LogPriority
+import logcat.asLog
+import logcat.logcat
 import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.di.IoDispatcher
-import timber.log.Timber
 
 /**
  * DatabaseInitializer の実装
@@ -45,19 +47,19 @@ class DatabaseInitializerImpl @Inject constructor(
 
     override suspend fun initialize(): Result<Boolean> = withContext(ioDispatcher) {
         try {
-            Timber.d("Starting database initialization")
+            logcat { "Starting database initialization" }
 
             // ProfileRepository を通じてデータベースにアクセス
             // これにより Room データベースが初期化される
             val profileCount = profileRepository.getProfileCount()
             val hasProfiles = profileCount > 0
 
-            Timber.d("Database initialization complete. Profile count: $profileCount")
+            logcat { "Database initialization complete. Profile count: $profileCount" }
 
             _isInitialized = true
             Result.success(hasProfiles)
         } catch (e: Exception) {
-            Timber.w("Database initialization failed", e)
+            logcat(LogPriority.WARN) { "Database initialization failed: ${e.asLog()}" }
             Result.failure(e)
         }
     }

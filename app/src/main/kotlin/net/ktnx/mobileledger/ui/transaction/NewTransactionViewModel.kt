@@ -33,6 +33,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import logcat.LogPriority
+import logcat.asLog
+import logcat.logcat
 import net.ktnx.mobileledger.data.repository.AccountRepository
 import net.ktnx.mobileledger.data.repository.CurrencyRepository
 import net.ktnx.mobileledger.data.repository.ProfileRepository
@@ -50,7 +53,6 @@ import net.ktnx.mobileledger.model.MatchedTemplate
 import net.ktnx.mobileledger.service.AppStateService
 import net.ktnx.mobileledger.service.CurrencyFormatter
 import net.ktnx.mobileledger.utils.SimpleDate
-import timber.log.Timber
 
 @HiltViewModel
 class NewTransactionViewModel @Inject constructor(
@@ -232,13 +234,13 @@ class NewTransactionViewModel @Inject constructor(
     }
 
     private fun lookupAccountSuggestions(rowId: Int, term: String) {
-        Timber.d("lookupAccountSuggestions: rowId=$rowId, term='$term'")
+        logcat { "lookupAccountSuggestions: rowId=$rowId, term='$term'" }
 
         // Cancel previous suggestion job to prevent race conditions during rapid input
         accountSuggestionJob?.cancel()
 
         if (term.length < 2) {
-            Timber.d("term too short (${term.length}), clearing suggestions")
+            logcat { "term too short (${term.length}), clearing suggestions" }
             _uiState.update {
                 it.copy(
                     accountSuggestions = emptyList(),
@@ -254,20 +256,20 @@ class NewTransactionViewModel @Inject constructor(
             delay(50)
 
             val profileId = _uiState.value.profileId
-            Timber.d("profileId=$profileId")
+            logcat { "profileId=$profileId" }
 
             if (profileId == null) {
-                Timber.d("profileId is null, returning")
+                logcat { "profileId is null, returning" }
                 return@launch
             }
 
             val termUpper = term.uppercase()
-            Timber.d("querying DB: profileId=$profileId, term='$termUpper'")
+            logcat { "querying DB: profileId=$profileId, term='$termUpper'" }
             val suggestions = accountRepository.searchAccountNamesSync(profileId, termUpper)
 
             // Only update if this job is still active (not cancelled by a newer input)
             if (isActive) {
-                Timber.d("got ${suggestions.size} suggestions for row $rowId: ${suggestions.take(3)}")
+                logcat { "got ${suggestions.size} suggestions for row $rowId: ${suggestions.take(3)}" }
                 _uiState.update {
                     it.copy(
                         accountSuggestions = suggestions,
@@ -276,13 +278,13 @@ class NewTransactionViewModel @Inject constructor(
                     )
                 }
             } else {
-                Timber.d("job cancelled, discarding ${suggestions.size} suggestions")
+                logcat { "job cancelled, discarding ${suggestions.size} suggestions" }
             }
         }
     }
 
     fun setProfile(profileId: Long) {
-        Timber.d("setProfile: profileId=$profileId")
+        logcat { "setProfile: profileId=$profileId" }
         _uiState.update { it.copy(profileId = profileId) }
     }
 
@@ -556,7 +558,7 @@ class NewTransactionViewModel @Inject constructor(
                     }
                 }
             } catch (e: Exception) {
-                Timber.d("Invalid regex in template: $regex - ${e.message}")
+                logcat { "Invalid regex in template: $regex - ${e.message}" }
             }
         }
         return null
@@ -767,10 +769,10 @@ class NewTransactionViewModel @Inject constructor(
     private suspend fun handleTransactionSendSuccess(transaction: LedgerTransaction) {
         try {
             transactionRepository.storeTransaction(transaction.toDBO())
-            Timber.d("Transaction saved to DB")
+            logcat { "Transaction saved to DB" }
             appStateService.signalDataChanged()
         } catch (e: Exception) {
-            Timber.d("Failed to save transaction: ${e.message}")
+            logcat { "Failed to save transaction: ${e.message}" }
         }
 
         _uiState.update { it.copy(isSubmitting = false, isBusy = false) }

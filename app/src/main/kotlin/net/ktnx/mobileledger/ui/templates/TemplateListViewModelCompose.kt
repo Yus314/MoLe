@@ -29,9 +29,10 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import logcat.asLog
+import logcat.logcat
 import net.ktnx.mobileledger.data.repository.TemplateRepository
 import net.ktnx.mobileledger.db.TemplateHeader
-import timber.log.Timber
 
 /**
  * ViewModel for the template list screen using Compose.
@@ -61,7 +62,7 @@ class TemplateListViewModelCompose @Inject constructor(
 
             templateRepository.getAllTemplates()
                 .catch { e ->
-                    Timber.d("Error loading templates: ${e.message}")
+                    logcat { "Error loading templates: ${e.message}" }
                     _uiState.update {
                         it.copy(
                             isLoading = false,
@@ -113,7 +114,7 @@ class TemplateListViewModelCompose @Inject constructor(
                     _effects.send(TemplateListEffect.ShowUndoSnackbar(template.name, templateId))
                 }
             } catch (e: Exception) {
-                Timber.d("Error deleting template: ${e.message}")
+                logcat { "Error deleting template: ${e.message}" }
                 _effects.send(TemplateListEffect.ShowError("テンプレートの削除に失敗しました"))
             }
         }
@@ -126,7 +127,7 @@ class TemplateListViewModelCompose @Inject constructor(
                 templateRepository.insertTemplate(template)
                 deletedTemplate = null
             } catch (e: Exception) {
-                Timber.d("Error restoring template: ${e.message}")
+                logcat { "Error restoring template: ${e.message}" }
                 _effects.send(TemplateListEffect.ShowError("テンプレートの復元に失敗しました"))
             }
         }
@@ -137,7 +138,7 @@ class TemplateListViewModelCompose @Inject constructor(
             try {
                 templateRepository.duplicateTemplate(templateId)
             } catch (e: Exception) {
-                Timber.d("Error duplicating template: ${e.message}")
+                logcat { "Error duplicating template: ${e.message}" }
                 _effects.send(TemplateListEffect.ShowError("テンプレートの複製に失敗しました"))
             }
         }

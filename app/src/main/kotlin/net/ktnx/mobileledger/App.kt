@@ -27,12 +27,15 @@ import java.net.PasswordAuthentication
 import java.net.URL
 import java.util.Locale
 import javax.inject.Inject
+import logcat.AndroidLogcatLogger
+import logcat.LogPriority
+import logcat.asLog
+import logcat.logcat
 import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.service.CurrencyFormatter
 import net.ktnx.mobileledger.ui.profiles.ProfileDetailModel
 import net.ktnx.mobileledger.utils.Colors
 import net.ktnx.mobileledger.utils.Globals
-import timber.log.Timber
 
 @HiltAndroidApp
 class App : Application() {
@@ -61,12 +64,10 @@ class App : Application() {
         instance = this
         super.onCreate()
 
-        // Initialize Timber for logging (only in debug builds)
-        if (BuildConfig.DEBUG) {
-            Timber.plant(Timber.DebugTree())
-        }
+        // Initialize logcat for logging (only in debug builds)
+        AndroidLogcatLogger.installOnDebuggableApp(this, minPriority = LogPriority.VERBOSE)
 
-        Timber.d("App onCreate()")
+        logcat { "App onCreate()" }
         currencyFormatter.refresh(Locale.getDefault())
         Authenticator.setDefault(object : Authenticator() {
             override fun getPasswordAuthentication(): PasswordAuthentication? {
@@ -81,14 +82,12 @@ class App : Application() {
                                 getAuthPassword().toCharArray()
                             )
                         } else {
-                            Timber.w(
-                                "Requesting host [%s] differs from expected [%s]",
-                                requestingHost,
-                                expectedHost
-                            )
+                            logcat(LogPriority.WARN) {
+                                "Requesting host [$requestingHost] differs from expected [$expectedHost]"
+                            }
                         }
                     } catch (e: MalformedURLException) {
-                        Timber.d(e, "Malformed URL for authentication")
+                        logcat { "Malformed URL for authentication: ${e.asLog()}" }
                     }
                 }
 

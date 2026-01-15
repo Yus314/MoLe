@@ -23,6 +23,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.runtime.LaunchedEffect
 import dagger.hilt.android.AndroidEntryPoint
+import logcat.logcat
 import net.ktnx.mobileledger.App
 import net.ktnx.mobileledger.R
 import net.ktnx.mobileledger.ui.components.CrashReportDialog
@@ -30,7 +31,6 @@ import net.ktnx.mobileledger.ui.splash.SplashEffect
 import net.ktnx.mobileledger.ui.splash.SplashScreen
 import net.ktnx.mobileledger.ui.splash.SplashViewModel
 import net.ktnx.mobileledger.ui.theme.MoLeTheme
-import timber.log.Timber
 
 @AndroidEntryPoint
 class SplashActivity : CrashReportingActivity() {
@@ -64,30 +64,30 @@ class SplashActivity : CrashReportingActivity() {
             }
         }
 
-        Timber.d("onCreate()")
+        logcat { "onCreate()" }
     }
 
     override fun onStart() {
         super.onStart()
-        Timber.d("onStart()")
+        logcat { "onStart()" }
         running = true
     }
 
     override fun onPause() {
         super.onPause()
-        Timber.d("onPause()")
+        logcat { "onPause()" }
         running = false
     }
 
     override fun onResume() {
         super.onResume()
-        Timber.d("onResume()")
+        logcat { "onResume()" }
         running = true
     }
 
     private fun startMainActivity() {
         if (running) {
-            Timber.d("still running, launching main activity")
+            logcat { "still running, launching main activity" }
             val intent = Intent(this, MainActivityCompose::class.java).apply {
                 addFlags(
                     Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NO_USER_ACTION or
@@ -98,7 +98,7 @@ class SplashActivity : CrashReportingActivity() {
             @Suppress("DEPRECATION")
             overridePendingTransition(R.anim.fade_in_slowly, R.anim.fade_out_slowly)
         } else {
-            Timber.d("Not running, finish and go away")
+            logcat { "Not running, finish and go away" }
             finish()
         }
     }

@@ -26,12 +26,12 @@ import java.util.Locale
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import logcat.logcat
 import net.ktnx.mobileledger.App
 import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.db.Profile
 import net.ktnx.mobileledger.di.BackupEntryPoint
 import net.ktnx.mobileledger.utils.Colors
-import timber.log.Timber
 
 @SuppressLint("Registered")
 open class ProfileThemedActivity : CrashReportingActivity() {
@@ -47,20 +47,17 @@ open class ProfileThemedActivity : CrashReportingActivity() {
 
     protected fun setupProfileColors(newHue: Int) {
         if (themeSetUp && newHue == mThemeHue) {
-            Timber.d("Ignore request to set theme to the same value (%d)", newHue)
+            logcat { "Ignore request to set theme to the same value ($newHue)" }
             return
         }
 
-        Timber.d("Changing theme from %d to %d", mThemeHue, newHue)
+        logcat { "Changing theme from $mThemeHue to $newHue" }
 
         mThemeHue = newHue
         Colors.setupTheme(this, mThemeHue)
 
         if (themeSetUp) {
-            Timber.d(
-                "setupProfileColors(): theme already set up, supposedly the activity will be " +
-                    "recreated"
-            )
+            logcat { "setupProfileColors(): theme already set up, supposedly the activity will be recreated" }
             return
         }
         themeSetUp = true
@@ -81,7 +78,7 @@ open class ProfileThemedActivity : CrashReportingActivity() {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 profileRepository.currentProfile.collect { profile ->
                     if (profile == null) {
-                        Timber.d("No current profile, leaving")
+                        logcat { "No current profile, leaving" }
                         return@collect
                     }
 
@@ -90,7 +87,7 @@ open class ProfileThemedActivity : CrashReportingActivity() {
                     val hue = profile.theme
 
                     if (hue != mThemeHue) {
-                        Timber.d("profile observer calling setupProfileColors(%d)", hue)
+                        logcat { "profile observer calling setupProfileColors($hue)" }
                         setupProfileColors(hue)
                     }
                 }
@@ -111,7 +108,7 @@ open class ProfileThemedActivity : CrashReportingActivity() {
             mThemeHue = Colors.DEFAULT_HUE_DEG
         }
 
-        Timber.d("initProfile() calling setupProfileColors(%d)", hue)
+        logcat { "initProfile() calling setupProfileColors($hue)" }
         setupProfileColors(hue)
 
         initProfile(profileId)
@@ -131,19 +128,19 @@ open class ProfileThemedActivity : CrashReportingActivity() {
      */
     private suspend fun initProfileAsync(profileId: Long) {
         val profile = withContext(Dispatchers.IO) {
-            Timber.d(String.format(Locale.US, "Loading profile %d", profileId))
+            logcat { "Loading profile $profileId" }
 
             var loadedProfile = profileRepository.getProfileByIdSync(profileId)
 
             if (loadedProfile == null) {
-                Timber.d("Profile %d not found. Trying any other", profileId)
+                logcat { "Profile $profileId not found. Trying any other" }
                 loadedProfile = profileRepository.getAnyProfile()
             }
 
             if (loadedProfile == null) {
-                Timber.d("No profile could be loaded")
+                logcat { "No profile could be loaded" }
             } else {
-                Timber.d("Profile %d loaded. posting", profileId)
+                logcat { "Profile $profileId loaded. posting" }
             }
 
             loadedProfile

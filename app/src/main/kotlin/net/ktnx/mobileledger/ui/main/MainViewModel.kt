@@ -42,6 +42,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.yield
+import logcat.asLog
+import logcat.logcat
 import net.ktnx.mobileledger.async.TransactionAccumulator
 import net.ktnx.mobileledger.data.repository.AccountRepository
 import net.ktnx.mobileledger.data.repository.OptionRepository
@@ -62,7 +64,6 @@ import net.ktnx.mobileledger.service.CurrencyFormatter
 import net.ktnx.mobileledger.service.SyncInfo
 import net.ktnx.mobileledger.service.TaskProgress
 import net.ktnx.mobileledger.utils.SimpleDate
-import timber.log.Timber
 
 /**
  * ViewModel for the main screen using StateFlow for Compose compatibility.
@@ -604,7 +605,7 @@ class MainViewModel @Inject constructor(
                 }
                 // Account counts are now managed via AppStateService.lastSyncInfo
             } catch (e: Exception) {
-                Timber.d("Error loading accounts", e)
+                logcat { "Error loading accounts: ${e.asLog()}" }
                 _accountSummaryUiState.update { it.copy(isLoading = false) }
             }
         }
@@ -631,7 +632,7 @@ class MainViewModel @Inject constructor(
                 val transactionItems = accumulator.getItems()
                 updateDisplayedTransactions(transactionItems)
             } catch (e: Exception) {
-                Timber.d("Error loading transactions", e)
+                logcat { "Error loading transactions: ${e.asLog()}" }
                 _transactionListUiState.update { it.copy(isLoading = false) }
             }
         }
@@ -709,7 +710,7 @@ class MainViewModel @Inject constructor(
     fun startSync(profile: Profile? = null) {
         val syncProfile = profile ?: profileRepository.currentProfile.value
         if (syncProfile == null) {
-            Timber.d("No profile to sync")
+            logcat { "No profile to sync" }
             return
         }
 
@@ -802,7 +803,7 @@ class MainViewModel @Inject constructor(
      */
     private suspend fun filterAndDisplayTransactions(list: List<LedgerTransaction>) {
         withContext(Dispatchers.Default) {
-            Timber.d("entered coroutine filter (about to examine ${list.size} transactions)")
+            logcat { "entered coroutine filter (about to examine ${list.size} transactions)" }
             val accNameFilter = _transactionListUiState.value.accountFilter
 
             val acc = TransactionAccumulator(accNameFilter, accNameFilter, currencyFormatter)
@@ -823,7 +824,7 @@ class MainViewModel @Inject constructor(
             withContext(Dispatchers.Main) {
                 updateDisplayedTransactions(items)
             }
-            Timber.d("transaction list updated")
+            logcat { "transaction list updated" }
         }
     }
 }

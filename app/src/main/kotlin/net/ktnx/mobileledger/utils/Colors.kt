@@ -24,11 +24,12 @@ import android.util.TypedValue
 import androidx.annotation.ColorInt
 import androidx.lifecycle.MutableLiveData
 import java.util.Locale
+import logcat.LogPriority
+import logcat.logcat
 import net.ktnx.mobileledger.BuildConfig
 import net.ktnx.mobileledger.R
 import net.ktnx.mobileledger.db.Profile
 import net.ktnx.mobileledger.ui.HueRing
-import timber.log.Timber
 
 object Colors {
     const val DEFAULT_HUE_DEG = 261
@@ -105,7 +106,7 @@ object Colors {
         return if (mod == 0) {
             val themeId = getThemeIdForHue(hueDegrees)
             val result = themePrimaryColor.getValue(themeId)
-            Timber.d("getPrimaryColorForHue(%d) = %x", hueDegrees, result)
+            logcat { "getPrimaryColorForHue($hueDegrees) = ${result.toString(16)}" }
             result
         } else {
             val x0 = hueDegrees - mod
@@ -123,7 +124,7 @@ object Colors {
         if (adjustedHue == 360) adjustedHue = 0
         if (adjustedHue in 0 until 360 && adjustedHue != DEFAULT_HUE_DEG) {
             if (adjustedHue % HueRing.hueStepDegrees != 0) {
-                Timber.w("Adjusting unexpected hue %d", adjustedHue)
+                logcat(LogPriority.WARN) { "Adjusting unexpected hue $adjustedHue" }
                 themeIndex = kotlin.math.round(1f * adjustedHue / HueRing.hueStepDegrees).toInt()
             } else {
                 themeIndex = adjustedHue / HueRing.hueStepDegrees
@@ -185,7 +186,7 @@ object Colors {
                     if (huesSB.isNotEmpty()) huesSB.append(", ")
                     huesSB.append(h)
                 }
-                Timber.d(String.format("used hues: %s", huesSB))
+                logcat { "used hues: $huesSB" }
             }
             hues.add(hues[0])
 
@@ -219,11 +220,9 @@ object Colors {
             val chosenIndex = (Math.random() * largestIntervalStarts.size).toInt()
             val chosenIntervalStart = largestIntervalStarts[chosenIndex]
 
-            Timber.d(
-                "Choosing the middle colour between %d and %d",
-                chosenIntervalStart,
-                chosenIntervalStart + largestInterval
-            )
+            logcat {
+                "Choosing the middle colour between $chosenIntervalStart and ${chosenIntervalStart + largestInterval}"
+            }
 
             var adjustedInterval = largestInterval
             if (adjustedInterval % 2 != 0) {
@@ -243,7 +242,7 @@ object Colors {
             }
         }
 
-        Timber.d(String.format(Locale.US, "New profile hue: %d", finalHue))
+        logcat { "New profile hue: $finalHue" }
 
         return finalHue
     }

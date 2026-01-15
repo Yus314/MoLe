@@ -31,6 +31,9 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
+import logcat.LogPriority
+import logcat.asLog
+import logcat.logcat
 import net.ktnx.mobileledger.db.Profile
 import net.ktnx.mobileledger.di.IoDispatcher
 import net.ktnx.mobileledger.json.API
@@ -41,7 +44,6 @@ import net.ktnx.mobileledger.utils.Globals
 import net.ktnx.mobileledger.utils.NetworkUtil
 import net.ktnx.mobileledger.utils.SimpleDate
 import net.ktnx.mobileledger.utils.UrlEncodedFormData
-import timber.log.Timber
 
 /**
  * Pure Coroutines implementation of [TransactionSender].
@@ -75,19 +77,19 @@ class TransactionSenderImpl @Inject constructor(
                         var sendOK = false
                         for (ver in API.allVersions) {
                             coroutineContext.ensureActive()
-                            Timber.d("Trying version $ver")
+                            logcat { "Trying version $ver" }
                             try {
                                 sendOKViaAPI(profile, transaction, ver, simulate)
                                 sendOK = true
-                                Timber.d("Version $ver request succeeded")
+                                logcat { "Version $ver request succeeded" }
                                 break
                             } catch (e: ApiNotSupportedException) {
-                                Timber.d("Version $ver not supported: ${e.message}", e)
+                                logcat { "Version $ver not supported: ${e.message}" }
                             }
                         }
 
                         if (!sendOK) {
-                            Timber.d("Trying HTML form emulation")
+                            logcat { "Trying HTML form emulation" }
                             legacySendOkWithRetry(profile, transaction, simulate)
                         }
                     }
@@ -103,7 +105,7 @@ class TransactionSenderImpl @Inject constructor(
 
                 Result.success(Unit)
             } catch (e: Exception) {
-                Timber.w(e, "Error sending transaction")
+                logcat(LogPriority.WARN) { "Error sending transaction: ${e.asLog()}" }
                 Result.failure(e)
             }
         }
@@ -126,7 +128,7 @@ class TransactionSenderImpl @Inject constructor(
         val gateway = Gateway.forApiVersion(apiVersion)
         val body = gateway.transactionSaveRequest(transaction)
 
-        Timber.d("Sending using API $apiVersion")
+        logcat { "Sending using API $apiVersion" }
         sendRequest(http, body, simulate)
     }
 
@@ -135,7 +137,7 @@ class TransactionSenderImpl @Inject constructor(
      */
     private suspend fun sendRequest(http: HttpURLConnection, body: String, simulate: Boolean) {
         if (simulate) {
-            Timber.d("The request would be: $body")
+            logcat { "The request would be: $body" }
             delay(1500)
             if (Math.random() > 0.3) {
                 throw RuntimeException("Simulated test exception")
@@ -148,16 +150,16 @@ class TransactionSenderImpl @Inject constructor(
         http.doInput = true
         http.addRequestProperty("Content-Length", bodyBytes.size.toString())
 
-        Timber.d("request header: ${http.requestProperties}")
+        logcat { "request header: ${http.requestProperties}" }
 
         try {
             http.outputStream.use { req ->
                 coroutineContext.ensureActive()
-                Timber.d("Request body: $body")
+                logcat { "Request body: $body" }
                 req.write(bodyBytes)
 
                 val responseCode = http.responseCode
-                Timber.d("Response: %d %s", responseCode, http.responseMessage)
+                logcat { "Response: $responseCode ${http.responseMessage}" }
 
                 http.errorStream?.use { resp ->
                     when (responseCode) {
@@ -170,7 +172,7 @@ class TransactionSenderImpl @Inject constructor(
                             while (count <= 5) {
                                 coroutineContext.ensureActive()
                                 val line = reader.readLine() ?: break
-                                Timber.d(line)
+                                logcat { line }
                                 if (errorLines.isNotEmpty()) {
                                     errorLines.append("\n")
                                 }
@@ -183,7 +185,7 @@ class TransactionSenderImpl @Inject constructor(
                         else -> {
                             val reader = BufferedReader(InputStreamReader(resp))
                             val line = reader.readLine()
-                            Timber.d("Response content: $line")
+                            logcat { "Response content: $line" }
                             throw IOException(
                                 String.format(Locale.ROOT, "Error response code %d", responseCode)
                             )
@@ -231,10 +233,10 @@ class TransactionSenderImpl @Inject constructor(
         val body = params.toString()
         http.addRequestProperty("Content-Length", body.length.toString())
 
-        Timber.d("request header: ${http.requestProperties}")
+        logcat { "request header: ${http.requestProperties}" }
 
         if (simulate) {
-            Timber.d("The request would be: $body")
+            logcat { "The request would be: $body" }
             delay(1500)
             return true
         }
@@ -242,11 +244,11 @@ class TransactionSenderImpl @Inject constructor(
         try {
             http.outputStream.use { req ->
                 coroutineContext.ensureActive()
-                Timber.d("Request body: $body")
+                logcat { "Request body: $body" }
                 req.write(body.toByteArray(StandardCharsets.US_ASCII))
 
                 http.inputStream.use { resp ->
-                    Timber.d(http.responseCode.toString())
+                    logcat { http.responseCode.toString() }
                     when (http.responseCode) {
                         303 -> return true
 
@@ -261,13 +263,13 @@ class TransactionSenderImpl @Inject constructor(
                                 val m = reSessionCookie.matcher(cookie)
                                 if (m.matches()) {
                                     session = m.group(1)
-                                    Timber.d("new session is $session")
+                                    logcat { "new session is $session" }
                                 } else {
-                                    Timber.d("set-cookie: $cookie")
-                                    Timber.w("Response Set-Cookie headers is not a _SESSION one")
+                                    logcat { "set-cookie: $cookie" }
+                                    logcat(LogPriority.WARN) { "Response Set-Cookie headers is not a _SESSION one" }
                                 }
                             } else {
-                                Timber.w("Response has no Set-Cookie header")
+                                logcat(LogPriority.WARN) { "Response has no Set-Cookie header" }
                             }
 
                             // the token needs to be updated
@@ -280,8 +282,8 @@ class TransactionSenderImpl @Inject constructor(
                                 val m = re.matcher(line)
                                 if (m.matches()) {
                                     token = m.group(1)
-                                    Timber.d(line)
-                                    Timber.d("Token=$token")
+                                    logcat { line }
+                                    logcat { "Token=$token" }
                                     return false // retry
                                 }
                                 line = reader.readLine()

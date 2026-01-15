@@ -140,7 +140,7 @@ dependencies {
     implementation libs.jetbrains.annotations
 
     // Logging
-    implementation libs.timber
+    implementation libs.logcat
 
     // Hilt Dependency Injection
     implementation libs.hilt.android

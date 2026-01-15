@@ -25,21 +25,22 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import kotlinx.coroutines.runBlocking
+import logcat.asLog
+import logcat.logcat
 import net.ktnx.mobileledger.di.BackupEntryPoint
-import timber.log.Timber
 
 class MobileLedgerBackupAgent : BackupAgent() {
 
     @Throws(IOException::class)
     override fun onBackup(oldState: ParcelFileDescriptor, data: BackupDataOutput, newState: ParcelFileDescriptor) {
-        Timber.d("onBackup()")
+        logcat { "onBackup()" }
         backupSettings(data)
         newState.close()
     }
 
     @Throws(IOException::class)
     private fun backupSettings(data: BackupDataOutput) {
-        Timber.d("Starting cloud backup")
+        logcat { "Starting cloud backup" }
         val entryPoint = BackupEntryPoint.get(this)
         val output = ByteArrayOutputStream(4096)
         val saver = RawConfigWriter(
@@ -54,12 +55,12 @@ class MobileLedgerBackupAgent : BackupAgent() {
         val bytes = output.toByteArray()
         data.writeEntityHeader(SETTINGS_KEY, bytes.size)
         data.writeEntityData(bytes, bytes.size)
-        Timber.d("Done writing backup data")
+        logcat { "Done writing backup data" }
     }
 
     @Throws(IOException::class)
     override fun onRestore(data: BackupDataInput, appVersionCode: Int, newState: ParcelFileDescriptor) {
-        Timber.d("Starting cloud restore")
+        logcat { "Starting cloud restore" }
         if (data.readNextHeader()) {
             val key = data.key
             if (key == SETTINGS_KEY) {
@@ -75,9 +76,9 @@ class MobileLedgerBackupAgent : BackupAgent() {
         data.readEntityData(bytes, 0, bytes.size)
         val reader = RawConfigReader(ByteArrayInputStream(bytes))
         reader.readConfig()
-        Timber.d("Successfully read restore data. Wiping database")
+        logcat { "Successfully read restore data. Wiping database" }
         entryPoint.db().deleteAllSync()
-        Timber.d("Database wiped")
+        logcat { "Database wiped" }
         // runBlocking is required here because BackupAgent.onRestore() is called
         // synchronously by the Android system and cannot be made a suspend function
         runBlocking {
@@ -87,7 +88,7 @@ class MobileLedgerBackupAgent : BackupAgent() {
                 entryPoint.currencyRepository()
             )
         }
-        Timber.d("All data restored from the cloud")
+        logcat { "All data restored from the cloud" }
     }
 
     companion object {

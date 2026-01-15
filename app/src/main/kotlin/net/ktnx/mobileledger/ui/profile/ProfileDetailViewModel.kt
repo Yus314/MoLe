@@ -42,6 +42,9 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import logcat.LogPriority
+import logcat.asLog
+import logcat.logcat
 import net.ktnx.mobileledger.App
 import net.ktnx.mobileledger.BuildConfig
 import net.ktnx.mobileledger.data.repository.ProfileRepository
@@ -52,7 +55,6 @@ import net.ktnx.mobileledger.model.HledgerVersion
 import net.ktnx.mobileledger.ui.profiles.ProfileDetailModel
 import net.ktnx.mobileledger.utils.Colors
 import net.ktnx.mobileledger.utils.NetworkUtil
-import timber.log.Timber
 
 @HiltViewModel
 class ProfileDetailViewModel @Inject constructor(
@@ -370,10 +372,10 @@ class ProfileDetailViewModel @Inject constructor(
 
                 if (profile.id > 0) {
                     profileRepository.updateProfile(profile)
-                    Timber.d("Profile updated in DB")
+                    logcat { "Profile updated in DB" }
                 } else {
                     profileRepository.insertProfile(profile)
-                    Timber.d("Profile inserted in DB")
+                    logcat { "Profile inserted in DB" }
                 }
 
                 BackupManager.dataChanged(BuildConfig.APPLICATION_ID)
@@ -382,7 +384,7 @@ class ProfileDetailViewModel @Inject constructor(
                 _effects.send(ProfileDetailEffect.ProfileSaved)
                 _effects.send(ProfileDetailEffect.NavigateBack)
             } catch (e: Exception) {
-                Timber.d("Error saving profile: ${e.message}")
+                logcat { "Error saving profile: ${e.message}" }
                 _uiState.update { it.copy(isSaving = false) }
                 _effects.send(ProfileDetailEffect.ShowError("プロファイルの保存に失敗しました"))
             }
@@ -448,11 +450,9 @@ class ProfileDetailViewModel @Inject constructor(
                     404 -> return HledgerVersion(true)
 
                     else -> {
-                        Timber.d(
-                            "HTTP error detecting hledger-web version: [%d] %s",
-                            http.responseCode,
-                            http.responseMessage
-                        )
+                        logcat {
+                            "HTTP error detecting hledger-web version: [${http.responseCode}] ${http.responseMessage}"
+                        }
                         return null
                     }
                 }
@@ -473,14 +473,14 @@ class ProfileDetailViewModel @Inject constructor(
                         HledgerVersion(major, minor)
                     }
                 } else {
-                    Timber.d(String.format(Locale.ROOT, "Unrecognised version string '%s'", version))
+                    logcat { "Unrecognised version string '$version'" }
                     return null
                 }
             } finally {
                 resetAuthenticationData()
             }
         } catch (e: IOException) {
-            Timber.d("IOException during version detection: ${e.message}")
+            logcat { "IOException during version detection: ${e.message}" }
             return null
         }
     }
@@ -541,7 +541,7 @@ class ProfileDetailViewModel @Inject constructor(
                     if (profile != null) {
                         profileRepository.deleteProfile(profile)
                         // Repository handles order updates internally
-                        Timber.d("Profile deleted from DB")
+                        logcat { "Profile deleted from DB" }
                     }
                 }
 
@@ -549,7 +549,7 @@ class ProfileDetailViewModel @Inject constructor(
                 _effects.send(ProfileDetailEffect.ProfileDeleted)
                 _effects.send(ProfileDetailEffect.NavigateBack)
             } catch (e: Exception) {
-                Timber.d("Error deleting profile: ${e.message}")
+                logcat { "Error deleting profile: ${e.message}" }
                 _uiState.update { it.copy(isLoading = false) }
                 _effects.send(ProfileDetailEffect.ShowError("プロファイルの削除に失敗しました"))
             }

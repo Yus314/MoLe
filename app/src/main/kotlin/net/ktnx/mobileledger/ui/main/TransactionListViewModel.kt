@@ -34,6 +34,8 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import logcat.asLog
+import logcat.logcat
 import net.ktnx.mobileledger.async.TransactionAccumulator
 import net.ktnx.mobileledger.data.repository.AccountRepository
 import net.ktnx.mobileledger.data.repository.ProfileRepository
@@ -43,7 +45,6 @@ import net.ktnx.mobileledger.model.LedgerTransaction
 import net.ktnx.mobileledger.model.TransactionListItem
 import net.ktnx.mobileledger.service.CurrencyFormatter
 import net.ktnx.mobileledger.utils.SimpleDate
-import timber.log.Timber
 
 /**
  * ViewModel for the transaction list tab.
@@ -150,7 +151,7 @@ class TransactionListViewModel @Inject constructor(
                 val displayItems = convertToDisplayItems(dbTransactions, accountFilter)
                 updateDisplayedTransactionsDirectly(displayItems)
             } catch (e: Exception) {
-                Timber.d("Error loading transactions", e)
+                logcat { "Error loading transactions: ${e.asLog()}" }
                 _uiState.update {
                     it.copy(
                         isLoading = false,
@@ -400,7 +401,7 @@ class TransactionListViewModel @Inject constructor(
         displayedTransactionsFilterJob?.cancel()
 
         displayedTransactionsFilterJob = viewModelScope.launch {
-            Timber.d("entered coroutine (about to examine ${list.size} transactions)")
+            logcat { "entered coroutine (about to examine ${list.size} transactions)" }
             val accNameFilter = _uiState.value.accountFilter
 
             val acc = TransactionAccumulator(accNameFilter, accNameFilter, currencyFormatter)
@@ -416,7 +417,7 @@ class TransactionListViewModel @Inject constructor(
 
             val items = acc.getItems()
             updateDisplayedTransactions(items)
-            Timber.d("transaction list updated")
+            logcat { "transaction list updated" }
         }
     }
 }

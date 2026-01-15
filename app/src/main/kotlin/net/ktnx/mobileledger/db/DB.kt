@@ -31,6 +31,9 @@ import java.io.InputStreamReader
 import java.util.Locale
 import java.util.UUID
 import java.util.regex.Pattern
+import logcat.LogPriority
+import logcat.asLog
+import logcat.logcat
 import net.ktnx.mobileledger.App
 import net.ktnx.mobileledger.dao.AccountDAO
 import net.ktnx.mobileledger.dao.AccountValueDAO
@@ -41,7 +44,6 @@ import net.ktnx.mobileledger.dao.TemplateAccountDAO
 import net.ktnx.mobileledger.dao.TemplateHeaderDAO
 import net.ktnx.mobileledger.dao.TransactionAccountDAO
 import net.ktnx.mobileledger.dao.TransactionDAO
-import timber.log.Timber
 
 @Database(
     version = DB.REVISION,
@@ -226,7 +228,7 @@ abstract class DB : RoomDatabase() {
 
             try {
                 rm.openRawResource(resId).use { res ->
-                    Timber.d("Applying $fileName")
+                    logcat { "Applying $fileName" }
                     val reader = BufferedReader(InputStreamReader(res))
 
                     val endOfStatement = Pattern.compile(";\\s*(?:--.*)?$")

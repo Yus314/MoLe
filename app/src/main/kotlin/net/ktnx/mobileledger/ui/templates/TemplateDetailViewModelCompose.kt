@@ -37,11 +37,12 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import logcat.asLog
+import logcat.logcat
 import net.ktnx.mobileledger.data.repository.TemplateRepository
 import net.ktnx.mobileledger.db.TemplateAccount
 import net.ktnx.mobileledger.db.TemplateHeader
 import net.ktnx.mobileledger.utils.Misc
-import timber.log.Timber
 
 /**
  * ViewModel for the template detail screen using Compose.
@@ -147,7 +148,7 @@ class TemplateDetailViewModelCompose @Inject constructor(
                     _uiState.update { it.copy(isLoading = false) }
                 }
             } catch (e: Exception) {
-                Timber.d("Error loading template: ${e.message}")
+                logcat { "Error loading template: ${e.message}" }
                 _uiState.update { it.copy(isLoading = false) }
                 _effects.send(TemplateDetailEffect.ShowError("テンプレートの読み込みに失敗しました"))
             }
@@ -525,7 +526,7 @@ class TemplateDetailViewModelCompose @Inject constructor(
                 _effects.send(TemplateDetailEffect.TemplateSaved)
                 _effects.send(TemplateDetailEffect.NavigateBack)
             } catch (e: Exception) {
-                Timber.d("Error saving template: ${e.message}")
+                logcat { "Error saving template: ${e.message}" }
                 _uiState.update { it.copy(isSaving = false) }
                 _effects.send(TemplateDetailEffect.ShowError("テンプレートの保存に失敗しました"))
             }
@@ -651,7 +652,7 @@ class TemplateDetailViewModelCompose @Inject constructor(
                 _effects.send(TemplateDetailEffect.TemplateDeleted)
                 _effects.send(TemplateDetailEffect.NavigateBack)
             } catch (e: Exception) {
-                Timber.d("Error deleting template: ${e.message}")
+                logcat { "Error deleting template: ${e.message}" }
                 _uiState.update { it.copy(isLoading = false) }
                 _effects.send(TemplateDetailEffect.ShowError("テンプレートの削除に失敗しました"))
             }

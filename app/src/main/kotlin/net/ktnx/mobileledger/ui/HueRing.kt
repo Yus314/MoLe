@@ -33,9 +33,9 @@ import kotlin.math.cos
 import kotlin.math.hypot
 import kotlin.math.min
 import kotlin.math.sin
+import logcat.logcat
 import net.ktnx.mobileledger.utils.Colors
 import net.ktnx.mobileledger.utils.DimensionUtils
-import timber.log.Timber
 
 class HueRing : View {
     private lateinit var ringPaint: Paint
@@ -255,13 +255,13 @@ class HueRing : View {
                     if (hue < 0) {
                         hue += 1
                     }
-                    Timber.d(
-                        "x=%1.3f, y=%1.3f, angle=%1.3f rad, hueDegrees=%1.3f",
-                        x,
-                        y,
-                        angleRad,
-                        hue
-                    )
+                    logcat {
+                        "x=${"%.3f".format(
+                            x
+                        )}, y=${"%.3f".format(
+                            y
+                        )}, angle=${"%.3f".format(angleRad)} rad, hueDegrees=${"%.3f".format(hue)}"
+                    }
                     setHue(hue)
                 }
             }

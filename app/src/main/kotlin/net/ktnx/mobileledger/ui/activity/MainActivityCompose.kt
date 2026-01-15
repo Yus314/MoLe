@@ -38,6 +38,8 @@ import java.util.Locale
 import javax.inject.Inject
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import logcat.asLog
+import logcat.logcat
 import net.ktnx.mobileledger.BackupsActivity
 import net.ktnx.mobileledger.R
 import net.ktnx.mobileledger.data.repository.OptionRepository
@@ -55,7 +57,6 @@ import net.ktnx.mobileledger.ui.profiles.ProfileDetailActivity
 import net.ktnx.mobileledger.ui.templates.TemplatesActivity
 import net.ktnx.mobileledger.ui.theme.MoLeTheme
 import net.ktnx.mobileledger.utils.Colors
-import timber.log.Timber
 
 /**
  * Main activity using Jetpack Compose for the UI.
@@ -77,9 +78,9 @@ class MainActivityCompose : ProfileThemedActivity() {
     private val transactionListViewModel: TransactionListViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        Timber.d("onCreate()/entry")
+        logcat { "onCreate()/entry" }
         super.onCreate(savedInstanceState)
-        Timber.d("onCreate()/after super")
+        logcat { "onCreate()/after super" }
 
         // Observe profile changes from ProfileRepository (via ViewModel)
         lifecycleScope.launch {
@@ -118,7 +119,7 @@ class MainActivityCompose : ProfileThemedActivity() {
                     viewModel.dataVersion.collect { version ->
                         // Only reload if version changed (avoid duplicate reloads on lifecycle restart)
                         if (version > 0 && version != lastProcessedVersion) {
-                            Timber.d("Data version changed to $version, reloading data")
+                            logcat { "Data version changed to $version, reloading data" }
                             lastProcessedVersion = version
                             viewModel.reloadDataAfterChange()
                         }
@@ -231,7 +232,7 @@ class MainActivityCompose : ProfileThemedActivity() {
     private fun onProfileChanged(newProfile: Profile?) {
         val newProfileTheme = newProfile?.theme ?: Colors.DEFAULT_HUE_DEG
         if (newProfileTheme != Colors.profileThemeId) {
-            Timber.d("profile theme ${Colors.profileThemeId} → $newProfileTheme")
+            logcat { "profile theme ${Colors.profileThemeId} → $newProfileTheme" }
             Colors.profileThemeId = newProfileTheme
             profileThemeChanged()
             return
@@ -257,7 +258,7 @@ class MainActivityCompose : ProfileThemedActivity() {
         }
 
         if (newList.isNotEmpty() && replacementProfile == null) {
-            Timber.d("Switching profile because the current is no longer available")
+            logcat { "Switching profile because the current is no longer available" }
             profileRepository.setCurrentProfile(newList[0])
         } else if (replacementProfile != null) {
             profileRepository.setCurrentProfile(replacementProfile)
@@ -344,7 +345,7 @@ class MainActivityCompose : ProfileThemedActivity() {
                 try {
                     lastUpdate = opt.value?.toLong() ?: 0L
                 } catch (ex: NumberFormatException) {
-                    Timber.d("Error parsing '${opt.value}' as long", ex)
+                    logcat { "Error parsing '${opt.value}' as long: ${ex.message}" }
                 }
             }
 
@@ -369,7 +370,7 @@ class MainActivityCompose : ProfileThemedActivity() {
     }
 
     private fun profileThemeChanged() {
-        Timber.d("profileThemeChanged(): recreating activity")
+        logcat { "profileThemeChanged(): recreating activity" }
         recreate()
     }
 

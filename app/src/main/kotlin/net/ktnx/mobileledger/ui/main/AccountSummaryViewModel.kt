@@ -28,11 +28,12 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import logcat.asLog
+import logcat.logcat
 import net.ktnx.mobileledger.data.repository.AccountRepository
 import net.ktnx.mobileledger.data.repository.PreferencesRepository
 import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.model.LedgerAccount
-import timber.log.Timber
 
 /**
  * ViewModel for the Account Summary tab.
@@ -180,7 +181,7 @@ class AccountSummaryViewModel @Inject constructor(
                     )
                 }
             } catch (e: Exception) {
-                Timber.d("Error loading accounts", e)
+                logcat { "Error loading accounts: ${e.asLog()}" }
                 _uiState.update {
                     it.copy(
                         isLoading = false,

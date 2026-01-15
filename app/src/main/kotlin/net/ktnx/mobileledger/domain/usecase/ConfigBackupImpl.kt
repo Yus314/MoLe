@@ -28,13 +28,15 @@ import kotlin.coroutines.coroutineContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
+import logcat.LogPriority
+import logcat.asLog
+import logcat.logcat
 import net.ktnx.mobileledger.backup.RawConfigReader
 import net.ktnx.mobileledger.backup.RawConfigWriter
 import net.ktnx.mobileledger.data.repository.CurrencyRepository
 import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.data.repository.TemplateRepository
 import net.ktnx.mobileledger.di.IoDispatcher
-import timber.log.Timber
 
 /**
  * Pure Coroutines implementation of [ConfigBackup].
@@ -81,10 +83,10 @@ class ConfigBackupImpl @Inject constructor(
                 writer.writeConfig()
             }
 
-            Timber.d("Backup completed successfully")
+            logcat { "Backup completed successfully" }
             Result.success(Unit)
         } catch (e: Exception) {
-            Timber.w("Error during backup", e)
+            logcat(LogPriority.WARN) { "Error during backup: ${e.asLog()}" }
             Result.failure(e)
         }
     }
@@ -127,10 +129,10 @@ class ConfigBackupImpl @Inject constructor(
                 }
             }
 
-            Timber.d("Restore completed successfully")
+            logcat { "Restore completed successfully" }
             Result.success(Unit)
         } catch (e: Exception) {
-            Timber.w("Error during restore", e)
+            logcat(LogPriority.WARN) { "Error during restore: ${e.asLog()}" }
             Result.failure(e)
         }
     }

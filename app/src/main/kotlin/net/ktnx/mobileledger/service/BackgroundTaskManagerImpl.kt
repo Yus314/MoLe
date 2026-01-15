@@ -22,7 +22,7 @@ import javax.inject.Singleton
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import timber.log.Timber
+import logcat.logcat
 
 /**
  * Implementation of [BackgroundTaskManager].
@@ -51,7 +51,7 @@ class BackgroundTaskManagerImpl @Inject constructor() : BackgroundTaskManager {
         val newProgress: TaskProgress
         synchronized(lock) {
             runningTasks.add(taskId)
-            Timber.d("Task started: $taskId, running count: ${runningTasks.size}")
+            logcat { "Task started: $taskId, running count: ${runningTasks.size}" }
             newProgress = TaskProgress(
                 taskId = taskId,
                 state = TaskState.STARTING,
@@ -70,7 +70,7 @@ class BackgroundTaskManagerImpl @Inject constructor() : BackgroundTaskManager {
         val shouldClearProgress: Boolean
         synchronized(lock) {
             runningTasks.remove(taskId)
-            Timber.d("Task finished: $taskId, running count: ${runningTasks.size}")
+            logcat { "Task finished: $taskId, running count: ${runningTasks.size}" }
             newIsRunning = runningTasks.isNotEmpty()
             shouldClearProgress = runningTasks.isEmpty()
         }

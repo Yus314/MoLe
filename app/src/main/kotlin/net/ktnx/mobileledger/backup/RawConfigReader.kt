@@ -25,6 +25,8 @@ import java.io.InputStream
 import java.io.InputStreamReader
 import kotlin.coroutines.coroutineContext
 import kotlinx.coroutines.ensureActive
+import logcat.LogPriority
+import logcat.logcat
 import net.ktnx.mobileledger.App
 import net.ktnx.mobileledger.data.repository.CurrencyRepository
 import net.ktnx.mobileledger.data.repository.ProfileRepository
@@ -34,7 +36,6 @@ import net.ktnx.mobileledger.db.Profile
 import net.ktnx.mobileledger.db.TemplateAccount
 import net.ktnx.mobileledger.db.TemplateHeader
 import net.ktnx.mobileledger.db.TemplateWithAccounts
-import timber.log.Timber
 
 class RawConfigReader(inputStream: InputStream) {
     private val r: JsonReader = JsonReader(BufferedReader(InputStreamReader(inputStream)))
@@ -292,7 +293,7 @@ class RawConfigReader(inputStream: InputStream) {
 
     private suspend fun restoreCurrentProfile(profileRepository: ProfileRepository) {
         if (currentProfile == null) {
-            Timber.d("Not restoring current profile (not present in backup)")
+            logcat { "Not restoring current profile (not present in backup)" }
             return
         }
 
@@ -300,11 +301,11 @@ class RawConfigReader(inputStream: InputStream) {
         val p = profileRepository.getProfileByUuidSync(currentProfileUuid)
 
         if (p != null) {
-            Timber.d("Restoring current profile ${p.name}")
+            logcat { "Restoring current profile ${p.name}" }
             profileRepository.setCurrentProfile(p)
             App.storeStartupProfileAndTheme(p.id, p.theme)
         } else {
-            Timber.d("Not restoring profile $currentProfile: not found in DB")
+            logcat { "Not restoring profile $currentProfile: not found in DB" }
         }
     }
 }

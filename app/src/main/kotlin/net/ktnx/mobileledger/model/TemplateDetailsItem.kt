@@ -29,12 +29,12 @@ import java.util.Locale
 import java.util.Objects
 import java.util.regex.Pattern
 import java.util.regex.PatternSyntaxException
+import logcat.logcat
 import net.ktnx.mobileledger.R
 import net.ktnx.mobileledger.db.TemplateAccount
 import net.ktnx.mobileledger.db.TemplateBase
 import net.ktnx.mobileledger.db.TemplateHeader
 import net.ktnx.mobileledger.utils.Misc
-import timber.log.Timber
 
 abstract class TemplateDetailsItem protected constructor(val type: Type) {
     var id: Long? = null
@@ -242,13 +242,7 @@ abstract class TemplateDetailsItem protected constructor(val type: Type) {
 
         fun equalContents(o: AccountRow): Boolean {
             if (position != o.position) {
-                Timber.d(
-                    "[%d] != [%d]: pos %d != pos %d",
-                    id,
-                    o.id,
-                    position,
-                    o.position
-                )
+                logcat { "[$id] != [${o.id}]: pos $position != pos ${o.position}" }
                 return false
             }
             return amount == o.amount && accountName == o.accountName &&

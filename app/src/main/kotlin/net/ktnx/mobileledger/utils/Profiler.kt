@@ -17,8 +17,8 @@
 
 package net.ktnx.mobileledger.utils
 
+import logcat.logcat
 import net.ktnx.mobileledger.BuildConfig
-import timber.log.Timber
 
 class Profiler(private val name: String) {
     private var opStart: Long = 0
@@ -44,12 +44,10 @@ class Profiler(private val name: String) {
     fun dumpStats() {
         if (!BuildConfig.DEBUG) return
 
-        Timber.d(
-            "Operation '%s' executed %d times for %d ms. Average time %4.2fms",
-            name,
-            opCount,
-            opMills,
-            1.0 * opMills / opCount
-        )
+        logcat {
+            "Operation '$name' executed $opCount times for $opMills ms. Average time ${"%.2f".format(
+                1.0 * opMills / opCount
+            )}ms"
+        }
     }
 }

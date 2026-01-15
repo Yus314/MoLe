@@ -26,6 +26,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import java.util.Locale
+import logcat.logcat
 import net.ktnx.mobileledger.db.Account
 import net.ktnx.mobileledger.db.AccountValue
 import net.ktnx.mobileledger.db.DB
@@ -33,7 +34,6 @@ import net.ktnx.mobileledger.db.Transaction
 import net.ktnx.mobileledger.db.TransactionWithAccounts
 import net.ktnx.mobileledger.model.LedgerAccount
 import net.ktnx.mobileledger.utils.Misc
-import timber.log.Timber
 
 @Dao
 abstract class TransactionDAO : BaseDAO<Transaction>() {
@@ -190,12 +190,12 @@ abstract class TransactionDAO : BaseDAO<Transaction>() {
             storeSync(tr)
         }
 
-        Timber.d("Purging old transactions")
+        logcat { "Purging old transactions" }
         var removed = purgeOldTransactionsSync(profileId, generation)
-        Timber.d(String.format(Locale.ROOT, "Purged %d transactions", removed))
+        logcat { "Purged $removed transactions" }
 
         removed = purgeOldTransactionAccountsSync(profileId, generation)
-        Timber.d(String.format(Locale.ROOT, "Purged %d transaction accounts", removed))
+        logcat { "Purged $removed transaction accounts" }
     }
 
     @androidx.room.Transaction

@@ -23,7 +23,7 @@ import android.view.GestureDetector.SimpleOnGestureListener
 import android.view.MotionEvent
 import android.view.View
 import kotlin.math.abs
-import timber.log.Timber
+import logcat.logcat
 
 abstract class OnSwipeTouchListener(ctx: Context) : View.OnTouchListener {
     @JvmField
@@ -31,14 +31,14 @@ abstract class OnSwipeTouchListener(ctx: Context) : View.OnTouchListener {
 
     private inner class GestureListener : SimpleOnGestureListener() {
         override fun onDown(e: MotionEvent): Boolean {
-            Timber.d("onDown")
+            logcat { "onDown" }
             return false
         }
 
         override fun onFling(e1: MotionEvent?, e2: MotionEvent, velocityX: Float, velocityY: Float): Boolean {
             var result = false
 
-            Timber.d("onFling")
+            logcat { "onFling" }
 
             try {
                 if (e1 == null) return false
@@ -47,10 +47,10 @@ abstract class OnSwipeTouchListener(ctx: Context) : View.OnTouchListener {
                 if (abs(diffX) > abs(diffY)) {
                     if (abs(diffX) > SWIPE_THRESHOLD && abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
                         if (diffX > 0) {
-                            Timber.d("calling onSwipeRight")
+                            logcat { "calling onSwipeRight" }
                             onSwipeRight()
                         } else {
-                            Timber.d("calling onSwipeLeft")
+                            logcat { "calling onSwipeLeft" }
                             onSwipeLeft()
                         }
                     }
@@ -64,7 +64,7 @@ abstract class OnSwipeTouchListener(ctx: Context) : View.OnTouchListener {
                     result = true
                 }
             } catch (e: Exception) {
-                Timber.d("Error during fling gesture", e)
+                logcat { "Error during fling gesture: ${e.message}" }
             }
 
             return result
@@ -73,7 +73,7 @@ abstract class OnSwipeTouchListener(ctx: Context) : View.OnTouchListener {
 
     open fun onSwipeRight() {}
     open fun onSwipeLeft() {
-        Timber.d("LEFT")
+        logcat { "LEFT" }
     }
     open fun onSwipeUp() {}
     open fun onSwipeDown() {}

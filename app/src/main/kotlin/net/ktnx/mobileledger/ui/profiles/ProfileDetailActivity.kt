@@ -23,13 +23,13 @@ import android.os.Bundle
 import androidx.activity.compose.setContent
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.Locale
+import logcat.logcat
 import net.ktnx.mobileledger.db.Profile
 import net.ktnx.mobileledger.ui.activity.CrashReportingActivity
 import net.ktnx.mobileledger.ui.components.CrashReportDialog
 import net.ktnx.mobileledger.ui.profile.ProfileDetailScreen
 import net.ktnx.mobileledger.ui.theme.MoLeTheme
 import net.ktnx.mobileledger.utils.Colors
-import timber.log.Timber
 
 /**
  * An activity representing a single Profile detail screen.
@@ -83,13 +83,9 @@ class ProfileDetailActivity : CrashReportingActivity() {
             if (profile != null) {
                 starter.putExtra(ARG_ITEM_ID, profile.id)
                 starter.putExtra(ARG_HUE, profile.theme)
-                Timber.d(
-                    "Starting profile editor for profile %d, theme %d",
-                    profile.id,
-                    profile.theme
-                )
+                logcat { "Starting profile editor for profile ${profile.id}, theme ${profile.theme}" }
             } else {
-                Timber.d("Starting empty profile editor")
+                logcat { "Starting empty profile editor" }
             }
             context.startActivity(starter)
         }

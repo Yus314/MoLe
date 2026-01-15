@@ -17,9 +17,9 @@
 
 package net.ktnx.mobileledger.ui.transaction
 
+import logcat.logcat
 import net.ktnx.mobileledger.db.TemplateHeader
 import net.ktnx.mobileledger.utils.SimpleDate
-import timber.log.Timber
 
 /**
  * Utility object for extracting values from regex match groups in templates.
@@ -44,11 +44,11 @@ object TemplateMatchGroupExtractor {
             if (groupNumber <= matchResult.groupCount()) {
                 matchResult.group(groupNumber) ?: fallback
             } else {
-                Timber.d("Group $groupNumber exceeds count ${matchResult.groupCount()}")
+                logcat { "Group $groupNumber exceeds count ${matchResult.groupCount()}" }
                 fallback
             }
         } catch (e: Exception) {
-            Timber.d("Failed to extract group $groupNumber: ${e.message}")
+            logcat { "Failed to extract group $groupNumber: ${e.message}" }
             fallback
         }
     }
@@ -99,7 +99,7 @@ object TemplateMatchGroupExtractor {
         return try {
             SimpleDate(year, month, day)
         } catch (e: Exception) {
-            Timber.d("Failed to construct date: $year-$month-$day")
+            logcat { "Failed to construct date: $year-$month-$day" }
             null
         }
     }

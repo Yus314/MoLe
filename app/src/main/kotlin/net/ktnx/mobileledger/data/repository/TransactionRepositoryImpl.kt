@@ -24,6 +24,7 @@ import javax.inject.Singleton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
+import logcat.logcat
 import net.ktnx.mobileledger.dao.AccountDAO
 import net.ktnx.mobileledger.dao.AccountValueDAO
 import net.ktnx.mobileledger.dao.TransactionAccountDAO
@@ -34,7 +35,6 @@ import net.ktnx.mobileledger.db.Transaction
 import net.ktnx.mobileledger.db.TransactionWithAccounts
 import net.ktnx.mobileledger.model.LedgerAccount
 import net.ktnx.mobileledger.utils.Misc
-import timber.log.Timber
 
 /**
  * Implementation of [TransactionRepository] that wraps the existing [TransactionDAO].
@@ -218,12 +218,12 @@ class TransactionRepositoryImpl @Inject constructor(
                 storeTransactionInternal(tr)
             }
 
-            Timber.d("Purging old transactions")
+            logcat { "Purging old transactions" }
             var removed = transactionDAO.purgeOldTransactionsSync(profileId, generation)
-            Timber.d(String.format(Locale.ROOT, "Purged %d transactions", removed))
+            logcat { "Purged $removed transactions" }
 
             removed = transactionDAO.purgeOldTransactionAccountsSync(profileId, generation)
-            Timber.d(String.format(Locale.ROOT, "Purged %d transaction accounts", removed))
+            logcat { "Purged $removed transaction accounts" }
         }
     }
 

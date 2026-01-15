@@ -28,13 +28,14 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import logcat.asLog
+import logcat.logcat
 import net.ktnx.mobileledger.R
 import net.ktnx.mobileledger.db.Profile
 import net.ktnx.mobileledger.ui.QR
 import net.ktnx.mobileledger.ui.theme.MoLeTheme
 import net.ktnx.mobileledger.ui.transaction.NewTransactionScreen
 import net.ktnx.mobileledger.ui.transaction.NewTransactionViewModel
-import timber.log.Timber
 
 /**
  * New Transaction Activity using Jetpack Compose for the UI.
@@ -70,7 +71,7 @@ class NewTransactionActivityCompose :
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 profileRepository.currentProfile.collect { profile ->
                     if (profile == null) {
-                        Timber.d("No active profile. Redirecting to SplashActivity")
+                        logcat { "No active profile. Redirecting to SplashActivity" }
                         val intent = Intent(this@NewTransactionActivityCompose, SplashActivity::class.java)
                         intent.flags = Intent.FLAG_ACTIVITY_TASK_ON_HOME or Intent.FLAG_ACTIVITY_NEW_TASK
                         startActivity(intent)
@@ -98,13 +99,13 @@ class NewTransactionActivityCompose :
         profileTheme = intent.getIntExtra(PARAM_THEME, -1)
 
         if (profileTheme < 0) {
-            Timber.d("Started with invalid/missing theme; quitting")
+            logcat { "Started with invalid/missing theme; quitting" }
             finish()
             return
         }
 
         if (profileId <= 0) {
-            Timber.d("Started with invalid/missing profile_id; quitting")
+            logcat { "Started with invalid/missing profile_id; quitting" }
             finish()
             return
         }
@@ -120,7 +121,7 @@ class NewTransactionActivityCompose :
     }
 
     override fun onQRScanResult(text: String?) {
-        Timber.d("Got QR scan result [$text]")
+        logcat { "Got QR scan result [$text]" }
         // QR result handling is now done through the ViewModel
         // The ViewModel will process the QR code and apply matching templates
     }

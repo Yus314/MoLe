@@ -30,6 +30,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.yield
+import logcat.logcat
 import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.db.Profile
 import net.ktnx.mobileledger.domain.model.SyncException
@@ -40,7 +41,6 @@ import net.ktnx.mobileledger.service.AppStateService
 import net.ktnx.mobileledger.service.BackgroundTaskManager
 import net.ktnx.mobileledger.service.SyncInfo
 import net.ktnx.mobileledger.service.TaskProgress
-import timber.log.Timber
 
 /**
  * ViewModel for coordinating the main screen UI.
@@ -189,7 +189,7 @@ class MainCoordinatorViewModel @Inject constructor(
     fun startSync(profile: Profile? = null) {
         val syncProfile = profile ?: profileRepository.currentProfile.value
         if (syncProfile == null) {
-            Timber.d("No profile to sync")
+            logcat { "No profile to sync" }
             return
         }
 
