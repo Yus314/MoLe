@@ -20,8 +20,8 @@ package net.ktnx.mobileledger.ui.main
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import java.util.concurrent.atomic.AtomicReference
 import javax.inject.Inject
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -30,17 +30,16 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.yield
-import net.ktnx.mobileledger.async.RetrieveTransactionsTask
-import net.ktnx.mobileledger.data.repository.AccountRepository
-import net.ktnx.mobileledger.data.repository.OptionRepository
 import net.ktnx.mobileledger.data.repository.ProfileRepository
-import net.ktnx.mobileledger.data.repository.TransactionRepository
 import net.ktnx.mobileledger.db.Profile
+import net.ktnx.mobileledger.domain.model.SyncException
+import net.ktnx.mobileledger.domain.model.SyncProgress
+import net.ktnx.mobileledger.domain.model.SyncState
+import net.ktnx.mobileledger.domain.usecase.TransactionSyncer
 import net.ktnx.mobileledger.service.AppStateService
 import net.ktnx.mobileledger.service.BackgroundTaskManager
 import net.ktnx.mobileledger.service.SyncInfo
 import net.ktnx.mobileledger.service.TaskProgress
-import net.ktnx.mobileledger.service.TaskState
 import net.ktnx.mobileledger.utils.Logger
 
 /**
@@ -60,9 +59,7 @@ import net.ktnx.mobileledger.utils.Logger
 @HiltViewModel
 class MainCoordinatorViewModel @Inject constructor(
     private val profileRepository: ProfileRepository,
-    private val accountRepository: AccountRepository,
-    private val transactionRepository: TransactionRepository,
-    private val optionRepository: OptionRepository,
+    private val transactionSyncer: TransactionSyncer,
     private val backgroundTaskManager: BackgroundTaskManager,
     private val appStateService: AppStateService
 ) : ViewModel() {
@@ -82,21 +79,43 @@ class MainCoordinatorViewModel @Inject constructor(
     private val _effects = Channel<MainCoordinatorEffect>(Channel.BUFFERED)
     val effects = _effects.receiveAsFlow()
 
-    private val retrieveTransactionsTask = AtomicReference<RetrieveTransactionsTask?>(null)
+    // Sync state management
+    private val _syncState = MutableStateFlow<SyncState>(SyncState.Idle)
+    val syncState: StateFlow<SyncState> = _syncState.asStateFlow()
+    private var syncJob: Job? = null
 
     init {
-        observeTaskRunning()
+        observeSyncState()
         observeProfile()
     }
 
-    private fun observeTaskRunning() {
+    /**
+     * Observe syncState and update UI state accordingly.
+     * This replaces the legacy BackgroundTaskManager observation.
+     */
+    private fun observeSyncState() {
         viewModelScope.launch {
-            backgroundTaskManager.isRunning.collect { running ->
-                _uiState.update {
-                    it.copy(
-                        backgroundTasksRunning = running,
-                        isRefreshing = running
-                    )
+            syncState.collect { state ->
+                _uiState.update { uiState ->
+                    when (state) {
+                        is SyncState.InProgress -> {
+                            val progress = state.progress
+                            uiState.copy(
+                                backgroundTasksRunning = true,
+                                isRefreshing = true,
+                                backgroundTaskProgress = when (progress) {
+                                    is SyncProgress.Running -> progress.progressFraction
+                                    else -> 0f
+                                }
+                            )
+                        }
+
+                        else -> uiState.copy(
+                            backgroundTasksRunning = false,
+                            isRefreshing = false,
+                            backgroundTaskProgress = 0f
+                        )
+                    }
                 }
             }
         }
@@ -154,12 +173,70 @@ class MainCoordinatorViewModel @Inject constructor(
     private fun refreshData() {
         viewModelScope.launch {
             yield()
-            scheduleTransactionListRetrieval()
+            startSync()
         }
     }
 
     private fun cancelRefresh() {
-        stopTransactionsRetrieval()
+        cancelSync()
+    }
+
+    /**
+     * Start synchronization using TransactionSyncer.
+     *
+     * @param profile The profile to sync. If null, uses the current profile.
+     */
+    fun startSync(profile: Profile? = null) {
+        val syncProfile = profile ?: profileRepository.currentProfile.value
+        if (syncProfile == null) {
+            Logger.debug("sync", "No profile to sync")
+            return
+        }
+
+        // Cancel any existing sync
+        syncJob?.cancel()
+
+        syncJob = viewModelScope.launch {
+            _syncState.value = SyncState.InProgress(SyncProgress.Starting("同期開始..."))
+
+            try {
+                transactionSyncer.sync(syncProfile)
+                    .collect { progress ->
+                        _syncState.value = SyncState.InProgress(progress)
+                    }
+
+                // Sync completed successfully
+                val result = transactionSyncer.getLastResult()
+                if (result != null) {
+                    _syncState.value = SyncState.Completed(result)
+                } else {
+                    _syncState.value = SyncState.Idle
+                }
+            } catch (e: SyncException) {
+                _syncState.value = SyncState.Failed(e.syncError)
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                _syncState.value = SyncState.Cancelled
+            } catch (e: Exception) {
+                _syncState.value = SyncState.Failed(
+                    net.ktnx.mobileledger.domain.model.SyncError.UnknownError(
+                        message = e.message ?: "予期しないエラーが発生しました",
+                        cause = e
+                    )
+                )
+            }
+        }
+    }
+
+    /**
+     * Cancel the current sync operation.
+     */
+    fun cancelSync() {
+        syncJob?.cancel()
+        _syncState.value = SyncState.Cancelled
+    }
+
+    fun clearSyncState() {
+        _syncState.value = SyncState.Idle
     }
 
     private fun addNewTransaction() {
@@ -204,49 +281,6 @@ class MainCoordinatorViewModel @Inject constructor(
         _uiState.update { it.copy(updateError = null) }
     }
 
-    fun scheduleTransactionListRetrieval() {
-        if (retrieveTransactionsTask.get() != null) {
-            Logger.debug("db", "Ignoring request for transaction retrieval - already active")
-            return
-        }
-
-        val profile = profileRepository.currentProfile.value
-        if (profile == null) {
-            Logger.debug("db", "No current profile, skipping transaction retrieval")
-            return
-        }
-
-        val task = RetrieveTransactionsTask(
-            profile,
-            accountRepository,
-            transactionRepository,
-            optionRepository,
-            backgroundTaskManager,
-            appStateService
-        )
-
-        if (!retrieveTransactionsTask.compareAndSet(null, task)) {
-            Logger.debug("db", "Another task was started concurrently, skipping")
-            return
-        }
-
-        Logger.debug("db", "Created a background transaction retrieval task")
-        task.start()
-    }
-
-    fun stopTransactionsRetrieval() {
-        val task = retrieveTransactionsTask.get()
-        if (task != null) {
-            task.interrupt()
-        } else {
-            backgroundTaskManager.updateProgress(TaskProgress("cancel", TaskState.FINISHED, "Cancelled"))
-        }
-    }
-
-    fun transactionRetrievalDone() {
-        retrieveTransactionsTask.set(null)
-    }
-
     fun reloadDataAfterChange() {
         appStateService.signalDataChanged()
     }
@@ -257,25 +291,6 @@ class MainCoordinatorViewModel @Inject constructor(
                 currentProfileId = profile?.id,
                 currentProfileTheme = profile?.theme ?: -1,
                 currentProfileCanPost = profile?.canPost() ?: false
-            )
-        }
-    }
-
-    fun updateBackgroundTaskProgress(progress: RetrieveTransactionsTask.Progress?) {
-        val progressState = progress?.state
-        val isRunning = progress != null &&
-            progressState == RetrieveTransactionsTask.ProgressState.RUNNING
-
-        _uiState.update {
-            it.copy(
-                backgroundTasksRunning = progress != null &&
-                    progressState != RetrieveTransactionsTask.ProgressState.FINISHED,
-                isRefreshing = isRunning,
-                backgroundTaskProgress = if (isRunning && progress!!.getTotal() > 0) {
-                    progress.getProgress().toFloat() / progress.getTotal()
-                } else {
-                    0f
-                }
             )
         }
     }

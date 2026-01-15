@@ -204,7 +204,7 @@ class TransactionSyncerImpl @Inject constructor(
 
                 while (true) {
                     coroutineContext.ensureActive()
-                    val acc = parser.nextAccountWithoutTask(map) ?: break
+                    val acc = parser.nextAccount(map) ?: break
                     list.add(acc)
                     expectedPostingsCount += acc.amountCount
                 }

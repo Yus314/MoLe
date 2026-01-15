@@ -321,7 +321,7 @@ class MainViewModelTest {
     }
 
     @Test
-    fun `cancelRefresh stops running task`() = runTest {
+    fun `cancelRefresh sets sync state to Cancelled`() = runTest {
         // Given
         val profile = createTestProfile(id = 1L)
         profileRepository.insertProfile(profile)
@@ -335,8 +335,8 @@ class MainViewModelTest {
         viewModel.onMainEvent(MainEvent.CancelRefresh)
         advanceUntilIdle()
 
-        // Then - should update background task manager
-        assertNotNull(backgroundTaskManager.progress.value)
+        // Then - sync state should be cancelled
+        assertTrue(viewModel.syncState.value is SyncState.Cancelled)
     }
 
     // ========================================
@@ -685,28 +685,29 @@ class MainViewModelTest {
     // ========================================
 
     @Test
-    fun `backgroundTaskManager running state updates mainUiState`() = runTest {
+    fun `sync state updates mainUiState refresh flags`() = runTest {
         // Given
+        val profile = createTestProfile(id = 1L)
+        profileRepository.insertProfile(profile)
+        profileRepository.setCurrentProfile(profile)
+        transactionSyncer.progressSteps = 2
+        transactionSyncer.delayPerStepMs = 0 // Complete quickly
+
         viewModel = createViewModel()
+        viewModel.updateProfile(profile)
         advanceUntilIdle()
 
-        assertFalse(viewModel.mainUiState.value.isRefreshing)
-
-        // When
-        backgroundTaskManager.taskStarted("test-task")
-        advanceUntilIdle()
-
-        // Then
-        assertTrue(viewModel.mainUiState.value.isRefreshing)
-        assertTrue(viewModel.mainUiState.value.backgroundTasksRunning)
-
-        // When - task finishes
-        backgroundTaskManager.taskFinished("test-task")
-        advanceUntilIdle()
-
-        // Then
         assertFalse(viewModel.mainUiState.value.isRefreshing)
         assertFalse(viewModel.mainUiState.value.backgroundTasksRunning)
+
+        // When - sync completes
+        viewModel.startSync()
+        advanceUntilIdle()
+
+        // Then - sync completed, not refreshing anymore
+        assertFalse(viewModel.mainUiState.value.isRefreshing)
+        assertFalse(viewModel.mainUiState.value.backgroundTasksRunning)
+        assertTrue(viewModel.syncState.value is SyncState.Completed)
     }
 
     // ========================================

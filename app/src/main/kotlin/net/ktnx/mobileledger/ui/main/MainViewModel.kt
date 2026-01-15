@@ -21,7 +21,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.util.Date
-import java.util.concurrent.atomic.AtomicReference
 import javax.inject.Inject
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -43,7 +42,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.yield
-import net.ktnx.mobileledger.async.RetrieveTransactionsTask
 import net.ktnx.mobileledger.async.TransactionAccumulator
 import net.ktnx.mobileledger.data.repository.AccountRepository
 import net.ktnx.mobileledger.data.repository.OptionRepository
@@ -63,7 +61,6 @@ import net.ktnx.mobileledger.service.BackgroundTaskManager
 import net.ktnx.mobileledger.service.CurrencyFormatter
 import net.ktnx.mobileledger.service.SyncInfo
 import net.ktnx.mobileledger.service.TaskProgress
-import net.ktnx.mobileledger.service.TaskState
 import net.ktnx.mobileledger.utils.Logger
 import net.ktnx.mobileledger.utils.SimpleDate
 
@@ -118,7 +115,6 @@ class MainViewModel @Inject constructor(
     private val _effects = Channel<MainEffect>(Channel.BUFFERED)
     val effects = _effects.receiveAsFlow()
 
-    private val retrieveTransactionsTask = AtomicReference<RetrieveTransactionsTask?>(null)
     private var displayedTransactionsUpdaterJob: Job? = null
     private var syncJob: Job? = null
 
@@ -135,22 +131,36 @@ class MainViewModel @Inject constructor(
         loadInitialData()
         observeDataChanges()
         observeAccountSearch()
-        observeTaskRunning()
+        observeSyncState()
     }
 
     /**
-     * Observe the BackgroundTaskManager's isRunning state and update isRefreshing accordingly.
-     * This direct observation approach is more robust than the previous 100ms delay job,
-     * which could be cancelled and leave isRefreshing stuck at true.
+     * Observe syncState and update UI state accordingly.
+     * This replaces the legacy BackgroundTaskManager observation.
      */
-    private fun observeTaskRunning() {
+    private fun observeSyncState() {
         viewModelScope.launch {
-            backgroundTaskManager.isRunning.collect { running ->
-                _mainUiState.update {
-                    it.copy(
-                        backgroundTasksRunning = running,
-                        isRefreshing = running
-                    )
+            syncState.collect { state ->
+                _mainUiState.update { uiState ->
+                    when (state) {
+                        is SyncState.InProgress -> {
+                            val progress = state.progress
+                            uiState.copy(
+                                backgroundTasksRunning = true,
+                                isRefreshing = true,
+                                backgroundTaskProgress = when (progress) {
+                                    is SyncProgress.Running -> progress.progressFraction
+                                    else -> 0f
+                                }
+                            )
+                        }
+
+                        else -> uiState.copy(
+                            backgroundTasksRunning = false,
+                            isRefreshing = false,
+                            backgroundTaskProgress = 0f
+                        )
+                    }
                 }
             }
         }
@@ -295,12 +305,12 @@ class MainViewModel @Inject constructor(
         // recomposition during PullToRefreshBox animation.
         viewModelScope.launch {
             yield()
-            scheduleTransactionListRetrieval()
+            startSync()
         }
     }
 
     private fun cancelRefresh() {
-        stopTransactionsRetrieval()
+        cancelSync()
     }
 
     private fun addNewTransaction() {
@@ -489,33 +499,6 @@ class MainViewModel @Inject constructor(
                     )
                 }
             )
-        }
-    }
-
-    fun updateBackgroundTaskProgress(progress: RetrieveTransactionsTask.Progress?) {
-        val progressState = progress?.state
-        val isRunning = progress != null &&
-            progressState == RetrieveTransactionsTask.ProgressState.RUNNING
-        val isFinished = progress != null &&
-            progressState == RetrieveTransactionsTask.ProgressState.FINISHED
-
-        _mainUiState.update {
-            it.copy(
-                backgroundTasksRunning = progress != null &&
-                    progressState != RetrieveTransactionsTask.ProgressState.FINISHED,
-                isRefreshing = isRunning,
-                backgroundTaskProgress = if (isRunning && progress!!.getTotal() > 0) {
-                    progress.getProgress().toFloat() / progress.getTotal()
-                } else {
-                    0f
-                }
-            )
-        }
-
-        // Reload data when refresh finishes
-        if (isFinished) {
-            reloadAccounts()
-            reloadTransactions()
         }
     }
 
@@ -718,57 +701,8 @@ class MainViewModel @Inject constructor(
         // Transaction count is now managed via AppStateService.lastSyncInfo
     }
 
-    fun scheduleTransactionListRetrieval() {
-        // Check if a task is already running (lock-free)
-        if (retrieveTransactionsTask.get() != null) {
-            Logger.debug("db", "Ignoring request for transaction retrieval - already active")
-            return
-        }
-
-        val profile = profileRepository.currentProfile.value
-        if (profile == null) {
-            Logger.debug("db", "No current profile, skipping transaction retrieval")
-            return
-        }
-
-        val task = RetrieveTransactionsTask(
-            profile,
-            accountRepository,
-            transactionRepository,
-            optionRepository,
-            backgroundTaskManager,
-            appStateService
-        )
-
-        // CAS (Compare-And-Swap) to atomically set the task
-        // If another thread set a task first, this will fail and we skip
-        if (!retrieveTransactionsTask.compareAndSet(null, task)) {
-            Logger.debug("db", "Another task was started concurrently, skipping")
-            return
-        }
-
-        Logger.debug("db", "Created a background transaction retrieval task")
-        task.start()
-    }
-
-    fun stopTransactionsRetrieval() {
-        val task = retrieveTransactionsTask.get()
-        if (task != null) {
-            task.interrupt()
-        } else {
-            backgroundTaskManager.updateProgress(TaskProgress("cancel", TaskState.FINISHED, "Cancelled"))
-        }
-    }
-
-    fun transactionRetrievalDone() {
-        retrieveTransactionsTask.set(null)
-    }
-
     /**
      * Start synchronization using TransactionSyncer.
-     *
-     * This method provides a Coroutines-based alternative to scheduleTransactionListRetrieval().
-     * It uses the TransactionSyncer interface which can be easily mocked in tests.
      *
      * @param profile The profile to sync. If null, uses the current profile.
      */

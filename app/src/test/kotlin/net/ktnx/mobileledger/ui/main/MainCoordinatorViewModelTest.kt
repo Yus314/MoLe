@@ -26,8 +26,8 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import net.ktnx.mobileledger.db.Profile
-import net.ktnx.mobileledger.service.TaskProgress
-import net.ktnx.mobileledger.service.TaskState
+import net.ktnx.mobileledger.domain.model.SyncState
+import net.ktnx.mobileledger.fake.FakeTransactionSyncer
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -50,9 +50,7 @@ class MainCoordinatorViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var profileRepository: FakeProfileRepositoryForViewModel
-    private lateinit var accountRepository: FakeAccountRepositoryForViewModel
-    private lateinit var transactionRepository: FakeTransactionRepositoryForViewModel
-    private lateinit var optionRepository: FakeOptionRepositoryForViewModel
+    private lateinit var transactionSyncer: FakeTransactionSyncer
     private lateinit var backgroundTaskManager: FakeBackgroundTaskManagerForViewModel
     private lateinit var appStateService: FakeAppStateServiceForViewModel
     private lateinit var viewModel: MainCoordinatorViewModel
@@ -61,9 +59,7 @@ class MainCoordinatorViewModelTest {
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         profileRepository = FakeProfileRepositoryForViewModel()
-        accountRepository = FakeAccountRepositoryForViewModel()
-        transactionRepository = FakeTransactionRepositoryForViewModel()
-        optionRepository = FakeOptionRepositoryForViewModel()
+        transactionSyncer = FakeTransactionSyncer()
         backgroundTaskManager = FakeBackgroundTaskManagerForViewModel()
         appStateService = FakeAppStateServiceForViewModel()
     }
@@ -89,9 +85,7 @@ class MainCoordinatorViewModelTest {
 
     private fun createViewModel() = MainCoordinatorViewModel(
         profileRepository,
-        accountRepository,
-        transactionRepository,
-        optionRepository,
+        transactionSyncer,
         backgroundTaskManager,
         appStateService
     )
@@ -101,11 +95,13 @@ class MainCoordinatorViewModelTest {
     // ========================================
 
     @Test
-    fun `init observes task running state`() = runTest {
+    fun `startSync updates sync state and completes`() = runTest {
         // Given
         val profile = createTestProfile()
         profileRepository.insertProfile(profile)
         profileRepository.setCurrentProfile(profile)
+        transactionSyncer.progressSteps = 2
+        transactionSyncer.delayPerStepMs = 0 // Complete quickly
 
         // When
         viewModel = createViewModel()
@@ -114,13 +110,13 @@ class MainCoordinatorViewModelTest {
         // Then - initial state
         assertFalse(viewModel.uiState.value.isRefreshing)
 
-        // When - task starts
-        backgroundTaskManager.taskStarted("test-task")
+        // When - sync starts and completes
+        viewModel.startSync()
         advanceUntilIdle()
 
-        // Then
-        assertTrue(viewModel.uiState.value.isRefreshing)
-        assertTrue(viewModel.uiState.value.backgroundTasksRunning)
+        // Then - sync completed
+        assertTrue(viewModel.syncState.value is SyncState.Completed)
+        assertFalse(viewModel.uiState.value.isRefreshing)
     }
 
     @Test
@@ -250,33 +246,29 @@ class MainCoordinatorViewModelTest {
     // ========================================
 
     @Test
-    fun `isRefreshing matches task running state`() = runTest {
+    fun `isRefreshing matches sync state`() = runTest {
         // Given
         val profile = createTestProfile()
         profileRepository.insertProfile(profile)
         profileRepository.setCurrentProfile(profile)
+        transactionSyncer.progressSteps = 2
+        transactionSyncer.delayPerStepMs = 0 // Complete quickly
         viewModel = createViewModel()
         advanceUntilIdle()
 
         assertFalse(viewModel.uiState.value.isRefreshing)
 
-        // When - task starts
-        backgroundTaskManager.taskStarted("sync-task")
+        // When - sync starts and completes
+        viewModel.startSync()
         advanceUntilIdle()
 
-        // Then
-        assertTrue(viewModel.uiState.value.isRefreshing)
-
-        // When - task finishes
-        backgroundTaskManager.taskFinished("sync-task")
-        advanceUntilIdle()
-
-        // Then
+        // Then - sync completed, not refreshing anymore
         assertFalse(viewModel.uiState.value.isRefreshing)
+        assertTrue(viewModel.syncState.value is SyncState.Completed)
     }
 
     @Test
-    fun `cancelRefresh stops running task`() = runTest {
+    fun `cancelRefresh cancels sync`() = runTest {
         // Given
         val profile = createTestProfile()
         profileRepository.insertProfile(profile)
@@ -288,9 +280,9 @@ class MainCoordinatorViewModelTest {
         viewModel.onEvent(MainCoordinatorEvent.CancelRefresh)
         advanceUntilIdle()
 
-        // Then - cancel emits FINISHED progress when no task running
-        val progress = backgroundTaskManager.progress.value
-        assertEquals(TaskState.FINISHED, progress?.state)
+        // Then - sync state should be cancelled
+        assertTrue(viewModel.syncState.value is SyncState.Cancelled)
+        assertFalse(viewModel.uiState.value.isRefreshing)
     }
 
     // ========================================

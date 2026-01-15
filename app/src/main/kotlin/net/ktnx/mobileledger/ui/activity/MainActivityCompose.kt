@@ -43,7 +43,6 @@ import net.ktnx.mobileledger.R
 import net.ktnx.mobileledger.data.repository.OptionRepository
 import net.ktnx.mobileledger.db.Option
 import net.ktnx.mobileledger.db.Profile
-import net.ktnx.mobileledger.service.TaskState
 import net.ktnx.mobileledger.ui.components.CrashReportDialog
 import net.ktnx.mobileledger.ui.main.AccountSummaryViewModel
 import net.ktnx.mobileledger.ui.main.MainCoordinatorEffect
@@ -93,27 +92,6 @@ class MainActivityCompose : ProfileThemedActivity() {
                 launch {
                     viewModel.allProfiles.collect { profiles ->
                         onProfileListChanged(profiles)
-                    }
-                }
-                // Observe task progress from BackgroundTaskManager via ViewModel
-                // Note: isRefreshing is now managed by MainViewModel.observeTaskRunning()
-                // which directly observes BackgroundTaskManager.isRunning StateFlow
-                launch {
-                    var wasRunning = false
-                    viewModel.taskProgress.collect { progress ->
-                        if (progress != null) {
-                            wasRunning = true
-                        }
-                        // Reset the task reference when finished so new refreshes can start
-                        // Note: BackgroundTaskManager sets progress to null (not FINISHED) when task ends,
-                        // so we need to check for null AND track if a task was previously running
-                        val taskEnded = progress == null ||
-                            progress.state == TaskState.FINISHED ||
-                            progress.state == TaskState.ERROR
-                        if (wasRunning && taskEnded) {
-                            viewModel.transactionRetrievalDone()
-                            wasRunning = false
-                        }
                     }
                 }
                 // Observe sync info from AppStateService via ViewModel

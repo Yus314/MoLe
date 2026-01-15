@@ -17,7 +17,6 @@
 
 package net.ktnx.mobileledger.json
 
-import net.ktnx.mobileledger.async.RetrieveTransactionsTask
 import net.ktnx.mobileledger.model.AmountStyle
 import net.ktnx.mobileledger.model.LedgerAccount
 
@@ -27,65 +26,13 @@ abstract class ParsedLedgerAccount {
 
     abstract fun getSimpleBalance(): List<SimpleBalance>
 
-    open fun toLedgerAccount(task: RetrieveTransactionsTask, map: HashMap<String, LedgerAccount>): LedgerAccount {
-        task.addNumberOfPostings(anumpostings)
-        val accName = aname
-        val existing = map[accName]
-        if (existing != null) {
-            throw RuntimeException("Account '$accName' already present")
-        }
-        val parentName = LedgerAccount.extractParentName(accName)
-        val createdParents = ArrayList<LedgerAccount>()
-        val parent: LedgerAccount? = if (parentName == null) {
-            null
-        } else {
-            task.ensureAccountExists(parentName, map, createdParents).also {
-                it.hasSubAccounts = true
-            }
-        }
-        val acc = LedgerAccount(accName, parent)
-        map[accName] = acc
-
-        var lastCurrency: String? = null
-        var lastCurrencyAmount = 0f
-        var lastAmountStyle: AmountStyle? = null
-
-        for (b in getSimpleBalance()) {
-            task.throwIfCancelled()
-            val currency = b.commodity
-            val amount = b.amount
-            val amountStyle = b.amountStyle
-
-            if (currency == lastCurrency) {
-                lastCurrencyAmount += amount
-                // Keep the first amountStyle found for this currency
-            } else {
-                if (lastCurrency != null) {
-                    acc.addAmount(lastCurrencyAmount, lastCurrency, lastAmountStyle)
-                }
-                lastCurrency = currency
-                lastCurrencyAmount = amount
-                lastAmountStyle = amountStyle
-            }
-        }
-        if (lastCurrency != null) {
-            acc.addAmount(lastCurrencyAmount, lastCurrency, lastAmountStyle)
-        }
-        for (p in createdParents) {
-            acc.propagateAmountsTo(p)
-        }
-
-        return acc
-    }
-
     /**
-     * Convert to LedgerAccount without RetrieveTransactionsTask dependency.
-     * This method is used by the pure Coroutines implementation of TransactionSyncerImpl.
+     * Convert to LedgerAccount.
      *
      * @param map Map of account names to LedgerAccount instances for parent lookup
      * @return The converted LedgerAccount
      */
-    open fun toLedgerAccountWithoutTask(map: HashMap<String, LedgerAccount>): LedgerAccount {
+    open fun toLedgerAccount(map: HashMap<String, LedgerAccount>): LedgerAccount {
         val accName = aname
         val existing = map[accName]
         if (existing != null) {
@@ -96,7 +43,7 @@ abstract class ParsedLedgerAccount {
         val parent: LedgerAccount? = if (parentName == null) {
             null
         } else {
-            ensureAccountExistsWithoutTask(parentName, map, createdParents).also {
+            ensureAccountExists(parentName, map, createdParents).also {
                 it.hasSubAccounts = true
             }
         }
@@ -133,7 +80,7 @@ abstract class ParsedLedgerAccount {
         return acc
     }
 
-    private fun ensureAccountExistsWithoutTask(
+    private fun ensureAccountExists(
         accountName: String,
         map: HashMap<String, LedgerAccount>,
         createdAccounts: ArrayList<LedgerAccount>
@@ -142,7 +89,7 @@ abstract class ParsedLedgerAccount {
 
         val parentName = LedgerAccount.extractParentName(accountName)
         val parentAccount = if (parentName != null) {
-            ensureAccountExistsWithoutTask(parentName, map, createdAccounts)
+            ensureAccountExists(parentName, map, createdAccounts)
         } else {
             null
         }
