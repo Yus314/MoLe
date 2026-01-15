@@ -24,6 +24,8 @@ import javax.inject.Inject
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -64,7 +66,8 @@ class TransactionListViewModel @Inject constructor(
 
     private val _accountSearchQuery = MutableStateFlow("")
 
-    private var displayedTransactionsUpdater: TransactionsDisplayedFilter? = null
+    // Job for managing filter task cancellation
+    private var displayedTransactionsFilterJob: Job? = null
 
     init {
         observeProfileChanges()
@@ -388,44 +391,34 @@ class TransactionListViewModel @Inject constructor(
     /**
      * Update displayed transactions from web sync.
      * Used by RetrieveTransactionsTask to show live updates during sync.
+     *
+     * Uses viewModelScope.launch instead of Thread for proper lifecycle management
+     * and deterministic testing with TestDispatcher.
      */
-    @Synchronized
     fun updateDisplayedTransactionsFromWeb(list: List<LedgerTransaction>) {
-        displayedTransactionsUpdater?.interrupt()
-        displayedTransactionsUpdater = TransactionsDisplayedFilter(this, list)
-        displayedTransactionsUpdater?.start()
-    }
+        // Cancel any previously running filter job
+        displayedTransactionsFilterJob?.cancel()
 
-    /**
-     * Background thread for filtering transactions during web sync.
-     */
-    private class TransactionsDisplayedFilter(
-        private val viewModel: TransactionListViewModel,
-        private val list: List<LedgerTransaction>
-    ) : Thread() {
-
-        override fun run() {
+        displayedTransactionsFilterJob = viewModelScope.launch {
             Logger.debug(
                 "dFilter",
-                "entered synchronized block (about to examine ${list.size} transactions)"
+                "entered coroutine (about to examine ${list.size} transactions)"
             )
-            val accNameFilter = viewModel._uiState.value.accountFilter
+            val accNameFilter = _uiState.value.accountFilter
 
-            val acc = TransactionAccumulator(accNameFilter, accNameFilter, viewModel.currencyFormatter)
+            val acc = TransactionAccumulator(accNameFilter, accNameFilter, currencyFormatter)
             for (tr in list) {
-                if (isInterrupted) {
-                    return
-                }
+                ensureActive() // Check for cancellation instead of isInterrupted
 
                 if (accNameFilter == null || tr.hasAccountNamedLike(accNameFilter)) {
                     tr.date?.let { date -> acc.put(tr, date) }
                 }
             }
 
-            if (isInterrupted) return
+            ensureActive() // Check for cancellation before updating UI
 
             val items = acc.getItems()
-            viewModel.updateDisplayedTransactions(items)
+            updateDisplayedTransactions(items)
             Logger.debug("dFilter", "transaction list updated")
         }
     }

@@ -23,7 +23,8 @@ import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStream
 import java.io.InputStreamReader
-import kotlinx.coroutines.runBlocking
+import kotlin.coroutines.coroutineContext
+import kotlinx.coroutines.ensureActive
 import net.ktnx.mobileledger.App
 import net.ktnx.mobileledger.data.repository.CurrencyRepository
 import net.ktnx.mobileledger.data.repository.ProfileRepository
@@ -241,61 +242,62 @@ class RawConfigReader(inputStream: InputStream) {
         return list
     }
 
-    fun restoreAll(
+    suspend fun restoreAll(
         profileRepository: ProfileRepository,
         templateRepository: TemplateRepository,
         currencyRepository: CurrencyRepository
     ) {
+        coroutineContext.ensureActive()
         restoreCommodities(currencyRepository)
+        coroutineContext.ensureActive()
         restoreProfiles(profileRepository)
+        coroutineContext.ensureActive()
         restoreTemplates(templateRepository)
+        coroutineContext.ensureActive()
         restoreCurrentProfile(profileRepository)
     }
 
-    private fun restoreTemplates(templateRepository: TemplateRepository) {
+    private suspend fun restoreTemplates(templateRepository: TemplateRepository) {
         val templatesList = templates ?: return
 
-        runBlocking {
-            for (t in templatesList) {
-                if (templateRepository.getTemplateWithAccountsByUuidSync(t.header.uuid) == null) {
-                    templateRepository.insertTemplateWithAccounts(t)
-                }
+        for (t in templatesList) {
+            coroutineContext.ensureActive()
+            if (templateRepository.getTemplateWithAccountsByUuidSync(t.header.uuid) == null) {
+                templateRepository.insertTemplateWithAccounts(t)
             }
         }
     }
 
-    private fun restoreProfiles(profileRepository: ProfileRepository) {
+    private suspend fun restoreProfiles(profileRepository: ProfileRepository) {
         val profilesList = profiles ?: return
 
-        runBlocking {
-            for (p in profilesList) {
-                if (profileRepository.getProfileByUuidSync(p.uuid) == null) {
-                    profileRepository.insertProfile(p)
-                }
+        for (p in profilesList) {
+            coroutineContext.ensureActive()
+            if (profileRepository.getProfileByUuidSync(p.uuid) == null) {
+                profileRepository.insertProfile(p)
             }
         }
     }
 
-    private fun restoreCommodities(currencyRepository: CurrencyRepository) {
+    private suspend fun restoreCommodities(currencyRepository: CurrencyRepository) {
         val commoditiesList = commodities ?: return
 
-        runBlocking {
-            for (c in commoditiesList) {
-                if (currencyRepository.getCurrencyByNameSync(c.name) == null) {
-                    currencyRepository.insertCurrency(c)
-                }
+        for (c in commoditiesList) {
+            coroutineContext.ensureActive()
+            if (currencyRepository.getCurrencyByNameSync(c.name) == null) {
+                currencyRepository.insertCurrency(c)
             }
         }
     }
 
-    private fun restoreCurrentProfile(profileRepository: ProfileRepository) {
+    private suspend fun restoreCurrentProfile(profileRepository: ProfileRepository) {
         if (currentProfile == null) {
             Logger.debug("backup", "Not restoring current profile (not present in backup)")
             return
         }
 
         val currentProfileUuid = currentProfile ?: return
-        val p = runBlocking { profileRepository.getProfileByUuidSync(currentProfileUuid) }
+        val p = profileRepository.getProfileByUuidSync(currentProfileUuid)
 
         if (p != null) {
             Logger.debug("backup", "Restoring current profile ${p.name}")

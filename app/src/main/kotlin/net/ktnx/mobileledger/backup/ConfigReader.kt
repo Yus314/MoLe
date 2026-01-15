@@ -59,20 +59,27 @@ constructor(
 
     @Throws(IOException::class)
     override fun processStream() {
-        r.readConfig()
-        r.restoreAll(profileRepository, templateRepository, currencyRepository)
-        val currentProfile = r.currentProfile
+        // runBlocking is required here because processStream() is called from
+        // Thread.run() in ConfigIO base class. ConfigBackupImpl uses pure coroutines
+        // and bypasses this class entirely.
+        runBlocking {
+            r.readConfig()
+            r.restoreAll(profileRepository, templateRepository, currencyRepository)
+            val currentProfile = r.currentProfile
 
-        if (profileRepository.currentProfile.value == null) {
-            var p = runBlocking {
-                if (currentProfile != null) profileRepository.getProfileByUuidSync(currentProfile) else null
+            if (profileRepository.currentProfile.value == null) {
+                var p = if (currentProfile != null) {
+                    profileRepository.getProfileByUuidSync(currentProfile)
+                } else {
+                    null
+                }
+
+                if (p == null) {
+                    p = profileRepository.getAnyProfile()
+                }
+
+                p?.let { profileRepository.setCurrentProfile(it) }
             }
-
-            if (p == null) {
-                p = runBlocking { profileRepository.getAnyProfile() }
-            }
-
-            p?.let { profileRepository.setCurrentProfile(it) }
         }
 
         onDoneListener?.let { Misc.onMainThread { it.done() } }

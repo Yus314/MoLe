@@ -23,7 +23,6 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.Transaction
 import java.util.UUID
-import net.ktnx.mobileledger.dao.BaseDAO
 import net.ktnx.mobileledger.utils.Misc
 
 @Entity(
@@ -149,15 +148,6 @@ class Profile {
 
         val trnDao = DB.get().getTransactionDAO()
         trnDao.deleteSync(trnDao.getAllForProfileUnorderedSync(id))
-    }
-
-    /**
-     * @deprecated Use ProfileRepository.deleteProfileData() instead.
-     * This method violates the Repository pattern by accessing the database directly.
-     */
-    @Deprecated("Use ProfileRepository.deleteProfileData() instead", ReplaceWith(""))
-    fun wipeAllData() {
-        BaseDAO.runAsync { wipeAllDataSync() }
     }
 
     companion object {

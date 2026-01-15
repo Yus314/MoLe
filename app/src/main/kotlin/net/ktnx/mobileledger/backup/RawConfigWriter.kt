@@ -22,7 +22,8 @@ import java.io.BufferedWriter
 import java.io.IOException
 import java.io.OutputStream
 import java.io.OutputStreamWriter
-import kotlinx.coroutines.runBlocking
+import kotlin.coroutines.coroutineContext
+import kotlinx.coroutines.ensureActive
 import net.ktnx.mobileledger.data.repository.CurrencyRepository
 import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.data.repository.TemplateRepository
@@ -39,11 +40,15 @@ class RawConfigWriter(
     }
 
     @Throws(IOException::class)
-    fun writeConfig() {
+    suspend fun writeConfig() {
+        coroutineContext.ensureActive()
         w.beginObject()
         writeCommodities()
+        coroutineContext.ensureActive()
         writeProfiles()
+        coroutineContext.ensureActive()
         writeCurrentProfile()
+        coroutineContext.ensureActive()
         writeConfigTemplates()
         w.endObject()
         w.flush()
@@ -75,8 +80,8 @@ class RawConfigWriter(
     }
 
     @Throws(IOException::class)
-    private fun writeConfigTemplates() {
-        val templates = runBlocking { templateRepository.getAllTemplatesWithAccountsSync() }
+    private suspend fun writeConfigTemplates() {
+        val templates = templateRepository.getAllTemplatesWithAccountsSync()
 
         if (templates.isEmpty()) return
 
@@ -123,8 +128,8 @@ class RawConfigWriter(
     }
 
     @Throws(IOException::class)
-    private fun writeCommodities() {
-        val list = runBlocking { currencyRepository.getAllCurrenciesSync() }
+    private suspend fun writeCommodities() {
+        val list = currencyRepository.getAllCurrenciesSync()
         if (list.isEmpty()) return
 
         w.name(ConfigIO.Keys.COMMODITIES).beginArray()
@@ -139,8 +144,8 @@ class RawConfigWriter(
     }
 
     @Throws(IOException::class)
-    private fun writeProfiles() {
-        val profiles = runBlocking { profileRepository.getAllProfilesSync() }
+    private suspend fun writeProfiles() {
+        val profiles = profileRepository.getAllProfilesSync()
 
         if (profiles.isEmpty()) return
 
