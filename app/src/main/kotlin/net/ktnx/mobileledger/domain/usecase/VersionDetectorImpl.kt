@@ -23,9 +23,10 @@ import java.net.HttpURLConnection
 import java.util.regex.Pattern
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
+import net.ktnx.mobileledger.di.IoDispatcher
 import net.ktnx.mobileledger.utils.Logger
 import net.ktnx.mobileledger.utils.NetworkUtil
 
@@ -36,10 +37,12 @@ import net.ktnx.mobileledger.utils.NetworkUtil
  * 既存の VersionDetectionThread のロジックを suspend 関数として提供。
  */
 @Singleton
-class VersionDetectorImpl @Inject constructor() : VersionDetector {
+class VersionDetectorImpl @Inject constructor(
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
+) : VersionDetector {
 
     override suspend fun detect(url: String, useAuth: Boolean, user: String?, password: String?): Result<String> =
-        withContext(Dispatchers.IO) {
+        withContext(ioDispatcher) {
             try {
                 Logger.debug(TAG, "Detecting version for URL: $url")
 

@@ -19,9 +19,10 @@ package net.ktnx.mobileledger.domain.usecase
 
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import net.ktnx.mobileledger.data.repository.ProfileRepository
+import net.ktnx.mobileledger.di.IoDispatcher
 import net.ktnx.mobileledger.utils.Logger
 
 /**
@@ -33,7 +34,8 @@ import net.ktnx.mobileledger.utils.Logger
  */
 @Singleton
 class DatabaseInitializerImpl @Inject constructor(
-    private val profileRepository: ProfileRepository
+    private val profileRepository: ProfileRepository,
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : DatabaseInitializer {
 
     private var _isInitialized: Boolean = false
@@ -41,7 +43,7 @@ class DatabaseInitializerImpl @Inject constructor(
     override val isInitialized: Boolean
         get() = _isInitialized
 
-    override suspend fun initialize(): Result<Boolean> = withContext(Dispatchers.IO) {
+    override suspend fun initialize(): Result<Boolean> = withContext(ioDispatcher) {
         try {
             Logger.debug(TAG, "Starting database initialization")
 
