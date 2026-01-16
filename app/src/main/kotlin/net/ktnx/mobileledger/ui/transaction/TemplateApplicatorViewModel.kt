@@ -37,6 +37,13 @@ import net.ktnx.mobileledger.domain.model.TemplateLine
 import net.ktnx.mobileledger.model.MatchedTemplate
 import net.ktnx.mobileledger.service.CurrencyFormatter
 
+private fun Template.toTemplateItem() = TemplateItem(
+    id = id ?: 0L,
+    name = name,
+    description = transactionDescription,
+    regex = pattern
+)
+
 @HiltViewModel
 class TemplateApplicatorViewModel @Inject constructor(
     private val profileRepository: ProfileRepository,
@@ -66,14 +73,7 @@ class TemplateApplicatorViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isSearching = true) }
             val templates = templateRepository.getAllTemplatesAsDomainSync()
-                .map {
-                    TemplateItem(
-                        it.id ?: 0L,
-                        it.name,
-                        it.transactionDescription,
-                        it.pattern
-                    )
-                }
+                .map { it.toTemplateItem() }
             _uiState.update {
                 it.copy(
                     showTemplateSelector = true,
@@ -100,8 +100,7 @@ class TemplateApplicatorViewModel @Inject constructor(
     }
 
     private suspend fun buildApplyTemplateEffect(template: Template): TemplateApplicatorEffect.ApplyTemplate {
-        val defaultCurrency = profileRepository.currentProfile.value?.defaultCommodityOrEmpty ?: ""
-        val currencyMap = buildCurrencyMap(template.lines)
+        val (defaultCurrency, currencyMap) = buildCurrencyContext(template.lines)
 
         val newAccounts = template.lines.map { line ->
             val currencyName = line.currencyId?.let { currencyMap[it] } ?: defaultCurrency
@@ -155,8 +154,7 @@ class TemplateApplicatorViewModel @Inject constructor(
         viewModelScope.launch {
             val template = matched.template
             val matchResult = matched.matchResult
-            val defaultCurrency = profileRepository.currentProfile.value?.defaultCommodityOrEmpty ?: ""
-            val currencyMap = buildCurrencyMap(template.lines)
+            val (defaultCurrency, currencyMap) = buildCurrencyContext(template.lines)
 
             val description = extractFromMatchGroup(
                 matchResult,
@@ -234,11 +232,18 @@ class TemplateApplicatorViewModel @Inject constructor(
         )
     }
 
-    private suspend fun buildCurrencyMap(lines: List<TemplateLine>): Map<Long, String?> {
+    private data class CurrencyContext(
+        val defaultCurrency: String,
+        val currencyMap: Map<Long, String?>
+    )
+
+    private suspend fun buildCurrencyContext(lines: List<TemplateLine>): CurrencyContext {
+        val defaultCurrency = profileRepository.currentProfile.value?.defaultCommodityOrEmpty ?: ""
         val currencyIds = lines.mapNotNull { it.currencyId }.distinct()
-        return currencyIds.associateWith { id ->
+        val currencyMap = currencyIds.associateWith { id ->
             currencyRepository.getCurrencyByIdSync(id)?.name
         }
+        return CurrencyContext(defaultCurrency, currencyMap)
     }
 
     private fun searchTemplates(query: String) {
@@ -254,14 +259,7 @@ class TemplateApplicatorViewModel @Inject constructor(
             }
             _uiState.update {
                 it.copy(
-                    availableTemplates = templates.map { t ->
-                        TemplateItem(
-                            t.id ?: 0L,
-                            t.name,
-                            t.transactionDescription,
-                            t.pattern
-                        )
-                    },
+                    availableTemplates = templates.map { it.toTemplateItem() },
                     isSearching = false
                 )
             }
