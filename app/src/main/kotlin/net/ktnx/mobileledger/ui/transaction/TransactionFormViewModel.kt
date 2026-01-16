@@ -108,10 +108,15 @@ class TransactionFormViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            val termUpper = term.uppercase()
-            val containers = transactionRepository.searchByDescription(termUpper)
-            val suggestions = containers.mapNotNull { it.description }
-            _uiState.update { it.copy(descriptionSuggestions = suggestions) }
+            try {
+                val termUpper = term.uppercase()
+                val containers = transactionRepository.searchByDescription(termUpper)
+                val suggestions = containers.mapNotNull { it.description }
+                _uiState.update { it.copy(descriptionSuggestions = suggestions) }
+            } catch (e: Exception) {
+                logcat { "Failed to lookup suggestions: ${e.message}" }
+                _uiState.update { it.copy(descriptionSuggestions = emptyList()) }
+            }
         }
     }
 
@@ -177,12 +182,17 @@ class TransactionFormViewModel @Inject constructor(
             transactionRepository.storeTransaction(transaction, profileId)
             logcat { "Transaction saved to DB" }
             appStateService.signalDataChanged()
+            _uiState.update { it.copy(isSubmitting = false, isBusy = false) }
+            _effects.send(TransactionFormEffect.TransactionSaved)
         } catch (e: Exception) {
             logcat { "Failed to save transaction: ${e.message}" }
+            _uiState.update { it.copy(isSubmitting = false, isBusy = false) }
+            _effects.send(
+                TransactionFormEffect.ShowError(
+                    "取引はサーバーに送信されましたが、ローカル保存に失敗しました: ${e.message}"
+                )
+            )
         }
-
-        _uiState.update { it.copy(isSubmitting = false, isBusy = false) }
-        _effects.send(TransactionFormEffect.TransactionSaved)
     }
 
     private fun handleTransactionSendFailure(errorMessage: String) {
@@ -274,19 +284,25 @@ class TransactionFormViewModel @Inject constructor(
     private fun loadFromTransaction(transactionId: Long) {
         viewModelScope.launch {
             _uiState.update { it.copy(isBusy = true) }
-
-            val transaction = transactionRepository.getTransactionByIdSync(transactionId)
-
-            if (transaction != null) {
-                _uiState.update { state ->
-                    state.copy(
-                        description = transaction.description,
-                        transactionComment = transaction.comment ?: "",
-                        isBusy = false
-                    )
+            try {
+                val transaction = transactionRepository.getTransactionByIdSync(transactionId)
+                if (transaction != null) {
+                    _uiState.update { state ->
+                        state.copy(
+                            description = transaction.description,
+                            transactionComment = transaction.comment ?: "",
+                            isBusy = false
+                        )
+                    }
+                } else {
+                    _uiState.update { it.copy(isBusy = false) }
+                    _effects.send(TransactionFormEffect.ShowError("取引が見つかりません"))
                 }
-            } else {
+            } catch (e: Exception) {
                 _uiState.update { it.copy(isBusy = false) }
+                _effects.send(
+                    TransactionFormEffect.ShowError("取引の読み込みに失敗しました: ${e.message}")
+                )
             }
         }
     }
@@ -294,24 +310,23 @@ class TransactionFormViewModel @Inject constructor(
     private fun loadFromDescription(description: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isBusy = true, description = description) }
-
-            val transactionWithAccounts = transactionRepository.getFirstByDescription(description)
-
-            if (transactionWithAccounts != null) {
-                _uiState.update { state ->
-                    state.copy(
-                        isBusy = false
-                    )
-                }
-            } else {
+            try {
+                val transactionWithAccounts = transactionRepository.getFirstByDescription(description)
                 _uiState.update { it.copy(isBusy = false) }
+                // Note: 見つからない場合はエラーではない（新規入力として扱う）
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isBusy = false) }
+                logcat { "Failed to load from description: ${e.message}" }
+                // サジェスト機能の失敗は致命的ではないのでログのみ
             }
         }
     }
 
     private fun handleNavigateBack() {
-        if (!_uiState.value.hasUnsavedChanges) {
-            viewModelScope.launch {
+        viewModelScope.launch {
+            if (_uiState.value.hasUnsavedChanges) {
+                _effects.send(TransactionFormEffect.ShowDiscardChangesDialog)
+            } else {
                 _effects.send(TransactionFormEffect.NavigateBack)
             }
         }

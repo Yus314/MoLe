@@ -149,6 +149,10 @@ fun NewTransactionScreen(
                         descriptionFocusRequester.requestFocus()
                     }
                 }
+
+                is TransactionFormEffect.ShowDiscardChangesDialog -> {
+                    showDiscardDialog = true
+                }
             }
         }
     }

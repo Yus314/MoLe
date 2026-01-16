@@ -100,4 +100,5 @@ sealed class TransactionFormEffect {
     data class ShowError(val message: String) : TransactionFormEffect()
     data object HideKeyboard : TransactionFormEffect()
     data class RequestFocus(val element: FocusedElement) : TransactionFormEffect()
+    data object ShowDiscardChangesDialog : TransactionFormEffect()
 }
