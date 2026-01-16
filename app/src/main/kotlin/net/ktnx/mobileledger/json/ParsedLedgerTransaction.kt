@@ -18,9 +18,13 @@
 package net.ktnx.mobileledger.json
 
 import java.text.ParseException
+import net.ktnx.mobileledger.domain.model.Transaction
 import net.ktnx.mobileledger.model.LedgerTransaction
 
 interface ParsedLedgerTransaction {
     @Throws(ParseException::class)
     fun asLedgerTransaction(): LedgerTransaction
+
+    @Throws(ParseException::class)
+    fun toDomain(): Transaction
 }

@@ -54,6 +54,17 @@ open class ParsedPosting : BasePosting() {
         )
     }
 
+    fun toDomain(): TransactionLine {
+        val amt = pamount?.firstOrNull()
+        return TransactionLine(
+            id = null,
+            accountName = paccount ?: "",
+            amount = amt?.aquantity?.asFloat(),
+            currency = amt?.acommodity ?: "",
+            comment = pcomment.takeIf { it.isNotEmpty() }
+        )
+    }
+
     companion object {
         @JvmStatic
         fun fromLedgerAccount(acc: LedgerTransactionAccount): ParsedPosting = ParsedPosting().apply {

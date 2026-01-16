@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import java.io.IOException
 import java.io.InputStream
 import java.text.ParseException
+import net.ktnx.mobileledger.domain.model.Transaction
 import net.ktnx.mobileledger.json.TransactionListParser as BaseParser
 import net.ktnx.mobileledger.model.LedgerTransaction
 
@@ -39,4 +40,7 @@ constructor(input: InputStream) : BaseParser() {
     @Throws(ParseException::class)
     override fun nextTransaction(): LedgerTransaction? =
         if (iterator.hasNext()) iterator.next().asLedgerTransaction() else null
+
+    @Throws(ParseException::class)
+    override fun nextTransactionDomain(): Transaction? = if (iterator.hasNext()) iterator.next().toDomain() else null
 }

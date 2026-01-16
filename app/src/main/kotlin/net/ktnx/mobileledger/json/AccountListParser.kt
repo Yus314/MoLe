@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.MappingIterator
 import java.io.IOException
 import java.io.InputStream
 import logcat.logcat
+import net.ktnx.mobileledger.domain.model.Account
 import net.ktnx.mobileledger.model.LedgerAccount
 
 abstract class AccountListParser {
@@ -45,6 +46,28 @@ abstract class AccountListParser {
 
         logcat { "Got account '${next.name}' [${apiVersion.description}]" }
         return next
+    }
+
+    /**
+     * Parse the next account as a domain model from the JSON stream.
+     *
+     * Note: This does NOT create parent accounts. Parent account creation
+     * should be handled by the caller (e.g., TransactionSyncerImpl).
+     *
+     * @return The next Account or null if no more accounts
+     */
+    open fun nextAccountDomain(): Account? {
+        if (!iterator.hasNext()) return null
+
+        val parsed = iterator.next()
+
+        if (parsed.aname.equals("root", ignoreCase = true)) {
+            return nextAccountDomain()
+        }
+
+        val account = parsed.toDomain()
+        logcat { "Got account '${account.name}' [${apiVersion.description}]" }
+        return account
     }
 
     companion object {

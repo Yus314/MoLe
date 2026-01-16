@@ -69,6 +69,21 @@ class ParsedLedgerTransaction : IParsedLedgerTransaction {
         return tr
     }
 
+    @Throws(ParseException::class)
+    override fun toDomain(): Transaction {
+        val date = tdate?.let { Globals.parseIsoDate(it) }
+            ?: throw ParseException("Transaction date is required", 0)
+
+        return Transaction(
+            id = null,
+            ledgerId = tindex.toLong(),
+            date = date,
+            description = tdescription ?: "",
+            comment = tcomment?.trim()?.takeIf { it.isNotEmpty() },
+            lines = tpostings?.map { it.toDomain() } ?: emptyList()
+        )
+    }
+
     companion object {
         @JvmStatic
         fun fromLedgerTransaction(tr: LedgerTransaction): ParsedLedgerTransaction = ParsedLedgerTransaction().apply {

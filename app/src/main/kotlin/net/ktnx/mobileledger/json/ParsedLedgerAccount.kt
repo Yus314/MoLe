@@ -17,6 +17,8 @@
 
 package net.ktnx.mobileledger.json
 
+import net.ktnx.mobileledger.domain.model.Account
+import net.ktnx.mobileledger.domain.model.AccountAmount
 import net.ktnx.mobileledger.model.AmountStyle
 import net.ktnx.mobileledger.model.LedgerAccount
 
@@ -25,6 +27,34 @@ abstract class ParsedLedgerAccount {
     open var anumpostings: Int = 0
 
     abstract fun getSimpleBalance(): List<SimpleBalance>
+
+    /**
+     * Convert to domain model Account.
+     *
+     * Note: This does NOT create parent accounts. Parent account creation
+     * should be handled by the caller (e.g., TransactionSyncerImpl).
+     */
+    open fun toDomain(): Account {
+        val level = aname.count { it == ':' }
+        val balances = getSimpleBalance()
+        return Account(
+            id = null,
+            name = aname,
+            level = level,
+            isExpanded = false,
+            isVisible = true,
+            amounts = aggregateBalances(balances)
+        )
+    }
+
+    private fun aggregateBalances(balances: List<SimpleBalance>): List<AccountAmount> = balances
+        .groupBy { it.commodity }
+        .map { (commodity, items) ->
+            AccountAmount(
+                currency = commodity,
+                amount = items.sumOf { it.amount.toDouble() }.toFloat()
+            )
+        }
 
     /**
      * Convert to LedgerAccount.
