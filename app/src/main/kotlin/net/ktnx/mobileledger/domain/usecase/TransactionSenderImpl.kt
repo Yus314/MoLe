@@ -40,11 +40,8 @@ import net.ktnx.mobileledger.domain.model.Transaction
 import net.ktnx.mobileledger.json.API
 import net.ktnx.mobileledger.json.ApiNotSupportedException
 import net.ktnx.mobileledger.json.Gateway
-import net.ktnx.mobileledger.model.LedgerTransaction
-import net.ktnx.mobileledger.model.LedgerTransactionAccount
 import net.ktnx.mobileledger.utils.Globals
 import net.ktnx.mobileledger.utils.NetworkUtil
-import net.ktnx.mobileledger.utils.SimpleDate
 import net.ktnx.mobileledger.utils.UrlEncodedFormData
 
 /**
@@ -69,39 +66,17 @@ class TransactionSenderImpl @Inject constructor(
     private var session: String? = null
 
     override suspend fun send(profile: Profile, transaction: Transaction, simulate: Boolean): Result<Unit> {
-        val profileId = profile.id ?: return Result.failure(IllegalStateException("Cannot send from unsaved profile"))
-        return sendInternalWithDomain(profile, transaction, profileId, simulate)
-    }
-
-    /**
-     * Convert domain model Transaction to LedgerTransaction for legacy HTML form submission.
-     */
-    private fun toLedgerTransaction(transaction: Transaction, profileId: Long): LedgerTransaction {
-        val ledgerTx = LedgerTransaction(transaction.ledgerId, profileId)
-        ledgerTx.date = transaction.date
-        ledgerTx.description = transaction.description
-        ledgerTx.comment = transaction.comment
-
-        for (line in transaction.lines) {
-            val acc = LedgerTransactionAccount(line.accountName, line.currency)
-            acc.comment = line.comment
-            if (line.amount != null) {
-                acc.setAmount(line.amount)
-            }
-            ledgerTx.addAccount(acc)
-        }
-
-        return ledgerTx
+        profile.id ?: return Result.failure(IllegalStateException("Cannot send from unsaved profile"))
+        return sendInternalWithDomain(profile, transaction, simulate)
     }
 
     /**
      * Send transaction using domain models directly.
-     * Uses JSON API with domain model serialization, falls back to HTML form with LedgerTransaction.
+     * Uses JSON API with domain model serialization, falls back to HTML form.
      */
     private suspend fun sendInternalWithDomain(
         profile: Profile,
         transaction: Transaction,
-        profileId: Long,
         simulate: Boolean
     ): Result<Unit> = withContext(ioDispatcher) {
         try {
@@ -126,16 +101,12 @@ class TransactionSenderImpl @Inject constructor(
 
                     if (!sendOK) {
                         logcat { "Trying HTML form emulation" }
-                        // Fall back to LedgerTransaction for HTML form
-                        val legacyTx = toLedgerTransaction(transaction, profileId)
-                        legacySendOkWithRetry(profile, legacyTx, simulate)
+                        legacySendOkWithRetry(profile, transaction, simulate)
                     }
                 }
 
                 API.html -> {
-                    // HTML form requires LedgerTransaction
-                    val legacyTx = toLedgerTransaction(transaction, profileId)
-                    legacySendOkWithRetry(profile, legacyTx, simulate)
+                    legacySendOkWithRetry(profile, transaction, simulate)
                 }
 
                 API.v1_14, API.v1_15, API.v1_19_1, API.v1_23, API.v1_32, API.v1_40, API.v1_50 -> {
@@ -243,7 +214,7 @@ class TransactionSenderImpl @Inject constructor(
     /**
      * Send transaction via legacy HTML form
      */
-    private suspend fun legacySendOK(profile: Profile, transaction: LedgerTransaction, simulate: Boolean): Boolean {
+    private suspend fun legacySendOK(profile: Profile, transaction: Transaction, simulate: Boolean): Boolean {
         coroutineContext.ensureActive()
         val http = NetworkUtil.prepareConnection(profile, "add")
         http.requestMethod = "POST"
@@ -259,14 +230,12 @@ class TransactionSenderImpl @Inject constructor(
         params.addPair("_formid", "identify-add")
         token?.let { params.addPair("_token", it) }
 
-        val transactionDate = transaction.getDateIfAny() ?: SimpleDate.today()
-
-        params.addPair("date", Globals.formatLedgerDate(transactionDate))
-        params.addPair("description", transaction.description ?: "")
-        for (acc in transaction.accounts) {
-            params.addPair("account", acc.accountName)
-            if (acc.isAmountSet) {
-                params.addPair("amount", String.format(Locale.US, "%1.2f", acc.amount))
+        params.addPair("date", Globals.formatLedgerDate(transaction.date))
+        params.addPair("description", transaction.description)
+        for (line in transaction.lines) {
+            params.addPair("account", line.accountName)
+            if (line.amount != null) {
+                params.addPair("amount", String.format(Locale.US, "%1.2f", line.amount))
             } else {
                 params.addPair("amount", "")
             }
@@ -347,7 +316,7 @@ class TransactionSenderImpl @Inject constructor(
     /**
      * Send transaction via legacy HTML form with retry
      */
-    private suspend fun legacySendOkWithRetry(profile: Profile, transaction: LedgerTransaction, simulate: Boolean) {
+    private suspend fun legacySendOkWithRetry(profile: Profile, transaction: Transaction, simulate: Boolean) {
         var tried = 0
         while (!legacySendOK(profile, transaction, simulate)) {
             coroutineContext.ensureActive()
