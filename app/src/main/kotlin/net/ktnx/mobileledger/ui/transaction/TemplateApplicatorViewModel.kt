@@ -101,11 +101,10 @@ class TemplateApplicatorViewModel @Inject constructor(
 
     private suspend fun buildApplyTemplateEffect(template: Template): TemplateApplicatorEffect.ApplyTemplate {
         val defaultCurrency = profileRepository.currentProfile.value?.defaultCommodityOrEmpty ?: ""
+        val currencyMap = buildCurrencyMap(template.lines)
 
         val newAccounts = template.lines.map { line ->
-            val currencyName = line.currencyId?.let { currencyId ->
-                currencyRepository.getCurrencyByIdSync(currencyId)?.name
-            } ?: defaultCurrency
+            val currencyName = line.currencyId?.let { currencyMap[it] } ?: defaultCurrency
 
             TransactionAccountRow(
                 id = AccountRowsUiState.nextId(),
@@ -157,6 +156,7 @@ class TemplateApplicatorViewModel @Inject constructor(
             val template = matched.template
             val matchResult = matched.matchResult
             val defaultCurrency = profileRepository.currentProfile.value?.defaultCommodityOrEmpty ?: ""
+            val currencyMap = buildCurrencyMap(template.lines)
 
             val description = extractFromMatchGroup(
                 matchResult,
@@ -173,7 +173,7 @@ class TemplateApplicatorViewModel @Inject constructor(
             val date = TemplateMatchGroupExtractor.extractDate(matchResult, template)
 
             val newAccounts = template.lines.map { line ->
-                extractAccountRow(matchResult, line, defaultCurrency)
+                extractAccountRow(matchResult, line, defaultCurrency, currencyMap)
             }
 
             val effect = TemplateApplicatorEffect.ApplyTemplate(
@@ -192,10 +192,11 @@ class TemplateApplicatorViewModel @Inject constructor(
         fallback: String?
     ): String? = TemplateMatchGroupExtractor.extractFromMatchGroup(matchResult, groupNumber, fallback)
 
-    private suspend fun extractAccountRow(
+    private fun extractAccountRow(
         matchResult: java.util.regex.MatchResult,
         line: TemplateLine,
-        defaultCurrency: String
+        defaultCurrency: String,
+        currencyMap: Map<Long, String?>
     ): TransactionAccountRow {
         val accountName = extractFromMatchGroup(
             matchResult,
@@ -214,7 +215,7 @@ class TemplateApplicatorViewModel @Inject constructor(
         val currencyName = if (line.currencyGroup != null && line.currencyGroup!! > 0) {
             extractFromMatchGroup(matchResult, line.currencyGroup, null)
         } else {
-            line.currencyId?.let { currencyRepository.getCurrencyByIdSync(it)?.name }
+            line.currencyId?.let { currencyMap[it] }
         } ?: defaultCurrency
 
         val comment = extractFromMatchGroup(
@@ -231,6 +232,13 @@ class TemplateApplicatorViewModel @Inject constructor(
             comment = comment,
             isAmountValid = true
         )
+    }
+
+    private suspend fun buildCurrencyMap(lines: List<TemplateLine>): Map<Long, String?> {
+        val currencyIds = lines.mapNotNull { it.currencyId }.distinct()
+        return currencyIds.associateWith { id ->
+            currencyRepository.getCurrencyByIdSync(id)?.name
+        }
     }
 
     private fun searchTemplates(query: String) {
