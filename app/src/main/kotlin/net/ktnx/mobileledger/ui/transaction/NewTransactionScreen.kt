@@ -125,12 +125,14 @@ fun NewTransactionScreen(
                 is TransactionFormEffect.NavigateBack -> onNavigateBack()
 
                 is TransactionFormEffect.TransactionSaved -> {
+                    // Reset form and account rows immediately
+                    formViewModel.onEvent(TransactionFormEvent.Reset)
+                    accountRowsViewModel.onEvent(AccountRowsEvent.Reset)
+                    // Show snackbar (suspends until dismissed, but reset already done)
                     snackbarHostState.showSnackbar(
                         message = "Transaction saved",
                         duration = SnackbarDuration.Short
                     )
-                    // Reset account rows when transaction is saved
-                    accountRowsViewModel.onEvent(AccountRowsEvent.Reset)
                 }
 
                 is TransactionFormEffect.ShowError -> {
