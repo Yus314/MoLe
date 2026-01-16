@@ -102,7 +102,7 @@ class TemplateApplicatorViewModel @Inject constructor(
     private suspend fun buildApplyTemplateEffect(
         template: TemplateWithAccounts
     ): TemplateApplicatorEffect.ApplyTemplate {
-        val defaultCurrency = profileRepository.currentProfile.value?.getDefaultCommodityOrEmpty() ?: ""
+        val defaultCurrency = profileRepository.currentProfile.value?.defaultCommodityOrEmpty ?: ""
 
         val newAccounts = template.accounts.map { acc ->
             val currencyName = acc.currency?.let { currencyId ->
@@ -166,7 +166,7 @@ class TemplateApplicatorViewModel @Inject constructor(
 
             val matchResult = matched.matchResult
             val header = template.header
-            val defaultCurrency = profileRepository.currentProfile.value?.getDefaultCommodityOrEmpty() ?: ""
+            val defaultCurrency = profileRepository.currentProfile.value?.defaultCommodityOrEmpty ?: ""
 
             val description = extractFromMatchGroup(
                 matchResult,

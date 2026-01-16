@@ -62,13 +62,13 @@ class App : Application() {
         ?: profileRepository.currentProfile.value?.url ?: ""
 
     private fun getAuthUserName(): String =
-        temporaryAuthData?.authUser ?: profileRepository.currentProfile.value?.authUser ?: ""
+        temporaryAuthData?.authUser ?: profileRepository.currentProfile.value?.authentication?.user ?: ""
 
     private fun getAuthPassword(): String =
-        temporaryAuthData?.authPassword ?: profileRepository.currentProfile.value?.authPassword ?: ""
+        temporaryAuthData?.authPassword ?: profileRepository.currentProfile.value?.authentication?.password ?: ""
 
     private fun getAuthEnabled(): Boolean =
-        temporaryAuthData?.useAuthentication ?: profileRepository.currentProfile.value?.isAuthEnabled() ?: false
+        temporaryAuthData?.useAuthentication ?: profileRepository.currentProfile.value?.isAuthEnabled ?: false
 
     override fun onCreate() {
         instance = this

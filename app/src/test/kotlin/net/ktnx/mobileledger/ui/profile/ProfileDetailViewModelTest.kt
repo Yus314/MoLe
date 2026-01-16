@@ -32,10 +32,11 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import net.ktnx.mobileledger.TemporaryAuthData
 import net.ktnx.mobileledger.data.repository.ProfileRepository
-import net.ktnx.mobileledger.db.Profile
+import net.ktnx.mobileledger.domain.model.FutureDates
+import net.ktnx.mobileledger.domain.model.Profile
 import net.ktnx.mobileledger.json.API
-import net.ktnx.mobileledger.model.FutureDates
 import net.ktnx.mobileledger.service.AuthDataProvider
+import net.ktnx.mobileledger.util.createTestDomainProfile
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -89,22 +90,21 @@ class ProfileDetailViewModelTest {
     )
 
     private fun createTestProfile(
-        id: Long = 0L,
+        id: Long? = null,
         name: String = "Test Profile",
         url: String = "https://example.com/ledger",
         theme: Int = 180
-    ): Profile = Profile().apply {
-        this.id = id
-        this.name = name
-        this.url = url
-        this.theme = theme
-        this.uuid = java.util.UUID.randomUUID().toString()
-        this.orderNo = 1
-        this.useAuthentication = false
-        this.permitPosting = true
-        this.futureDates = FutureDates.None.toInt()
-        this.apiVersion = API.auto.toInt()
-    }
+    ): Profile = createTestDomainProfile(
+        id = id,
+        name = name,
+        url = url,
+        theme = theme,
+        orderNo = 1,
+        authentication = null,
+        permitPosting = true,
+        futureDates = FutureDates.None,
+        apiVersion = API.auto.toInt()
+    )
 
     // ========================================
     // Initialization tests
@@ -767,29 +767,34 @@ class FakeProfileRepositoryForProfileDetail : ProfileRepository {
     override suspend fun getProfileCount(): Int = profiles.size
 
     override suspend fun insertProfile(profile: Profile): Long {
-        val id = if (profile.id == 0L) nextId++ else profile.id
-        profile.id = id
-        profiles[id] = profile
+        val id = if (profile.id == null || profile.id == 0L) nextId++ else profile.id
+        val profileWithId = profile.copy(id = id)
+        profiles[id] = profileWithId
         return id
     }
 
     override suspend fun updateProfile(profile: Profile) {
-        profiles[profile.id] = profile
-        if (_currentProfile.value?.id == profile.id) {
+        val id = profile.id ?: return
+        profiles[id] = profile
+        if (_currentProfile.value?.id == id) {
             _currentProfile.value = profile
         }
     }
 
     override suspend fun deleteProfile(profile: Profile) {
-        profiles.remove(profile.id)
-        if (_currentProfile.value?.id == profile.id) {
+        val id = profile.id ?: return
+        profiles.remove(id)
+        if (_currentProfile.value?.id == id) {
             _currentProfile.value = profiles.values.firstOrNull()
         }
     }
 
     override suspend fun updateProfileOrder(profiles: List<Profile>) {
         profiles.forEachIndexed { index, profile ->
-            this.profiles[profile.id]?.orderNo = index
+            val id = profile.id ?: return@forEachIndexed
+            this.profiles[id]?.let { existing ->
+                this.profiles[id] = existing.copy(orderNo = index)
+            }
         }
     }
 

@@ -18,7 +18,7 @@
 package net.ktnx.mobileledger.domain.usecase
 
 import kotlinx.coroutines.flow.Flow
-import net.ktnx.mobileledger.db.Profile
+import net.ktnx.mobileledger.domain.model.Profile
 import net.ktnx.mobileledger.domain.model.SyncProgress
 import net.ktnx.mobileledger.domain.model.SyncResult
 

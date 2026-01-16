@@ -17,9 +17,9 @@
 
 package net.ktnx.mobileledger.ui.profile
 
-import net.ktnx.mobileledger.db.Profile
+import net.ktnx.mobileledger.domain.model.FutureDates
+import net.ktnx.mobileledger.domain.model.Profile
 import net.ktnx.mobileledger.json.API
-import net.ktnx.mobileledger.model.FutureDates
 import net.ktnx.mobileledger.model.HledgerVersion
 import net.ktnx.mobileledger.utils.Colors
 

@@ -24,10 +24,11 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import net.ktnx.mobileledger.db.Profile
+import net.ktnx.mobileledger.domain.model.Profile
 import net.ktnx.mobileledger.domain.model.Transaction
 import net.ktnx.mobileledger.domain.model.TransactionLine
 import net.ktnx.mobileledger.fake.FakeTransactionSender
+import net.ktnx.mobileledger.util.createTestDomainProfile
 import net.ktnx.mobileledger.utils.SimpleDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -65,12 +66,12 @@ class TransactionSenderImplTest {
         testScope = TestScope(testDispatcher)
         fakeSender = FakeTransactionSender()
 
-        testProfile = Profile().apply {
-            id = 1L
-            name = "Test Profile"
-            url = "https://example.com/ledger"
+        testProfile = createTestDomainProfile(
+            id = 1L,
+            name = "Test Profile",
+            url = "https://example.com/ledger",
             apiVersion = 0 // auto
-        }
+        )
 
         testTransaction = Transaction(
             id = null,

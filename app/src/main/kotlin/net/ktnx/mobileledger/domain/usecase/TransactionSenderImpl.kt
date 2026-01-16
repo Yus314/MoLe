@@ -34,8 +34,8 @@ import kotlinx.coroutines.withContext
 import logcat.LogPriority
 import logcat.asLog
 import logcat.logcat
-import net.ktnx.mobileledger.db.Profile
 import net.ktnx.mobileledger.di.IoDispatcher
+import net.ktnx.mobileledger.domain.model.Profile
 import net.ktnx.mobileledger.domain.model.Transaction
 import net.ktnx.mobileledger.json.API
 import net.ktnx.mobileledger.json.ApiNotSupportedException
@@ -70,7 +70,8 @@ class TransactionSenderImpl @Inject constructor(
 
     override suspend fun send(profile: Profile, transaction: Transaction, simulate: Boolean): Result<Unit> {
         // Convert domain model to LedgerTransaction and delegate to internal implementation
-        val legacyTransaction = toLedgerTransaction(transaction, profile.id)
+        val profileId = profile.id ?: return Result.failure(IllegalStateException("Cannot send from unsaved profile"))
+        val legacyTransaction = toLedgerTransaction(transaction, profileId)
         return sendInternal(profile, legacyTransaction, simulate)
     }
 

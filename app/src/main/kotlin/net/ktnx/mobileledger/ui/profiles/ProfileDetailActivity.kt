@@ -24,7 +24,6 @@ import androidx.activity.compose.setContent
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.Locale
 import logcat.logcat
-import net.ktnx.mobileledger.db.Profile
 import net.ktnx.mobileledger.ui.activity.CrashReportingActivity
 import net.ktnx.mobileledger.ui.components.CrashReportDialog
 import net.ktnx.mobileledger.ui.profile.ProfileDetailScreen
@@ -78,12 +77,14 @@ class ProfileDetailActivity : CrashReportingActivity() {
         const val ARG_HUE = "hue"
 
         @JvmStatic
-        fun start(context: Context, profile: Profile?) {
+        fun start(context: Context, profileId: Long?, themeHue: Int?) {
             val starter = Intent(context, ProfileDetailActivity::class.java)
-            if (profile != null) {
-                starter.putExtra(ARG_ITEM_ID, profile.id)
-                starter.putExtra(ARG_HUE, profile.theme)
-                logcat { "Starting profile editor for profile ${profile.id}, theme ${profile.theme}" }
+            if (profileId != null && profileId > 0) {
+                starter.putExtra(ARG_ITEM_ID, profileId)
+                if (themeHue != null) {
+                    starter.putExtra(ARG_HUE, themeHue)
+                }
+                logcat { "Starting profile editor for profile $profileId, theme $themeHue" }
             } else {
                 logcat { "Starting empty profile editor" }
             }

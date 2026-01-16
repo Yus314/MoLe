@@ -28,7 +28,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import net.ktnx.mobileledger.dao.ProfileDAO
-import net.ktnx.mobileledger.db.Profile
+import net.ktnx.mobileledger.data.repository.mapper.ProfileMapper.toDomain
+import net.ktnx.mobileledger.data.repository.mapper.ProfileMapper.toEntity
+import net.ktnx.mobileledger.domain.model.Profile
 
 /**
  * Implementation of [ProfileRepository] that wraps the existing [ProfileDAO].
@@ -61,26 +63,29 @@ class ProfileRepositoryImpl @Inject constructor(private val profileDAO: ProfileD
     // Query Operations
     // ========================================
 
-    override fun getAllProfiles(): Flow<List<Profile>> = profileDAO.getAllOrdered().asFlow()
+    override fun getAllProfiles(): Flow<List<Profile>> =
+        profileDAO.getAllOrdered().asFlow().map { list -> list.map { it.toDomain() } }
 
     override suspend fun getAllProfilesSync(): List<Profile> = withContext(Dispatchers.IO) {
-        profileDAO.getAllOrderedSync()
+        profileDAO.getAllOrderedSync().map { it.toDomain() }
     }
 
-    override fun getProfileById(profileId: Long): Flow<Profile?> = profileDAO.getById(profileId).asFlow()
+    override fun getProfileById(profileId: Long): Flow<Profile?> =
+        profileDAO.getById(profileId).asFlow().map { it?.toDomain() }
 
     override suspend fun getProfileByIdSync(profileId: Long): Profile? = withContext(Dispatchers.IO) {
-        profileDAO.getByIdSync(profileId)
+        profileDAO.getByIdSync(profileId)?.toDomain()
     }
 
-    override fun getProfileByUuid(uuid: String): Flow<Profile?> = profileDAO.getByUuid(uuid).asFlow().map { it }
+    override fun getProfileByUuid(uuid: String): Flow<Profile?> =
+        profileDAO.getByUuid(uuid).asFlow().map { it?.toDomain() }
 
     override suspend fun getProfileByUuidSync(uuid: String): Profile? = withContext(Dispatchers.IO) {
-        profileDAO.getByUuidSync(uuid)
+        profileDAO.getByUuidSync(uuid)?.toDomain()
     }
 
     override suspend fun getAnyProfile(): Profile? = withContext(Dispatchers.IO) {
-        profileDAO.getAnySync()
+        profileDAO.getAnySync()?.toDomain()
     }
 
     override suspend fun getProfileCount(): Int = withContext(Dispatchers.IO) {
@@ -92,12 +97,12 @@ class ProfileRepositoryImpl @Inject constructor(private val profileDAO: ProfileD
     // ========================================
 
     override suspend fun insertProfile(profile: Profile): Long = withContext(Dispatchers.IO) {
-        profileDAO.insertLastSync(profile)
+        profileDAO.insertLastSync(profile.toEntity())
     }
 
     override suspend fun updateProfile(profile: Profile) {
         withContext(Dispatchers.IO) {
-            profileDAO.updateSync(profile)
+            profileDAO.updateSync(profile.toEntity())
         }
         // Update current profile if it's the same one being updated
         _currentProfile.value?.let { current ->
@@ -109,13 +114,13 @@ class ProfileRepositoryImpl @Inject constructor(private val profileDAO: ProfileD
 
     override suspend fun deleteProfile(profile: Profile) {
         withContext(Dispatchers.IO) {
-            profileDAO.deleteSync(profile)
+            profileDAO.deleteSync(profile.toEntity())
         }
         // If deleted profile was current, select another or clear
         _currentProfile.value?.let { current ->
             if (current.id == profile.id) {
                 val fallback = withContext(Dispatchers.IO) {
-                    profileDAO.getAnySync()
+                    profileDAO.getAnySync()?.toDomain()
                 }
                 _currentProfile.value = fallback
             }
@@ -124,7 +129,7 @@ class ProfileRepositoryImpl @Inject constructor(private val profileDAO: ProfileD
 
     override suspend fun updateProfileOrder(profiles: List<Profile>) {
         withContext(Dispatchers.IO) {
-            profileDAO.updateOrderSync(profiles)
+            profileDAO.updateOrderSync(profiles.map { it.toEntity() })
         }
     }
 

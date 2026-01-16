@@ -31,10 +31,10 @@ import kotlinx.coroutines.launch
 import logcat.logcat
 import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.data.repository.TransactionRepository
+import net.ktnx.mobileledger.domain.model.FutureDates
 import net.ktnx.mobileledger.domain.model.Transaction
 import net.ktnx.mobileledger.domain.model.TransactionLine
 import net.ktnx.mobileledger.domain.usecase.TransactionSender
-import net.ktnx.mobileledger.model.FutureDates
 import net.ktnx.mobileledger.service.AppStateService
 import net.ktnx.mobileledger.utils.SimpleDate
 
@@ -59,11 +59,10 @@ class TransactionFormViewModel @Inject constructor(
     private fun initializeFromProfile() {
         val profile = profileRepository.currentProfile.value
         if (profile != null) {
-            val futureDates = FutureDates.valueOf(profile.futureDates)
             _uiState.update {
                 it.copy(
-                    profileId = profile.id,
-                    futureDates = futureDates
+                    profileId = profile.id ?: 0,
+                    futureDates = profile.futureDates
                 )
             }
         }
@@ -164,7 +163,7 @@ class TransactionFormViewModel @Inject constructor(
             val result = transactionSender.send(profile, transaction, state.isSimulateSave)
             result.fold(
                 onSuccess = {
-                    handleTransactionSendSuccess(transaction, profile.id)
+                    handleTransactionSendSuccess(transaction, profile.id ?: 0)
                 },
                 onFailure = { exception ->
                     handleTransactionSendFailure(exception.message ?: "送信に失敗しました")

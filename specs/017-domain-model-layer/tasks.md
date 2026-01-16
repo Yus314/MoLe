@@ -113,29 +113,29 @@
 
 ### TDD: Tests First (Red Phase)
 
-- [ ] T025a [P] [US3] Write ProfileTest in app/src/test/kotlin/net/ktnx/mobileledger/domain/model/ProfileTest.kt (test isAuthEnabled, canPost, defaultCommodityOrEmpty)
-- [ ] T025b [P] [US3] Write ServerVersionTest in app/src/test/kotlin/net/ktnx/mobileledger/domain/model/ServerVersionTest.kt (test displayString)
-- [ ] T025c [US3] Write ProfileMapperTest in app/src/test/kotlin/net/ktnx/mobileledger/data/repository/mapper/ProfileMapperTest.kt (test toDomain with/without auth, toEntity, roundTrip)
+- [X] T025a [P] [US3] Write ProfileTest in app/src/test/kotlin/net/ktnx/mobileledger/domain/model/ProfileTest.kt (test isAuthEnabled, canPost, defaultCommodityOrEmpty)
+- [X] T025b [P] [US3] Write ServerVersionTest in app/src/test/kotlin/net/ktnx/mobileledger/domain/model/ServerVersionTest.kt (test displayString)
+- [X] T025c [US3] Write ProfileMapperTest in app/src/test/kotlin/net/ktnx/mobileledger/data/repository/mapper/ProfileMapperTest.kt (test toDomain with/without auth, toEntity, roundTrip)
 
 ### Implementation (Green Phase)
 
-- [ ] T025 [P] [US3] Create ProfileAuthentication domain model in app/src/main/kotlin/net/ktnx/mobileledger/domain/model/ProfileAuthentication.kt
-- [ ] T026 [P] [US3] Create ServerVersion domain model in app/src/main/kotlin/net/ktnx/mobileledger/domain/model/ServerVersion.kt
-- [ ] T027 [US3] Create Profile domain model in app/src/main/kotlin/net/ktnx/mobileledger/domain/model/Profile.kt
-- [ ] T028 [US3] Create ProfileMapper in app/src/main/kotlin/net/ktnx/mobileledger/data/repository/mapper/ProfileMapper.kt
-- [ ] T029 [US3] Update ProfileRepository interface to return domain models in app/src/main/kotlin/net/ktnx/mobileledger/data/repository/ProfileRepository.kt
-- [ ] T030 [US3] Update ProfileRepositoryImpl to use ProfileMapper in app/src/main/kotlin/net/ktnx/mobileledger/data/repository/ProfileRepositoryImpl.kt
-- [ ] T031 [US3] Update FakeProfileRepository to return domain models in app/src/test/kotlin/net/ktnx/mobileledger/fake/FakeProfileRepository.kt
-- [ ] T032 [US3] Update ProfileSelectionViewModel to use domain model Profile in app/src/main/kotlin/net/ktnx/mobileledger/ui/main/ProfileSelectionViewModel.kt
-- [ ] T033 [US3] Update ProfileSelectionUiState to use domain model in app/src/main/kotlin/net/ktnx/mobileledger/ui/main/ProfileSelectionUiState.kt
-- [ ] T034 [US3] Update ProfileDetailViewModel to use domain model in app/src/main/kotlin/net/ktnx/mobileledger/ui/profiles/ProfileDetailViewModel.kt
-- [ ] T035 [US3] Update ProfileDetailUiState to use domain model in app/src/main/kotlin/net/ktnx/mobileledger/ui/profiles/ProfileDetailUiState.kt
-- [ ] T036 [US3] Update ProfileDetailScreen.kt to use domain model in app/src/main/kotlin/net/ktnx/mobileledger/ui/profiles/ProfileDetailScreen.kt
-- [ ] T037 [US3] Update MainCoordinatorViewModel to use domain model Profile in app/src/main/kotlin/net/ktnx/mobileledger/ui/main/MainCoordinatorViewModel.kt
-- [ ] T038 [US3] Update MainActivityCompose to use domain model Profile in app/src/main/kotlin/net/ktnx/mobileledger/ui/activity/MainActivityCompose.kt
-- [ ] T039 [US3] Update NavigationDrawer.kt to use domain model in app/src/main/kotlin/net/ktnx/mobileledger/ui/main/NavigationDrawer.kt
-- [ ] T040 [US3] Remove db package imports from all Profile-related ViewModels
-- [ ] T040a [US3] **CHECKPOINT**: Run `nix run .#verify` and test profile creation/editing flow
+- [X] T025 [P] [US3] Create ProfileAuthentication domain model in app/src/main/kotlin/net/ktnx/mobileledger/domain/model/ProfileAuthentication.kt
+- [X] T026 [P] [US3] Create ServerVersion domain model in app/src/main/kotlin/net/ktnx/mobileledger/domain/model/ServerVersion.kt
+- [X] T027 [US3] Create Profile domain model in app/src/main/kotlin/net/ktnx/mobileledger/domain/model/Profile.kt
+- [X] T028 [US3] Create ProfileMapper in app/src/main/kotlin/net/ktnx/mobileledger/data/repository/mapper/ProfileMapper.kt
+- [X] T029 [US3] Update ProfileRepository interface to return domain models in app/src/main/kotlin/net/ktnx/mobileledger/data/repository/ProfileRepository.kt
+- [X] T030 [US3] Update ProfileRepositoryImpl to use ProfileMapper in app/src/main/kotlin/net/ktnx/mobileledger/data/repository/ProfileRepositoryImpl.kt
+- [X] T031 [US3] Update FakeProfileRepository to return domain models in app/src/test/kotlin/net/ktnx/mobileledger/fake/FakeProfileRepository.kt
+- [X] T032 [US3] Update ProfileSelectionViewModel to use domain model Profile in app/src/main/kotlin/net/ktnx/mobileledger/ui/main/ProfileSelectionViewModel.kt
+- [X] T033 [US3] Update ProfileSelectionUiState to use domain model in app/src/main/kotlin/net/ktnx/mobileledger/ui/main/ProfileSelectionUiState.kt
+- [X] T034 [US3] Update ProfileDetailViewModel to use domain model in app/src/main/kotlin/net/ktnx/mobileledger/ui/profiles/ProfileDetailViewModel.kt
+- [X] T035 [US3] Update ProfileDetailUiState to use domain model in app/src/main/kotlin/net/ktnx/mobileledger/ui/profiles/ProfileDetailUiState.kt
+- [X] T036 [US3] Update ProfileDetailScreen.kt to use domain model in app/src/main/kotlin/net/ktnx/mobileledger/ui/profiles/ProfileDetailScreen.kt
+- [X] T037 [US3] Update MainCoordinatorViewModel to use domain model Profile in app/src/main/kotlin/net/ktnx/mobileledger/ui/main/MainCoordinatorViewModel.kt
+- [X] T038 [US3] Update MainActivityCompose to use domain model Profile in app/src/main/kotlin/net/ktnx/mobileledger/ui/activity/MainActivityCompose.kt
+- [X] T039 [US3] Update NavigationDrawer.kt to use domain model in app/src/main/kotlin/net/ktnx/mobileledger/ui/main/NavigationDrawer.kt
+- [X] T040 [US3] Remove db package imports from all Profile-related ViewModels
+- [X] T040a [US3] **CHECKPOINT**: Run `nix run .#verify` and test profile creation/editing flow
 
 **Checkpoint**: User Story 3 complete - Profile ViewModels use domain models exclusively
 

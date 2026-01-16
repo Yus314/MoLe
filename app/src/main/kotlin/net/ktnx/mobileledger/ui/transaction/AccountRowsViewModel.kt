@@ -60,7 +60,7 @@ class AccountRowsViewModel @Inject constructor(
     private fun initializeFromProfile() {
         val profile = profileRepository.currentProfile.value
         if (profile != null) {
-            val defaultCurrency = profile.getDefaultCommodityOrEmpty()
+            val defaultCurrency = profile.defaultCommodityOrEmpty
             AccountRowsUiState.resetIdCounter()
             _uiState.update {
                 it.copy(
@@ -150,9 +150,14 @@ class AccountRowsViewModel @Inject constructor(
                 return@launch
             }
 
+            val profileId = profile.id ?: run {
+                logcat { "profile has no id, returning" }
+                return@launch
+            }
+
             val termUpper = term.uppercase()
-            logcat { "querying DB: profileId=${profile.id}, term='$termUpper'" }
-            val suggestions = accountRepository.searchAccountNamesSync(profile.id, termUpper)
+            logcat { "querying DB: profileId=$profileId, term='$termUpper'" }
+            val suggestions = accountRepository.searchAccountNamesSync(profileId, termUpper)
 
             if (isActive) {
                 logcat { "got ${suggestions.size} suggestions for row $rowId: ${suggestions.take(3)}" }
@@ -349,7 +354,7 @@ class AccountRowsViewModel @Inject constructor(
     private fun toggleCurrency() {
         val profile = profileRepository.currentProfile.value ?: return
         val newShowCurrency = !_uiState.value.showCurrency
-        val defaultCurrency = if (newShowCurrency) profile.getDefaultCommodityOrEmpty() else ""
+        val defaultCurrency = if (newShowCurrency) profile.defaultCommodityOrEmpty else ""
 
         _uiState.update { state ->
             state.copy(
@@ -384,7 +389,7 @@ class AccountRowsViewModel @Inject constructor(
 
     private fun reset() {
         val profile = profileRepository.currentProfile.value
-        val defaultCurrency = profile?.getDefaultCommodityOrEmpty() ?: ""
+        val defaultCurrency = profile?.defaultCommodityOrEmpty ?: ""
 
         AccountRowsUiState.resetIdCounter()
 

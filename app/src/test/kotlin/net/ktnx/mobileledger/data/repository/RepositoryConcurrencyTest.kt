@@ -34,10 +34,11 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import net.ktnx.mobileledger.dao.TransactionDAO
 import net.ktnx.mobileledger.data.repository.mapper.TransactionMapper
-import net.ktnx.mobileledger.db.Profile
 import net.ktnx.mobileledger.db.Transaction as DbTransaction
 import net.ktnx.mobileledger.db.TransactionWithAccounts
+import net.ktnx.mobileledger.domain.model.Profile
 import net.ktnx.mobileledger.domain.model.Transaction
+import net.ktnx.mobileledger.util.createTestDomainProfile
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -77,13 +78,8 @@ class RepositoryConcurrencyTest {
     // Helper methods
     // ========================================
 
-    private fun createTestProfile(id: Long = 0L, name: String = "Test Profile"): Profile = Profile().apply {
-        this.id = id
-        this.name = name
-        this.uuid = java.util.UUID.randomUUID().toString()
-        this.url = "https://example.com/ledger"
-        this.orderNo = 1
-    }
+    private fun createTestProfile(id: Long? = null, name: String = "Test Profile"): Profile =
+        createTestDomainProfile(id = id, name = name)
 
     private fun createTestTransaction(
         profileId: Long = 1L,
@@ -302,29 +298,34 @@ class ConcurrentFakeProfileRepository : ProfileRepository {
     }
 
     override suspend fun insertProfile(profile: Profile): Long = synchronized(lock) {
-        val id = if (profile.id == 0L) idCounter.getAndIncrement().toLong() else profile.id
-        profile.id = id
-        profiles[id] = profile
+        val id = if (profile.id == null || profile.id == 0L) idCounter.getAndIncrement().toLong() else profile.id
+        val profileWithId = profile.copy(id = id)
+        profiles[id] = profileWithId
         id
     }
 
     override suspend fun updateProfile(profile: Profile): Unit = synchronized(lock) {
-        profiles[profile.id] = profile
-        if (_currentProfile.value?.id == profile.id) {
+        val id = profile.id ?: return
+        profiles[id] = profile
+        if (_currentProfile.value?.id == id) {
             _currentProfile.value = profile
         }
     }
 
     override suspend fun deleteProfile(profile: Profile): Unit = synchronized(lock) {
-        profiles.remove(profile.id)
-        if (_currentProfile.value?.id == profile.id) {
+        val id = profile.id ?: return
+        profiles.remove(id)
+        if (_currentProfile.value?.id == id) {
             _currentProfile.value = profiles.values.firstOrNull()
         }
     }
 
     override suspend fun updateProfileOrder(profiles: List<Profile>): Unit = synchronized(lock) {
         profiles.forEachIndexed { index, profile ->
-            this.profiles[profile.id]?.orderNo = index
+            val id = profile.id ?: return@forEachIndexed
+            this.profiles[id]?.let { existing ->
+                this.profiles[id] = existing.copy(orderNo = index)
+            }
         }
     }
 

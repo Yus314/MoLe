@@ -17,7 +17,7 @@
 
 package net.ktnx.mobileledger.domain.usecase
 
-import net.ktnx.mobileledger.db.Profile
+import net.ktnx.mobileledger.domain.model.Profile
 import net.ktnx.mobileledger.domain.model.Transaction
 import net.ktnx.mobileledger.model.LedgerTransaction
 

@@ -31,7 +31,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.yield
 import net.ktnx.mobileledger.data.repository.ProfileRepository
-import net.ktnx.mobileledger.db.Profile
+import net.ktnx.mobileledger.domain.model.Profile
 import net.ktnx.mobileledger.domain.model.SyncException
 import net.ktnx.mobileledger.domain.model.SyncProgress
 import net.ktnx.mobileledger.domain.model.SyncState
@@ -127,7 +127,7 @@ class MainCoordinatorViewModel @Inject constructor(
                     it.copy(
                         currentProfileId = profile?.id,
                         currentProfileTheme = profile?.theme ?: -1,
-                        currentProfileCanPost = profile?.canPost() ?: false
+                        currentProfileCanPost = profile?.canPost ?: false
                     )
                 }
             }
@@ -288,7 +288,7 @@ class MainCoordinatorViewModel @Inject constructor(
             it.copy(
                 currentProfileId = profile?.id,
                 currentProfileTheme = profile?.theme ?: -1,
-                currentProfileCanPost = profile?.canPost() ?: false
+                currentProfileCanPost = profile?.canPost ?: false
             )
         }
     }

@@ -27,7 +27,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import net.ktnx.mobileledger.data.repository.ProfileRepository
-import net.ktnx.mobileledger.db.Profile
+import net.ktnx.mobileledger.domain.model.Profile
 
 /**
  * ViewModel for profile selection in the navigation drawer.
@@ -122,9 +122,10 @@ class ProfileSelectionViewModel @Inject constructor(
             profileRepository.getAllProfiles().collect { profiles ->
                 _uiState.update { state ->
                     state.copy(
-                        profiles = profiles.map { profile ->
+                        profiles = profiles.mapNotNull { profile ->
+                            val profileId = profile.id ?: return@mapNotNull null
                             ProfileListItem(
-                                id = profile.id,
+                                id = profileId,
                                 name = profile.name,
                                 theme = profile.theme,
                                 canPost = profile.permitPosting

@@ -25,9 +25,10 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import net.ktnx.mobileledger.db.Profile
+import net.ktnx.mobileledger.domain.model.Profile
 import net.ktnx.mobileledger.domain.model.SyncState
 import net.ktnx.mobileledger.fake.FakeTransactionSyncer
+import net.ktnx.mobileledger.util.createTestDomainProfile
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -73,15 +74,17 @@ class MainCoordinatorViewModelTest {
     // Helper methods
     // ========================================
 
-    private fun createTestProfile(id: Long = 1L, name: String = "Test Profile", theme: Int = 0): Profile =
-        Profile().apply {
-            this.id = id
-            this.name = name
-            this.theme = theme
-            this.uuid = java.util.UUID.randomUUID().toString()
-            this.url = "https://example.com/ledger"
-            this.permitPosting = true
-        }
+    private fun createTestProfile(
+        id: Long = 1L,
+        name: String = "Test Profile",
+        theme: Int = 0,
+        permitPosting: Boolean = true
+    ): Profile = createTestDomainProfile(
+        id = id,
+        name = name,
+        theme = theme,
+        permitPosting = permitPosting
+    )
 
     private fun createViewModel() = MainCoordinatorViewModel(
         profileRepository,
@@ -292,9 +295,7 @@ class MainCoordinatorViewModelTest {
     @Test
     fun `addNewTransaction emits navigation effect when profile can post`() = runTest {
         // Given
-        val profile = createTestProfile(id = 1L, name = "Test", theme = 180).apply {
-            permitPosting = true
-        }
+        val profile = createTestProfile(id = 1L, name = "Test", theme = 180, permitPosting = true)
         profileRepository.insertProfile(profile)
         profileRepository.setCurrentProfile(profile)
         viewModel = createViewModel()
@@ -319,9 +320,7 @@ class MainCoordinatorViewModelTest {
     @Test
     fun `addNewTransaction does not emit effect when profile cannot post`() = runTest {
         // Given
-        val profile = createTestProfile(id = 1L, name = "Test").apply {
-            permitPosting = false
-        }
+        val profile = createTestProfile(id = 1L, name = "Test", permitPosting = false)
         profileRepository.insertProfile(profile)
         profileRepository.setCurrentProfile(profile)
         viewModel = createViewModel()
@@ -441,9 +440,7 @@ class MainCoordinatorViewModelTest {
     @Test
     fun `observes current profile for FAB state`() = runTest {
         // Given
-        val profile = createTestProfile(id = 1L, name = "Test", theme = 90).apply {
-            permitPosting = true
-        }
+        val profile = createTestProfile(id = 1L, name = "Test", theme = 90, permitPosting = true)
         profileRepository.insertProfile(profile)
         profileRepository.setCurrentProfile(profile)
 
@@ -460,12 +457,8 @@ class MainCoordinatorViewModelTest {
     @Test
     fun `profile change updates FAB state`() = runTest {
         // Given
-        val profile1 = createTestProfile(id = 1L, name = "Profile 1", theme = 0).apply {
-            permitPosting = true
-        }
-        val profile2 = createTestProfile(id = 2L, name = "Profile 2", theme = 180).apply {
-            permitPosting = false
-        }
+        val profile1 = createTestProfile(id = 1L, name = "Profile 1", theme = 0, permitPosting = true)
+        val profile2 = createTestProfile(id = 2L, name = "Profile 2", theme = 180, permitPosting = false)
         profileRepository.insertProfile(profile1)
         profileRepository.insertProfile(profile2)
         profileRepository.setCurrentProfile(profile1)

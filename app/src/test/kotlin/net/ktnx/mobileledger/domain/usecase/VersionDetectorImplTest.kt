@@ -19,8 +19,10 @@ package net.ktnx.mobileledger.domain.usecase
 
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
-import net.ktnx.mobileledger.db.Profile
+import net.ktnx.mobileledger.domain.model.Profile
+import net.ktnx.mobileledger.domain.model.ProfileAuthentication
 import net.ktnx.mobileledger.fake.FakeVersionDetector
+import net.ktnx.mobileledger.util.createTestDomainProfile
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -95,14 +97,12 @@ class VersionDetectorImplTest {
         versionDetector.shouldSucceed = true
         versionDetector.versionToReturn = "1.28"
 
-        val profile = Profile().apply {
-            id = 1L
-            name = "Test Profile"
-            url = "https://profile.example.com"
-            useAuthentication = true
-            authUser = "profileuser"
-            authPassword = "profilepass"
-        }
+        val profile = createTestDomainProfile(
+            id = 1L,
+            name = "Test Profile",
+            url = "https://profile.example.com",
+            authentication = ProfileAuthentication("profileuser", "profilepass")
+        )
 
         // When
         val result = versionDetector.detect(profile)

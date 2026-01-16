@@ -28,14 +28,15 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import net.ktnx.mobileledger.db.Profile
 import net.ktnx.mobileledger.db.Transaction
 import net.ktnx.mobileledger.db.Transaction as DbTransaction
 import net.ktnx.mobileledger.db.TransactionAccount
 import net.ktnx.mobileledger.db.TransactionWithAccounts
+import net.ktnx.mobileledger.domain.model.Profile
 import net.ktnx.mobileledger.domain.model.Transaction as DomainTransaction
 import net.ktnx.mobileledger.domain.model.TransactionLine
 import net.ktnx.mobileledger.fake.FakeCurrencyFormatter
+import net.ktnx.mobileledger.util.createTestDomainProfile
 import net.ktnx.mobileledger.utils.SimpleDate
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -94,15 +95,13 @@ class TransactionListViewModelTest {
         name: String = "Test Profile",
         theme: Int = 0,
         orderNo: Int = 0
-    ): Profile = Profile().apply {
-        this.id = id
-        this.name = name
-        this.theme = theme
-        this.orderNo = orderNo
-        this.uuid = java.util.UUID.randomUUID().toString()
-        this.url = "https://example.com/ledger"
-        this.permitPosting = true
-    }
+    ): Profile = createTestDomainProfile(
+        id = id,
+        name = name,
+        theme = theme,
+        orderNo = orderNo,
+        permitPosting = true
+    )
 
     private fun createTestTransaction(
         id: Long,

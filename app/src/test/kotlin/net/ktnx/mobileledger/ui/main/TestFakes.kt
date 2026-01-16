@@ -29,9 +29,9 @@ import net.ktnx.mobileledger.data.repository.TransactionRepository
 import net.ktnx.mobileledger.db.Account
 import net.ktnx.mobileledger.db.AccountWithAmounts
 import net.ktnx.mobileledger.db.Option
-import net.ktnx.mobileledger.db.Profile
 import net.ktnx.mobileledger.db.Transaction as DbTransaction
 import net.ktnx.mobileledger.db.TransactionWithAccounts
+import net.ktnx.mobileledger.domain.model.Profile
 import net.ktnx.mobileledger.domain.model.Transaction
 import net.ktnx.mobileledger.domain.model.TransactionLine
 import net.ktnx.mobileledger.service.AppStateService
@@ -78,29 +78,34 @@ class FakeProfileRepositoryForViewModel : ProfileRepository {
     override suspend fun getProfileCount(): Int = profilesMap.size
 
     override suspend fun insertProfile(profile: Profile): Long {
-        val id = if (profile.id == 0L) nextId++ else profile.id
-        profile.id = id
-        profilesMap[id] = profile
+        val id = if (profile.id == null || profile.id == 0L) nextId++ else profile.id
+        val profileWithId = profile.copy(id = id)
+        profilesMap[id] = profileWithId
         return id
     }
 
     override suspend fun updateProfile(profile: Profile) {
-        profilesMap[profile.id] = profile
-        if (_currentProfile.value?.id == profile.id) {
+        val id = profile.id ?: return
+        profilesMap[id] = profile
+        if (_currentProfile.value?.id == id) {
             _currentProfile.value = profile
         }
     }
 
     override suspend fun deleteProfile(profile: Profile) {
-        profilesMap.remove(profile.id)
-        if (_currentProfile.value?.id == profile.id) {
+        val id = profile.id ?: return
+        profilesMap.remove(id)
+        if (_currentProfile.value?.id == id) {
             _currentProfile.value = profilesMap.values.firstOrNull()
         }
     }
 
     override suspend fun updateProfileOrder(profiles: List<Profile>) {
         profiles.forEachIndexed { index, profile ->
-            profilesMap[profile.id]?.orderNo = index
+            val id = profile.id ?: return@forEachIndexed
+            profilesMap[id]?.let { existing ->
+                profilesMap[id] = existing.copy(orderNo = index)
+            }
         }
     }
 

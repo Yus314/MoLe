@@ -17,7 +17,7 @@
 
 package net.ktnx.mobileledger.domain.usecase
 
-import net.ktnx.mobileledger.db.Profile
+import net.ktnx.mobileledger.domain.model.Profile
 
 /**
  * hledger-web バージョン検出のインターフェース
@@ -45,8 +45,8 @@ interface VersionDetector {
      */
     suspend fun detect(profile: Profile): Result<String> = detect(
         url = profile.url,
-        useAuth = profile.useAuthentication,
-        user = profile.authUser,
-        password = profile.authPassword
+        useAuth = profile.isAuthEnabled,
+        user = profile.authentication?.user,
+        password = profile.authentication?.password
     )
 }

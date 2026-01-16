@@ -71,8 +71,9 @@ class AccountSummaryViewModel @Inject constructor(
     private fun observeProfileChanges() {
         viewModelScope.launch {
             profileRepository.currentProfile.collect { profile ->
-                if (profile != null) {
-                    loadAccounts(profile.id)
+                val profileId = profile?.id
+                if (profileId != null) {
+                    loadAccounts(profileId)
                 } else {
                     _uiState.update { it.copy(accounts = emptyList(), isLoading = false) }
                 }

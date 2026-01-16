@@ -25,11 +25,49 @@ import net.ktnx.mobileledger.db.Profile
 import net.ktnx.mobileledger.db.Transaction
 import net.ktnx.mobileledger.db.TransactionAccount
 import net.ktnx.mobileledger.db.TransactionWithAccounts
+import net.ktnx.mobileledger.domain.model.FutureDates
+import net.ktnx.mobileledger.domain.model.Profile as DomainProfile
+import net.ktnx.mobileledger.domain.model.ProfileAuthentication
 
 /**
  * Test utility functions for creating test data.
  */
 
+/**
+ * Create a domain model Profile for testing.
+ */
+fun createTestDomainProfile(
+    id: Long? = 1L,
+    name: String = "Test Profile",
+    url: String = "https://example.com/ledger",
+    theme: Int = 0,
+    orderNo: Int = 0,
+    authentication: ProfileAuthentication? = null,
+    permitPosting: Boolean = true,
+    defaultCommodity: String? = null,
+    apiVersion: Int = 0,
+    futureDates: FutureDates = FutureDates.None
+): DomainProfile = DomainProfile(
+    id = id,
+    name = name,
+    uuid = UUID.randomUUID().toString(),
+    url = url,
+    authentication = authentication,
+    orderNo = orderNo,
+    permitPosting = permitPosting,
+    theme = theme,
+    preferredAccountsFilter = null,
+    futureDates = futureDates,
+    apiVersion = apiVersion,
+    showCommodityByDefault = false,
+    defaultCommodity = defaultCommodity,
+    showCommentsByDefault = true,
+    serverVersion = null
+)
+
+/**
+ * Create a db.Profile for testing (legacy, prefer createTestDomainProfile).
+ */
 fun createTestProfile(
     id: Long = 0L,
     name: String = "Test Profile",

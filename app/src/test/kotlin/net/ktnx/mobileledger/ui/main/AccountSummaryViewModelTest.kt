@@ -31,7 +31,8 @@ import net.ktnx.mobileledger.data.repository.PreferencesRepository
 import net.ktnx.mobileledger.db.Account
 import net.ktnx.mobileledger.db.AccountValue
 import net.ktnx.mobileledger.db.AccountWithAmounts
-import net.ktnx.mobileledger.db.Profile
+import net.ktnx.mobileledger.domain.model.Profile
+import net.ktnx.mobileledger.util.createTestDomainProfile
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -86,15 +87,13 @@ class AccountSummaryViewModelTest {
         name: String = "Test Profile",
         theme: Int = 0,
         orderNo: Int = 0
-    ): Profile = Profile().apply {
-        this.id = id
-        this.name = name
-        this.theme = theme
-        this.orderNo = orderNo
-        this.uuid = java.util.UUID.randomUUID().toString()
-        this.url = "https://example.com/ledger"
-        this.permitPosting = true
-    }
+    ): Profile = createTestDomainProfile(
+        id = id,
+        name = name,
+        theme = theme,
+        orderNo = orderNo,
+        permitPosting = true
+    )
 
     private fun createTestAccount(
         id: Long,

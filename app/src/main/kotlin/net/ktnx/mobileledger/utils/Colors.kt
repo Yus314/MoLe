@@ -28,7 +28,7 @@ import logcat.LogPriority
 import logcat.logcat
 import net.ktnx.mobileledger.BuildConfig
 import net.ktnx.mobileledger.R
-import net.ktnx.mobileledger.db.Profile
+import net.ktnx.mobileledger.domain.model.Profile
 import net.ktnx.mobileledger.ui.HueRing
 
 object Colors {

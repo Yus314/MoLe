@@ -93,8 +93,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import net.ktnx.mobileledger.R
+import net.ktnx.mobileledger.domain.model.FutureDates
 import net.ktnx.mobileledger.json.API
-import net.ktnx.mobileledger.model.FutureDates
 import net.ktnx.mobileledger.ui.components.ConfirmDialog
 import net.ktnx.mobileledger.ui.components.HueRing
 import net.ktnx.mobileledger.ui.components.LoadingIndicator

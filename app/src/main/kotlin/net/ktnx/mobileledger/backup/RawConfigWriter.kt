@@ -156,23 +156,23 @@ class RawConfigWriter(
             w.name(ConfigIO.Keys.NAME).value(p.name)
             w.name(ConfigIO.Keys.UUID).value(p.uuid)
             w.name(ConfigIO.Keys.URL).value(p.url)
-            w.name(ConfigIO.Keys.USE_AUTH).value(p.isAuthEnabled())
-            if (p.isAuthEnabled()) {
-                w.name(ConfigIO.Keys.AUTH_USER).value(p.authUser)
-                w.name(ConfigIO.Keys.AUTH_PASS).value(p.authPassword)
+            w.name(ConfigIO.Keys.USE_AUTH).value(p.isAuthEnabled)
+            if (p.isAuthEnabled) {
+                w.name(ConfigIO.Keys.AUTH_USER).value(p.authentication?.user)
+                w.name(ConfigIO.Keys.AUTH_PASS).value(p.authentication?.password)
             }
             if (p.apiVersion != API.auto.toInt()) {
                 w.name(ConfigIO.Keys.API_VER).value(p.apiVersion.toLong())
             }
-            w.name(ConfigIO.Keys.CAN_POST).value(p.canPost())
-            if (p.canPost()) {
-                val defaultCommodity = p.getDefaultCommodityOrEmpty()
+            w.name(ConfigIO.Keys.CAN_POST).value(p.canPost)
+            if (p.canPost) {
+                val defaultCommodity = p.defaultCommodityOrEmpty
                 if (defaultCommodity.isNotEmpty()) {
                     w.name(ConfigIO.Keys.DEFAULT_COMMODITY).value(defaultCommodity)
                 }
                 w.name(ConfigIO.Keys.SHOW_COMMODITY).value(p.showCommodityByDefault)
                 w.name(ConfigIO.Keys.SHOW_COMMENTS).value(p.showCommentsByDefault)
-                w.name(ConfigIO.Keys.FUTURE_DATES).value(p.futureDates)
+                w.name(ConfigIO.Keys.FUTURE_DATES).value(p.futureDates.toInt().toLong())
                 w.name(ConfigIO.Keys.PREF_ACCOUNT).value(p.preferredAccountsFilter)
             }
             w.name(ConfigIO.Keys.COLOUR).value(p.theme)
