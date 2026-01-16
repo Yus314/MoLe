@@ -116,37 +116,37 @@
 
 ### 4.1 TransactionFormViewModel (New)
 
-- [ ] T041 [P] [US2] Create TransactionFormUiState.kt with state, events, and effects in `app/src/main/kotlin/net/ktnx/mobileledger/ui/transaction/TransactionFormUiState.kt`
-- [ ] T042 [US2] Create TransactionFormViewModel with form management logic in `app/src/main/kotlin/net/ktnx/mobileledger/ui/transaction/TransactionFormViewModel.kt`
-- [ ] T043 [US2] Migrate date handling from NewTransactionViewModel to TransactionFormViewModel in `app/src/main/kotlin/net/ktnx/mobileledger/ui/transaction/TransactionFormViewModel.kt`
-- [ ] T044 [US2] Migrate description/comment handling from NewTransactionViewModel to TransactionFormViewModel in `app/src/main/kotlin/net/ktnx/mobileledger/ui/transaction/TransactionFormViewModel.kt`
-- [ ] T045 [US2] Migrate form validation logic from NewTransactionViewModel to TransactionFormViewModel in `app/src/main/kotlin/net/ktnx/mobileledger/ui/transaction/TransactionFormViewModel.kt`
-- [ ] T046 [US2] Migrate transaction sending logic from NewTransactionViewModel to TransactionFormViewModel in `app/src/main/kotlin/net/ktnx/mobileledger/ui/transaction/TransactionFormViewModel.kt`
-- [ ] T047 [US2] Create TransactionFormViewModelTest with form management tests in `app/src/test/kotlin/net/ktnx/mobileledger/ui/transaction/TransactionFormViewModelTest.kt`
-- [ ] T048 [US2] Add TransactionFormViewModel tests for validation in `app/src/test/kotlin/net/ktnx/mobileledger/ui/transaction/TransactionFormViewModelTest.kt`
-- [ ] T049 [US2] Add TransactionFormViewModel tests for transaction sending in `app/src/test/kotlin/net/ktnx/mobileledger/ui/transaction/TransactionFormViewModelTest.kt`
+- [X] T041 [P] [US2] Create TransactionFormUiState.kt with state, events, and effects in `app/src/main/kotlin/net/ktnx/mobileledger/ui/transaction/TransactionFormUiState.kt`
+- [X] T042 [US2] Create TransactionFormViewModel with form management logic in `app/src/main/kotlin/net/ktnx/mobileledger/ui/transaction/TransactionFormViewModel.kt`
+- [X] T043 [US2] Migrate date handling from NewTransactionViewModel to TransactionFormViewModel in `app/src/main/kotlin/net/ktnx/mobileledger/ui/transaction/TransactionFormViewModel.kt`
+- [X] T044 [US2] Migrate description/comment handling from NewTransactionViewModel to TransactionFormViewModel in `app/src/main/kotlin/net/ktnx/mobileledger/ui/transaction/TransactionFormViewModel.kt`
+- [X] T045 [US2] Migrate form validation logic from NewTransactionViewModel to TransactionFormViewModel in `app/src/main/kotlin/net/ktnx/mobileledger/ui/transaction/TransactionFormViewModel.kt`
+- [X] T046 [US2] Migrate transaction sending logic from NewTransactionViewModel to TransactionFormViewModel in `app/src/main/kotlin/net/ktnx/mobileledger/ui/transaction/TransactionFormViewModel.kt`
+- [X] T047 [US2] Create TransactionFormViewModelTest with form management tests in `app/src/test/kotlin/net/ktnx/mobileledger/ui/transaction/TransactionFormViewModelTest.kt`
+- [X] T048 [US2] Add TransactionFormViewModel tests for validation in `app/src/test/kotlin/net/ktnx/mobileledger/ui/transaction/TransactionFormViewModelTest.kt`
+- [X] T049 [US2] Add TransactionFormViewModel tests for transaction sending in `app/src/test/kotlin/net/ktnx/mobileledger/ui/transaction/TransactionFormViewModelTest.kt`
 
 ### 4.2 AccountRowsViewModel (New)
 
-- [ ] T050 [P] [US2] Create AccountRowsUiState.kt with state, events, and effects in `app/src/main/kotlin/net/ktnx/mobileledger/ui/transaction/AccountRowsUiState.kt`
-- [ ] T051 [US2] Create AccountRowsViewModel with row management logic in `app/src/main/kotlin/net/ktnx/mobileledger/ui/transaction/AccountRowsViewModel.kt`
-- [ ] T052 [US2] Migrate account row add/remove/move logic from NewTransactionViewModel in `app/src/main/kotlin/net/ktnx/mobileledger/ui/transaction/AccountRowsViewModel.kt`
-- [ ] T053 [US2] Migrate amount calculation/balance logic from NewTransactionViewModel in `app/src/main/kotlin/net/ktnx/mobileledger/ui/transaction/AccountRowsViewModel.kt`
-- [ ] T054 [US2] Migrate currency selection logic from NewTransactionViewModel in `app/src/main/kotlin/net/ktnx/mobileledger/ui/transaction/AccountRowsViewModel.kt`
-- [ ] T055 [US2] Migrate account name suggestions logic from NewTransactionViewModel in `app/src/main/kotlin/net/ktnx/mobileledger/ui/transaction/AccountRowsViewModel.kt`
-- [ ] T056 [US2] Migrate focus management logic from NewTransactionViewModel in `app/src/main/kotlin/net/ktnx/mobileledger/ui/transaction/AccountRowsViewModel.kt`
-- [ ] T057 [US2] Create AccountRowsViewModelTest with row management tests in `app/src/test/kotlin/net/ktnx/mobileledger/ui/transaction/AccountRowsViewModelTest.kt`
-- [ ] T058 [US2] Add AccountRowsViewModel tests for balance calculation in `app/src/test/kotlin/net/ktnx/mobileledger/ui/transaction/AccountRowsViewModelTest.kt`
-- [ ] T059 [US2] Add AccountRowsViewModel tests for currency selection in `app/src/test/kotlin/net/ktnx/mobileledger/ui/transaction/AccountRowsViewModelTest.kt`
+- [X] T050 [P] [US2] Create AccountRowsUiState.kt with state, events, and effects in `app/src/main/kotlin/net/ktnx/mobileledger/ui/transaction/AccountRowsUiState.kt`
+- [X] T051 [US2] Create AccountRowsViewModel with row management logic in `app/src/main/kotlin/net/ktnx/mobileledger/ui/transaction/AccountRowsViewModel.kt`
+- [X] T052 [US2] Migrate account row add/remove/move logic from NewTransactionViewModel in `app/src/main/kotlin/net/ktnx/mobileledger/ui/transaction/AccountRowsViewModel.kt`
+- [X] T053 [US2] Migrate amount calculation/balance logic from NewTransactionViewModel in `app/src/main/kotlin/net/ktnx/mobileledger/ui/transaction/AccountRowsViewModel.kt`
+- [X] T054 [US2] Migrate currency selection logic from NewTransactionViewModel in `app/src/main/kotlin/net/ktnx/mobileledger/ui/transaction/AccountRowsViewModel.kt`
+- [X] T055 [US2] Migrate account name suggestions logic from NewTransactionViewModel in `app/src/main/kotlin/net/ktnx/mobileledger/ui/transaction/AccountRowsViewModel.kt`
+- [X] T056 [US2] Migrate focus management logic from NewTransactionViewModel in `app/src/main/kotlin/net/ktnx/mobileledger/ui/transaction/AccountRowsViewModel.kt`
+- [X] T057 [US2] Create AccountRowsViewModelTest with row management tests in `app/src/test/kotlin/net/ktnx/mobileledger/ui/transaction/AccountRowsViewModelTest.kt`
+- [X] T058 [US2] Add AccountRowsViewModel tests for balance calculation in `app/src/test/kotlin/net/ktnx/mobileledger/ui/transaction/AccountRowsViewModelTest.kt`
+- [X] T059 [US2] Add AccountRowsViewModel tests for currency selection in `app/src/test/kotlin/net/ktnx/mobileledger/ui/transaction/AccountRowsViewModelTest.kt`
 
 ### 4.3 TemplateApplicatorViewModel (New)
 
-- [ ] T060 [P] [US2] Create TemplateApplicatorUiState.kt with state, events, and effects in `app/src/main/kotlin/net/ktnx/mobileledger/ui/transaction/TemplateApplicatorUiState.kt`
-- [ ] T061 [US2] Create TemplateApplicatorViewModel with template search logic in `app/src/main/kotlin/net/ktnx/mobileledger/ui/transaction/TemplateApplicatorViewModel.kt`
-- [ ] T062 [US2] Migrate template matching logic from NewTransactionViewModel in `app/src/main/kotlin/net/ktnx/mobileledger/ui/transaction/TemplateApplicatorViewModel.kt`
-- [ ] T063 [US2] Migrate template apply effect logic from NewTransactionViewModel in `app/src/main/kotlin/net/ktnx/mobileledger/ui/transaction/TemplateApplicatorViewModel.kt`
-- [ ] T064 [US2] Create TemplateApplicatorViewModelTest with template search tests in `app/src/test/kotlin/net/ktnx/mobileledger/ui/transaction/TemplateApplicatorViewModelTest.kt`
-- [ ] T065 [US2] Add TemplateApplicatorViewModel tests for template application in `app/src/test/kotlin/net/ktnx/mobileledger/ui/transaction/TemplateApplicatorViewModelTest.kt`
+- [X] T060 [P] [US2] Create TemplateApplicatorUiState.kt with state, events, and effects in `app/src/main/kotlin/net/ktnx/mobileledger/ui/transaction/TemplateApplicatorUiState.kt`
+- [X] T061 [US2] Create TemplateApplicatorViewModel with template search logic in `app/src/main/kotlin/net/ktnx/mobileledger/ui/transaction/TemplateApplicatorViewModel.kt`
+- [X] T062 [US2] Migrate template matching logic from NewTransactionViewModel in `app/src/main/kotlin/net/ktnx/mobileledger/ui/transaction/TemplateApplicatorViewModel.kt`
+- [X] T063 [US2] Migrate template apply effect logic from NewTransactionViewModel in `app/src/main/kotlin/net/ktnx/mobileledger/ui/transaction/TemplateApplicatorViewModel.kt`
+- [X] T064 [US2] Create TemplateApplicatorViewModelTest with template search tests in `app/src/test/kotlin/net/ktnx/mobileledger/ui/transaction/TemplateApplicatorViewModelTest.kt`
+- [X] T065 [US2] Add TemplateApplicatorViewModel tests for template application in `app/src/test/kotlin/net/ktnx/mobileledger/ui/transaction/TemplateApplicatorViewModelTest.kt`
 
 ### 4.4 Activity Integration & NewTransactionViewModel Cleanup
 
