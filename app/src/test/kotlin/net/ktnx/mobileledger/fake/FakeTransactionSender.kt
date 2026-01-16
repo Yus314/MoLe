@@ -20,7 +20,6 @@ package net.ktnx.mobileledger.fake
 import net.ktnx.mobileledger.domain.model.Profile
 import net.ktnx.mobileledger.domain.model.Transaction
 import net.ktnx.mobileledger.domain.usecase.TransactionSender
-import net.ktnx.mobileledger.model.LedgerTransaction
 
 /**
  * Fake implementation of [TransactionSender] for testing.
@@ -33,14 +32,10 @@ class FakeTransactionSender : TransactionSender {
     var shouldSucceed = true
     var errorMessage = "Simulated failure"
 
-    // Records for domain model sends
     val sentTransactions = mutableListOf<SentTransaction>()
 
-    // Records for legacy sends
-    val sentLegacyTransactions = mutableListOf<SentLegacyTransaction>()
-
     /**
-     * Record of a sent transaction (domain model).
+     * Record of a sent transaction.
      */
     data class SentTransaction(
         val profile: Profile,
@@ -48,27 +43,8 @@ class FakeTransactionSender : TransactionSender {
         val simulate: Boolean
     )
 
-    /**
-     * Record of a sent transaction (legacy LedgerTransaction).
-     */
-    data class SentLegacyTransaction(
-        val profile: Profile,
-        val transaction: LedgerTransaction,
-        val simulate: Boolean
-    )
-
     override suspend fun send(profile: Profile, transaction: Transaction, simulate: Boolean): Result<Unit> {
         sentTransactions.add(SentTransaction(profile, transaction, simulate))
-        return if (shouldSucceed) {
-            Result.success(Unit)
-        } else {
-            Result.failure(Exception(errorMessage))
-        }
-    }
-
-    @Deprecated("Use send(Profile, Transaction, Boolean) instead")
-    override suspend fun sendLegacy(profile: Profile, transaction: LedgerTransaction, simulate: Boolean): Result<Unit> {
-        sentLegacyTransactions.add(SentLegacyTransaction(profile, transaction, simulate))
         return if (shouldSucceed) {
             Result.success(Unit)
         } else {
@@ -83,6 +59,5 @@ class FakeTransactionSender : TransactionSender {
         shouldSucceed = true
         errorMessage = "Simulated failure"
         sentTransactions.clear()
-        sentLegacyTransactions.clear()
     }
 }

@@ -73,10 +73,6 @@ class TransactionSenderImpl @Inject constructor(
         return sendInternalWithDomain(profile, transaction, profileId, simulate)
     }
 
-    @Deprecated("Use send(Profile, Transaction, Boolean) instead")
-    override suspend fun sendLegacy(profile: Profile, transaction: LedgerTransaction, simulate: Boolean): Result<Unit> =
-        sendInternal(profile, transaction, simulate)
-
     /**
      * Convert domain model Transaction to LedgerTransaction for legacy HTML form submission.
      */
@@ -162,76 +158,6 @@ class TransactionSenderImpl @Inject constructor(
     private suspend fun sendOKViaAPIWithDomain(
         profile: Profile,
         transaction: Transaction,
-        apiVersion: API,
-        simulate: Boolean
-    ) {
-        coroutineContext.ensureActive()
-        val http = NetworkUtil.prepareConnection(profile, "add")
-        http.requestMethod = "PUT"
-        http.setRequestProperty("Content-Type", "application/json")
-        http.setRequestProperty("Accept", "*/*")
-
-        val gateway = Gateway.forApiVersion(apiVersion)
-        val body = gateway.transactionSaveRequest(transaction)
-
-        logcat { "Sending using API $apiVersion" }
-        sendRequest(http, body, simulate)
-    }
-
-    @Deprecated("Use sendInternalWithDomain instead")
-    private suspend fun sendInternal(
-        profile: Profile,
-        transaction: LedgerTransaction,
-        simulate: Boolean
-    ): Result<Unit> = withContext(ioDispatcher) {
-        try {
-            coroutineContext.ensureActive()
-
-            val profileApiVersion = API.valueOf(profile.apiVersion)
-            when (profileApiVersion) {
-                API.auto -> {
-                    var sendOK = false
-                    for (ver in API.allVersions) {
-                        coroutineContext.ensureActive()
-                        logcat { "Trying version $ver" }
-                        try {
-                            sendOKViaAPI(profile, transaction, ver, simulate)
-                            sendOK = true
-                            logcat { "Version $ver request succeeded" }
-                            break
-                        } catch (e: ApiNotSupportedException) {
-                            logcat { "Version $ver not supported: ${e.message}" }
-                        }
-                    }
-
-                    if (!sendOK) {
-                        logcat { "Trying HTML form emulation" }
-                        legacySendOkWithRetry(profile, transaction, simulate)
-                    }
-                }
-
-                API.html -> legacySendOkWithRetry(profile, transaction, simulate)
-
-                API.v1_14, API.v1_15, API.v1_19_1, API.v1_23 -> {
-                    sendOKViaAPI(profile, transaction, profileApiVersion, simulate)
-                }
-
-                else -> error("Unexpected API version: $profileApiVersion")
-            }
-
-            Result.success(Unit)
-        } catch (e: Exception) {
-            logcat(LogPriority.WARN) { "Error sending transaction: ${e.asLog()}" }
-            Result.failure(e)
-        }
-    }
-
-    /**
-     * Send transaction via JSON API
-     */
-    private suspend fun sendOKViaAPI(
-        profile: Profile,
-        transaction: LedgerTransaction,
         apiVersion: API,
         simulate: Boolean
     ) {

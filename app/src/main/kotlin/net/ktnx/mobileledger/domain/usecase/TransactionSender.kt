@@ -19,7 +19,6 @@ package net.ktnx.mobileledger.domain.usecase
 
 import net.ktnx.mobileledger.domain.model.Profile
 import net.ktnx.mobileledger.domain.model.Transaction
-import net.ktnx.mobileledger.model.LedgerTransaction
 
 /**
  * Interface for sending transactions to the ledger server.
@@ -30,10 +29,7 @@ import net.ktnx.mobileledger.model.LedgerTransaction
 interface TransactionSender {
 
     /**
-     * Send a transaction to the ledger server using domain model.
-     *
-     * This is the preferred method for ViewModels to use, as it accepts the domain model
-     * Transaction and handles the conversion internally.
+     * Send a transaction to the ledger server.
      *
      * @param profile The profile containing server configuration (URL, API version, credentials)
      * @param transaction The fully validated domain model transaction to send
@@ -42,24 +38,4 @@ interface TransactionSender {
      *         [Result.failure] with the exception if the send failed
      */
     suspend fun send(profile: Profile, transaction: Transaction, simulate: Boolean = false): Result<Unit>
-
-    /**
-     * Send a transaction to the ledger server using legacy LedgerTransaction.
-     *
-     * @deprecated Use the domain model Transaction overload instead.
-     * This method is kept for backward compatibility during migration.
-     *
-     * @param profile The profile containing server configuration (URL, API version, credentials)
-     * @param transaction The fully validated transaction to send
-     * @param simulate If true, simulate the send without actually modifying server state.
-     *                 Useful for validation/preview purposes. Default is false.
-     * @return [Result.success] with Unit if the transaction was accepted by the server,
-     *         [Result.failure] with the exception if the send failed (network error,
-     *         server rejection, API version mismatch, etc.)
-     *
-     * @throws kotlinx.coroutines.CancellationException if the coroutine is cancelled
-     *         (not wrapped in Result, per standard coroutine conventions)
-     */
-    @Deprecated("Use send(Profile, Transaction, Boolean) instead", ReplaceWith("send(profile, transaction, simulate)"))
-    suspend fun sendLegacy(profile: Profile, transaction: LedgerTransaction, simulate: Boolean = false): Result<Unit>
 }
