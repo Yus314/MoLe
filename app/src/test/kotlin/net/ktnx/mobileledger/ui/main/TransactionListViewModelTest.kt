@@ -842,6 +842,7 @@ class FakeTransactionRepositoryForTransactionList : net.ktnx.mobileledger.data.r
 
 /**
  * Fake AccountRepository specialized for TransactionListViewModel tests.
+ * Now uses domain models (Account) for query operations.
  */
 class FakeAccountRepositoryForTransactionList : net.ktnx.mobileledger.data.repository.AccountRepository {
     private val accountNames = mutableMapOf<Long, MutableList<String>>()
@@ -851,10 +852,10 @@ class FakeAccountRepositoryForTransactionList : net.ktnx.mobileledger.data.repos
     }
 
     override fun getAllWithAmounts(profileId: Long, includeZeroBalances: Boolean) =
-        MutableStateFlow<List<net.ktnx.mobileledger.db.AccountWithAmounts>>(emptyList())
+        MutableStateFlow<List<net.ktnx.mobileledger.domain.model.Account>>(emptyList())
 
     override suspend fun getAllWithAmountsSync(profileId: Long, includeZeroBalances: Boolean) =
-        emptyList<net.ktnx.mobileledger.db.AccountWithAmounts>()
+        emptyList<net.ktnx.mobileledger.domain.model.Account>()
 
     override fun getAll(profileId: Long, includeZeroBalances: Boolean) =
         MutableStateFlow<List<net.ktnx.mobileledger.db.Account>>(emptyList())
@@ -867,7 +868,7 @@ class FakeAccountRepositoryForTransactionList : net.ktnx.mobileledger.data.repos
     override suspend fun getByNameSync(profileId: Long, accountName: String): net.ktnx.mobileledger.db.Account? = null
 
     override fun getByNameWithAmounts(profileId: Long, accountName: String) =
-        MutableStateFlow<net.ktnx.mobileledger.db.AccountWithAmounts?>(null)
+        MutableStateFlow<net.ktnx.mobileledger.domain.model.Account?>(null)
 
     override fun searchAccountNames(profileId: Long, term: String) =
         MutableStateFlow(accountNames[profileId]?.filter { it.contains(term, ignoreCase = true) } ?: emptyList())
@@ -876,7 +877,7 @@ class FakeAccountRepositoryForTransactionList : net.ktnx.mobileledger.data.repos
         accountNames[profileId]?.filter { it.contains(term, ignoreCase = true) } ?: emptyList()
 
     override suspend fun searchAccountsWithAmountsSync(profileId: Long, term: String) =
-        emptyList<net.ktnx.mobileledger.db.AccountWithAmounts>()
+        emptyList<net.ktnx.mobileledger.domain.model.Account>()
 
     override fun searchAccountNamesGlobal(term: String) =
         MutableStateFlow(accountNames.values.flatten().filter { it.contains(term, ignoreCase = true) })

@@ -26,11 +26,13 @@ import net.ktnx.mobileledger.data.repository.AccountRepository
 import net.ktnx.mobileledger.data.repository.OptionRepository
 import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.data.repository.TransactionRepository
-import net.ktnx.mobileledger.db.Account
+import net.ktnx.mobileledger.db.Account as DbAccount
 import net.ktnx.mobileledger.db.AccountWithAmounts
 import net.ktnx.mobileledger.db.Option
 import net.ktnx.mobileledger.db.Transaction as DbTransaction
 import net.ktnx.mobileledger.db.TransactionWithAccounts
+import net.ktnx.mobileledger.domain.model.Account
+import net.ktnx.mobileledger.domain.model.AccountAmount
 import net.ktnx.mobileledger.domain.model.Profile
 import net.ktnx.mobileledger.domain.model.Transaction
 import net.ktnx.mobileledger.domain.model.TransactionLine
@@ -261,64 +263,106 @@ class FakeTransactionRepositoryForViewModel : TransactionRepository {
 
 /**
  * Fake AccountRepository for ViewModel testing.
+ *
+ * Now uses domain models (Account) for query operations.
  */
 class FakeAccountRepositoryForViewModel : AccountRepository {
-    private val accounts = mutableMapOf<Long, MutableList<String>>()
+    // Internal storage using domain models
+    private val domainAccounts = mutableMapOf<Long, MutableList<Account>>()
 
-    fun addAccount(profileId: Long, name: String) {
-        accounts.getOrPut(profileId) { mutableListOf() }.add(name)
+    // Track account names for search operations
+    private val accountNames = mutableMapOf<Long, MutableList<String>>()
+
+    private var nextId = 1L
+
+    /**
+     * Add a domain model account for testing.
+     */
+    fun addAccount(profileId: Long, account: Account) {
+        val id = account.id ?: nextId++
+        val accountWithId = if (account.id == null) account.copy(id = id) else account
+        domainAccounts.getOrPut(profileId) { mutableListOf() }.add(accountWithId)
+        accountNames.getOrPut(profileId) { mutableListOf() }.add(account.name)
     }
 
-    override fun getAllWithAmounts(profileId: Long, includeZeroBalances: Boolean): Flow<List<AccountWithAmounts>> =
+    /**
+     * Convenience method to add an account by name only.
+     */
+    fun addAccount(profileId: Long, name: String) {
+        addAccount(
+            profileId,
+            Account(
+                id = null,
+                name = name,
+                level = name.count { it == ':' },
+                isExpanded = true,
+                amounts = emptyList()
+            )
+        )
+    }
+
+    override fun getAllWithAmounts(profileId: Long, includeZeroBalances: Boolean): Flow<List<Account>> {
+        val accounts = domainAccounts[profileId] ?: emptyList()
+        val filtered = if (includeZeroBalances) {
+            accounts
+        } else {
+            accounts.filter { it.hasAmounts && it.amounts.any { amt -> amt.amount != 0f } }
+        }
+        return MutableStateFlow(filtered)
+    }
+
+    override suspend fun getAllWithAmountsSync(profileId: Long, includeZeroBalances: Boolean): List<Account> {
+        val accounts = domainAccounts[profileId] ?: emptyList()
+        return if (includeZeroBalances) {
+            accounts
+        } else {
+            accounts.filter { it.hasAmounts && it.amounts.any { amt -> amt.amount != 0f } }
+        }
+    }
+
+    override fun getAll(profileId: Long, includeZeroBalances: Boolean): Flow<List<DbAccount>> =
         MutableStateFlow(emptyList())
 
-    override suspend fun getAllWithAmountsSync(
-        profileId: Long,
-        includeZeroBalances: Boolean
-    ): List<AccountWithAmounts> = emptyList()
+    override suspend fun getByIdSync(id: Long): DbAccount? = null
 
-    override fun getAll(profileId: Long, includeZeroBalances: Boolean): Flow<List<Account>> =
-        MutableStateFlow(emptyList())
+    override fun getByName(profileId: Long, accountName: String): Flow<DbAccount?> = MutableStateFlow(null)
 
-    override suspend fun getByIdSync(id: Long): Account? = null
+    override suspend fun getByNameSync(profileId: Long, accountName: String): DbAccount? = null
 
-    override fun getByName(profileId: Long, accountName: String): Flow<Account?> = MutableStateFlow(null)
-
-    override suspend fun getByNameSync(profileId: Long, accountName: String): Account? = null
-
-    override fun getByNameWithAmounts(profileId: Long, accountName: String): Flow<AccountWithAmounts?> =
-        MutableStateFlow(null)
+    override fun getByNameWithAmounts(profileId: Long, accountName: String): Flow<Account?> =
+        MutableStateFlow(domainAccounts[profileId]?.find { it.name == accountName })
 
     override fun searchAccountNames(profileId: Long, term: String): Flow<List<String>> = MutableStateFlow(
-        accounts[profileId]?.filter { it.contains(term, ignoreCase = true) } ?: emptyList()
+        accountNames[profileId]?.filter { it.contains(term, ignoreCase = true) } ?: emptyList()
     )
 
     override suspend fun searchAccountNamesSync(profileId: Long, term: String): List<String> =
-        accounts[profileId]?.filter { it.contains(term, ignoreCase = true) } ?: emptyList()
+        accountNames[profileId]?.filter { it.contains(term, ignoreCase = true) } ?: emptyList()
 
-    override suspend fun searchAccountsWithAmountsSync(profileId: Long, term: String): List<AccountWithAmounts> =
-        emptyList()
+    override suspend fun searchAccountsWithAmountsSync(profileId: Long, term: String): List<Account> =
+        domainAccounts[profileId]?.filter { it.name.contains(term, ignoreCase = true) } ?: emptyList()
 
     override fun searchAccountNamesGlobal(term: String): Flow<List<String>> =
-        MutableStateFlow(accounts.values.flatten().filter { it.contains(term, ignoreCase = true) })
+        MutableStateFlow(accountNames.values.flatten().filter { it.contains(term, ignoreCase = true) })
 
     override suspend fun searchAccountNamesGlobalSync(term: String): List<String> =
-        accounts.values.flatten().filter { it.contains(term, ignoreCase = true) }
+        accountNames.values.flatten().filter { it.contains(term, ignoreCase = true) }
 
-    override suspend fun insertAccount(account: Account): Long = 0L
+    override suspend fun insertAccount(account: DbAccount): Long = 0L
 
     override suspend fun insertAccountWithAmounts(accountWithAmounts: AccountWithAmounts) {}
 
-    override suspend fun updateAccount(account: Account) {}
+    override suspend fun updateAccount(account: DbAccount) {}
 
-    override suspend fun deleteAccount(account: Account) {}
+    override suspend fun deleteAccount(account: DbAccount) {}
 
     override suspend fun storeAccounts(accounts: List<AccountWithAmounts>, profileId: Long) {}
 
-    override suspend fun getCountForProfile(profileId: Long): Int = accounts[profileId]?.size ?: 0
+    override suspend fun getCountForProfile(profileId: Long): Int = domainAccounts[profileId]?.size ?: 0
 
     override suspend fun deleteAllAccounts() {
-        accounts.clear()
+        domainAccounts.clear()
+        accountNames.clear()
     }
 }
 

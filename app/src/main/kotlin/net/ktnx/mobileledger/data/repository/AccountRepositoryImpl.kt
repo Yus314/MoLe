@@ -26,8 +26,10 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import net.ktnx.mobileledger.dao.AccountDAO
 import net.ktnx.mobileledger.dao.AccountValueDAO
-import net.ktnx.mobileledger.db.Account
+import net.ktnx.mobileledger.data.repository.mapper.AccountMapper.toDomain
+import net.ktnx.mobileledger.db.Account as DbAccount
 import net.ktnx.mobileledger.db.AccountWithAmounts
+import net.ktnx.mobileledger.domain.model.Account
 
 /**
  * Implementation of [AccountRepository] that wraps the existing [AccountDAO].
@@ -49,32 +51,33 @@ class AccountRepositoryImpl @Inject constructor(
     // Query Operations
     // ========================================
 
-    override fun getAllWithAmounts(profileId: Long, includeZeroBalances: Boolean): Flow<List<AccountWithAmounts>> =
+    override fun getAllWithAmounts(profileId: Long, includeZeroBalances: Boolean): Flow<List<Account>> =
         accountDAO.getAllWithAmounts(profileId, includeZeroBalances).asFlow()
+            .map { entities -> entities.map { it.toDomain() } }
 
-    override suspend fun getAllWithAmountsSync(
-        profileId: Long,
-        includeZeroBalances: Boolean
-    ): List<AccountWithAmounts> = withContext(Dispatchers.IO) {
-        accountDAO.getAllWithAmountsSync(profileId, includeZeroBalances)
-    }
+    override suspend fun getAllWithAmountsSync(profileId: Long, includeZeroBalances: Boolean): List<Account> =
+        withContext(Dispatchers.IO) {
+            accountDAO.getAllWithAmountsSync(profileId, includeZeroBalances)
+                .map { it.toDomain() }
+        }
 
-    override fun getAll(profileId: Long, includeZeroBalances: Boolean): Flow<List<Account>> =
+    override fun getAll(profileId: Long, includeZeroBalances: Boolean): Flow<List<DbAccount>> =
         accountDAO.getAll(profileId, includeZeroBalances).asFlow()
 
-    override suspend fun getByIdSync(id: Long): Account? = withContext(Dispatchers.IO) {
+    override suspend fun getByIdSync(id: Long): DbAccount? = withContext(Dispatchers.IO) {
         accountDAO.getByIdSync(id)
     }
 
-    override fun getByName(profileId: Long, accountName: String): Flow<Account?> =
+    override fun getByName(profileId: Long, accountName: String): Flow<DbAccount?> =
         accountDAO.getByName(profileId, accountName).asFlow()
 
-    override suspend fun getByNameSync(profileId: Long, accountName: String): Account? = withContext(Dispatchers.IO) {
+    override suspend fun getByNameSync(profileId: Long, accountName: String): DbAccount? = withContext(Dispatchers.IO) {
         accountDAO.getByNameSync(profileId, accountName)
     }
 
-    override fun getByNameWithAmounts(profileId: Long, accountName: String): Flow<AccountWithAmounts?> =
+    override fun getByNameWithAmounts(profileId: Long, accountName: String): Flow<Account?> =
         accountDAO.getByNameWithAmounts(profileId, accountName).asFlow()
+            .map { it?.toDomain() }
 
     // ========================================
     // Search Operations
@@ -89,9 +92,10 @@ class AccountRepositoryImpl @Inject constructor(
             AccountDAO.unbox(accountDAO.lookupNamesInProfileByNameSync(profileId, term.uppercase()))
         }
 
-    override suspend fun searchAccountsWithAmountsSync(profileId: Long, term: String): List<AccountWithAmounts> =
+    override suspend fun searchAccountsWithAmountsSync(profileId: Long, term: String): List<Account> =
         withContext(Dispatchers.IO) {
             accountDAO.lookupWithAmountsInProfileByNameSync(profileId, term.uppercase())
+                .map { it.toDomain() }
         }
 
     override fun searchAccountNamesGlobal(term: String): Flow<List<String>> =
@@ -106,7 +110,7 @@ class AccountRepositoryImpl @Inject constructor(
     // Mutation Operations
     // ========================================
 
-    override suspend fun insertAccount(account: Account): Long = withContext(Dispatchers.IO) {
+    override suspend fun insertAccount(account: DbAccount): Long = withContext(Dispatchers.IO) {
         accountDAO.insertSync(account)
     }
 
@@ -122,13 +126,13 @@ class AccountRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun updateAccount(account: Account) {
+    override suspend fun updateAccount(account: DbAccount) {
         withContext(Dispatchers.IO) {
             accountDAO.updateSync(account)
         }
     }
 
-    override suspend fun deleteAccount(account: Account) {
+    override suspend fun deleteAccount(account: DbAccount) {
         withContext(Dispatchers.IO) {
             accountDAO.deleteSync(account)
         }

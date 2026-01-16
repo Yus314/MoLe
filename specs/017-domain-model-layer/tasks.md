@@ -149,23 +149,23 @@
 
 ### TDD: Tests First (Red Phase)
 
-- [ ] T041a [P] [US4] Write AccountTest in app/src/test/kotlin/net/ktnx/mobileledger/domain/model/AccountTest.kt (test parentName, shortName, hasAmounts)
-- [ ] T041b [US4] Write AccountMapperTest in app/src/test/kotlin/net/ktnx/mobileledger/data/repository/mapper/AccountMapperTest.kt (test toDomain with amounts, hierarchy level, expanded state)
+- [X] T041a [P] [US4] Write AccountTest in app/src/test/kotlin/net/ktnx/mobileledger/domain/model/AccountTest.kt (test parentName, shortName, hasAmounts)
+- [X] T041b [US4] Write AccountMapperTest in app/src/test/kotlin/net/ktnx/mobileledger/data/repository/mapper/AccountMapperTest.kt (test toDomain with amounts, hierarchy level, expanded state)
 
 ### Implementation (Green Phase)
 
-- [ ] T041 [P] [US4] Create AccountAmount domain model in app/src/main/kotlin/net/ktnx/mobileledger/domain/model/AccountAmount.kt
-- [ ] T042 [US4] Create Account domain model in app/src/main/kotlin/net/ktnx/mobileledger/domain/model/Account.kt
-- [ ] T043 [US4] Create AccountMapper in app/src/main/kotlin/net/ktnx/mobileledger/data/repository/mapper/AccountMapper.kt
-- [ ] T044 [US4] Update AccountRepository interface to return domain models in app/src/main/kotlin/net/ktnx/mobileledger/data/repository/AccountRepository.kt
-- [ ] T045 [US4] Update AccountRepositoryImpl to use AccountMapper in app/src/main/kotlin/net/ktnx/mobileledger/data/repository/AccountRepositoryImpl.kt
-- [ ] T046 [US4] Update FakeAccountRepository to return domain models in app/src/test/kotlin/net/ktnx/mobileledger/fake/FakeAccountRepository.kt
-- [ ] T047 [US4] Update AccountSummaryViewModel to use domain model Account in app/src/main/kotlin/net/ktnx/mobileledger/ui/main/AccountSummaryViewModel.kt
-- [ ] T048 [US4] Update AccountSummaryUiState to use domain model in app/src/main/kotlin/net/ktnx/mobileledger/ui/main/AccountSummaryUiState.kt
-- [ ] T049 [US4] Update AccountSummaryTab.kt to use domain model in app/src/main/kotlin/net/ktnx/mobileledger/ui/main/AccountSummaryTab.kt
-- [ ] T050 [US4] Mark LedgerAccount as @Deprecated in app/src/main/kotlin/net/ktnx/mobileledger/model/LedgerAccount.kt
-- [ ] T051 [US4] Remove db package imports from AccountSummaryViewModel
-- [ ] T051a [US4] **CHECKPOINT**: Run `nix run .#test && nix run .#build` and verify account list displays correctly
+- [X] T041 [P] [US4] Create AccountAmount domain model in app/src/main/kotlin/net/ktnx/mobileledger/domain/model/AccountAmount.kt
+- [X] T042 [US4] Create Account domain model in app/src/main/kotlin/net/ktnx/mobileledger/domain/model/Account.kt
+- [X] T043 [US4] Create AccountMapper in app/src/main/kotlin/net/ktnx/mobileledger/data/repository/mapper/AccountMapper.kt
+- [X] T044 [US4] Update AccountRepository interface to return domain models in app/src/main/kotlin/net/ktnx/mobileledger/data/repository/AccountRepository.kt
+- [X] T045 [US4] Update AccountRepositoryImpl to use AccountMapper in app/src/main/kotlin/net/ktnx/mobileledger/data/repository/AccountRepositoryImpl.kt
+- [X] T046 [US4] Update FakeAccountRepository to return domain models in app/src/test/kotlin/net/ktnx/mobileledger/ui/main/TestFakes.kt
+- [X] T047 [US4] Update AccountSummaryViewModel to use domain model Account in app/src/main/kotlin/net/ktnx/mobileledger/ui/main/AccountSummaryViewModel.kt
+- [X] T048 [US4] Update AccountSummaryUiState to use domain model in app/src/main/kotlin/net/ktnx/mobileledger/ui/main/AccountSummaryUiState.kt
+- [X] T049 [US4] Update AccountSummaryTab.kt to use domain model in app/src/main/kotlin/net/ktnx/mobileledger/ui/main/AccountSummaryTab.kt
+- [X] T050 [US4] Mark LedgerAccount as @Deprecated in app/src/main/kotlin/net/ktnx/mobileledger/model/LedgerAccount.kt
+- [X] T051 [US4] Remove db package imports from AccountSummaryViewModel
+- [X] T051a [US4] **CHECKPOINT**: Run `nix run .#test && nix run .#build` and verify account list displays correctly
 
 **Checkpoint**: User Story 4 complete - AccountSummaryViewModel uses domain models exclusively
 
