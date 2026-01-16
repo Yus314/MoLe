@@ -30,7 +30,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import logcat.logcat
 import net.ktnx.mobileledger.R
-import net.ktnx.mobileledger.db.Profile
+import net.ktnx.mobileledger.domain.model.Profile
 import net.ktnx.mobileledger.ui.QR
 import net.ktnx.mobileledger.ui.theme.MoLeTheme
 import net.ktnx.mobileledger.ui.transaction.AccountRowsEvent
@@ -174,8 +174,9 @@ class NewTransactionActivityCompose :
          * Start the new transaction activity for the given profile.
          */
         fun start(context: Context, profile: Profile) {
+            val profileId = profile.id ?: return
             val intent = Intent(context, NewTransactionActivityCompose::class.java)
-            intent.putExtra(PARAM_PROFILE_ID, profile.id)
+            intent.putExtra(PARAM_PROFILE_ID, profileId)
             intent.putExtra(PARAM_THEME, profile.theme)
             context.startActivity(intent)
         }
