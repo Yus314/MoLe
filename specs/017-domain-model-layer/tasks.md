@@ -179,25 +179,25 @@
 
 ### TDD: Tests First (Red Phase)
 
-- [ ] T052a [P] [US5] Write TemplateTest in app/src/test/kotlin/net/ktnx/mobileledger/domain/model/TemplateTest.kt (basic data class tests)
-- [ ] T052b [P] [US5] Write CurrencyTest in app/src/test/kotlin/net/ktnx/mobileledger/domain/model/CurrencyTest.kt (test CurrencyPosition enum)
-- [ ] T052c [P] [US5] Write TemplateMapperTest in app/src/test/kotlin/net/ktnx/mobileledger/data/repository/mapper/TemplateMapperTest.kt (test toDomain with lines)
-- [ ] T052d [P] [US5] Write CurrencyMapperTest in app/src/test/kotlin/net/ktnx/mobileledger/data/repository/mapper/CurrencyMapperTest.kt (test toDomain, toEntity)
+- [X] T052a [P] [US5] Write TemplateTest in app/src/test/kotlin/net/ktnx/mobileledger/domain/model/TemplateTest.kt (basic data class tests)
+- [X] T052b [P] [US5] Write CurrencyTest in app/src/test/kotlin/net/ktnx/mobileledger/domain/model/CurrencyTest.kt (test CurrencyPosition enum)
+- [X] T052c [P] [US5] Write TemplateMapperTest in app/src/test/kotlin/net/ktnx/mobileledger/data/repository/mapper/TemplateMapperTest.kt (test toDomain with lines)
+- [X] T052d [P] [US5] Write CurrencyMapperTest in app/src/test/kotlin/net/ktnx/mobileledger/data/repository/mapper/CurrencyMapperTest.kt (test toDomain, toEntity)
 
 ### Implementation (Green Phase)
 
-- [ ] T052 [P] [US5] Create TemplateLine domain model in app/src/main/kotlin/net/ktnx/mobileledger/domain/model/TemplateLine.kt
-- [ ] T053 [P] [US5] Create Currency domain model in app/src/main/kotlin/net/ktnx/mobileledger/domain/model/Currency.kt
-- [ ] T054 [US5] Create Template domain model in app/src/main/kotlin/net/ktnx/mobileledger/domain/model/Template.kt
-- [ ] T055 [P] [US5] Create TemplateMapper in app/src/main/kotlin/net/ktnx/mobileledger/data/repository/mapper/TemplateMapper.kt
-- [ ] T056 [P] [US5] Create CurrencyMapper in app/src/main/kotlin/net/ktnx/mobileledger/data/repository/mapper/CurrencyMapper.kt
-- [ ] T057 [US5] Update TemplateRepository interface to return domain models in app/src/main/kotlin/net/ktnx/mobileledger/data/repository/TemplateRepository.kt
-- [ ] T058 [US5] Update TemplateRepositoryImpl to use TemplateMapper in app/src/main/kotlin/net/ktnx/mobileledger/data/repository/TemplateRepositoryImpl.kt
-- [ ] T059 [US5] Update CurrencyRepository interface to return domain models in app/src/main/kotlin/net/ktnx/mobileledger/data/repository/CurrencyRepository.kt
-- [ ] T060 [US5] Update CurrencyRepositoryImpl to use CurrencyMapper in app/src/main/kotlin/net/ktnx/mobileledger/data/repository/CurrencyRepositoryImpl.kt
-- [ ] T061 [US5] Update FakeTemplateRepository to return domain models in app/src/test/kotlin/net/ktnx/mobileledger/fake/FakeTemplateRepository.kt
-- [ ] T062 [US5] Update FakeCurrencyRepository to return domain models in app/src/test/kotlin/net/ktnx/mobileledger/fake/FakeCurrencyRepository.kt
-- [ ] T063 [US5] Update TemplateListViewModelCompose to use domain model in app/src/main/kotlin/net/ktnx/mobileledger/ui/templates/TemplateListViewModelCompose.kt
+- [X] T052 [P] [US5] Create TemplateLine domain model in app/src/main/kotlin/net/ktnx/mobileledger/domain/model/TemplateLine.kt
+- [X] T053 [P] [US5] Create Currency domain model in app/src/main/kotlin/net/ktnx/mobileledger/domain/model/Currency.kt
+- [X] T054 [US5] Create Template domain model in app/src/main/kotlin/net/ktnx/mobileledger/domain/model/Template.kt
+- [X] T055 [P] [US5] Create TemplateMapper in app/src/main/kotlin/net/ktnx/mobileledger/data/repository/mapper/TemplateMapper.kt
+- [X] T056 [P] [US5] Create CurrencyMapper in app/src/main/kotlin/net/ktnx/mobileledger/data/repository/mapper/CurrencyMapper.kt
+- [X] T057 [US5] Update TemplateRepository interface to return domain models in app/src/main/kotlin/net/ktnx/mobileledger/data/repository/TemplateRepository.kt
+- [X] T058 [US5] Update TemplateRepositoryImpl to use TemplateMapper in app/src/main/kotlin/net/ktnx/mobileledger/data/repository/TemplateRepositoryImpl.kt
+- [X] T059 [US5] Update CurrencyRepository interface to return domain models in app/src/main/kotlin/net/ktnx/mobileledger/data/repository/CurrencyRepository.kt
+- [X] T060 [US5] Update CurrencyRepositoryImpl to use CurrencyMapper in app/src/main/kotlin/net/ktnx/mobileledger/data/repository/CurrencyRepositoryImpl.kt
+- [X] T061 [US5] Update FakeTemplateRepository to return domain models in app/src/test/kotlin/net/ktnx/mobileledger/fake/FakeTemplateRepository.kt
+- [X] T062 [US5] Update FakeCurrencyRepository to return domain models in app/src/test/kotlin/net/ktnx/mobileledger/fake/FakeCurrencyRepository.kt
+- [X] T063 [US5] Update TemplateListViewModelCompose to use domain model in app/src/main/kotlin/net/ktnx/mobileledger/ui/templates/TemplateListViewModelCompose.kt
 - [ ] T064 [US5] Update TemplateDetailViewModelCompose to use domain model in app/src/main/kotlin/net/ktnx/mobileledger/ui/templates/TemplateDetailViewModelCompose.kt
 - [ ] T065 [US5] Update TemplateApplicatorViewModel to use domain model in app/src/main/kotlin/net/ktnx/mobileledger/ui/transaction/TemplateApplicatorViewModel.kt
 - [ ] T066 [US5] Update TemplatesScreen.kt to use domain model in app/src/main/kotlin/net/ktnx/mobileledger/ui/templates/TemplatesScreen.kt

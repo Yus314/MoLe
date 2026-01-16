@@ -32,11 +32,23 @@ enum class CurrencyPosition {
      */
     fun toInt(): Int = ordinal
 
+    /**
+     * データベース保存用の文字列に変換
+     */
+    fun toDbString(): String = name.lowercase()
+
     companion object {
         /**
          * Int から enum に変換
          * 無効な値の場合は AFTER を返す
          */
         fun fromInt(value: Int): CurrencyPosition = entries.getOrNull(value) ?: AFTER
+
+        /**
+         * 文字列から enum に変換
+         * 無効な値の場合は AFTER を返す
+         */
+        fun fromString(value: String): CurrencyPosition =
+            entries.find { it.name.equals(value, ignoreCase = true) } ?: AFTER
     }
 }

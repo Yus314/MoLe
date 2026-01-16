@@ -32,7 +32,7 @@ import kotlinx.coroutines.launch
 import logcat.asLog
 import logcat.logcat
 import net.ktnx.mobileledger.data.repository.TemplateRepository
-import net.ktnx.mobileledger.db.TemplateHeader
+import net.ktnx.mobileledger.domain.model.Template
 
 /**
  * ViewModel for the template list screen using Compose.
@@ -50,7 +50,7 @@ class TemplateListViewModelCompose @Inject constructor(
     val effects = _effects.receiveAsFlow()
 
     // For undo functionality
-    private var deletedTemplate: TemplateHeader? = null
+    private var deletedTemplate: Template? = null
 
     init {
         loadTemplates()
@@ -60,7 +60,7 @@ class TemplateListViewModelCompose @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
 
-            templateRepository.getAllTemplates()
+            templateRepository.getAllTemplatesAsDomain()
                 .catch { e ->
                     logcat { "Error loading templates: ${e.message}" }
                     _uiState.update {
@@ -73,12 +73,12 @@ class TemplateListViewModelCompose @Inject constructor(
                 .collect { templates ->
                     _uiState.update { state ->
                         state.copy(
-                            templates = templates.map { header ->
+                            templates = templates.map { template ->
                                 TemplateListItem(
-                                    id = header.id,
-                                    name = header.name,
-                                    pattern = header.regularExpression,
-                                    isFallback = header.isFallback
+                                    id = template.id ?: 0L,
+                                    name = template.name,
+                                    pattern = template.pattern,
+                                    isFallback = template.isFallback
                                 )
                             },
                             isLoading = false
@@ -107,14 +107,14 @@ class TemplateListViewModelCompose @Inject constructor(
     private fun deleteTemplate(templateId: Long) {
         viewModelScope.launch {
             try {
-                val template = templateRepository.getTemplateByIdSync(templateId)
+                val template = templateRepository.getTemplateAsDomainSync(templateId)
                 if (template != null) {
-                    deletedTemplate = TemplateHeader(template)
-                    templateRepository.deleteTemplate(template)
+                    deletedTemplate = template
+                    templateRepository.deleteTemplateById(templateId)
                     _effects.send(TemplateListEffect.ShowUndoSnackbar(template.name, templateId))
                 }
             } catch (e: Exception) {
-                logcat { "Error deleting template: ${e.message}" }
+                logcat { "Error deleting template: ${e.asLog()}" }
                 _effects.send(TemplateListEffect.ShowError("テンプレートの削除に失敗しました"))
             }
         }
@@ -124,10 +124,11 @@ class TemplateListViewModelCompose @Inject constructor(
         val template = deletedTemplate ?: return
         viewModelScope.launch {
             try {
-                templateRepository.insertTemplate(template)
+                val entity = net.ktnx.mobileledger.data.repository.mapper.TemplateMapper.run { template.toEntity() }
+                templateRepository.insertTemplateWithAccounts(entity)
                 deletedTemplate = null
             } catch (e: Exception) {
-                logcat { "Error restoring template: ${e.message}" }
+                logcat { "Error restoring template: ${e.asLog()}" }
                 _effects.send(TemplateListEffect.ShowError("テンプレートの復元に失敗しました"))
             }
         }

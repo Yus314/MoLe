@@ -22,10 +22,13 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.runTest
+import net.ktnx.mobileledger.data.repository.mapper.TemplateMapper.toDomain
 import net.ktnx.mobileledger.db.TemplateAccount
 import net.ktnx.mobileledger.db.TemplateHeader
 import net.ktnx.mobileledger.db.TemplateWithAccounts
+import net.ktnx.mobileledger.domain.model.Template as DomainTemplate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
@@ -367,14 +370,37 @@ class FakeTemplateRepository : TemplateRepository {
     private val templateAccounts = mutableMapOf<Long, MutableList<TemplateAccount>>()
     private var nextTemplateId = 1L
     private var nextAccountId = 1L
+    private val templatesFlow = MutableStateFlow<List<TemplateWithAccounts>>(emptyList())
 
     private fun emitChanges() {
-        // Placeholder for Flow updates
+        templatesFlow.value = getAllTemplatesWithAccountsInternalSync()
     }
 
     private fun getSortedTemplates(): List<TemplateHeader> =
         templates.values.sortedWith(compareBy({ it.isFallback }, { it.name }))
 
+    private fun getAllTemplatesWithAccountsInternalSync(): List<TemplateWithAccounts> =
+        getSortedTemplates().map { header: TemplateHeader ->
+            val result = TemplateWithAccounts()
+            result.header = header
+            result.accounts = templateAccounts[header.id] ?: emptyList()
+            result
+        }
+
+    // Domain Model Query Operations
+    override fun getAllTemplatesAsDomain(): Flow<List<DomainTemplate>> =
+        templatesFlow.map { list -> list.map { it.toDomain() } }
+
+    override fun getTemplateAsDomain(id: Long): Flow<DomainTemplate?> =
+        templatesFlow.map { list -> list.find { it.header.id == id }?.toDomain() }
+
+    override suspend fun getTemplateAsDomainSync(id: Long): DomainTemplate? =
+        getTemplateWithAccountsInternal(id)?.toDomain()
+
+    override suspend fun getAllTemplatesAsDomainSync(): List<DomainTemplate> =
+        getAllTemplatesWithAccountsInternalSync().map { it.toDomain() }
+
+    // Database Entity Query Operations
     override fun getAllTemplates(): Flow<List<TemplateHeader>> = MutableStateFlow(getSortedTemplates())
 
     override fun getTemplateById(id: Long): Flow<TemplateHeader?> = MutableStateFlow(templates[id])
@@ -406,12 +432,7 @@ class FakeTemplateRepository : TemplateRepository {
     }
 
     override suspend fun getAllTemplatesWithAccountsSync(): List<TemplateWithAccounts> =
-        getSortedTemplates().map { header: TemplateHeader ->
-            val result = TemplateWithAccounts()
-            result.header = header
-            result.accounts = templateAccounts[header.id] ?: emptyList()
-            result
-        }
+        getAllTemplatesWithAccountsInternalSync()
 
     override suspend fun insertTemplate(template: TemplateHeader): Long {
         val id = if (template.id == 0L) nextTemplateId++ else template.id
@@ -451,6 +472,14 @@ class FakeTemplateRepository : TemplateRepository {
         templates.remove(template.id)
         templateAccounts.remove(template.id)
         emitChanges()
+    }
+
+    override suspend fun deleteTemplateById(id: Long): Boolean {
+        val existed = templates.containsKey(id)
+        templates.remove(id)
+        templateAccounts.remove(id)
+        emitChanges()
+        return existed
     }
 
     override suspend fun duplicateTemplate(id: Long): TemplateWithAccounts? {

@@ -18,7 +18,8 @@
 package net.ktnx.mobileledger.data.repository
 
 import kotlinx.coroutines.flow.Flow
-import net.ktnx.mobileledger.db.Currency
+import net.ktnx.mobileledger.db.Currency as DbCurrency
+import net.ktnx.mobileledger.domain.model.Currency as DomainCurrency
 
 /**
  * Repository interface for Currency data access.
@@ -42,7 +43,49 @@ import net.ktnx.mobileledger.db.Currency
 interface CurrencyRepository {
 
     // ========================================
-    // Query Operations
+    // Domain Model Query Operations
+    // ========================================
+
+    /**
+     * Get all currencies as domain models.
+     *
+     * @return Flow that emits the currency domain model list whenever it changes
+     */
+    fun getAllCurrenciesAsDomain(): Flow<List<DomainCurrency>>
+
+    /**
+     * Get all currencies as domain models synchronously.
+     *
+     * @return List of all currency domain models
+     */
+    suspend fun getAllCurrenciesAsDomainSync(): List<DomainCurrency>
+
+    /**
+     * Get a currency as domain model by its ID.
+     *
+     * @param id The currency ID
+     * @return Flow that emits the currency domain model when it changes
+     */
+    fun getCurrencyAsDomain(id: Long): Flow<DomainCurrency?>
+
+    /**
+     * Get a currency as domain model by its ID synchronously.
+     *
+     * @param id The currency ID
+     * @return The currency domain model or null if not found
+     */
+    suspend fun getCurrencyAsDomainSync(id: Long): DomainCurrency?
+
+    /**
+     * Get a currency as domain model by its name synchronously.
+     *
+     * @param name The currency name
+     * @return The currency domain model or null if not found
+     */
+    suspend fun getCurrencyAsDomainByNameSync(name: String): DomainCurrency?
+
+    // ========================================
+    // Database Entity Query Operations (for internal use)
     // ========================================
 
     /**
@@ -50,14 +93,14 @@ interface CurrencyRepository {
      *
      * @return Flow that emits the currency list whenever it changes
      */
-    fun getAllCurrencies(): Flow<List<Currency>>
+    fun getAllCurrencies(): Flow<List<DbCurrency>>
 
     /**
      * Get all currencies synchronously.
      *
      * @return List of all currencies
      */
-    suspend fun getAllCurrenciesSync(): List<Currency>
+    suspend fun getAllCurrenciesSync(): List<DbCurrency>
 
     /**
      * Get a currency by its ID.
@@ -65,7 +108,7 @@ interface CurrencyRepository {
      * @param id The currency ID
      * @return Flow that emits the currency when it changes
      */
-    fun getCurrencyById(id: Long): Flow<Currency?>
+    fun getCurrencyById(id: Long): Flow<DbCurrency?>
 
     /**
      * Get a currency by its ID synchronously.
@@ -73,7 +116,7 @@ interface CurrencyRepository {
      * @param id The currency ID
      * @return The currency or null if not found
      */
-    suspend fun getCurrencyByIdSync(id: Long): Currency?
+    suspend fun getCurrencyByIdSync(id: Long): DbCurrency?
 
     /**
      * Get a currency by its name.
@@ -81,7 +124,7 @@ interface CurrencyRepository {
      * @param name The currency name
      * @return Flow that emits the currency when it changes
      */
-    fun getCurrencyByName(name: String): Flow<Currency?>
+    fun getCurrencyByName(name: String): Flow<DbCurrency?>
 
     /**
      * Get a currency by its name synchronously.
@@ -89,7 +132,7 @@ interface CurrencyRepository {
      * @param name The currency name
      * @return The currency or null if not found
      */
-    suspend fun getCurrencyByNameSync(name: String): Currency?
+    suspend fun getCurrencyByNameSync(name: String): DbCurrency?
 
     // ========================================
     // Mutation Operations
@@ -101,21 +144,21 @@ interface CurrencyRepository {
      * @param currency The currency to insert
      * @return The ID of the inserted currency
      */
-    suspend fun insertCurrency(currency: Currency): Long
+    suspend fun insertCurrency(currency: DbCurrency): Long
 
     /**
      * Update an existing currency.
      *
      * @param currency The currency to update
      */
-    suspend fun updateCurrency(currency: Currency)
+    suspend fun updateCurrency(currency: DbCurrency)
 
     /**
      * Delete a currency.
      *
      * @param currency The currency to delete
      */
-    suspend fun deleteCurrency(currency: Currency)
+    suspend fun deleteCurrency(currency: DbCurrency)
 
     /**
      * Delete all currencies.

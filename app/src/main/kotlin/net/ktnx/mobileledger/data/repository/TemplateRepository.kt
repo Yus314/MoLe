@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.Flow
 import net.ktnx.mobileledger.db.TemplateAccount
 import net.ktnx.mobileledger.db.TemplateHeader
 import net.ktnx.mobileledger.db.TemplateWithAccounts
+import net.ktnx.mobileledger.domain.model.Template
 
 /**
  * Repository interface for Template data access.
@@ -45,7 +46,41 @@ import net.ktnx.mobileledger.db.TemplateWithAccounts
 interface TemplateRepository {
 
     // ========================================
-    // Query Operations
+    // Domain Model Query Operations
+    // ========================================
+
+    /**
+     * Get all templates as domain models ordered by fallback status and name.
+     *
+     * @return Flow that emits the template domain model list whenever it changes
+     */
+    fun getAllTemplatesAsDomain(): Flow<List<Template>>
+
+    /**
+     * Get a template as domain model by its ID.
+     *
+     * @param id The template ID
+     * @return Flow that emits the template domain model when it changes
+     */
+    fun getTemplateAsDomain(id: Long): Flow<Template?>
+
+    /**
+     * Get a template as domain model by its ID synchronously.
+     *
+     * @param id The template ID
+     * @return The template domain model or null if not found
+     */
+    suspend fun getTemplateAsDomainSync(id: Long): Template?
+
+    /**
+     * Get all templates as domain models synchronously.
+     *
+     * @return List of all template domain models
+     */
+    suspend fun getAllTemplatesAsDomainSync(): List<Template>
+
+    // ========================================
+    // Database Entity Query Operations (for internal use)
     // ========================================
 
     /**
@@ -134,6 +169,14 @@ interface TemplateRepository {
      * @param template The template to delete
      */
     suspend fun deleteTemplate(template: TemplateHeader)
+
+    /**
+     * Delete a template by its ID.
+     *
+     * @param id The template ID to delete
+     * @return true if deleted, false if not found
+     */
+    suspend fun deleteTemplateById(id: Long): Boolean
 
     /**
      * Duplicate a template with all its accounts.

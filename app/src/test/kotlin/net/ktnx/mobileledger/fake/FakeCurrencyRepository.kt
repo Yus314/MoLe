@@ -19,8 +19,11 @@ package net.ktnx.mobileledger.fake
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.map
 import net.ktnx.mobileledger.data.repository.CurrencyRepository
+import net.ktnx.mobileledger.data.repository.mapper.CurrencyMapper.toDomain
 import net.ktnx.mobileledger.db.Currency
+import net.ktnx.mobileledger.domain.model.Currency as DomainCurrency
 
 /**
  * Fake implementation of [CurrencyRepository] for testing.
@@ -28,9 +31,31 @@ import net.ktnx.mobileledger.db.Currency
 class FakeCurrencyRepository : CurrencyRepository {
 
     private val currencies = mutableMapOf<Long, Currency>()
+    private val currenciesFlow = MutableStateFlow<List<Currency>>(emptyList())
     private var nextId = 1L
 
-    override fun getAllCurrencies(): Flow<List<Currency>> = MutableStateFlow(currencies.values.toList())
+    // ========================================
+    // Domain Model Query Operations
+    // ========================================
+
+    override fun getAllCurrenciesAsDomain(): Flow<List<DomainCurrency>> =
+        currenciesFlow.map { list -> list.map { it.toDomain() } }
+
+    override suspend fun getAllCurrenciesAsDomainSync(): List<DomainCurrency> = currencies.values.map { it.toDomain() }
+
+    override fun getCurrencyAsDomain(id: Long): Flow<DomainCurrency?> =
+        currenciesFlow.map { list -> list.find { it.id == id }?.toDomain() }
+
+    override suspend fun getCurrencyAsDomainSync(id: Long): DomainCurrency? = currencies[id]?.toDomain()
+
+    override suspend fun getCurrencyAsDomainByNameSync(name: String): DomainCurrency? =
+        currencies.values.find { it.name == name }?.toDomain()
+
+    // ========================================
+    // Database Entity Query Operations
+    // ========================================
+
+    override fun getAllCurrencies(): Flow<List<Currency>> = currenciesFlow
 
     override suspend fun getAllCurrenciesSync(): List<Currency> = currencies.values.toList()
 
@@ -47,23 +72,32 @@ class FakeCurrencyRepository : CurrencyRepository {
         val id = if (currency.id == 0L) nextId++ else currency.id
         currency.id = id
         currencies[id] = currency
+        emitFlow()
         return id
     }
 
     override suspend fun updateCurrency(currency: Currency) {
         currencies[currency.id] = currency
+        emitFlow()
     }
 
     override suspend fun deleteCurrency(currency: Currency) {
         currencies.remove(currency.id)
+        emitFlow()
     }
 
     override suspend fun deleteAllCurrencies() {
         currencies.clear()
+        emitFlow()
+    }
+
+    private fun emitFlow() {
+        currenciesFlow.value = currencies.values.toList()
     }
 
     fun reset() {
         currencies.clear()
         nextId = 1L
+        emitFlow()
     }
 }

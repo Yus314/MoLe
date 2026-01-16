@@ -68,6 +68,10 @@ abstract class TemplateHeaderDAO {
     abstract fun getAllTemplatesWithAccountsSync(): List<TemplateWithAccounts>
 
     @Transaction
+    @Query("SELECT * FROM templates ORDER BY is_fallback, UPPER(name)")
+    abstract fun getTemplatesWithAccounts(): LiveData<List<TemplateWithAccounts>>
+
+    @Transaction
     open fun insertSync(templateWithAccounts: TemplateWithAccounts) {
         val templateId = insertSync(templateWithAccounts.header)
         for (acc in templateWithAccounts.accounts) {
