@@ -45,14 +45,16 @@ import net.ktnx.mobileledger.data.repository.AccountRepository
 import net.ktnx.mobileledger.data.repository.OptionRepository
 import net.ktnx.mobileledger.data.repository.TransactionRepository
 import net.ktnx.mobileledger.data.repository.mapper.AccountMapper.withStateFrom
-import net.ktnx.mobileledger.data.repository.mapper.LegacyModelMapper.toDomain
+import net.ktnx.mobileledger.data.repository.mapper.LegacyModelMapper.toDomainAccounts
 import net.ktnx.mobileledger.data.repository.mapper.LegacyModelMapper.toDomainTransactions
 import net.ktnx.mobileledger.di.IoDispatcher
+import net.ktnx.mobileledger.domain.model.Account
 import net.ktnx.mobileledger.domain.model.Profile
 import net.ktnx.mobileledger.domain.model.SyncError
 import net.ktnx.mobileledger.domain.model.SyncException
 import net.ktnx.mobileledger.domain.model.SyncProgress
 import net.ktnx.mobileledger.domain.model.SyncResult
+import net.ktnx.mobileledger.domain.model.Transaction
 import net.ktnx.mobileledger.err.HTTPException
 import net.ktnx.mobileledger.json.API
 import net.ktnx.mobileledger.json.AccountListParser
@@ -100,12 +102,12 @@ class TransactionSyncerImpl @Inject constructor(
             // Retrieve accounts
             coroutineContext.ensureActive()
             emit(SyncProgress.Indeterminate("アカウントを取得中..."))
-            var accounts: List<LedgerAccount>? = retrieveAccountList(profile)
+            var accounts: List<Account>? = retrieveAccountList(profile)
 
             // Retrieve transactions
             coroutineContext.ensureActive()
             emit(SyncProgress.Indeterminate("取引を取得中..."))
-            var transactions: List<LedgerTransaction>? = if (accounts == null) {
+            var transactions: List<Transaction>? = if (accounts == null) {
                 null
             } else {
                 retrieveTransactionList(profile) { current, total ->
@@ -114,6 +116,7 @@ class TransactionSyncerImpl @Inject constructor(
             }
 
             // Fall back to legacy HTML parsing if JSON API is not available
+            @Suppress("DEPRECATION") // LedgerAccount/LedgerTransaction used in HTML parsing
             if (accounts == null || transactions == null) {
                 emit(SyncProgress.Indeterminate("HTMLモードで取得中..."))
                 val mutableAccounts = ArrayList<LedgerAccount>()
@@ -121,8 +124,9 @@ class TransactionSyncerImpl @Inject constructor(
                 retrieveTransactionListLegacy(profile, mutableAccounts, mutableTransactions) { current, total ->
                     emit(SyncProgress.Running(current, total, "取引を処理中..."))
                 }
-                accounts = mutableAccounts
-                transactions = mutableTransactions
+                // Convert legacy models to domain models
+                accounts = mutableAccounts.toDomainAccounts()
+                transactions = mutableTransactions.toDomainTransactions()
             }
 
             // Save to database
@@ -156,7 +160,7 @@ class TransactionSyncerImpl @Inject constructor(
     /**
      * JSON API を使用してアカウントリストを取得する
      */
-    private suspend fun retrieveAccountList(profile: Profile): List<LedgerAccount>? {
+    private suspend fun retrieveAccountList(profile: Profile): List<Account>? {
         val apiVersion = API.valueOf(profile.apiVersion)
         return when {
             apiVersion == API.auto -> retrieveAccountListAnyVersion(profile)
@@ -170,7 +174,7 @@ class TransactionSyncerImpl @Inject constructor(
         }
     }
 
-    private suspend fun retrieveAccountListAnyVersion(profile: Profile): List<LedgerAccount>? {
+    private suspend fun retrieveAccountListAnyVersion(profile: Profile): List<Account>? {
         for (ver in API.allVersions) {
             try {
                 return retrieveAccountListForVersion(profile, ver)
@@ -183,7 +187,7 @@ class TransactionSyncerImpl @Inject constructor(
         throw ApiNotSupportedException()
     }
 
-    private suspend fun retrieveAccountListForVersion(profile: Profile, version: API): List<LedgerAccount>? {
+    private suspend fun retrieveAccountListForVersion(profile: Profile, version: API): List<Account>? {
         coroutineContext.ensureActive()
         val http = NetworkUtil.prepareConnection(profile, "accounts")
         http.allowUserInteraction = false
@@ -195,8 +199,8 @@ class TransactionSyncerImpl @Inject constructor(
                 else -> throw HTTPException(http.responseCode, http.responseMessage)
             }
 
-            val list = ArrayList<LedgerAccount>()
-            val map = HashMap<String, LedgerAccount>()
+            val list = ArrayList<Account>()
+            val existingNames = HashSet<String>()
 
             http.inputStream.use { resp ->
                 coroutineContext.ensureActive()
@@ -205,17 +209,56 @@ class TransactionSyncerImpl @Inject constructor(
 
                 while (true) {
                     coroutineContext.ensureActive()
-                    val acc = parser.nextAccount(map) ?: break
+                    val acc = parser.nextAccountDomain() ?: break
                     list.add(acc)
-                    expectedPostingsCount += acc.amountCount
+                    existingNames.add(acc.name)
+                    expectedPostingsCount += acc.amounts.size
                 }
 
                 logcat(LogPriority.WARN) { "Got ${list.size} accounts using protocol ${version.description}" }
             }
+
+            // Generate parent accounts that don't exist
+            ensureParentAccountsExist(list, existingNames)
+
             list
         } finally {
             http.disconnect()
         }
+    }
+
+    /**
+     * 親アカウントが存在しない場合は生成する
+     *
+     * hledger API はアカウントのフラットリストを返すため、
+     * 親アカウントが明示的に含まれない場合がある。
+     * 例: "Assets:Cash" はあるが "Assets" がない場合、"Assets" を生成する。
+     */
+    private fun ensureParentAccountsExist(accounts: MutableList<Account>, existingNames: MutableSet<String>) {
+        val toAdd = mutableListOf<Account>()
+
+        for (account in accounts) {
+            var parentName = account.parentName
+            while (parentName != null && parentName !in existingNames) {
+                val level = parentName.count { it == ':' }
+                toAdd.add(
+                    Account(
+                        id = null,
+                        name = parentName,
+                        level = level,
+                        isExpanded = false,
+                        isVisible = true,
+                        amounts = emptyList()
+                    )
+                )
+                existingNames.add(parentName)
+                parentName = parentName.lastIndexOf(':').let { idx ->
+                    if (idx > 0) parentName!!.substring(0, idx) else null
+                }
+            }
+        }
+
+        accounts.addAll(toAdd)
     }
 
     /**
@@ -224,7 +267,7 @@ class TransactionSyncerImpl @Inject constructor(
     private suspend fun retrieveTransactionList(
         profile: Profile,
         onProgress: suspend (Int, Int) -> Unit
-    ): List<LedgerTransaction>? {
+    ): List<Transaction>? {
         val apiVersion = API.valueOf(profile.apiVersion)
         return when {
             apiVersion == API.auto -> retrieveTransactionListAnyVersion(profile, onProgress)
@@ -241,7 +284,7 @@ class TransactionSyncerImpl @Inject constructor(
     private suspend fun retrieveTransactionListAnyVersion(
         profile: Profile,
         onProgress: suspend (Int, Int) -> Unit
-    ): List<LedgerTransaction>? {
+    ): List<Transaction>? {
         for (ver in API.allVersions) {
             try {
                 return retrieveTransactionListForVersion(profile, ver, onProgress)
@@ -256,7 +299,7 @@ class TransactionSyncerImpl @Inject constructor(
         profile: Profile,
         apiVersion: API,
         onProgress: suspend (Int, Int) -> Unit
-    ): List<LedgerTransaction>? {
+    ): List<Transaction>? {
         coroutineContext.ensureActive()
         val http = NetworkUtil.prepareConnection(profile, "transactions")
         http.allowUserInteraction = false
@@ -268,7 +311,7 @@ class TransactionSyncerImpl @Inject constructor(
                 else -> throw HTTPException(http.responseCode, http.responseMessage)
             }
 
-            val trList = ArrayList<LedgerTransaction>()
+            val trList = ArrayList<Transaction>()
             http.inputStream.use { resp ->
                 coroutineContext.ensureActive()
                 val parser = TransactionListParser.forApiVersion(apiVersion, resp)
@@ -276,10 +319,10 @@ class TransactionSyncerImpl @Inject constructor(
 
                 while (true) {
                     coroutineContext.ensureActive()
-                    val transaction = parser.nextTransaction() ?: break
+                    val transaction = parser.nextTransactionDomain() ?: break
                     trList.add(transaction)
 
-                    processedPostings += transaction.accounts.size
+                    processedPostings += transaction.lines.size
                     if (expectedPostingsCount > 0) {
                         onProgress(processedPostings, expectedPostingsCount)
                     }
@@ -290,9 +333,7 @@ class TransactionSyncerImpl @Inject constructor(
 
             // Sort transactions in reverse chronological order
             trList.sortWith { o1, o2 ->
-                val res = (o2.getDateIfAny() ?: SimpleDate.today()).compareTo(
-                    o1.getDateIfAny() ?: SimpleDate.today()
-                )
+                val res = o2.date.compareTo(o1.date)
                 if (res != 0) res else o2.ledgerId.compareTo(o1.ledgerId)
             }
             trList
@@ -449,34 +490,29 @@ class TransactionSyncerImpl @Inject constructor(
     /**
      * アカウントと取引をデータベースに保存する
      *
-     * LedgerAccount/LedgerTransaction を domain.model.* に変換し、
-     * Repository のドメインモデルメソッドを使用して保存する。
+     * ドメインモデルを直接受け取り、Repository を使用して保存する。
      * これにより、domain層からdb層への直接依存を排除する。
      */
-    @Suppress("DEPRECATION") // LegacyModelMapper uses deprecated model classes
     private suspend fun saveAccountsAndTransactions(
         profile: Profile,
-        accounts: List<LedgerAccount>,
-        transactions: List<LedgerTransaction>
+        accounts: List<Account>,
+        transactions: List<Transaction>
     ) {
         val profileId = profile.id ?: throw IllegalStateException("Cannot sync unsaved profile")
 
         logcat { "Preparing account list" }
-        val domainAccounts = accounts.map { legacyAccount ->
+        val accountsWithState = accounts.map { account ->
             coroutineContext.ensureActive()
-            val domainAccount = legacyAccount.toDomain()
             // Preserve existing UI state if account exists
-            val existing = accountRepository.getByNameWithAmountsSync(profileId, legacyAccount.name)
-            domainAccount.withStateFrom(existing)
+            val existing = accountRepository.getByNameWithAmountsSync(profileId, account.name)
+            account.withStateFrom(existing)
         }
         logcat { "Account list prepared. Storing" }
-        accountRepository.storeAccountsAsDomain(domainAccounts, profileId)
+        accountRepository.storeAccountsAsDomain(accountsWithState, profileId)
         logcat { "Account list stored" }
 
-        logcat { "Preparing transaction list" }
-        val domainTransactions = transactions.toDomainTransactions()
         logcat { "Storing transaction list" }
-        transactionRepository.storeTransactionsAsDomain(domainTransactions, profileId)
+        transactionRepository.storeTransactionsAsDomain(transactions, profileId)
         logcat { "Transactions stored" }
 
         optionRepository.setLastSyncTimestamp(profileId, Date().time)
