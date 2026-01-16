@@ -21,11 +21,14 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.runTest
 import net.ktnx.mobileledger.dao.TransactionDAO
-import net.ktnx.mobileledger.db.Transaction
+import net.ktnx.mobileledger.data.repository.mapper.TransactionMapper
+import net.ktnx.mobileledger.db.Transaction as DbTransaction
 import net.ktnx.mobileledger.db.TransactionAccount
 import net.ktnx.mobileledger.db.TransactionWithAccounts
+import net.ktnx.mobileledger.domain.model.Transaction
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -74,7 +77,7 @@ class TransactionRepositoryTest {
             createTestAccount("Expenses:Food", 100f)
         )
     ): TransactionWithAccounts {
-        val transaction = Transaction().apply {
+        val dbTransaction = DbTransaction().apply {
             this.id = id
             this.profileId = profileId
             this.description = description
@@ -85,7 +88,7 @@ class TransactionRepositoryTest {
             this.generation = 1L
         }
         val twa = TransactionWithAccounts()
-        twa.transaction = transaction
+        twa.transaction = dbTransaction
         twa.accounts = accounts
         return twa
     }
@@ -115,7 +118,7 @@ class TransactionRepositoryTest {
 
         val transactions = repository.getAllTransactions(testProfileId).first()
         assertEquals(1, transactions.size)
-        assertEquals("Groceries", transactions[0].transaction.description)
+        assertEquals("Groceries", transactions[0].description)
     }
 
     @Test
@@ -127,7 +130,7 @@ class TransactionRepositoryTest {
 
         val transactions = repository.getAllTransactions(1L).first()
         assertEquals(1, transactions.size)
-        assertEquals("Profile 1", transactions[0].transaction.description)
+        assertEquals("Profile 1", transactions[0].description)
     }
 
     // ========================================
@@ -165,7 +168,7 @@ class TransactionRepositoryTest {
 
         val transactions = repository.getTransactionsFiltered(testProfileId, "Cash").first()
         assertEquals(1, transactions.size)
-        assertEquals("Cash payment", transactions[0].transaction.description)
+        assertEquals("Cash payment", transactions[0].description)
     }
 
     // ========================================
@@ -185,7 +188,7 @@ class TransactionRepositoryTest {
 
         val result = repository.getTransactionByIdSync(testTx.transaction.id)
         assertNotNull(result)
-        assertEquals("Test", result?.transaction?.description)
+        assertEquals("Test", result?.description)
     }
 
     // ========================================
@@ -238,9 +241,9 @@ class TransactionRepositoryTest {
 
         val result = repository.getFirstByDescription("Groceries")
         assertNotNull(result)
-        assertEquals(2026, result?.transaction?.year)
-        assertEquals(1, result?.transaction?.month)
-        assertEquals(15, result?.transaction?.day)
+        assertEquals(2026, result?.date?.year)
+        assertEquals(1, result?.date?.month)
+        assertEquals(15, result?.date?.day)
     }
 
     @Test
@@ -279,7 +282,7 @@ class TransactionRepositoryTest {
 
         val result = repository.getFirstByDescriptionHavingAccount("Payment", "Cash")
         assertNotNull(result)
-        assertTrue(result?.accounts?.any { it.accountName.contains("Cash") } == true)
+        assertTrue(result?.lines?.any { it.accountName.contains("Cash") } == true)
     }
 
     // ========================================
@@ -346,7 +349,7 @@ class TransactionRepositoryTest {
         assertEquals(1, deleted)
         val remaining = repository.getAllTransactions(2L).first()
         assertEquals(1, remaining.size)
-        assertEquals("P2", remaining[0].transaction.description)
+        assertEquals("P2", remaining[0].description)
     }
 
     // ========================================
@@ -375,6 +378,7 @@ class TransactionRepositoryTest {
  *
  * This implementation provides an in-memory store that allows testing
  * without a real database or Room infrastructure.
+ * Uses TransactionMapper to convert db entities to domain models.
  */
 class FakeTransactionRepository : TransactionRepository {
 
@@ -386,7 +390,7 @@ class FakeTransactionRepository : TransactionRepository {
         transactionsFlow.value = transactions.values.toList()
     }
 
-    override fun getAllTransactions(profileId: Long): Flow<List<TransactionWithAccounts>> = MutableStateFlow(
+    override fun getAllTransactions(profileId: Long): Flow<List<Transaction>> = MutableStateFlow(
         transactions.values
             .filter { it.transaction.profileId == profileId }
             .sortedWith(
@@ -397,9 +401,9 @@ class FakeTransactionRepository : TransactionRepository {
                     { it.transaction.ledgerId }
                 )
             )
-    )
+    ).map { TransactionMapper.toDomainList(it) }
 
-    override fun getTransactionsFiltered(profileId: Long, accountName: String?): Flow<List<TransactionWithAccounts>> =
+    override fun getTransactionsFiltered(profileId: Long, accountName: String?): Flow<List<Transaction>> =
         MutableStateFlow(
             transactions.values
                 .filter { twa ->
@@ -418,13 +422,13 @@ class FakeTransactionRepository : TransactionRepository {
                         { it.transaction.ledgerId }
                     )
                 )
-        )
+        ).map { TransactionMapper.toDomainList(it) }
 
-    override fun getTransactionById(transactionId: Long): Flow<TransactionWithAccounts?> =
-        MutableStateFlow(transactions[transactionId])
+    override fun getTransactionById(transactionId: Long): Flow<Transaction?> =
+        MutableStateFlow(transactions[transactionId]).map { it?.let { TransactionMapper.toDomain(it) } }
 
-    override suspend fun getTransactionByIdSync(transactionId: Long): TransactionWithAccounts? =
-        transactions[transactionId]
+    override suspend fun getTransactionByIdSync(transactionId: Long): Transaction? =
+        transactions[transactionId]?.let { TransactionMapper.toDomain(it) }
 
     override suspend fun searchByDescription(term: String): List<TransactionDAO.DescriptionContainer> {
         val termUpper = term.uppercase()
@@ -445,23 +449,21 @@ class FakeTransactionRepository : TransactionRepository {
             .sortedWith(compareBy({ it.ordering }, { it.description?.uppercase() }))
     }
 
-    override suspend fun getFirstByDescription(description: String): TransactionWithAccounts? = transactions.values
+    override suspend fun getFirstByDescription(description: String): Transaction? = transactions.values
         .filter { it.transaction.description == description }
         .maxByOrNull {
             it.transaction.year * 10000 + it.transaction.month * 100 + it.transaction.day
-        }
+        }?.let { TransactionMapper.toDomain(it) }
 
-    override suspend fun getFirstByDescriptionHavingAccount(
-        description: String,
-        accountTerm: String
-    ): TransactionWithAccounts? = transactions.values
-        .filter { twa ->
-            twa.transaction.description == description &&
-                twa.accounts.any { it.accountName.contains(accountTerm, ignoreCase = true) }
-        }
-        .maxByOrNull {
-            it.transaction.year * 10000 + it.transaction.month * 100 + it.transaction.day
-        }
+    override suspend fun getFirstByDescriptionHavingAccount(description: String, accountTerm: String): Transaction? =
+        transactions.values
+            .filter { twa ->
+                twa.transaction.description == description &&
+                    twa.accounts.any { it.accountName.contains(accountTerm, ignoreCase = true) }
+            }
+            .maxByOrNull {
+                it.transaction.year * 10000 + it.transaction.month * 100 + it.transaction.day
+            }?.let { TransactionMapper.toDomain(it) }
 
     override suspend fun insertTransaction(transaction: TransactionWithAccounts) {
         if (transaction.transaction.id == 0L) {
@@ -475,12 +477,12 @@ class FakeTransactionRepository : TransactionRepository {
         insertTransaction(transaction)
     }
 
-    override suspend fun deleteTransaction(transaction: Transaction) {
+    override suspend fun deleteTransaction(transaction: DbTransaction) {
         transactions.remove(transaction.id)
         emitChanges()
     }
 
-    override suspend fun deleteTransactions(transactions: List<Transaction>) {
+    override suspend fun deleteTransactions(transactions: List<DbTransaction>) {
         transactions.forEach { this.transactions.remove(it.id) }
         emitChanges()
     }

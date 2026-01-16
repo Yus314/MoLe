@@ -482,10 +482,7 @@ class FakeTemplateRepository : TemplateRepository {
         return result
     }
 
-    override suspend fun saveTemplateWithAccounts(
-        header: TemplateHeader,
-        accounts: List<TemplateAccount>
-    ): Long {
+    override suspend fun saveTemplateWithAccounts(header: TemplateHeader, accounts: List<TemplateAccount>): Long {
         val isNew = header.id == 0L
         val savedId = if (isNew) {
             val id = nextTemplateId++

@@ -24,14 +24,17 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import net.ktnx.mobileledger.dao.TransactionDAO
+import net.ktnx.mobileledger.data.repository.mapper.TransactionMapper
 import net.ktnx.mobileledger.db.Profile
-import net.ktnx.mobileledger.db.Transaction
+import net.ktnx.mobileledger.db.Transaction as DbTransaction
 import net.ktnx.mobileledger.db.TransactionWithAccounts
+import net.ktnx.mobileledger.domain.model.Transaction
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -86,7 +89,7 @@ class ProfileSwitchingEdgeCaseTest {
         profileId: Long,
         description: String = "Test Transaction"
     ): TransactionWithAccounts {
-        val transaction = Transaction().apply {
+        val transaction = DbTransaction().apply {
             this.profileId = profileId
             this.description = description
             this.year = 2026
@@ -239,14 +242,15 @@ class ProfileSwitchingEdgeCaseTest {
         transactionRepository.insertTransaction(createTestTransaction(id1, "TX2 for P1"))
         transactionRepository.insertTransaction(createTestTransaction(id2, "TX1 for P2"))
 
-        // Verify isolation
+        // Verify isolation - check count and descriptions
         val p1Transactions = transactionRepository.getAllTransactions(id1).first()
         val p2Transactions = transactionRepository.getAllTransactions(id2).first()
 
         assertEquals(2, p1Transactions.size)
         assertEquals(1, p2Transactions.size)
-        assertTrue(p1Transactions.all { it.transaction.profileId == id1 })
-        assertTrue(p2Transactions.all { it.transaction.profileId == id2 })
+        // Verify by description since domain model doesn't expose profileId
+        assertTrue(p1Transactions.all { it.description.contains("P1") })
+        assertTrue(p2Transactions.all { it.description.contains("P2") })
     }
 
     @Test
@@ -368,28 +372,28 @@ class EdgeCaseFakeTransactionRepository : TransactionRepository {
     private val transactions = mutableMapOf<Long, TransactionWithAccounts>()
     private var nextId = 1L
 
-    override fun getAllTransactions(profileId: Long): Flow<List<TransactionWithAccounts>> =
+    override fun getAllTransactions(profileId: Long): Flow<List<Transaction>> =
         MutableStateFlow(transactions.values.filter { it.transaction.profileId == profileId }.toList())
+            .map { TransactionMapper.toDomainList(it) }
 
-    override fun getTransactionsFiltered(profileId: Long, accountName: String?): Flow<List<TransactionWithAccounts>> =
+    override fun getTransactionsFiltered(profileId: Long, accountName: String?): Flow<List<Transaction>> =
         MutableStateFlow(
             transactions.values.filter { it.transaction.profileId == profileId }.toList()
-        )
+        ).map { TransactionMapper.toDomainList(it) }
 
-    override fun getTransactionById(transactionId: Long): Flow<TransactionWithAccounts?> =
+    override fun getTransactionById(transactionId: Long): Flow<Transaction?> =
         MutableStateFlow(transactions[transactionId])
+            .map { it?.let { TransactionMapper.toDomain(it) } }
 
-    override suspend fun getTransactionByIdSync(transactionId: Long): TransactionWithAccounts? =
-        transactions[transactionId]
+    override suspend fun getTransactionByIdSync(transactionId: Long): Transaction? =
+        transactions[transactionId]?.let { TransactionMapper.toDomain(it) }
 
     override suspend fun searchByDescription(term: String): List<TransactionDAO.DescriptionContainer> = emptyList()
 
-    override suspend fun getFirstByDescription(description: String): TransactionWithAccounts? = null
+    override suspend fun getFirstByDescription(description: String): Transaction? = null
 
-    override suspend fun getFirstByDescriptionHavingAccount(
-        description: String,
-        accountTerm: String
-    ): TransactionWithAccounts? = null
+    override suspend fun getFirstByDescriptionHavingAccount(description: String, accountTerm: String): Transaction? =
+        null
 
     override suspend fun insertTransaction(transaction: TransactionWithAccounts) {
         if (transaction.transaction.id == 0L) {
@@ -402,11 +406,11 @@ class EdgeCaseFakeTransactionRepository : TransactionRepository {
         insertTransaction(transaction)
     }
 
-    override suspend fun deleteTransaction(transaction: Transaction) {
+    override suspend fun deleteTransaction(transaction: DbTransaction) {
         transactions.remove(transaction.id)
     }
 
-    override suspend fun deleteTransactions(transactions: List<Transaction>) {
+    override suspend fun deleteTransactions(transactions: List<DbTransaction>) {
         transactions.forEach { this.transactions.remove(it.id) }
     }
 

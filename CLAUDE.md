@@ -649,9 +649,9 @@ class MyViewModelTest {
 ```
 
 ## Recent Changes
+- 017-domain-model-layer: Added Kotlin 2.0.21 / JVM target 1.8 + Hilt 2.51.1, Jetpack Compose (composeBom 2024.12.01), Coroutines 1.9.0, Room 2.4.2
 - 016-viewmodel-responsibility-separation: Added Kotlin 2.0.21 / JVM target 1.8 + Hilt 2.51.1, Jetpack Compose (composeBom 2024.12.01), Coroutines 1.9.0, Room 2.4.2
 - 015-thread-wrapper-coroutines: Completed - Converted Thread wrappers to pure Coroutines. TransactionSenderImpl, ConfigBackupImpl, ViewModels now use viewModelScope.launch + delay() instead of Thread + Thread.sleep(). Removed GeneralBackgroundTasks, TaskCallback, AsyncResultCallback, BaseDAO async methods.
-- 014-async-pattern-unification: Added Kotlin 2.0.21 / JVM target 1.8 + Kotlin Coroutines 1.9.0, Hilt 2.51.1, Jetpack Compose (composeBom 2024.12.01)
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->
