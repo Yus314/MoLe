@@ -96,4 +96,21 @@ object AccountMapper {
             amounts = dbAmounts
         }
     }
+
+    /**
+     * 既存アカウントのUI状態（展開状態等）を保持した新しいAccountを返す
+     *
+     * 同期処理で使用。既存のアカウントが存在する場合、そのIDと展開状態を引き継ぐ。
+     *
+     * @param existing 既存のアカウント。null の場合は元のAccountをそのまま返す
+     * @return 既存のUI状態を反映した Account
+     */
+    fun Account.withStateFrom(existing: Account?): Account = if (existing != null) {
+        copy(
+            id = existing.id,
+            isExpanded = existing.isExpanded
+        )
+    } else {
+        this
+    }
 }

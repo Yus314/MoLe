@@ -237,4 +237,8 @@ class FakeOptionRepository : OptionRepository {
     override suspend fun deleteAllOptions() {
         options.clear()
     }
+
+    override suspend fun setLastSyncTimestamp(profileId: Long, timestamp: Long) {
+        insertOption(Option(profileId, Option.OPT_LAST_SCRAPE, timestamp.toString()))
+    }
 }

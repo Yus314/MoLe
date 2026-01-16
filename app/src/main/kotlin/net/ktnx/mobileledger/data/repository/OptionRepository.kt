@@ -74,4 +74,18 @@ interface OptionRepository {
      * Deletes all options (for backup/restore).
      */
     suspend fun deleteAllOptions()
+
+    // ========================================
+    // Convenience Operations
+    // ========================================
+
+    /**
+     * Sets the last sync timestamp for a profile.
+     *
+     * This is a convenience method that creates/updates the OPT_LAST_SCRAPE option.
+     *
+     * @param profileId The profile ID
+     * @param timestamp The timestamp in milliseconds
+     */
+    suspend fun setLastSyncTimestamp(profileId: Long, timestamp: Long)
 }

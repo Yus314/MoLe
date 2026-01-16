@@ -44,10 +44,9 @@ import logcat.logcat
 import net.ktnx.mobileledger.data.repository.AccountRepository
 import net.ktnx.mobileledger.data.repository.OptionRepository
 import net.ktnx.mobileledger.data.repository.TransactionRepository
-import net.ktnx.mobileledger.db.Account
-import net.ktnx.mobileledger.db.AccountWithAmounts
-import net.ktnx.mobileledger.db.Option
-import net.ktnx.mobileledger.db.TransactionWithAccounts
+import net.ktnx.mobileledger.data.repository.mapper.AccountMapper.withStateFrom
+import net.ktnx.mobileledger.data.repository.mapper.LegacyModelMapper.toDomain
+import net.ktnx.mobileledger.data.repository.mapper.LegacyModelMapper.toDomainTransactions
 import net.ktnx.mobileledger.di.IoDispatcher
 import net.ktnx.mobileledger.domain.model.Profile
 import net.ktnx.mobileledger.domain.model.SyncError
@@ -449,7 +448,12 @@ class TransactionSyncerImpl @Inject constructor(
 
     /**
      * アカウントと取引をデータベースに保存する
+     *
+     * LedgerAccount/LedgerTransaction を domain.model.* に変換し、
+     * Repository のドメインモデルメソッドを使用して保存する。
+     * これにより、domain層からdb層への直接依存を排除する。
      */
+    @Suppress("DEPRECATION") // LegacyModelMapper uses deprecated model classes
     private suspend fun saveAccountsAndTransactions(
         profile: Profile,
         accounts: List<LedgerAccount>,
@@ -458,36 +462,24 @@ class TransactionSyncerImpl @Inject constructor(
         val profileId = profile.id ?: throw IllegalStateException("Cannot sync unsaved profile")
 
         logcat { "Preparing account list" }
-        val list = ArrayList<AccountWithAmounts>()
-        for (acc in accounts) {
+        val domainAccounts = accounts.map { legacyAccount ->
             coroutineContext.ensureActive()
-            val a = acc.toDBOWithAmounts()
-            val existing: Account? = accountRepository.getByNameSync(profileId, acc.name)
-            if (existing != null) {
-                a.account.expanded = existing.expanded
-                a.account.amountsExpanded = existing.amountsExpanded
-                a.account.id = existing.id
-            }
-            list.add(a)
+            val domainAccount = legacyAccount.toDomain()
+            // Preserve existing UI state if account exists
+            val existing = accountRepository.getByNameWithAmountsSync(profileId, legacyAccount.name)
+            domainAccount.withStateFrom(existing)
         }
         logcat { "Account list prepared. Storing" }
-        accountRepository.storeAccounts(list, profileId)
+        accountRepository.storeAccountsAsDomain(domainAccounts, profileId)
         logcat { "Account list stored" }
 
         logcat { "Preparing transaction list" }
-        val tranList = ArrayList<TransactionWithAccounts>()
-        for (tr in transactions) {
-            coroutineContext.ensureActive()
-            tranList.add(tr.toDBO())
-        }
-
+        val domainTransactions = transactions.toDomainTransactions()
         logcat { "Storing transaction list" }
-        transactionRepository.storeTransactions(tranList, profileId)
+        transactionRepository.storeTransactionsAsDomain(domainTransactions, profileId)
         logcat { "Transactions stored" }
 
-        optionRepository.insertOption(
-            Option(profileId, Option.OPT_LAST_SCRAPE, Date().time.toString())
-        )
+        optionRepository.setLastSyncTimestamp(profileId, Date().time)
     }
 
     private fun ensureAccountExists(

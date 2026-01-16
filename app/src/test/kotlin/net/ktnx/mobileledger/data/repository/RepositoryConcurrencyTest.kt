@@ -433,6 +433,17 @@ class ConcurrentFakeTransactionRepository : TransactionRepository {
             }
         }
 
+    override suspend fun storeTransactionsAsDomain(transactions: List<Transaction>, profileId: Long): Unit =
+        synchronized(lock) {
+            transactions.forEach { tx ->
+                val entity = TransactionMapper.toEntity(tx, profileId)
+                if (entity.transaction.id == 0L) {
+                    entity.transaction.id = idCounter.getAndIncrement().toLong()
+                }
+                this.transactions[entity.transaction.id] = entity
+            }
+        }
+
     override suspend fun deleteAllForProfile(profileId: Long): Int = synchronized(lock) {
         val toRemove = transactions.values.filter { it.transaction.profileId == profileId }
         toRemove.forEach { transactions.remove(it.transaction.id) }

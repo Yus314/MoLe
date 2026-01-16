@@ -247,6 +247,25 @@ class TransactionRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun storeTransactionsAsDomain(transactions: List<Transaction>, profileId: Long) {
+        withContext(Dispatchers.IO) {
+            val generation = transactionDAO.getGenerationSync(profileId) + 1
+
+            for (domainTransaction in transactions) {
+                val entity = TransactionMapper.toEntity(domainTransaction, profileId)
+                entity.transaction.generation = generation
+                storeTransactionInternal(entity)
+            }
+
+            logcat { "Purging old transactions" }
+            var removed = transactionDAO.purgeOldTransactionsSync(profileId, generation)
+            logcat { "Purged $removed transactions" }
+
+            removed = transactionDAO.purgeOldTransactionAccountsSync(profileId, generation)
+            logcat { "Purged $removed transaction accounts" }
+        }
+    }
+
     override suspend fun deleteAllForProfile(profileId: Long): Int = withContext(Dispatchers.IO) {
         transactionDAO.deleteAllSync(profileId)
     }

@@ -27,6 +27,7 @@ import kotlinx.coroutines.withContext
 import net.ktnx.mobileledger.dao.AccountDAO
 import net.ktnx.mobileledger.dao.AccountValueDAO
 import net.ktnx.mobileledger.data.repository.mapper.AccountMapper.toDomain
+import net.ktnx.mobileledger.data.repository.mapper.AccountMapper.toEntity
 import net.ktnx.mobileledger.db.Account as DbAccount
 import net.ktnx.mobileledger.db.AccountWithAmounts
 import net.ktnx.mobileledger.domain.model.Account
@@ -78,6 +79,11 @@ class AccountRepositoryImpl @Inject constructor(
     override fun getByNameWithAmounts(profileId: Long, accountName: String): Flow<Account?> =
         accountDAO.getByNameWithAmounts(profileId, accountName).asFlow()
             .map { it?.toDomain() }
+
+    override suspend fun getByNameWithAmountsSync(profileId: Long, accountName: String): Account? =
+        withContext(Dispatchers.IO) {
+            accountDAO.getByNameWithAmountsSync(profileId, accountName)?.toDomain()
+        }
 
     // ========================================
     // Search Operations
@@ -156,6 +162,35 @@ class AccountRepositoryImpl @Inject constructor(
                 for (value in rec.amounts) {
                     value.accountId = account.id
                     value.generation = account.generation
+                    value.id = accountValueDAO.insertSync(value)
+                }
+            }
+            accountDAO.purgeOldAccountsSync(profileId, generation)
+            accountDAO.purgeOldAccountValuesSync(profileId, generation)
+        }
+    }
+
+    override suspend fun storeAccountsAsDomain(accounts: List<Account>, profileId: Long) {
+        withContext(Dispatchers.IO) {
+            val generation = accountDAO.getGenerationSync(profileId) + 1
+
+            for (domainAccount in accounts) {
+                val entity: AccountWithAmounts = domainAccount.toEntity(profileId)
+                entity.account.generation = generation
+
+                // Check for existing account to preserve amountsExpanded (not in domain model)
+                val existing = accountDAO.getByNameSync(profileId, domainAccount.name)
+                if (existing != null) {
+                    entity.account.amountsExpanded = existing.amountsExpanded
+                }
+
+                // Insert account
+                entity.account.id = accountDAO.insertSync(entity.account)
+
+                // Insert amounts
+                for (value in entity.amounts.toList()) {
+                    value.accountId = entity.account.id
+                    value.generation = generation
                     value.id = accountValueDAO.insertSync(value)
                 }
             }

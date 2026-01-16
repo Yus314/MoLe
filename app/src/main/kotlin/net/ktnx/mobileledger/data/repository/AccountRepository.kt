@@ -112,6 +112,15 @@ interface AccountRepository {
      */
     fun getByNameWithAmounts(profileId: Long, accountName: String): Flow<Account?>
 
+    /**
+     * Get an account by name with its amounts synchronously.
+     *
+     * @param profileId The profile ID
+     * @param accountName The account name
+     * @return The account with amounts or null if not found
+     */
+    suspend fun getByNameWithAmountsSync(profileId: Long, accountName: String): Account?
+
     // ========================================
     // Search Operations
     // ========================================
@@ -205,6 +214,17 @@ interface AccountRepository {
      * @param profileId The profile ID
      */
     suspend fun storeAccounts(accounts: List<AccountWithAmounts>, profileId: Long)
+
+    /**
+     * Store a batch of accounts using domain models.
+     *
+     * This operation handles generation tracking, db entity conversion, and purges old data.
+     * Used by sync operations that work with domain models.
+     *
+     * @param accounts The domain model accounts to store
+     * @param profileId The profile ID
+     */
+    suspend fun storeAccountsAsDomain(accounts: List<Account>, profileId: Long)
 
     /**
      * Get the count of accounts for a profile.

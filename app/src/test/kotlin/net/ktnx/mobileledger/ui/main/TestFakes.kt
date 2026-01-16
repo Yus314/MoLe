@@ -246,6 +246,15 @@ class FakeTransactionRepositoryForViewModel : TransactionRepository {
         }
     }
 
+    override suspend fun storeTransactionsAsDomain(transactions: List<Transaction>, profileId: Long) {
+        transactions.forEach { tx ->
+            val id = tx.id ?: nextId++
+            val txWithId = if (tx.id == null) tx.copy(id = id) else tx
+            domainTransactions[id] = txWithId
+            profileMap[id] = profileId
+        }
+    }
+
     override suspend fun deleteAllForProfile(profileId: Long): Int {
         val toRemove = domainTransactions.values.filter { profileMap[it.id] == profileId }
         toRemove.forEach {
@@ -332,6 +341,9 @@ class FakeAccountRepositoryForViewModel : AccountRepository {
     override fun getByNameWithAmounts(profileId: Long, accountName: String): Flow<Account?> =
         MutableStateFlow(domainAccounts[profileId]?.find { it.name == accountName })
 
+    override suspend fun getByNameWithAmountsSync(profileId: Long, accountName: String): Account? =
+        domainAccounts[profileId]?.find { it.name == accountName }
+
     override fun searchAccountNames(profileId: Long, term: String): Flow<List<String>> = MutableStateFlow(
         accountNames[profileId]?.filter { it.contains(term, ignoreCase = true) } ?: emptyList()
     )
@@ -357,6 +369,11 @@ class FakeAccountRepositoryForViewModel : AccountRepository {
     override suspend fun deleteAccount(account: DbAccount) {}
 
     override suspend fun storeAccounts(accounts: List<AccountWithAmounts>, profileId: Long) {}
+
+    override suspend fun storeAccountsAsDomain(accounts: List<Account>, profileId: Long) {
+        domainAccounts[profileId] = accounts.toMutableList()
+        accountNames[profileId] = accounts.map { it.name }.toMutableList()
+    }
 
     override suspend fun getCountForProfile(profileId: Long): Int = domainAccounts[profileId]?.size ?: 0
 
@@ -397,6 +414,10 @@ class FakeOptionRepositoryForViewModel : OptionRepository {
 
     override suspend fun deleteAllOptions() {
         options.clear()
+    }
+
+    override suspend fun setLastSyncTimestamp(profileId: Long, timestamp: Long) {
+        insertOption(Option(profileId, Option.OPT_LAST_SCRAPE, timestamp.toString()))
     }
 }
 

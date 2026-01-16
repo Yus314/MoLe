@@ -178,6 +178,15 @@ interface TransactionRepository {
     suspend fun storeTransactions(transactions: List<TransactionWithAccounts>, profileId: Long)
 
     /**
+     * Store multiple transactions from sync using domain models.
+     * This will purge old transactions not in the current generation.
+     *
+     * @param transactions The domain model transactions to store.
+     * @param profileId The profile ID for the transactions.
+     */
+    suspend fun storeTransactionsAsDomain(transactions: List<Transaction>, profileId: Long)
+
+    /**
      * Delete all transactions for a profile.
      *
      * @param profileId The profile ID.

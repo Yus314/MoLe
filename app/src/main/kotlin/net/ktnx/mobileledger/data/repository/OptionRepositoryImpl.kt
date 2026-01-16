@@ -81,4 +81,14 @@ class OptionRepositoryImpl @Inject constructor(
             optionDAO.deleteAllSync()
         }
     }
+
+    // ========================================
+    // Convenience Operations
+    // ========================================
+
+    override suspend fun setLastSyncTimestamp(profileId: Long, timestamp: Long) {
+        withContext(Dispatchers.IO) {
+            optionDAO.insertSync(Option(profileId, Option.OPT_LAST_SCRAPE, timestamp.toString()))
+        }
+    }
 }

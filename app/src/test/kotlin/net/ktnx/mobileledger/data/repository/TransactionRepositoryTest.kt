@@ -505,6 +505,13 @@ class FakeTransactionRepository : TransactionRepository {
         }
     }
 
+    override suspend fun storeTransactionsAsDomain(transactions: List<Transaction>, profileId: Long) {
+        transactions.forEach { tx ->
+            val entity = TransactionMapper.toEntity(tx, profileId)
+            insertTransaction(entity)
+        }
+    }
+
     override suspend fun deleteAllForProfile(profileId: Long): Int {
         val toRemove = transactions.values.filter { it.transaction.profileId == profileId }
         toRemove.forEach { transactions.remove(it.transaction.id) }

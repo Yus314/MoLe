@@ -548,6 +548,14 @@ class FakeAccountRepositoryForAccountSummary : AccountRepository {
         domainAccounts.clear()
         accountNames.clear()
     }
+
+    override suspend fun getByNameWithAmountsSync(profileId: Long, accountName: String): Account? =
+        domainAccounts[profileId]?.find { it.name == accountName }
+
+    override suspend fun storeAccountsAsDomain(accounts: List<Account>, profileId: Long) {
+        domainAccounts[profileId] = accounts.toMutableList()
+        accountNames[profileId] = accounts.map { it.name }.toMutableList()
+    }
 }
 
 /**

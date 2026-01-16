@@ -838,6 +838,37 @@ class FakeTransactionRepositoryForTransactionList : net.ktnx.mobileledger.data.r
 
     override suspend fun getMaxLedgerId(profileId: Long) = transactions.filter { it.transaction.profileId == profileId }
         .maxOfOrNull { it.transaction.ledgerId }
+
+    override suspend fun storeTransactionsAsDomain(transactions: List<DomainTransaction>, profileId: Long) {
+        // Convert domain transactions to db entities for storage
+        transactions.forEach { tx ->
+            val dbTransaction = DbTransaction().apply {
+                val maxId = this@FakeTransactionRepositoryForTransactionList.transactions
+                    .maxOfOrNull { it.transaction.id } ?: 0L
+                id = tx.id ?: (maxId + 1)
+                this.profileId = profileId
+                ledgerId = tx.ledgerId
+                year = tx.date.year
+                month = tx.date.month
+                day = tx.date.day
+                description = tx.description
+                comment = tx.comment
+            }
+            val accounts = tx.lines.map { line ->
+                TransactionAccount().apply {
+                    id = line.id ?: 0L
+                    accountName = line.accountName
+                    amount = line.amount ?: 0f
+                    currency = line.currency
+                    comment = line.comment
+                }
+            }
+            val twa = TransactionWithAccounts()
+            twa.transaction = dbTransaction
+            twa.accounts = accounts
+            this.transactions.add(twa)
+        }
+    }
 }
 
 /**
@@ -899,5 +930,19 @@ class FakeAccountRepositoryForTransactionList : net.ktnx.mobileledger.data.repos
 
     override suspend fun deleteAllAccounts() {
         accountNames.clear()
+    }
+
+    override suspend fun getByNameWithAmountsSync(
+        profileId: Long,
+        accountName: String
+    ): net.ktnx.mobileledger.domain.model.Account? = null
+
+    override suspend fun storeAccountsAsDomain(
+        accounts: List<net.ktnx.mobileledger.domain.model.Account>,
+        profileId: Long
+    ) {
+        accounts.forEach { account ->
+            accountNames.getOrPut(profileId) { mutableListOf() }.add(account.name)
+        }
     }
 }

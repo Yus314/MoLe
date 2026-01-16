@@ -456,6 +456,11 @@ class FakeAccountRepository : AccountRepository {
         return MutableStateFlow(account?.let { toDomain(it) })
     }
 
+    override suspend fun getByNameWithAmountsSync(profileId: Long, accountName: String): Account? {
+        val account = dbAccounts.values.find { it.profileId == profileId && it.name == accountName }
+        return account?.let { toDomain(it) }
+    }
+
     override fun searchAccountNames(profileId: Long, term: String): Flow<List<String>> =
         MutableStateFlow(searchAccountNamesInternal(profileId, term))
 
@@ -519,6 +524,37 @@ class FakeAccountRepository : AccountRepository {
         accounts.forEach { accountWithAmounts ->
             accountWithAmounts.account.profileId = profileId
             insertAccountWithAmounts(accountWithAmounts)
+        }
+    }
+
+    override suspend fun storeAccountsAsDomain(accounts: List<Account>, profileId: Long) {
+        // Remove existing accounts for this profile
+        val toRemove = this.dbAccounts.values.filter { it.profileId == profileId }.map { it.id }
+        toRemove.forEach {
+            this.dbAccounts.remove(it)
+            this.accountAmounts.remove(it)
+        }
+
+        // Add new accounts from domain models
+        accounts.forEach { account ->
+            val id = account.id ?: nextId++
+            val dbAccount = DbAccount().apply {
+                this.id = id
+                this.profileId = profileId
+                this.name = account.name
+                this.nameUpper = account.name.uppercase()
+                this.parentName = account.parentName
+                this.level = account.level
+                this.expanded = account.isExpanded
+            }
+            dbAccounts[id] = dbAccount
+            accountAmounts[id] = account.amounts.map { amt ->
+                AccountValue().apply {
+                    this.accountId = id
+                    this.currency = amt.currency
+                    this.value = amt.amount
+                }
+            }.toMutableList()
         }
     }
 

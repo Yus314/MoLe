@@ -102,6 +102,10 @@ abstract class AccountDAO : BaseDAO<Account>() {
     @Query("SELECT * FROM accounts WHERE profile_id = :profileId AND name = :accountName")
     abstract fun getByNameWithAmounts(profileId: Long, accountName: String): LiveData<AccountWithAmounts>
 
+    @Transaction
+    @Query("SELECT * FROM accounts WHERE profile_id = :profileId AND name = :accountName")
+    abstract fun getByNameWithAmountsSync(profileId: Long, accountName: String): AccountWithAmounts?
+
     @Query(
         "SELECT name, CASE WHEN name_upper LIKE :term||'%' THEN 1 " +
             "               WHEN name_upper LIKE '%:'||:term||'%' THEN 2 " +
