@@ -19,7 +19,6 @@ package net.ktnx.mobileledger.json.common
 
 import net.ktnx.mobileledger.di.CurrencyFormatterEntryPoint
 import net.ktnx.mobileledger.model.Currency
-import net.ktnx.mobileledger.model.LedgerTransactionAccount
 
 /**
  * Utility object providing common functionality for ParsedPosting implementations.
@@ -45,22 +44,4 @@ object PostingHelper {
      */
     @JvmStatic
     fun getCommoditySpaced(): Boolean = CurrencyFormatterEntryPoint.getOrNull()?.currencyGap?.value ?: false
-
-    /**
-     * Common conversion from LedgerTransactionAccount to posting fields.
-     * Sets paccount and pcomment on the provided posting fields.
-     *
-     * @param acc The ledger transaction account to convert from
-     * @param setAccount Function to set the account name
-     * @param setComment Function to set the comment
-     */
-    @JvmStatic
-    fun populateFromLedgerAccount(
-        acc: LedgerTransactionAccount,
-        setAccount: (String) -> Unit,
-        setComment: (String) -> Unit
-    ) {
-        setAccount(acc.accountName)
-        setComment(acc.comment ?: "")
-    }
 }

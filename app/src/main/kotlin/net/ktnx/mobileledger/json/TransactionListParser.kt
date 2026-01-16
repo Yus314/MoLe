@@ -21,16 +21,8 @@ import java.io.IOException
 import java.io.InputStream
 import java.text.ParseException
 import net.ktnx.mobileledger.domain.model.Transaction
-import net.ktnx.mobileledger.model.LedgerTransaction
 
 abstract class TransactionListParser {
-    @Deprecated(
-        "Use nextTransactionDomain() instead",
-        ReplaceWith("nextTransactionDomain()")
-    )
-    @Throws(ParseException::class)
-    abstract fun nextTransaction(): LedgerTransaction?
-
     @Throws(ParseException::class)
     abstract fun nextTransactionDomain(): Transaction?
 

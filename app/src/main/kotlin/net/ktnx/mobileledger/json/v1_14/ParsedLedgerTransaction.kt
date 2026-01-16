@@ -21,10 +21,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import java.text.ParseException
 import net.ktnx.mobileledger.domain.model.Transaction
 import net.ktnx.mobileledger.json.ParsedLedgerTransaction as IParsedLedgerTransaction
-import net.ktnx.mobileledger.model.LedgerTransaction
 import net.ktnx.mobileledger.utils.Globals
 import net.ktnx.mobileledger.utils.Misc
-import net.ktnx.mobileledger.utils.SimpleDate
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 open class ParsedLedgerTransaction : IParsedLedgerTransaction {
@@ -53,18 +51,6 @@ open class ParsedLedgerTransaction : IParsedLedgerTransaction {
     }
 
     @Throws(ParseException::class)
-    override fun asLedgerTransaction(): LedgerTransaction {
-        val date = tdate?.let { Globals.parseIsoDate(it) }
-        val tr = LedgerTransaction(tindex.toLong(), date, tdescription)
-        tr.comment = Misc.trim(Misc.emptyIsNull(tcomment))
-
-        tpostings?.forEach { p ->
-            tr.addAccount(p.asLedgerAccount())
-        }
-        return tr
-    }
-
-    @Throws(ParseException::class)
     override fun toDomain(): Transaction {
         val date = tdate?.let { Globals.parseIsoDate(it) }
             ?: throw ParseException("Transaction date is required", 0)
@@ -80,20 +66,6 @@ open class ParsedLedgerTransaction : IParsedLedgerTransaction {
     }
 
     companion object {
-        @JvmStatic
-        fun fromLedgerTransaction(tr: LedgerTransaction): ParsedLedgerTransaction = ParsedLedgerTransaction().apply {
-            tcomment = Misc.nullIsEmpty(tr.comment)
-            tprecedingcomment = ""
-            tpostings = tr.accounts
-                .filter { it.accountName.isNotEmpty() }
-                .map { ParsedPosting.fromLedgerAccount(it) }
-                .toMutableList()
-            tdate = Globals.formatIsoDate(tr.getDateIfAny() ?: SimpleDate.today())
-            tdate2 = null
-            tindex = 1
-            tdescription = tr.description
-        }
-
         @JvmStatic
         fun fromDomain(tr: Transaction): ParsedLedgerTransaction = ParsedLedgerTransaction().apply {
             tcomment = Misc.nullIsEmpty(tr.comment)

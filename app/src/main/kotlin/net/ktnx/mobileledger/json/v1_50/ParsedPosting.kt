@@ -21,8 +21,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import net.ktnx.mobileledger.domain.model.TransactionLine
 import net.ktnx.mobileledger.json.ParsedPosting as BasePosting
 import net.ktnx.mobileledger.json.common.StyleConfigurer
-import net.ktnx.mobileledger.model.AmountStyle
-import net.ktnx.mobileledger.model.LedgerTransactionAccount
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 class ParsedPosting : BasePosting() {
@@ -41,24 +39,6 @@ class ParsedPosting : BasePosting() {
     var poriginal: String? = null
     var ptransaction_: String = "1"
 
-    fun asLedgerAccount(): LedgerTransactionAccount {
-        val amt = pamount?.get(0)
-        val parsedStyle = amt?.astyle
-
-        // Preserve style information from hledger JSON
-        val amountStyle = parsedStyle?.let {
-            AmountStyle.fromParsedStyle(it, amt.acommodity)
-        }
-
-        return LedgerTransactionAccount(
-            paccount ?: "",
-            amt?.aquantity?.asFloat() ?: 0f,
-            amt?.acommodity,
-            pcomment,
-            amountStyle
-        )
-    }
-
     fun toDomain(): TransactionLine {
         val amt = pamount?.firstOrNull()
         return TransactionLine(
@@ -71,27 +51,6 @@ class ParsedPosting : BasePosting() {
     }
 
     companion object {
-        @JvmStatic
-        fun fromLedgerAccount(acc: LedgerTransactionAccount): ParsedPosting = ParsedPosting().apply {
-            paccount = acc.accountName
-            pcomment = acc.comment ?: ""
-            pamount = mutableListOf(
-                ParsedAmount().apply {
-                    acommodity = acc.currency ?: ""
-                    aismultiplier = false
-                    aquantity = ParsedQuantity().apply {
-                        decimalPlaces = 2
-                        decimalMantissa = Math.round(acc.amount * 100).toLong()
-                    }
-                    astyle = ParsedStyle().apply {
-                        ascommodityside = getCommoditySide()
-                        isAscommodityspaced = getCommoditySpaced()
-                        StyleConfigurer.DecimalMarkString.configureStyle(this, 2)
-                    }
-                }
-            )
-        }
-
         @JvmStatic
         fun fromDomain(line: TransactionLine): ParsedPosting = ParsedPosting().apply {
             paccount = line.accountName

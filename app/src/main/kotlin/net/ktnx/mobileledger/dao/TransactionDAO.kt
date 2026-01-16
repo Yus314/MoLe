@@ -32,7 +32,7 @@ import net.ktnx.mobileledger.db.AccountValue
 import net.ktnx.mobileledger.db.DB
 import net.ktnx.mobileledger.db.Transaction
 import net.ktnx.mobileledger.db.TransactionWithAccounts
-import net.ktnx.mobileledger.model.LedgerAccount
+import net.ktnx.mobileledger.utils.AccountNameUtils
 import net.ktnx.mobileledger.utils.Misc
 
 @Dao
@@ -256,8 +256,8 @@ abstract class TransactionDAO : BaseDAO<Transaction>() {
                     acc.profileId = profileId
                     acc.name = accName
                     acc.nameUpper = accName.uppercase()
-                    acc.parentName = LedgerAccount.extractParentName(accName)
-                    acc.level = LedgerAccount.determineLevel(acc.name)
+                    acc.parentName = AccountNameUtils.extractParentName(accName)
+                    acc.level = AccountNameUtils.determineLevel(acc.name)
                     acc.generation = trAcc.generation
 
                     acc.id = accDao.insertSync(acc)
@@ -276,7 +276,7 @@ abstract class TransactionDAO : BaseDAO<Transaction>() {
                     accValDao.updateSync(accVal)
                 }
 
-                accName = LedgerAccount.extractParentName(accName)
+                accName = AccountNameUtils.extractParentName(accName)
             }
         }
     }
