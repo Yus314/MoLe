@@ -18,6 +18,7 @@
 package net.ktnx.mobileledger.json.v1_19_1
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import net.ktnx.mobileledger.domain.model.TransactionLine
 import net.ktnx.mobileledger.json.ParsedPosting as BasePosting
 import net.ktnx.mobileledger.json.common.StyleConfigurer
 import net.ktnx.mobileledger.model.LedgerTransactionAccount
@@ -61,6 +62,27 @@ class ParsedPosting : BasePosting() {
                     aquantity = ParsedQuantity().apply {
                         decimalPlaces = 2
                         decimalMantissa = Math.round(acc.amount * 100).toLong()
+                    }
+                    astyle = ParsedStyle().apply {
+                        ascommodityside = getCommoditySide()
+                        isAscommodityspaced = getCommoditySpaced()
+                        StyleConfigurer.DecimalPointCharWithParsedPrecision.configureStyle(this, 2)
+                    }
+                }
+            )
+        }
+
+        @JvmStatic
+        fun fromDomain(line: TransactionLine): ParsedPosting = ParsedPosting().apply {
+            paccount = line.accountName
+            pcomment = line.comment ?: ""
+            pamount = mutableListOf(
+                ParsedAmount().apply {
+                    acommodity = line.currency
+                    aismultiplier = false
+                    aquantity = ParsedQuantity().apply {
+                        decimalPlaces = 2
+                        decimalMantissa = Math.round((line.amount ?: 0f) * 100).toLong()
                     }
                     astyle = ParsedStyle().apply {
                         ascommodityside = getCommoditySide()

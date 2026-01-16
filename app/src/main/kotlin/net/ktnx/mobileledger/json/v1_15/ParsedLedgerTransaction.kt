@@ -19,6 +19,7 @@ package net.ktnx.mobileledger.json.v1_15
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import java.text.ParseException
+import net.ktnx.mobileledger.domain.model.Transaction
 import net.ktnx.mobileledger.json.ParsedLedgerTransaction as IParsedLedgerTransaction
 import net.ktnx.mobileledger.model.LedgerTransaction
 import net.ktnx.mobileledger.utils.Globals
@@ -75,6 +76,20 @@ class ParsedLedgerTransaction : IParsedLedgerTransaction {
                 .map { ParsedPosting.fromLedgerAccount(it) }
                 .toMutableList()
             tdate = Globals.formatIsoDate(tr.getDateIfAny() ?: SimpleDate.today())
+            tdate2 = null
+            tindex = 1
+            tdescription = tr.description
+        }
+
+        @JvmStatic
+        fun fromDomain(tr: Transaction): ParsedLedgerTransaction = ParsedLedgerTransaction().apply {
+            tcomment = Misc.nullIsEmpty(tr.comment)
+            tprecedingcomment = ""
+            tpostings = tr.lines
+                .filter { it.accountName.isNotEmpty() }
+                .map { ParsedPosting.fromDomain(it) }
+                .toMutableList()
+            tdate = Globals.formatIsoDate(tr.date)
             tdate2 = null
             tindex = 1
             tdescription = tr.description

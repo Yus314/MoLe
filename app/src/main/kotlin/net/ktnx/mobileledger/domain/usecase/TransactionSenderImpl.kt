@@ -69,10 +69,8 @@ class TransactionSenderImpl @Inject constructor(
     private var session: String? = null
 
     override suspend fun send(profile: Profile, transaction: Transaction, simulate: Boolean): Result<Unit> {
-        // Convert domain model to LedgerTransaction and delegate to internal implementation
         val profileId = profile.id ?: return Result.failure(IllegalStateException("Cannot send from unsaved profile"))
-        val legacyTransaction = toLedgerTransaction(transaction, profileId)
-        return sendInternal(profile, legacyTransaction, simulate)
+        return sendInternalWithDomain(profile, transaction, profileId, simulate)
     }
 
     @Deprecated("Use send(Profile, Transaction, Boolean) instead")
@@ -80,7 +78,7 @@ class TransactionSenderImpl @Inject constructor(
         sendInternal(profile, transaction, simulate)
 
     /**
-     * Convert domain model Transaction to LedgerTransaction for server communication.
+     * Convert domain model Transaction to LedgerTransaction for legacy HTML form submission.
      */
     private fun toLedgerTransaction(transaction: Transaction, profileId: Long): LedgerTransaction {
         val ledgerTx = LedgerTransaction(transaction.ledgerId, profileId)
@@ -100,6 +98,87 @@ class TransactionSenderImpl @Inject constructor(
         return ledgerTx
     }
 
+    /**
+     * Send transaction using domain models directly.
+     * Uses JSON API with domain model serialization, falls back to HTML form with LedgerTransaction.
+     */
+    private suspend fun sendInternalWithDomain(
+        profile: Profile,
+        transaction: Transaction,
+        profileId: Long,
+        simulate: Boolean
+    ): Result<Unit> = withContext(ioDispatcher) {
+        try {
+            coroutineContext.ensureActive()
+
+            val profileApiVersion = API.valueOf(profile.apiVersion)
+            when (profileApiVersion) {
+                API.auto -> {
+                    var sendOK = false
+                    for (ver in API.allVersions) {
+                        coroutineContext.ensureActive()
+                        logcat { "Trying version $ver" }
+                        try {
+                            sendOKViaAPIWithDomain(profile, transaction, ver, simulate)
+                            sendOK = true
+                            logcat { "Version $ver request succeeded" }
+                            break
+                        } catch (e: ApiNotSupportedException) {
+                            logcat { "Version $ver not supported: ${e.message}" }
+                        }
+                    }
+
+                    if (!sendOK) {
+                        logcat { "Trying HTML form emulation" }
+                        // Fall back to LedgerTransaction for HTML form
+                        val legacyTx = toLedgerTransaction(transaction, profileId)
+                        legacySendOkWithRetry(profile, legacyTx, simulate)
+                    }
+                }
+
+                API.html -> {
+                    // HTML form requires LedgerTransaction
+                    val legacyTx = toLedgerTransaction(transaction, profileId)
+                    legacySendOkWithRetry(profile, legacyTx, simulate)
+                }
+
+                API.v1_14, API.v1_15, API.v1_19_1, API.v1_23, API.v1_32, API.v1_40, API.v1_50 -> {
+                    sendOKViaAPIWithDomain(profile, transaction, profileApiVersion, simulate)
+                }
+
+                else -> error("Unexpected API version: $profileApiVersion")
+            }
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            logcat(LogPriority.WARN) { "Error sending transaction: ${e.asLog()}" }
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Send transaction via JSON API using domain model directly.
+     */
+    private suspend fun sendOKViaAPIWithDomain(
+        profile: Profile,
+        transaction: Transaction,
+        apiVersion: API,
+        simulate: Boolean
+    ) {
+        coroutineContext.ensureActive()
+        val http = NetworkUtil.prepareConnection(profile, "add")
+        http.requestMethod = "PUT"
+        http.setRequestProperty("Content-Type", "application/json")
+        http.setRequestProperty("Accept", "*/*")
+
+        val gateway = Gateway.forApiVersion(apiVersion)
+        val body = gateway.transactionSaveRequest(transaction)
+
+        logcat { "Sending using API $apiVersion" }
+        sendRequest(http, body, simulate)
+    }
+
+    @Deprecated("Use sendInternalWithDomain instead")
     private suspend fun sendInternal(
         profile: Profile,
         transaction: LedgerTransaction,

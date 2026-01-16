@@ -18,11 +18,19 @@
 package net.ktnx.mobileledger.json
 
 import com.fasterxml.jackson.core.JsonProcessingException
+import net.ktnx.mobileledger.domain.model.Transaction
 import net.ktnx.mobileledger.model.LedgerTransaction
 
 abstract class Gateway {
     @Throws(JsonProcessingException::class)
     abstract fun transactionSaveRequest(ledgerTransaction: LedgerTransaction): String
+
+    /**
+     * Create JSON save request from domain Transaction model.
+     * Subclasses should override this to provide version-specific serialization.
+     */
+    @Throws(JsonProcessingException::class)
+    abstract fun transactionSaveRequest(transaction: Transaction): String
 
     companion object {
         @JvmStatic
