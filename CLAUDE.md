@@ -19,6 +19,7 @@ Auto-generated from all feature plans. Last updated: 2026-01-15
 - Kotlin 2.0.21 / JVM target 1.8 + Kotlin Coroutines 1.9.0, Hilt 2.51.1, Jetpack Compose (composeBom 2024.12.01) (014-async-pattern-unification)
 - Room Database 2.4.2 (SQLite) (014-async-pattern-unification)
 - Pure Coroutines for async operations, TestDispatcher for testing (015-thread-wrapper-coroutines)
+- Kotlin 2.0.21 / JVM target 1.8 + Hilt 2.51.1, Jetpack Compose (composeBom 2024.12.01), Coroutines 1.9.0, Room 2.4.2 (016-viewmodel-responsibility-separation)
 
 ## Project Structure
 
@@ -648,9 +649,9 @@ class MyViewModelTest {
 ```
 
 ## Recent Changes
+- 016-viewmodel-responsibility-separation: Added Kotlin 2.0.21 / JVM target 1.8 + Hilt 2.51.1, Jetpack Compose (composeBom 2024.12.01), Coroutines 1.9.0, Room 2.4.2
 - 015-thread-wrapper-coroutines: Completed - Converted Thread wrappers to pure Coroutines. TransactionSenderImpl, ConfigBackupImpl, ViewModels now use viewModelScope.launch + delay() instead of Thread + Thread.sleep(). Removed GeneralBackgroundTasks, TaskCallback, AsyncResultCallback, BaseDAO async methods.
 - 014-async-pattern-unification: Added Kotlin 2.0.21 / JVM target 1.8 + Kotlin Coroutines 1.9.0, Hilt 2.51.1, Jetpack Compose (composeBom 2024.12.01)
-- 012-accumulator-testability: Added Kotlin 2.0.21 / JVM target 1.8 + Hilt 2.51.1, Jetpack Compose (composeBom 2024.12.01), Coroutines 1.9.0
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->

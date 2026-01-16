@@ -30,7 +30,6 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.yield
-import logcat.logcat
 import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.db.Profile
 import net.ktnx.mobileledger.domain.model.SyncException
@@ -189,7 +188,6 @@ class MainCoordinatorViewModel @Inject constructor(
     fun startSync(profile: Profile? = null) {
         val syncProfile = profile ?: profileRepository.currentProfile.value
         if (syncProfile == null) {
-            logcat { "No profile to sync" }
             return
         }
 

@@ -73,17 +73,21 @@ import kotlinx.coroutines.launch
 import net.ktnx.mobileledger.R
 import net.ktnx.mobileledger.utils.SimpleDate
 
+// Import specialized ViewModel states and events
+
 /**
  * Main screen composable with tab navigation and drawer.
  */
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
-    mainUiState: MainUiState,
+    coordinatorUiState: MainCoordinatorUiState,
+    profileSelectionUiState: ProfileSelectionUiState,
     accountSummaryUiState: AccountSummaryUiState,
     transactionListUiState: TransactionListUiState,
-    drawerOpen: Boolean, // T043: Drawer state from ViewModel
-    onMainEvent: (MainEvent) -> Unit,
+    drawerOpen: Boolean,
+    onCoordinatorEvent: (MainCoordinatorEvent) -> Unit,
+    onProfileSelectionEvent: (ProfileSelectionEvent) -> Unit,
     onAccountSummaryEvent: (AccountSummaryEvent) -> Unit,
     onTransactionListEvent: (TransactionListEvent) -> Unit,
     onNavigateToNewTransaction: () -> Unit,
@@ -107,18 +111,18 @@ fun MainScreen(
         }
     }
 
-    // T043: Sync Compose -> ViewModel drawer state (when user closes by tapping outside)
+    // Sync Compose -> ViewModel drawer state (when user closes by tapping outside)
     LaunchedEffect(drawerState) {
         snapshotFlow { drawerState.isClosed }
             .collect { isClosed ->
                 if (isClosed && currentDrawerOpen) {
-                    onMainEvent(MainEvent.CloseDrawer)
+                    onCoordinatorEvent(MainCoordinatorEvent.CloseDrawer)
                 }
             }
     }
 
     val pagerState = rememberPagerState(
-        initialPage = if (mainUiState.selectedTab == MainTab.Accounts) 0 else 1,
+        initialPage = if (coordinatorUiState.selectedTab == MainTab.Accounts) 0 else 1,
         pageCount = { 2 }
     )
 
@@ -128,22 +132,22 @@ fun MainScreen(
     var showDatePicker by remember { mutableStateOf(false) }
 
     // Sync pager state with UI state
-    LaunchedEffect(mainUiState.selectedTab) {
-        val targetPage = if (mainUiState.selectedTab == MainTab.Accounts) 0 else 1
+    LaunchedEffect(coordinatorUiState.selectedTab) {
+        val targetPage = if (coordinatorUiState.selectedTab == MainTab.Accounts) 0 else 1
         if (pagerState.currentPage != targetPage) {
             pagerState.animateScrollToPage(targetPage)
         }
     }
 
     // Keep reference to latest selectedTab for use in collect lambda
-    val currentSelectedTab by rememberUpdatedState(mainUiState.selectedTab)
+    val currentSelectedTab by rememberUpdatedState(coordinatorUiState.selectedTab)
 
     // Update UI state when pager changes
     LaunchedEffect(pagerState) {
         snapshotFlow { pagerState.currentPage }.collect { page ->
             val newTab = if (page == 0) MainTab.Accounts else MainTab.Transactions
             if (currentSelectedTab != newTab) {
-                onMainEvent(MainEvent.SelectTab(newTab))
+                onCoordinatorEvent(MainCoordinatorEvent.SelectTab(newTab))
             }
         }
     }
@@ -165,30 +169,30 @@ fun MainScreen(
         drawerState = drawerState,
         drawerContent = {
             NavigationDrawerContent(
-                profiles = mainUiState.profiles,
-                currentProfileId = mainUiState.currentProfileId,
+                profiles = profileSelectionUiState.profiles,
+                currentProfileId = profileSelectionUiState.currentProfileId,
                 onProfileSelected = { profileId ->
-                    onMainEvent(MainEvent.SelectProfile(profileId))
-                    // Drawer will be closed by ViewModel
+                    onProfileSelectionEvent(ProfileSelectionEvent.SelectProfile(profileId))
+                    onCoordinatorEvent(MainCoordinatorEvent.CloseDrawer)
                 },
                 onEditProfile = { profileId ->
                     onNavigateToProfileSettings(profileId)
-                    onMainEvent(MainEvent.CloseDrawer)
+                    onCoordinatorEvent(MainCoordinatorEvent.CloseDrawer)
                 },
                 onCreateNewProfile = {
                     onNavigateToProfileSettings(-1)
-                    onMainEvent(MainEvent.CloseDrawer)
+                    onCoordinatorEvent(MainCoordinatorEvent.CloseDrawer)
                 },
                 onNavigateToTemplates = {
                     onNavigateToTemplates()
-                    onMainEvent(MainEvent.CloseDrawer)
+                    onCoordinatorEvent(MainCoordinatorEvent.CloseDrawer)
                 },
                 onNavigateToBackups = {
                     onNavigateToBackups()
-                    onMainEvent(MainEvent.CloseDrawer)
+                    onCoordinatorEvent(MainCoordinatorEvent.CloseDrawer)
                 },
                 onProfilesReordered = { orderedProfiles ->
-                    onMainEvent(MainEvent.ReorderProfiles(orderedProfiles))
+                    onProfileSelectionEvent(ProfileSelectionEvent.ReorderProfiles(orderedProfiles))
                 },
                 modifier = Modifier.fillMaxWidth(0.85f)
             )
@@ -198,9 +202,15 @@ fun MainScreen(
             modifier = modifier,
             topBar = {
                 TopAppBar(
-                    title = { Text(mainUiState.currentProfileName.ifEmpty { stringResource(R.string.app_name) }) },
+                    title = {
+                        Text(
+                            profileSelectionUiState.currentProfileName.ifEmpty {
+                                stringResource(R.string.app_name)
+                            }
+                        )
+                    },
                     navigationIcon = {
-                        IconButton(onClick = { onMainEvent(MainEvent.OpenDrawer) }) {
+                        IconButton(onClick = { onCoordinatorEvent(MainCoordinatorEvent.OpenDrawer) }) {
                             Icon(
                                 imageVector = Icons.Default.Menu,
                                 contentDescription = stringResource(R.string.nav_header_desc)
@@ -209,7 +219,7 @@ fun MainScreen(
                     },
                     actions = {
                         // Show zero balance toggle only on Accounts tab
-                        if (mainUiState.selectedTab == MainTab.Accounts) {
+                        if (coordinatorUiState.selectedTab == MainTab.Accounts) {
                             IconButton(
                                 onClick = {
                                     onAccountSummaryEvent(AccountSummaryEvent.ToggleZeroBalanceAccounts)
@@ -228,7 +238,7 @@ fun MainScreen(
                             }
                         }
                         // Show filter and go-to-date buttons only on Transactions tab
-                        if (mainUiState.selectedTab == MainTab.Transactions) {
+                        if (coordinatorUiState.selectedTab == MainTab.Transactions) {
                             // Search icon to show filter bar (only when filter bar is hidden)
                             if (!transactionListUiState.showAccountFilterInput) {
                                 IconButton(
@@ -263,7 +273,7 @@ fun MainScreen(
                 )
             },
             floatingActionButton = {
-                if (mainUiState.currentProfileCanPost) {
+                if (coordinatorUiState.currentProfileCanPost) {
                     FloatingActionButton(
                         onClick = onNavigateToNewTransaction,
                         containerColor = MaterialTheme.colorScheme.primary
@@ -276,7 +286,7 @@ fun MainScreen(
                 }
             }
         ) { paddingValues ->
-            if (mainUiState.currentProfileId == null) {
+            if (coordinatorUiState.currentProfileId == null) {
                 // No profile selected - show welcome message
                 WelcomeScreen(
                     onCreateProfile = { onNavigateToProfileSettings(-1) },
@@ -319,8 +329,8 @@ fun MainScreen(
                     // Pager with pull-to-refresh
                     PullToRefreshBox(
                         state = pullToRefreshState,
-                        isRefreshing = mainUiState.isRefreshing,
-                        onRefresh = { onMainEvent(MainEvent.RefreshData) },
+                        isRefreshing = coordinatorUiState.isRefreshing,
+                        onRefresh = { onCoordinatorEvent(MainCoordinatorEvent.RefreshData) },
                         modifier = Modifier.fillMaxSize()
                     ) {
                         HorizontalPager(

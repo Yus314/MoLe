@@ -38,20 +38,24 @@ import java.util.Locale
 import javax.inject.Inject
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import logcat.asLog
 import logcat.logcat
 import net.ktnx.mobileledger.BackupsActivity
 import net.ktnx.mobileledger.R
 import net.ktnx.mobileledger.data.repository.OptionRepository
 import net.ktnx.mobileledger.db.Option
 import net.ktnx.mobileledger.db.Profile
+import net.ktnx.mobileledger.service.AppStateService
 import net.ktnx.mobileledger.ui.components.CrashReportDialog
+import net.ktnx.mobileledger.ui.main.AccountSummaryEffect
 import net.ktnx.mobileledger.ui.main.AccountSummaryViewModel
 import net.ktnx.mobileledger.ui.main.MainCoordinatorEffect
+import net.ktnx.mobileledger.ui.main.MainCoordinatorEvent
 import net.ktnx.mobileledger.ui.main.MainCoordinatorViewModel
 import net.ktnx.mobileledger.ui.main.MainScreen
-import net.ktnx.mobileledger.ui.main.MainViewModel
+import net.ktnx.mobileledger.ui.main.MainTab
+import net.ktnx.mobileledger.ui.main.ProfileSelectionEvent
 import net.ktnx.mobileledger.ui.main.ProfileSelectionViewModel
+import net.ktnx.mobileledger.ui.main.TransactionListEvent
 import net.ktnx.mobileledger.ui.main.TransactionListViewModel
 import net.ktnx.mobileledger.ui.profiles.ProfileDetailActivity
 import net.ktnx.mobileledger.ui.templates.TemplatesActivity
@@ -67,11 +71,12 @@ class MainActivityCompose : ProfileThemedActivity() {
     @Inject
     lateinit var optionRepository: OptionRepository
 
+    @Inject
+    lateinit var appStateService: AppStateService
+
     // profileRepository is inherited from ProfileThemedActivity
 
-    // Phase 8: Inject all 4 ViewModels
-    // MainViewModel is kept temporarily for compatibility during incremental migration
-    private val viewModel: MainViewModel by viewModels()
+    // Phase 9: Use specialized ViewModels directly
     private val coordinatorViewModel: MainCoordinatorViewModel by viewModels()
     private val profileSelectionViewModel: ProfileSelectionViewModel by viewModels()
     private val accountSummaryViewModel: AccountSummaryViewModel by viewModels()
@@ -82,24 +87,26 @@ class MainActivityCompose : ProfileThemedActivity() {
         super.onCreate(savedInstanceState)
         logcat { "onCreate()/after super" }
 
-        // Observe profile changes from ProfileRepository (via ViewModel)
+        // Observe profile changes from ProfileRepository
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
-                    viewModel.currentProfile.collect { newProfile ->
+                    profileSelectionViewModel.currentProfile.collect { newProfile ->
                         onProfileChanged(newProfile)
                     }
                 }
                 launch {
-                    viewModel.allProfiles.collect { profiles ->
+                    // Use full Profile objects from repository instead of
+                    // recreating incomplete ones from ProfileListItem
+                    profileRepository.getAllProfiles().collect { profiles ->
                         onProfileListChanged(profiles)
                     }
                 }
-                // Observe sync info from AppStateService via ViewModel
+                // Observe sync info from AppStateService via CoordinatorViewModel
                 launch {
-                    viewModel.lastSyncInfo.collect { syncInfo ->
+                    coordinatorViewModel.lastSyncInfo.collect { syncInfo ->
                         if (syncInfo != null && syncInfo.date != null) {
-                            viewModel.updateLastUpdateInfo(
+                            coordinatorViewModel.updateLastUpdateInfo(
                                 syncInfo.date,
                                 syncInfo.transactionCount,
                                 syncInfo.accountCount
@@ -116,12 +123,29 @@ class MainActivityCompose : ProfileThemedActivity() {
                 // Observe data version changes to reload data after local changes
                 launch {
                     var lastProcessedVersion = 0L
-                    viewModel.dataVersion.collect { version ->
+                    coordinatorViewModel.dataVersion.collect { version ->
                         // Only reload if version changed (avoid duplicate reloads on lifecycle restart)
                         if (version > 0 && version != lastProcessedVersion) {
                             logcat { "Data version changed to $version, reloading data" }
                             lastProcessedVersion = version
-                            viewModel.reloadDataAfterChange()
+                            accountSummaryViewModel.reloadAccounts()
+                            transactionListViewModel.loadTransactions()
+                        }
+                    }
+                }
+                // Observe AccountSummaryViewModel effects
+                launch {
+                    accountSummaryViewModel.effects.collect { effect ->
+                        when (effect) {
+                            is AccountSummaryEffect.ShowAccountTransactions -> {
+                                // Switch to Transactions tab with account filter
+                                transactionListViewModel.onEvent(
+                                    TransactionListEvent.SetAccountFilter(effect.accountName)
+                                )
+                                coordinatorViewModel.onEvent(
+                                    MainCoordinatorEvent.SelectTab(MainTab.Transactions)
+                                )
+                            }
                         }
                     }
                 }
@@ -129,15 +153,12 @@ class MainActivityCompose : ProfileThemedActivity() {
         }
 
         setContent {
-            // Phase 8: MainViewModel handles main UI state (events and state must match)
-            // Specialized ViewModels are injected but not yet wired - to be completed in Phase 9
-            val mainUiState by viewModel.mainUiState.collectAsState()
-            val accountSummaryUiState by viewModel.accountSummaryUiState.collectAsState()
-            val transactionListUiState by viewModel.transactionListUiState.collectAsState()
-            val drawerOpen by viewModel.drawerOpen.collectAsState()
-
-            // Coordinator state for navigation effects
+            // Phase 9: Use specialized ViewModels directly
             val coordinatorUiState by coordinatorViewModel.uiState.collectAsState()
+            val profileSelectionUiState by profileSelectionViewModel.uiState.collectAsState()
+            val accountSummaryUiState by accountSummaryViewModel.uiState.collectAsState()
+            val transactionListUiState by transactionListViewModel.uiState.collectAsState()
+            val drawerOpen by coordinatorViewModel.drawerOpen.collectAsState()
 
             // Handle coordinator effects
             LaunchedEffect(Unit) {
@@ -149,8 +170,14 @@ class MainActivityCompose : ProfileThemedActivity() {
 
                         is MainCoordinatorEffect.NavigateToProfileDetail -> {
                             if (effect.profileId != null) {
-                                // Use legacy viewModel.allProfiles until fully migrated
-                                val profile = viewModel.allProfiles.value.find { it.id == effect.profileId }
+                                val profile = profileSelectionUiState.profiles.find { it.id == effect.profileId }?.let {
+                                    Profile().apply {
+                                        id = it.id
+                                        name = it.name
+                                        theme = it.theme
+                                        permitPosting = it.canPost
+                                    }
+                                }
                                 ProfileDetailActivity.start(this@MainActivityCompose, profile)
                             } else {
                                 ProfileDetailActivity.start(this@MainActivityCompose, null)
@@ -175,30 +202,39 @@ class MainActivityCompose : ProfileThemedActivity() {
             }
 
             MoLeTheme(
-                profileHue = if (mainUiState.currentProfileTheme >= 0) {
-                    mainUiState.currentProfileTheme.toFloat()
+                profileHue = if (coordinatorUiState.currentProfileTheme >= 0) {
+                    coordinatorUiState.currentProfileTheme.toFloat()
                 } else {
                     null
                 }
             ) {
                 MainScreen(
-                    mainUiState = mainUiState,
+                    coordinatorUiState = coordinatorUiState,
+                    profileSelectionUiState = profileSelectionUiState,
                     accountSummaryUiState = accountSummaryUiState,
                     transactionListUiState = transactionListUiState,
                     drawerOpen = drawerOpen,
-                    onMainEvent = viewModel::onMainEvent,
-                    onAccountSummaryEvent = viewModel::onAccountSummaryEvent,
-                    onTransactionListEvent = viewModel::onTransactionListEvent,
+                    onCoordinatorEvent = coordinatorViewModel::onEvent,
+                    onProfileSelectionEvent = profileSelectionViewModel::onEvent,
+                    onAccountSummaryEvent = accountSummaryViewModel::onEvent,
+                    onTransactionListEvent = transactionListViewModel::onEvent,
                     onNavigateToNewTransaction = {
-                        mainUiState.currentProfileId?.let { profileId ->
-                            navigateToNewTransaction(profileId, mainUiState.currentProfileTheme)
+                        coordinatorUiState.currentProfileId?.let { profileId ->
+                            navigateToNewTransaction(profileId, coordinatorUiState.currentProfileTheme)
                         }
                     },
                     onNavigateToProfileSettings = { profileId ->
                         if (profileId == -1L) {
                             ProfileDetailActivity.start(this, null)
                         } else {
-                            val profile = viewModel.allProfiles.value.find { it.id == profileId }
+                            val profile = profileSelectionUiState.profiles.find { it.id == profileId }?.let {
+                                Profile().apply {
+                                    id = it.id
+                                    name = it.name
+                                    theme = it.theme
+                                    permitPosting = it.canPost
+                                }
+                            }
                             ProfileDetailActivity.start(this, profile)
                         }
                     },
@@ -238,13 +274,13 @@ class MainActivityCompose : ProfileThemedActivity() {
             return
         }
 
-        viewModel.updateProfile(newProfile)
+        coordinatorViewModel.updateProfile(newProfile)
         updateLastUpdateTextFromDB()
     }
 
     private fun onProfileListChanged(newList: List<Profile>) {
         createShortcuts(newList)
-        viewModel.updateProfiles(newList)
+        // ProfileSelectionViewModel handles profile list internally via observeProfiles()
 
         val currentProfile = profileRepository.currentProfile.value
         var replacementProfile: Profile? = null
@@ -305,7 +341,8 @@ class MainActivityCompose : ProfileThemedActivity() {
         val locale = Locale.getDefault()
 
         if (lastUpdate == null) {
-            viewModel.updateHeaderTexts("----", "----")
+            accountSummaryViewModel.updateHeaderText("----")
+            transactionListViewModel.updateHeaderText("----")
         } else {
             val dateTimeText = DateUtils.formatDateTime(this, lastUpdate.time, formatFlags)
 
@@ -328,7 +365,8 @@ class MainActivityCompose : ProfileThemedActivity() {
                     dateTimeText
                 )
             }
-            viewModel.updateHeaderTexts(accountsText, transactionsText)
+            accountSummaryViewModel.updateHeaderText(accountsText)
+            transactionListViewModel.updateHeaderText(transactionsText)
         }
     }
 
@@ -349,12 +387,12 @@ class MainActivityCompose : ProfileThemedActivity() {
                 }
             }
 
-            val syncInfo = viewModel.lastSyncInfo.value
+            val syncInfo = coordinatorViewModel.lastSyncInfo.value
             if (lastUpdate == 0L) {
-                viewModel.updateLastUpdateInfo(null, 0, 0)
+                coordinatorViewModel.updateLastUpdateInfo(null, 0, 0)
             } else {
                 val date = Date(lastUpdate)
-                viewModel.updateLastUpdateInfo(
+                coordinatorViewModel.updateLastUpdateInfo(
                     date,
                     syncInfo?.transactionCount ?: 0,
                     syncInfo?.accountCount ?: 0

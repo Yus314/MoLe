@@ -17,7 +17,6 @@
 
 package net.ktnx.mobileledger.ui.profile
 
-import android.app.backup.BackupManager
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -31,6 +30,7 @@ import java.net.URL
 import java.util.Locale
 import java.util.regex.Pattern
 import javax.inject.Inject
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -45,20 +45,21 @@ import kotlinx.coroutines.withContext
 import logcat.LogPriority
 import logcat.asLog
 import logcat.logcat
-import net.ktnx.mobileledger.App
-import net.ktnx.mobileledger.BuildConfig
+import net.ktnx.mobileledger.TemporaryAuthData
 import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.db.Profile
+import net.ktnx.mobileledger.di.IoDispatcher
 import net.ktnx.mobileledger.json.API
 import net.ktnx.mobileledger.model.FutureDates
 import net.ktnx.mobileledger.model.HledgerVersion
-import net.ktnx.mobileledger.ui.profiles.ProfileDetailModel
-import net.ktnx.mobileledger.utils.Colors
+import net.ktnx.mobileledger.service.AuthDataProvider
 import net.ktnx.mobileledger.utils.NetworkUtil
 
 @HiltViewModel
 class ProfileDetailViewModel @Inject constructor(
     private val profileRepository: ProfileRepository,
+    private val authDataProvider: AuthDataProvider,
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     @Suppress("unused") private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -92,7 +93,7 @@ class ProfileDetailViewModel @Inject constructor(
                     initialThemeHue
                 } else {
                     val existingProfiles = profileRepository.getAllProfiles().first()
-                    Colors.getNewProfileThemeHue(existingProfiles)
+                    authDataProvider.getNewProfileThemeHue(existingProfiles)
                 }
 
                 _uiState.update {
@@ -109,7 +110,7 @@ class ProfileDetailViewModel @Inject constructor(
     }
 
     private suspend fun loadProfile(profileId: Long) {
-        withContext(Dispatchers.IO) {
+        withContext(ioDispatcher) {
             val profile = profileRepository.getProfileByIdSync(profileId)
             if (profile != null) {
                 orderNo = profile.orderNo
@@ -121,6 +122,7 @@ class ProfileDetailViewModel @Inject constructor(
                     null
                 }
 
+                val defaultHue = authDataProvider.getDefaultThemeHue()
                 _uiState.update {
                     ProfileDetailUiState(
                         profileId = profile.id,
@@ -129,8 +131,8 @@ class ProfileDetailViewModel @Inject constructor(
                         useAuthentication = profile.useAuthentication,
                         authUser = profile.authUser ?: "",
                         authPassword = profile.authPassword ?: "",
-                        themeHue = if (profile.theme == -1) Colors.DEFAULT_HUE_DEG else profile.theme,
-                        initialThemeHue = if (profile.theme == -1) Colors.DEFAULT_HUE_DEG else profile.theme,
+                        themeHue = if (profile.theme == -1) defaultHue else profile.theme,
+                        initialThemeHue = if (profile.theme == -1) defaultHue else profile.theme,
                         preferredAccountsFilter = profile.preferredAccountsFilter ?: "",
                         futureDates = FutureDates.valueOf(profile.futureDates),
                         apiVersion = API.valueOf(profile.apiVersion),
@@ -378,7 +380,7 @@ class ProfileDetailViewModel @Inject constructor(
                     logcat { "Profile inserted in DB" }
                 }
 
-                BackupManager.dataChanged(BuildConfig.APPLICATION_ID)
+                authDataProvider.notifyBackupDataChanged()
 
                 _uiState.update { it.copy(isSaving = false, hasUnsavedChanges = false) }
                 _effects.send(ProfileDetailEffect.ProfileSaved)
@@ -401,7 +403,7 @@ class ProfileDetailViewModel @Inject constructor(
             }
 
             val startTime = System.currentTimeMillis()
-            val result = withContext(Dispatchers.IO) {
+            val result = withContext(ioDispatcher) {
                 detectVersion()
             }
 
@@ -486,19 +488,18 @@ class ProfileDetailViewModel @Inject constructor(
     }
 
     private fun setAuthenticationData() {
-        // Create a ProfileDetailModel instance and set its values for authentication
-        // The App class uses the global profileModel for authentication
-        val tempModel = ProfileDetailModel()
         val state = _uiState.value
-        tempModel.setUrl(state.url)
-        tempModel.setAuthUserName(state.authUser)
-        tempModel.setAuthPassword(state.authPassword)
-        tempModel.setUseAuthentication(state.useAuthentication)
-        App.setAuthenticationDataFromProfileModel(tempModel)
+        val authData = TemporaryAuthData(
+            url = state.url,
+            useAuthentication = state.useAuthentication,
+            authUser = state.authUser,
+            authPassword = state.authPassword
+        )
+        authDataProvider.setTemporaryAuthData(authData)
     }
 
     private fun resetAuthenticationData() {
-        App.resetAuthenticationData()
+        authDataProvider.resetAuthenticationData()
     }
 
     private fun handleNavigateBack() {
