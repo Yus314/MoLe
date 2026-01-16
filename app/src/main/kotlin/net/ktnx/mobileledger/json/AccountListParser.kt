@@ -35,6 +35,10 @@ abstract class AccountListParser {
      * @param map Map of account names to LedgerAccount instances for parent lookup
      * @return The next LedgerAccount or null if no more accounts
      */
+    @Deprecated(
+        "Use nextAccountDomain() instead",
+        ReplaceWith("nextAccountDomain()")
+    )
     open fun nextAccount(map: HashMap<String, LedgerAccount>): LedgerAccount? {
         if (!iterator.hasNext()) return null
 

@@ -22,6 +22,10 @@ import net.ktnx.mobileledger.domain.model.Transaction
 import net.ktnx.mobileledger.model.LedgerTransaction
 
 interface ParsedLedgerTransaction {
+    @Deprecated(
+        "Use toDomain() instead",
+        ReplaceWith("toDomain()")
+    )
     @Throws(ParseException::class)
     fun asLedgerTransaction(): LedgerTransaction
 

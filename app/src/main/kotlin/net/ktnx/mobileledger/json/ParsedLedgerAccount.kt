@@ -62,6 +62,10 @@ abstract class ParsedLedgerAccount {
      * @param map Map of account names to LedgerAccount instances for parent lookup
      * @return The converted LedgerAccount
      */
+    @Deprecated(
+        "Use toDomain() instead",
+        ReplaceWith("toDomain()")
+    )
     open fun toLedgerAccount(map: HashMap<String, LedgerAccount>): LedgerAccount {
         val accName = aname
         val existing = map[accName]

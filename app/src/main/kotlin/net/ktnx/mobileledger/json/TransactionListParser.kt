@@ -24,6 +24,10 @@ import net.ktnx.mobileledger.domain.model.Transaction
 import net.ktnx.mobileledger.model.LedgerTransaction
 
 abstract class TransactionListParser {
+    @Deprecated(
+        "Use nextTransactionDomain() instead",
+        ReplaceWith("nextTransactionDomain()")
+    )
     @Throws(ParseException::class)
     abstract fun nextTransaction(): LedgerTransaction?
 
