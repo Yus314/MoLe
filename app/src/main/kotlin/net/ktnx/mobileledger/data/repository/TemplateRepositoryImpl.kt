@@ -27,6 +27,7 @@ import kotlinx.coroutines.withContext
 import net.ktnx.mobileledger.dao.TemplateAccountDAO
 import net.ktnx.mobileledger.dao.TemplateHeaderDAO
 import net.ktnx.mobileledger.data.repository.mapper.TemplateMapper.toDomain
+import net.ktnx.mobileledger.data.repository.mapper.TemplateMapper.toEntity
 import net.ktnx.mobileledger.db.TemplateAccount
 import net.ktnx.mobileledger.db.TemplateHeader
 import net.ktnx.mobileledger.db.TemplateWithAccounts
@@ -184,4 +185,9 @@ class TemplateRepositoryImpl @Inject constructor(
             templateAccountDAO.finishSave(savedId)
             savedId
         }
+
+    override suspend fun saveTemplate(template: Template): Long = withContext(Dispatchers.IO) {
+        val entity = template.toEntity()
+        saveTemplateWithAccounts(entity.header, entity.accounts)
+    }
 }

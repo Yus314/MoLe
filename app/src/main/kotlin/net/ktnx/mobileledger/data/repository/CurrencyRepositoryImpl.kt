@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import net.ktnx.mobileledger.dao.CurrencyDAO
 import net.ktnx.mobileledger.data.repository.mapper.CurrencyMapper.toDomain
+import net.ktnx.mobileledger.data.repository.mapper.CurrencyMapper.toEntity
 import net.ktnx.mobileledger.db.Currency
 import net.ktnx.mobileledger.domain.model.Currency as DomainCurrency
 
@@ -109,6 +110,26 @@ class CurrencyRepositoryImpl @Inject constructor(private val currencyDAO: Curren
     override suspend fun deleteAllCurrencies() {
         withContext(Dispatchers.IO) {
             currencyDAO.deleteAllSync()
+        }
+    }
+
+    override suspend fun saveCurrency(currency: DomainCurrency): Long = withContext(Dispatchers.IO) {
+        val entity = currency.toEntity()
+        if (entity.id == 0L) {
+            currencyDAO.insertSync(entity)
+        } else {
+            currencyDAO.updateSync(entity)
+            entity.id
+        }
+    }
+
+    override suspend fun deleteCurrencyByName(name: String): Boolean = withContext(Dispatchers.IO) {
+        val currency = currencyDAO.getByNameSync(name)
+        if (currency != null) {
+            currencyDAO.deleteSync(currency)
+            true
+        } else {
+            false
         }
     }
 }

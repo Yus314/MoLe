@@ -32,8 +32,8 @@ import logcat.logcat
 import net.ktnx.mobileledger.data.repository.CurrencyRepository
 import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.data.repository.TemplateRepository
-import net.ktnx.mobileledger.db.TemplateAccount
-import net.ktnx.mobileledger.db.TemplateWithAccounts
+import net.ktnx.mobileledger.domain.model.Template
+import net.ktnx.mobileledger.domain.model.TemplateLine
 import net.ktnx.mobileledger.model.MatchedTemplate
 import net.ktnx.mobileledger.service.CurrencyFormatter
 
@@ -65,13 +65,13 @@ class TemplateApplicatorViewModel @Inject constructor(
     private fun showTemplateSelector() {
         viewModelScope.launch {
             _uiState.update { it.copy(isSearching = true) }
-            val templates = templateRepository.getAllTemplatesWithAccountsSync()
+            val templates = templateRepository.getAllTemplatesAsDomainSync()
                 .map {
                     TemplateItem(
-                        it.header.id,
-                        it.header.name,
-                        it.header.transactionDescription,
-                        it.header.regularExpression
+                        it.id ?: 0L,
+                        it.name,
+                        it.transactionDescription,
+                        it.pattern
                     )
                 }
             _uiState.update {
@@ -90,7 +90,7 @@ class TemplateApplicatorViewModel @Inject constructor(
 
     private fun applyTemplate(templateId: Long) {
         viewModelScope.launch {
-            val template = templateRepository.getTemplateWithAccountsSync(templateId)
+            val template = templateRepository.getTemplateAsDomainSync(templateId)
             if (template != null) {
                 val effect = buildApplyTemplateEffect(template)
                 _effects.send(effect)
@@ -99,29 +99,27 @@ class TemplateApplicatorViewModel @Inject constructor(
         }
     }
 
-    private suspend fun buildApplyTemplateEffect(
-        template: TemplateWithAccounts
-    ): TemplateApplicatorEffect.ApplyTemplate {
+    private suspend fun buildApplyTemplateEffect(template: Template): TemplateApplicatorEffect.ApplyTemplate {
         val defaultCurrency = profileRepository.currentProfile.value?.defaultCommodityOrEmpty ?: ""
 
-        val newAccounts = template.accounts.map { acc ->
-            val currencyName = acc.currency?.let { currencyId ->
+        val newAccounts = template.lines.map { line ->
+            val currencyName = line.currencyId?.let { currencyId ->
                 currencyRepository.getCurrencyByIdSync(currencyId)?.name
             } ?: defaultCurrency
 
             TransactionAccountRow(
                 id = AccountRowsUiState.nextId(),
-                accountName = acc.accountName ?: "",
-                amountText = if (acc.amount != null) currencyFormatter.formatNumber(acc.amount!!) else "",
+                accountName = line.accountName ?: "",
+                amountText = if (line.amount != null) currencyFormatter.formatNumber(line.amount!!) else "",
                 currency = currencyName,
-                comment = acc.accountComment ?: "",
+                comment = line.comment ?: "",
                 isAmountValid = true
             )
         }
 
         return TemplateApplicatorEffect.ApplyTemplate(
-            description = template.header.transactionDescription ?: "",
-            transactionComment = template.header.transactionComment,
+            description = template.transactionDescription ?: "",
+            transactionComment = template.transactionComment,
             date = null,
             accounts = newAccounts
         )
@@ -137,10 +135,9 @@ class TemplateApplicatorViewModel @Inject constructor(
     }
 
     private suspend fun findMatchingTemplate(text: String): MatchedTemplate? {
-        val templates = templateRepository.getAllTemplatesWithAccountsSync()
-        for (twa in templates) {
-            val header = twa.header
-            val regex = header.regularExpression
+        val templates = templateRepository.getAllTemplatesAsDomainSync()
+        for (template in templates) {
+            val regex = template.pattern
             if (regex.isBlank()) continue
             try {
                 val pattern = Regex(regex)
@@ -149,7 +146,7 @@ class TemplateApplicatorViewModel @Inject constructor(
                     val javaPattern = java.util.regex.Pattern.compile(regex)
                     val javaMatcher = javaPattern.matcher(text)
                     if (javaMatcher.find()) {
-                        return MatchedTemplate(header, javaMatcher.toMatchResult())
+                        return MatchedTemplate(template, javaMatcher.toMatchResult())
                     }
                 }
             } catch (e: Exception) {
@@ -161,29 +158,26 @@ class TemplateApplicatorViewModel @Inject constructor(
 
     private fun applyMatchedTemplate(matched: MatchedTemplate) {
         viewModelScope.launch {
-            val template = templateRepository.getTemplateWithAccountsSync(matched.templateHead.id)
-                ?: return@launch
-
+            val template = matched.template
             val matchResult = matched.matchResult
-            val header = template.header
             val defaultCurrency = profileRepository.currentProfile.value?.defaultCommodityOrEmpty ?: ""
 
             val description = extractFromMatchGroup(
                 matchResult,
-                header.transactionDescriptionMatchGroup,
-                header.transactionDescription
+                template.transactionDescriptionMatchGroup,
+                template.transactionDescription
             ) ?: ""
 
             val comment = extractFromMatchGroup(
                 matchResult,
-                header.transactionCommentMatchGroup,
-                header.transactionComment
+                template.transactionCommentMatchGroup,
+                template.transactionComment
             )
 
-            val date = TemplateMatchGroupExtractor.extractDate(matchResult, header)
+            val date = TemplateMatchGroupExtractor.extractDate(matchResult, template)
 
-            val newAccounts = template.accounts.map { acc ->
-                extractAccountRow(matchResult, acc, defaultCurrency)
+            val newAccounts = template.lines.map { line ->
+                extractAccountRow(matchResult, line, defaultCurrency)
             }
 
             val effect = TemplateApplicatorEffect.ApplyTemplate(
@@ -204,33 +198,33 @@ class TemplateApplicatorViewModel @Inject constructor(
 
     private suspend fun extractAccountRow(
         matchResult: java.util.regex.MatchResult,
-        acc: TemplateAccount,
+        line: TemplateLine,
         defaultCurrency: String
     ): TransactionAccountRow {
         val accountName = extractFromMatchGroup(
             matchResult,
-            acc.accountNameMatchGroup,
-            acc.accountName
+            line.accountNameGroup,
+            line.accountName
         ) ?: ""
 
         val amountStr = extractFromMatchGroup(
             matchResult,
-            acc.amountMatchGroup,
-            acc.amount?.toString()
+            line.amountGroup,
+            line.amount?.toString()
         )
-        val amount = TemplateMatchGroupExtractor.parseAmount(amountStr, acc.negateAmount ?: false)
+        val amount = TemplateMatchGroupExtractor.parseAmount(amountStr, line.negateAmount)
         val amountText = amount?.let { currencyFormatter.formatNumber(it) } ?: ""
 
-        val currencyName = if (acc.currencyMatchGroup != null && acc.currencyMatchGroup!! > 0) {
-            extractFromMatchGroup(matchResult, acc.currencyMatchGroup, null)
+        val currencyName = if (line.currencyGroup != null && line.currencyGroup!! > 0) {
+            extractFromMatchGroup(matchResult, line.currencyGroup, null)
         } else {
-            acc.currency?.let { currencyRepository.getCurrencyByIdSync(it)?.name }
+            line.currencyId?.let { currencyRepository.getCurrencyByIdSync(it)?.name }
         } ?: defaultCurrency
 
         val comment = extractFromMatchGroup(
             matchResult,
-            acc.accountCommentMatchGroup,
-            acc.accountComment
+            line.commentGroup,
+            line.comment
         ) ?: ""
 
         return TransactionAccountRow(
@@ -247,21 +241,21 @@ class TemplateApplicatorViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isSearching = true) }
             val templates = if (query.isBlank()) {
-                templateRepository.getAllTemplatesWithAccountsSync()
+                templateRepository.getAllTemplatesAsDomainSync()
             } else {
-                templateRepository.getAllTemplatesWithAccountsSync().filter {
-                    it.header.name.contains(query, ignoreCase = true) ||
-                        it.header.transactionDescription?.contains(query, ignoreCase = true) == true
+                templateRepository.getAllTemplatesAsDomainSync().filter {
+                    it.name.contains(query, ignoreCase = true) ||
+                        it.transactionDescription?.contains(query, ignoreCase = true) == true
                 }
             }
             _uiState.update {
                 it.copy(
                     availableTemplates = templates.map { t ->
                         TemplateItem(
-                            t.header.id,
-                            t.header.name,
-                            t.header.transactionDescription,
-                            t.header.regularExpression
+                            t.id ?: 0L,
+                            t.name,
+                            t.transactionDescription,
+                            t.pattern
                         )
                     },
                     isSearching = false

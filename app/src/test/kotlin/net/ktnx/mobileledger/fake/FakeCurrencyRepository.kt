@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import net.ktnx.mobileledger.data.repository.CurrencyRepository
 import net.ktnx.mobileledger.data.repository.mapper.CurrencyMapper.toDomain
+import net.ktnx.mobileledger.data.repository.mapper.CurrencyMapper.toEntity
 import net.ktnx.mobileledger.db.Currency
 import net.ktnx.mobileledger.domain.model.Currency as DomainCurrency
 
@@ -89,6 +90,27 @@ class FakeCurrencyRepository : CurrencyRepository {
     override suspend fun deleteAllCurrencies() {
         currencies.clear()
         emitFlow()
+    }
+
+    override suspend fun saveCurrency(currency: DomainCurrency): Long {
+        val entity = currency.toEntity()
+        return if (entity.id == 0L) {
+            insertCurrency(entity)
+        } else {
+            updateCurrency(entity)
+            entity.id
+        }
+    }
+
+    override suspend fun deleteCurrencyByName(name: String): Boolean {
+        val currency = currencies.values.find { it.name == name }
+        return if (currency != null) {
+            currencies.remove(currency.id)
+            emitFlow()
+            true
+        } else {
+            false
+        }
     }
 
     private fun emitFlow() {

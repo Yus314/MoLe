@@ -164,4 +164,21 @@ interface CurrencyRepository {
      * Delete all currencies.
      */
     suspend fun deleteAllCurrencies()
+
+    /**
+     * Save a currency domain model.
+     * Handles insert/update automatically based on whether the currency has an ID.
+     *
+     * @param currency The currency domain model to save
+     * @return The saved currency ID
+     */
+    suspend fun saveCurrency(currency: DomainCurrency): Long
+
+    /**
+     * Delete a currency by its name.
+     *
+     * @param name The currency name to delete
+     * @return true if deleted, false if not found
+     */
+    suspend fun deleteCurrencyByName(name: String): Boolean
 }

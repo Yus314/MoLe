@@ -198,12 +198,12 @@
 - [X] T061 [US5] Update FakeTemplateRepository to return domain models in app/src/test/kotlin/net/ktnx/mobileledger/fake/FakeTemplateRepository.kt
 - [X] T062 [US5] Update FakeCurrencyRepository to return domain models in app/src/test/kotlin/net/ktnx/mobileledger/fake/FakeCurrencyRepository.kt
 - [X] T063 [US5] Update TemplateListViewModelCompose to use domain model in app/src/main/kotlin/net/ktnx/mobileledger/ui/templates/TemplateListViewModelCompose.kt
-- [ ] T064 [US5] Update TemplateDetailViewModelCompose to use domain model in app/src/main/kotlin/net/ktnx/mobileledger/ui/templates/TemplateDetailViewModelCompose.kt
-- [ ] T065 [US5] Update TemplateApplicatorViewModel to use domain model in app/src/main/kotlin/net/ktnx/mobileledger/ui/transaction/TemplateApplicatorViewModel.kt
-- [ ] T066 [US5] Update TemplatesScreen.kt to use domain model in app/src/main/kotlin/net/ktnx/mobileledger/ui/templates/TemplatesScreen.kt
-- [ ] T067 [US5] Update CurrencyPickerDialog to use domain model in app/src/main/kotlin/net/ktnx/mobileledger/ui/components/CurrencyPickerDialog.kt
-- [ ] T068 [US5] Remove db package imports from Template and Currency ViewModels
-- [ ] T068a [US5] **CHECKPOINT**: Run `nix run .#test && nix run .#build` and verify template management works
+- [X] T064 [US5] Update TemplateDetailViewModelCompose to use domain model in app/src/main/kotlin/net/ktnx/mobileledger/ui/templates/TemplateDetailViewModelCompose.kt
+- [X] T065 [US5] Update TemplateApplicatorViewModel to use domain model in app/src/main/kotlin/net/ktnx/mobileledger/ui/transaction/TemplateApplicatorViewModel.kt
+- [X] T066 [US5] Update TemplatesScreen.kt to use domain model in app/src/main/kotlin/net/ktnx/mobileledger/ui/templates/TemplatesScreen.kt
+- [X] T067 [US5] Update CurrencyPickerDialog to use domain model in app/src/main/kotlin/net/ktnx/mobileledger/ui/components/CurrencyPickerDialog.kt
+- [X] T068 [US5] Remove db package imports from Template and Currency ViewModels
+- [X] T068a [US5] **CHECKPOINT**: Run `nix run .#test && nix run .#build` and verify template management works
 
 **Checkpoint**: User Story 5 complete - All template and currency code uses domain models
 
@@ -213,13 +213,14 @@
 
 **Purpose**: Cleanup, verification, and documentation
 
-- [ ] T069 Verify all ViewModels have no net.ktnx.mobileledger.db imports (static analysis check)
+- [X] T069 Verify all ViewModels have no net.ktnx.mobileledger.db imports (static analysis check)
 - [ ] T070 [P] Remove @Deprecated classes from model package (LedgerTransaction.kt, LedgerTransactionAccount.kt, LedgerAccount.kt) after all references migrated
-- [ ] T071 [P] Update CLAUDE.md with domain model usage guidelines
-- [ ] T072 Run `nix run .#test` to verify all unit tests pass
-- [ ] T073 Run `nix run .#build` to verify build succeeds
-- [ ] T074 Run `nix run .#verify` for full validation including device install
-- [ ] T075 Run `nix run .#coverage` and verify domain/model + data/repository/mapper packages have ≥80% coverage (SC-005)
+  - **SKIPPED**: Deprecated classes still in use by 65+ files (json parsers, TransactionSender, etc.)
+- [X] T071 [P] Update CLAUDE.md with domain model usage guidelines
+- [X] T072 Run `nix run .#test` to verify all unit tests pass
+- [X] T073 Run `nix run .#build` to verify build succeeds
+- [X] T074 Run `nix run .#verify` for full validation including device install
+- [X] T075 Run `nix run .#coverage` and verify domain/model + data/repository/mapper packages have ≥80% coverage (SC-005)
 
 ---
 

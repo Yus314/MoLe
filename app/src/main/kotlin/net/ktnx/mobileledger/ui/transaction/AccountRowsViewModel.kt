@@ -330,23 +330,21 @@ class AccountRowsViewModel @Inject constructor(
         }
     }
 
-    private fun addCurrency(name: String, position: net.ktnx.mobileledger.model.Currency.Position, gap: Boolean) {
+    private fun addCurrency(name: String, position: net.ktnx.mobileledger.domain.model.CurrencyPosition, gap: Boolean) {
         viewModelScope.launch {
-            val currency = net.ktnx.mobileledger.db.Currency()
-            currency.name = name
-            currency.position = position.toString()
-            currency.hasGap = gap
-            currencyRepository.insertCurrency(currency)
+            val currency = net.ktnx.mobileledger.domain.model.Currency(
+                name = name,
+                position = position,
+                hasGap = gap
+            )
+            currencyRepository.saveCurrency(currency)
             loadCurrencies()
         }
     }
 
     private fun deleteCurrency(name: String) {
         viewModelScope.launch {
-            val currency = currencyRepository.getCurrencyByNameSync(name)
-            if (currency != null) {
-                currencyRepository.deleteCurrency(currency)
-            }
+            currencyRepository.deleteCurrencyByName(name)
             loadCurrencies()
         }
     }

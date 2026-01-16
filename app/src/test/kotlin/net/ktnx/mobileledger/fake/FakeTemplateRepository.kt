@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import net.ktnx.mobileledger.data.repository.TemplateRepository
 import net.ktnx.mobileledger.data.repository.mapper.TemplateMapper.toDomain
+import net.ktnx.mobileledger.data.repository.mapper.TemplateMapper.toEntity
 import net.ktnx.mobileledger.db.TemplateAccount
 import net.ktnx.mobileledger.db.TemplateHeader
 import net.ktnx.mobileledger.db.TemplateWithAccounts
@@ -136,6 +137,11 @@ class FakeTemplateRepository : TemplateRepository {
         }
         emitFlow()
         return id
+    }
+
+    override suspend fun saveTemplate(template: Template): Long {
+        val entity = template.toEntity()
+        return saveTemplateWithAccounts(entity.header, entity.accounts)
     }
 
     private fun emitFlow() {

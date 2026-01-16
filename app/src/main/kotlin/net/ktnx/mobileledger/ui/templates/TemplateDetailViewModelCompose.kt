@@ -21,7 +21,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -37,11 +36,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import logcat.asLog
 import logcat.logcat
 import net.ktnx.mobileledger.data.repository.TemplateRepository
-import net.ktnx.mobileledger.db.TemplateAccount
-import net.ktnx.mobileledger.db.TemplateHeader
+import net.ktnx.mobileledger.domain.model.Template
+import net.ktnx.mobileledger.domain.model.TemplateLine
 import net.ktnx.mobileledger.utils.Misc
 
 /**
@@ -75,33 +73,30 @@ class TemplateDetailViewModelCompose @Inject constructor(
             _uiState.update { it.copy(isLoading = true) }
 
             try {
-                val templateWithAccounts = templateRepository.getTemplateWithAccountsSync(templateId)
+                val template = templateRepository.getTemplateAsDomainSync(templateId)
 
-                if (templateWithAccounts != null) {
-                    val header = templateWithAccounts.header
-                    val accounts = templateWithAccounts.accounts.sortedBy { it.position }
-
-                    val accountRows = accounts.map { acc ->
+                if (template != null) {
+                    val accountRows = template.lines.mapIndexed { index, line ->
                         TemplateAccountRow(
-                            id = acc.id,
-                            position = acc.position.toInt(),
+                            id = line.id ?: syntheticId.getAndDecrement(),
+                            position = index,
                             accountName = extractMatchableValue(
-                                acc.accountName,
-                                acc.accountNameMatchGroup
+                                line.accountName,
+                                line.accountNameGroup
                             ),
                             accountComment = extractMatchableValue(
-                                acc.accountComment,
-                                acc.accountCommentMatchGroup
+                                line.comment,
+                                line.commentGroup
                             ),
                             amount = extractMatchableValueFloat(
-                                acc.amount,
-                                acc.amountMatchGroup
+                                line.amount,
+                                line.amountGroup
                             ),
                             currency = extractMatchableValueCurrency(
-                                acc.currency,
-                                acc.currencyMatchGroup
+                                line.currencyId,
+                                line.currencyGroup
                             ),
-                            negateAmount = acc.negateAmount == true
+                            negateAmount = line.negateAmount
                         )
                     }.ifEmpty {
                         listOf(
@@ -112,38 +107,38 @@ class TemplateDetailViewModelCompose @Inject constructor(
 
                     _uiState.update {
                         TemplateDetailUiState(
-                            templateId = header.id,
-                            name = header.name,
-                            pattern = header.regularExpression,
-                            testText = header.testText ?: "",
+                            templateId = template.id,
+                            name = template.name,
+                            pattern = template.pattern,
+                            testText = template.testText ?: "",
                             transactionDescription = extractMatchableValue(
-                                header.transactionDescription,
-                                header.transactionDescriptionMatchGroup
+                                template.transactionDescription,
+                                template.transactionDescriptionMatchGroup
                             ),
                             transactionComment = extractMatchableValue(
-                                header.transactionComment,
-                                header.transactionCommentMatchGroup
+                                template.transactionComment,
+                                template.transactionCommentMatchGroup
                             ),
                             dateYear = extractMatchableValueInt(
-                                header.dateYear,
-                                header.dateYearMatchGroup
+                                template.dateYear,
+                                template.dateYearMatchGroup
                             ),
                             dateMonth = extractMatchableValueInt(
-                                header.dateMonth,
-                                header.dateMonthMatchGroup
+                                template.dateMonth,
+                                template.dateMonthMatchGroup
                             ),
                             dateDay = extractMatchableValueInt(
-                                header.dateDay,
-                                header.dateDayMatchGroup
+                                template.dateDay,
+                                template.dateDayMatchGroup
                             ),
                             accounts = accountRows,
-                            isFallback = header.isFallback,
+                            isFallback = template.isFallback,
                             isLoading = false
                         )
                     }
 
                     // Validate the pattern
-                    validatePattern(header.regularExpression, header.testText ?: "")
+                    validatePattern(template.pattern, template.testText ?: "")
                 } else {
                     _uiState.update { it.copy(isLoading = false) }
                 }
@@ -509,18 +504,8 @@ class TemplateDetailViewModelCompose @Inject constructor(
             _uiState.update { it.copy(isSaving = true) }
 
             try {
-                val header = buildTemplateHeader(state)
-
-                // Build list of accounts to save
-                val accounts = mutableListOf<TemplateAccount>()
-                state.accounts.forEachIndexed { index, row ->
-                    if (!row.isEmpty() || index < 2) {
-                        val account = buildTemplateAccount(row, header.id, index.toLong())
-                        accounts.add(account)
-                    }
-                }
-
-                templateRepository.saveTemplateWithAccounts(header, accounts)
+                val template = buildTemplateDomainModel(state)
+                templateRepository.saveTemplate(template)
 
                 _uiState.update { it.copy(isSaving = false, hasUnsavedChanges = false) }
                 _effects.send(TemplateDetailEffect.TemplateSaved)
@@ -533,78 +518,46 @@ class TemplateDetailViewModelCompose @Inject constructor(
         }
     }
 
-    private fun buildTemplateHeader(state: TemplateDetailUiState): TemplateHeader {
-        val header = TemplateHeader(
-            state.templateId ?: 0,
-            Misc.trim(state.name) ?: "",
-            state.pattern
+    private fun buildTemplateDomainModel(state: TemplateDetailUiState): Template {
+        val lines = state.accounts
+            .filterIndexed { index, row -> !row.isEmpty() || index < 2 }
+            .map { row -> buildTemplateLine(row) }
+
+        return Template(
+            id = state.templateId,
+            name = Misc.trim(state.name) ?: "",
+            pattern = state.pattern,
+            testText = state.testText.ifEmpty { null },
+            transactionDescription = state.transactionDescription
+                .takeIf { it.isLiteral() }?.getLiteralValue()?.ifEmpty { null },
+            transactionDescriptionMatchGroup = state.transactionDescription
+                .takeIf { it.isMatchGroup() }?.getMatchGroup(),
+            transactionComment = state.transactionComment
+                .takeIf { it.isLiteral() }?.getLiteralValue()?.ifEmpty { null },
+            transactionCommentMatchGroup = state.transactionComment.takeIf { it.isMatchGroup() }?.getMatchGroup(),
+            dateYear = state.dateYear.takeIf { it.isLiteral() }?.getLiteralValue()?.toIntOrNull(),
+            dateYearMatchGroup = state.dateYear.takeIf { it.isMatchGroup() }?.getMatchGroup(),
+            dateMonth = state.dateMonth.takeIf { it.isLiteral() }?.getLiteralValue()?.toIntOrNull(),
+            dateMonthMatchGroup = state.dateMonth.takeIf { it.isMatchGroup() }?.getMatchGroup(),
+            dateDay = state.dateDay.takeIf { it.isLiteral() }?.getLiteralValue()?.toIntOrNull(),
+            dateDayMatchGroup = state.dateDay.takeIf { it.isMatchGroup() }?.getMatchGroup(),
+            isFallback = state.isFallback,
+            lines = lines
         )
-
-        header.testText = state.testText.ifEmpty { null }
-
-        when (val desc = state.transactionDescription) {
-            is MatchableValue.Literal -> header.transactionDescription = desc.value
-            is MatchableValue.MatchGroup -> header.transactionDescriptionMatchGroup = desc.group
-        }
-
-        when (val comment = state.transactionComment) {
-            is MatchableValue.Literal -> header.transactionComment = comment.value
-            is MatchableValue.MatchGroup -> header.transactionCommentMatchGroup = comment.group
-        }
-
-        when (val year = state.dateYear) {
-            is MatchableValue.Literal -> header.dateYear = year.value.toIntOrNull()
-            is MatchableValue.MatchGroup -> header.dateYearMatchGroup = year.group
-        }
-
-        when (val month = state.dateMonth) {
-            is MatchableValue.Literal -> header.dateMonth = month.value.toIntOrNull()
-            is MatchableValue.MatchGroup -> header.dateMonthMatchGroup = month.group
-        }
-
-        when (val day = state.dateDay) {
-            is MatchableValue.Literal -> header.dateDay = day.value.toIntOrNull()
-            is MatchableValue.MatchGroup -> header.dateDayMatchGroup = day.group
-        }
-
-        header.isFallback = state.isFallback
-
-        return header
     }
 
-    private fun buildTemplateAccount(row: TemplateAccountRow, templateId: Long, position: Long): TemplateAccount {
-        val account = TemplateAccount(
-            if (row.id > 0) row.id else 0,
-            templateId,
-            position
-        )
-
-        when (val name = row.accountName) {
-            is MatchableValue.Literal -> account.accountName = name.value
-            is MatchableValue.MatchGroup -> account.accountNameMatchGroup = name.group
-        }
-
-        when (val comment = row.accountComment) {
-            is MatchableValue.Literal -> account.accountComment = comment.value
-            is MatchableValue.MatchGroup -> account.accountCommentMatchGroup = comment.group
-        }
-
-        when (val amount = row.amount) {
-            is MatchableValue.Literal -> account.amount = amount.value.toFloatOrNull()
-
-            is MatchableValue.MatchGroup -> {
-                account.amountMatchGroup = amount.group
-                account.negateAmount = if (row.negateAmount) true else null
-            }
-        }
-
-        when (val currency = row.currency) {
-            is MatchableValue.Literal -> account.currency = currency.value.toLongOrNull()
-            is MatchableValue.MatchGroup -> account.currencyMatchGroup = currency.group
-        }
-
-        return account
-    }
+    private fun buildTemplateLine(row: TemplateAccountRow): TemplateLine = TemplateLine(
+        id = if (row.id > 0) row.id else null,
+        accountName = row.accountName.takeIf { it.isLiteral() }?.getLiteralValue()?.ifEmpty { null },
+        accountNameGroup = row.accountName.takeIf { it.isMatchGroup() }?.getMatchGroup(),
+        amount = row.amount.takeIf { it.isLiteral() }?.getLiteralValue()?.toFloatOrNull(),
+        amountGroup = row.amount.takeIf { it.isMatchGroup() }?.getMatchGroup(),
+        currencyId = row.currency.takeIf { it.isLiteral() }?.getLiteralValue()?.toLongOrNull(),
+        currencyGroup = row.currency.takeIf { it.isMatchGroup() }?.getMatchGroup(),
+        comment = row.accountComment.takeIf { it.isLiteral() }?.getLiteralValue()?.ifEmpty { null },
+        commentGroup = row.accountComment.takeIf { it.isMatchGroup() }?.getMatchGroup(),
+        negateAmount = row.negateAmount
+    )
 
     private fun handleNavigateBack() {
         if (_uiState.value.hasUnsavedChanges) {
@@ -642,10 +595,7 @@ class TemplateDetailViewModelCompose @Inject constructor(
             try {
                 val templateId = _uiState.value.templateId
                 if (templateId != null && templateId > 0) {
-                    val template = templateRepository.getTemplateByIdSync(templateId)
-                    if (template != null) {
-                        templateRepository.deleteTemplate(template)
-                    }
+                    templateRepository.deleteTemplateById(templateId)
                 }
 
                 _uiState.update { it.copy(isLoading = false) }

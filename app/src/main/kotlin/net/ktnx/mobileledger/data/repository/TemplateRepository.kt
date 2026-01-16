@@ -200,4 +200,13 @@ interface TemplateRepository {
      * @return The saved template ID
      */
     suspend fun saveTemplateWithAccounts(header: TemplateHeader, accounts: List<TemplateAccount>): Long
+
+    /**
+     * Save a template domain model with its lines.
+     * Handles insert/update of header and all accounts atomically.
+     *
+     * @param template The template domain model to save
+     * @return The saved template ID
+     */
+    suspend fun saveTemplate(template: Template): Long
 }
