@@ -17,9 +17,9 @@
 
 package net.ktnx.mobileledger.async
 
-import net.ktnx.mobileledger.model.LedgerAccount
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -157,8 +157,8 @@ class AccountParserTest {
         assertTrue(result.isSuccess)
         val account = result.getOrNull()?.accounts?.get(0)
         assertNotNull(account)
-        // Amount is stored in the account - verify through amountCount
-        assertEquals(1, account!!.amountCount)
+        // Amount is stored in the account - verify through amounts.size
+        assertEquals(1, account!!.amounts.size)
     }
 
     @Test
@@ -217,51 +217,21 @@ class AccountParserTest {
     }
 
     @Test
-    fun `ensureAccountExists creates synthetic parent accounts`() {
-        val map = HashMap<String, LedgerAccount>()
-        val createdAccounts = ArrayList<LedgerAccount>()
-
-        val result = AccountParser.ensureAccountExists(
-            "assets:bank:checking",
-            map,
-            createdAccounts
-        )
-
-        assertEquals("assets:bank:checking", result.name)
-        assertEquals(3, map.size) // assets, assets:bank, assets:bank:checking
-        assertTrue(map.containsKey("assets"))
-        assertTrue(map.containsKey("assets:bank"))
-        assertTrue(map.containsKey("assets:bank:checking"))
+    fun `extractParentName returns parent for nested account`() {
+        val result = AccountParser.extractParentName("assets:bank:checking")
+        assertEquals("assets:bank", result)
     }
 
     @Test
-    fun `ensureAccountExists returns existing account without creating duplicates`() {
-        val map = HashMap<String, LedgerAccount>()
-        val createdAccounts = ArrayList<LedgerAccount>()
-
-        // First call creates the account
-        val first = AccountParser.ensureAccountExists("assets", map, createdAccounts)
-
-        // Clear createdAccounts to check no new accounts are created
-        createdAccounts.clear()
-
-        // Second call should return existing
-        val second = AccountParser.ensureAccountExists("assets", map, createdAccounts)
-
-        assertEquals(first, second)
-        assertEquals(0, createdAccounts.size) // No new accounts created
+    fun `extractParentName returns parent for two-level account`() {
+        val result = AccountParser.extractParentName("assets:cash")
+        assertEquals("assets", result)
     }
 
     @Test
-    fun `ensureAccountExists handles single-level account`() {
-        val map = HashMap<String, LedgerAccount>()
-        val createdAccounts = ArrayList<LedgerAccount>()
-
-        val result = AccountParser.ensureAccountExists("assets", map, createdAccounts)
-
-        assertEquals("assets", result.name)
-        assertEquals(1, map.size)
-        assertEquals(1, createdAccounts.size)
+    fun `extractParentName returns null for top-level account`() {
+        val result = AccountParser.extractParentName("assets")
+        assertNull(result)
     }
 
     @Test

@@ -17,7 +17,6 @@
 
 package net.ktnx.mobileledger.async
 
-import net.ktnx.mobileledger.model.LedgerTransactionAccount
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -47,7 +46,7 @@ class TransactionParserTest {
         assertNotNull(result)
         assertEquals("acc:name", result!!.accountName)
         assertEquals(-34.56f, result.amount)
-        assertNull(result.currency)
+        assertEquals("", result.currency)
     }
 
     @Test

@@ -18,9 +18,9 @@
 package net.ktnx.mobileledger.async
 
 import java.net.URLDecoder
-import java.util.Locale
 import java.util.regex.Pattern
-import net.ktnx.mobileledger.model.LedgerAccount
+import net.ktnx.mobileledger.domain.model.Account
+import net.ktnx.mobileledger.domain.model.AccountAmount
 
 /**
  * Parses ledger accounts from legacy HTML format.
@@ -49,10 +49,38 @@ class AccountParser {
     }
 
     /**
+     * Mutable account builder for accumulating amounts during parsing.
+     */
+    private class AccountBuilder(val name: String) {
+        val amounts: MutableMap<String, Float> = mutableMapOf()
+
+        fun addAmount(amount: Float, currency: String) {
+            val current = amounts[currency] ?: 0f
+            amounts[currency] = current + amount
+        }
+
+        fun toAccount(): Account {
+            val level = name.count { it == ':' }
+            return Account(
+                id = null,
+                name = name,
+                level = level,
+                isExpanded = false,
+                isVisible = true,
+                amounts = amounts.map { (currency, amount) ->
+                    AccountAmount(currency = currency, amount = amount)
+                }
+            )
+        }
+
+        val amountCount: Int get() = amounts.size
+    }
+
+    /**
      * Result of account parsing including synthetic parent accounts.
      */
     data class ParseResult(
-        val accounts: List<LedgerAccount>,
+        val accounts: List<Account>,
         val totalPostings: Int
     )
 
@@ -71,10 +99,10 @@ class AccountParser {
     }
 
     private fun parseAccountsInternal(lines: List<String>): ParseResult {
-        val accounts = mutableListOf<LedgerAccount>()
-        val map = HashMap<String, LedgerAccount>()
-        var lastAccount: LedgerAccount? = null
-        val syntheticAccounts = ArrayList<LedgerAccount>()
+        val accountBuilders = mutableListOf<AccountBuilder>()
+        val map = HashMap<String, AccountBuilder>()
+        var lastAccount: AccountBuilder? = null
+        val syntheticAccounts = ArrayList<AccountBuilder>()
         var state = ParserState.EXPECTING_ACCOUNT
         var totalPostings = 0
 
@@ -104,16 +132,14 @@ class AccountParser {
                             continue
                         }
 
-                        val parentAccountName = LedgerAccount.extractParentName(accName)
-                        val parentAccount = if (parentAccountName != null) {
+                        val parentAccountName = extractParentName(accName)
+                        if (parentAccountName != null) {
                             ensureAccountExists(parentAccountName, map, syntheticAccounts)
-                        } else {
-                            null
                         }
-                        val newAccount = LedgerAccount(accName, parentAccount)
+                        val newAccount = AccountBuilder(accName)
                         lastAccount = newAccount
 
-                        accounts.add(newAccount)
+                        accountBuilders.add(newAccount)
                         map[accName] = newAccount
 
                         state = ParserState.EXPECTING_ACCOUNT_AMOUNT
@@ -126,7 +152,7 @@ class AccountParser {
                     while (m.find()) {
                         matchFound = true
                         var value = requireNotNull(m.group(1)) { "Value match group is null" }
-                        var currency = m.group(2) ?: ""
+                        val currency = m.group(2) ?: ""
 
                         val tmpM = reDecimalComma.matcher(value)
                         if (tmpM.find()) {
@@ -158,6 +184,8 @@ class AccountParser {
             }
         }
 
+        // Convert builders to immutable Account domain models
+        val accounts = accountBuilders.map { it.toAccount() }
         return ParseResult(accounts, totalPostings)
     }
 
@@ -172,28 +200,37 @@ class AccountParser {
         private val reDecimalComma = Pattern.compile(",\\d\\d?$")
 
         /**
+         * Extracts the parent account name from a full account name.
+         *
+         * @param accName The full account name (e.g., "assets:bank:checking")
+         * @return The parent name (e.g., "assets:bank") or null if top-level
+         */
+        fun extractParentName(accName: String): String? {
+            val colonPos = accName.lastIndexOf(':')
+            return if (colonPos < 0) null else accName.substring(0, colonPos)
+        }
+
+        /**
          * Ensures an account exists in the map, creating synthetic parent accounts as needed.
          *
          * @param accountName The account name to ensure exists
-         * @param map Map of account names to LedgerAccount instances
+         * @param map Map of account names to AccountBuilder instances
          * @param createdAccounts List to track created synthetic accounts
-         * @return The existing or newly created account
+         * @return The existing or newly created account builder
          */
-        fun ensureAccountExists(
+        private fun ensureAccountExists(
             accountName: String,
-            map: HashMap<String, LedgerAccount>,
-            createdAccounts: ArrayList<LedgerAccount>
-        ): LedgerAccount {
+            map: HashMap<String, AccountBuilder>,
+            createdAccounts: ArrayList<AccountBuilder>
+        ): AccountBuilder {
             map[accountName]?.let { return it }
 
-            val parentName = LedgerAccount.extractParentName(accountName)
-            val parentAccount = if (parentName != null) {
+            val parentName = extractParentName(accountName)
+            if (parentName != null) {
                 ensureAccountExists(parentName, map, createdAccounts)
-            } else {
-                null
             }
 
-            val acc = LedgerAccount(accountName, parentAccount)
+            val acc = AccountBuilder(accountName)
             createdAccounts.add(acc)
             map[accountName] = acc
             return acc

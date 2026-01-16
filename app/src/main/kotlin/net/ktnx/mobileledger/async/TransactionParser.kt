@@ -19,8 +19,10 @@ package net.ktnx.mobileledger.async
 
 import java.text.ParseException
 import java.util.regex.Pattern
-import net.ktnx.mobileledger.model.LedgerTransaction
-import net.ktnx.mobileledger.model.LedgerTransactionAccount
+import net.ktnx.mobileledger.domain.model.Transaction
+import net.ktnx.mobileledger.domain.model.TransactionLine
+import net.ktnx.mobileledger.utils.Globals
+import net.ktnx.mobileledger.utils.SimpleDate
 
 /**
  * Parses ledger transactions from legacy HTML format.
@@ -50,12 +52,31 @@ class TransactionParser {
     }
 
     /**
+     * Intermediate data class for building transactions during parsing.
+     */
+    private data class TransactionBuilder(
+        val ledgerId: Long,
+        val date: SimpleDate,
+        val description: String,
+        val lines: MutableList<TransactionLine> = mutableListOf()
+    ) {
+        fun toTransaction(): Transaction = Transaction(
+            id = null,
+            ledgerId = ledgerId,
+            date = date,
+            description = description,
+            comment = null,
+            lines = lines.toList()
+        )
+    }
+
+    /**
      * Parse transactions from legacy HTML lines.
      *
      * @param lines The HTML content lines to parse (from General Journal section)
      * @return Result containing list of parsed transactions or error
      */
-    fun parseTransactions(lines: List<String>): Result<List<LedgerTransaction>> = try {
+    fun parseTransactions(lines: List<String>): Result<List<Transaction>> = try {
         Result.success(parseTransactionsInternal(lines))
     } catch (e: TransactionParseException) {
         Result.failure(e)
@@ -63,11 +84,11 @@ class TransactionParser {
         Result.failure(TransactionParseException("Parse error: ${e.message}", e))
     }
 
-    private fun parseTransactionsInternal(lines: List<String>): List<LedgerTransaction> {
-        val transactions = mutableListOf<LedgerTransaction>()
+    private fun parseTransactionsInternal(lines: List<String>): List<Transaction> {
+        val transactions = mutableListOf<Transaction>()
         var state = ParserState.EXPECTING_TRANSACTION
         var transactionId = 0
-        var transaction: LedgerTransaction? = null
+        var builder: TransactionBuilder? = null
 
         for (line in lines) {
             val commentMatcher = reComment.matcher(line)
@@ -101,30 +122,30 @@ class TransactionParser {
                             )
                         }
 
-                        var date = requireNotNull(m.group(1)) { "Date match group is null" }
-                        val equalsIndex = date.indexOf('=')
+                        var dateStr = requireNotNull(m.group(1)) { "Date match group is null" }
+                        val equalsIndex = dateStr.indexOf('=')
                         if (equalsIndex >= 0) {
-                            date = date.substring(equalsIndex + 1)
+                            dateStr = dateStr.substring(equalsIndex + 1)
                         }
-                        transaction = LedgerTransaction(
-                            transactionId.toLong(),
-                            date,
-                            m.group(2)
+                        val date = Globals.parseLedgerDate(dateStr)
+                        builder = TransactionBuilder(
+                            ledgerId = transactionId.toLong(),
+                            date = date,
+                            description = m.group(2) ?: ""
                         )
                         state = ParserState.EXPECTING_TRANSACTION_DETAILS
                     }
                 }
 
                 ParserState.EXPECTING_TRANSACTION_DETAILS -> {
-                    val currentTransaction = requireNotNull(transaction) { "Transaction is null" }
+                    val currentBuilder = requireNotNull(builder) { "Transaction builder is null" }
                     if (line.isEmpty()) {
-                        currentTransaction.finishLoading()
-                        transactions.add(currentTransaction)
+                        transactions.add(currentBuilder.toTransaction())
                         state = ParserState.EXPECTING_TRANSACTION
                     } else {
-                        val lta = parseTransactionAccountLine(line)
-                        if (lta != null) {
-                            currentTransaction.addAccount(lta)
+                        val txLine = parseTransactionAccountLine(line)
+                        if (txLine != null) {
+                            currentBuilder.lines.add(txLine)
                         } else {
                             throw TransactionParseException(
                                 "Can't parse transaction $transactionId details: $line"
@@ -155,10 +176,10 @@ class TransactionParser {
          * Parse a single transaction account line.
          *
          * @param line The line to parse
-         * @return The parsed account entry, or null if the line doesn't match
+         * @return The parsed transaction line, or null if the line doesn't match
          */
         @JvmStatic
-        fun parseTransactionAccountLine(line: String): LedgerTransactionAccount? {
+        fun parseTransactionAccountLine(line: String): TransactionLine? {
             val m = reTransactionDetails.matcher(line)
             if (m.find()) {
                 val accName = requireNotNull(m.group(2)) { "Account name is null" }
@@ -166,7 +187,7 @@ class TransactionParser {
                 var amount = requireNotNull(m.group(4)) { "Amount is null" }
                 val currencyPost = m.group(5)
 
-                val currency: String? = when {
+                val currency: String = when {
                     !currencyPre.isNullOrEmpty() -> {
                         if (!currencyPost.isNullOrEmpty()) return null
                         currencyPre
@@ -174,12 +195,17 @@ class TransactionParser {
 
                     !currencyPost.isNullOrEmpty() -> currencyPost
 
-                    else -> null
+                    else -> ""
                 }
 
                 amount = amount.replace(',', '.')
 
-                return LedgerTransactionAccount(accName, amount.toFloat(), currency, null)
+                return TransactionLine(
+                    accountName = accName,
+                    amount = amount.toFloat(),
+                    currency = currency,
+                    comment = null
+                )
             }
             return null
         }
