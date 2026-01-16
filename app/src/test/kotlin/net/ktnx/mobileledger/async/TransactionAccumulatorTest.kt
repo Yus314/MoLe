@@ -17,10 +17,10 @@
 
 package net.ktnx.mobileledger.async
 
+import net.ktnx.mobileledger.domain.model.Transaction
+import net.ktnx.mobileledger.domain.model.TransactionLine
 import net.ktnx.mobileledger.fake.FakeCurrencyFormatter
-import net.ktnx.mobileledger.model.LedgerTransaction
-import net.ktnx.mobileledger.model.LedgerTransactionAccount
-import net.ktnx.mobileledger.model.TransactionListItem
+import net.ktnx.mobileledger.ui.main.TransactionListDisplayItem
 import net.ktnx.mobileledger.utils.SimpleDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -49,27 +49,31 @@ class TransactionAccumulatorTest {
     // ========================================
 
     /**
-     * Creates a test transaction with the given accounts.
-     * Uses the profileId-based constructor to avoid App dependency.
+     * Creates a test transaction with the given lines.
      */
     private fun createTransaction(
         ledgerId: Long,
         date: SimpleDate,
         description: String,
-        accounts: List<LedgerTransactionAccount>
-    ): LedgerTransaction {
-        val transaction = LedgerTransaction(ledgerId, 1L) // profileId = 1
-        transaction.date = date
-        transaction.description = description
-        accounts.forEach { transaction.addAccount(it) }
-        return transaction
-    }
+        lines: List<TransactionLine>
+    ): Transaction = Transaction(
+        id = null,
+        ledgerId = ledgerId,
+        date = date,
+        description = description,
+        comment = null,
+        lines = lines
+    )
 
     /**
-     * Creates a simple transaction account.
+     * Creates a simple transaction line.
      */
-    private fun createAccount(name: String, amount: Float, currency: String? = null): LedgerTransactionAccount =
-        LedgerTransactionAccount(name, amount, currency, null)
+    private fun createLine(name: String, amount: Float, currency: String = "") = TransactionLine(
+        accountName = name,
+        amount = amount,
+        currency = currency,
+        comment = null
+    )
 
     // ========================================
     // T007: Single transaction running total tests
@@ -87,9 +91,9 @@ class TransactionAccumulatorTest {
             ledgerId = 1,
             date = SimpleDate(2026, 1, 15),
             description = "Lunch",
-            accounts = listOf(
-                createAccount("Expenses:Food", 25.50f),
-                createAccount("Assets:Cash", -25.50f)
+            lines = listOf(
+                createLine("Expenses:Food", 25.50f),
+                createLine("Assets:Cash", -25.50f)
             )
         )
 
@@ -100,7 +104,7 @@ class TransactionAccumulatorTest {
         assertTrue("Should have at least 2 items", items.size >= 2)
 
         // Find the transaction item
-        val transactionItem = items.find { it.type == TransactionListItem.Type.TRANSACTION }
+        val transactionItem = items.filterIsInstance<TransactionListDisplayItem.Transaction>().firstOrNull()
         assertNotNull("Should have a transaction item", transactionItem)
         assertEquals("25.50", transactionItem!!.runningTotal)
     }
@@ -117,16 +121,16 @@ class TransactionAccumulatorTest {
             ledgerId = 1,
             date = SimpleDate(2026, 1, 15),
             description = "Lunch",
-            accounts = listOf(
-                createAccount("Expenses:Food", 25.50f),
-                createAccount("Assets:Cash", -25.50f)
+            lines = listOf(
+                createLine("Expenses:Food", 25.50f),
+                createLine("Assets:Cash", -25.50f)
             )
         )
 
         accumulator.put(transaction)
         val items = accumulator.getItems()
 
-        val transactionItem = items.find { it.type == TransactionListItem.Type.TRANSACTION }
+        val transactionItem = items.filterIsInstance<TransactionListDisplayItem.Transaction>().firstOrNull()
         assertNotNull(transactionItem)
         assertNull("Running total should be null when no accumulate account", transactionItem!!.runningTotal)
     }
@@ -147,9 +151,9 @@ class TransactionAccumulatorTest {
             ledgerId = 1,
             date = SimpleDate(2026, 1, 15),
             description = "Lunch",
-            accounts = listOf(
-                createAccount("Expenses:Food", 25.00f),
-                createAccount("Assets:Cash", -25.00f)
+            lines = listOf(
+                createLine("Expenses:Food", 25.00f),
+                createLine("Assets:Cash", -25.00f)
             )
         )
 
@@ -157,9 +161,9 @@ class TransactionAccumulatorTest {
             ledgerId = 2,
             date = SimpleDate(2026, 1, 16),
             description = "Dinner",
-            accounts = listOf(
-                createAccount("Expenses:Food", 35.50f),
-                createAccount("Assets:Cash", -35.50f)
+            lines = listOf(
+                createLine("Expenses:Food", 35.50f),
+                createLine("Assets:Cash", -35.50f)
             )
         )
 
@@ -168,7 +172,7 @@ class TransactionAccumulatorTest {
         val items = accumulator.getItems()
 
         // Items are reversed in getItems(), so most recent comes first after header
-        val transactions = items.filter { it.type == TransactionListItem.Type.TRANSACTION }
+        val transactions = items.filterIsInstance<TransactionListDisplayItem.Transaction>()
         assertEquals("Should have 2 transactions", 2, transactions.size)
 
         // The most recent transaction (dinner) should show the cumulative total: 25.00 + 35.50 = 60.50
@@ -191,9 +195,9 @@ class TransactionAccumulatorTest {
             ledgerId = 1,
             date = SimpleDate(2026, 1, 15),
             description = "Initial deposit",
-            accounts = listOf(
-                createAccount("Assets:Cash", 100.00f),
-                createAccount("Income:Salary", -100.00f)
+            lines = listOf(
+                createLine("Assets:Cash", 100.00f),
+                createLine("Income:Salary", -100.00f)
             )
         )
 
@@ -201,9 +205,9 @@ class TransactionAccumulatorTest {
             ledgerId = 2,
             date = SimpleDate(2026, 1, 16),
             description = "Withdrawal",
-            accounts = listOf(
-                createAccount("Assets:Cash", -30.00f),
-                createAccount("Expenses:Shopping", 30.00f)
+            lines = listOf(
+                createLine("Assets:Cash", -30.00f),
+                createLine("Expenses:Shopping", 30.00f)
             )
         )
 
@@ -211,7 +215,7 @@ class TransactionAccumulatorTest {
         accumulator.put(transaction2)
         val items = accumulator.getItems()
 
-        val transactions = items.filter { it.type == TransactionListItem.Type.TRANSACTION }
+        val transactions = items.filterIsInstance<TransactionListDisplayItem.Transaction>()
         val runningTotals = transactions.map { it.runningTotal }
 
         // After both transactions: 100.00 - 30.00 = 70.00
@@ -236,16 +240,16 @@ class TransactionAccumulatorTest {
             ledgerId = 1,
             date = SimpleDate(2026, 1, 15),
             description = "Big purchase",
-            accounts = listOf(
-                createAccount("Expenses:Food", 1234.56f),
-                createAccount("Assets:Cash", -1234.56f)
+            lines = listOf(
+                createLine("Expenses:Food", 1234.56f),
+                createLine("Assets:Cash", -1234.56f)
             )
         )
 
         accumulator.put(transaction)
         val items = accumulator.getItems()
 
-        val transactionItem = items.find { it.type == TransactionListItem.Type.TRANSACTION }
+        val transactionItem = items.filterIsInstance<TransactionListDisplayItem.Transaction>().firstOrNull()
         assertNotNull(transactionItem)
         // FakeCurrencyFormatter uses "#,##0.00" format with Locale.US
         assertEquals("1,234.56", transactionItem!!.runningTotal)
@@ -263,9 +267,9 @@ class TransactionAccumulatorTest {
             ledgerId = 1,
             date = SimpleDate(2026, 1, 15),
             description = "In",
-            accounts = listOf(
-                createAccount("Assets:Cash", 50.00f),
-                createAccount("Income:Gift", -50.00f)
+            lines = listOf(
+                createLine("Assets:Cash", 50.00f),
+                createLine("Income:Gift", -50.00f)
             )
         )
 
@@ -273,9 +277,9 @@ class TransactionAccumulatorTest {
             ledgerId = 2,
             date = SimpleDate(2026, 1, 16),
             description = "Out",
-            accounts = listOf(
-                createAccount("Assets:Cash", -50.00f),
-                createAccount("Expenses:Other", 50.00f)
+            lines = listOf(
+                createLine("Assets:Cash", -50.00f),
+                createLine("Expenses:Other", 50.00f)
             )
         )
 
@@ -283,7 +287,7 @@ class TransactionAccumulatorTest {
         accumulator.put(transaction2)
         val items = accumulator.getItems()
 
-        val transactions = items.filter { it.type == TransactionListItem.Type.TRANSACTION }
+        val transactions = items.filterIsInstance<TransactionListDisplayItem.Transaction>()
         val runningTotals = transactions.map { it.runningTotal }
 
         // After canceling out: 50 - 50 = 0
@@ -306,18 +310,18 @@ class TransactionAccumulatorTest {
             ledgerId = 1,
             date = SimpleDate(2026, 1, 15),
             description = "Multi-currency",
-            accounts = listOf(
-                createAccount("Assets:Cash", 100.00f, "USD"),
-                createAccount("Assets:Cash", 50.00f, "EUR"),
-                createAccount("Income:Other", -100.00f, "USD"),
-                createAccount("Income:Other", -50.00f, "EUR")
+            lines = listOf(
+                createLine("Assets:Cash", 100.00f, "USD"),
+                createLine("Assets:Cash", 50.00f, "EUR"),
+                createLine("Income:Other", -100.00f, "USD"),
+                createLine("Income:Other", -50.00f, "EUR")
             )
         )
 
         accumulator.put(transaction)
         val items = accumulator.getItems()
 
-        val transactionItem = items.find { it.type == TransactionListItem.Type.TRANSACTION }
+        val transactionItem = items.filterIsInstance<TransactionListDisplayItem.Transaction>().firstOrNull()
         assertNotNull(transactionItem)
 
         val runningTotal = transactionItem!!.runningTotal
@@ -346,16 +350,16 @@ class TransactionAccumulatorTest {
             ledgerId = 1,
             date = SimpleDate(2026, 1, 15),
             description = "Default currency",
-            accounts = listOf(
-                createAccount("Assets:Cash", 75.25f, null),
-                createAccount("Income:Other", -75.25f, null)
+            lines = listOf(
+                createLine("Assets:Cash", 75.25f, ""),
+                createLine("Income:Other", -75.25f, "")
             )
         )
 
         accumulator.put(transaction)
         val items = accumulator.getItems()
 
-        val transactionItem = items.find { it.type == TransactionListItem.Type.TRANSACTION }
+        val transactionItem = items.filterIsInstance<TransactionListDisplayItem.Transaction>().firstOrNull()
         assertNotNull(transactionItem)
         assertEquals("75.25", transactionItem!!.runningTotal)
     }
@@ -379,16 +383,16 @@ class TransactionAccumulatorTest {
             ledgerId = 1,
             date = SimpleDate(2026, 1, 15),
             description = "Test",
-            accounts = listOf(
-                createAccount("Expenses:Test", 9999.99f),
-                createAccount("Assets:Cash", -9999.99f)
+            lines = listOf(
+                createLine("Expenses:Test", 9999.99f),
+                createLine("Assets:Cash", -9999.99f)
             )
         )
 
         accumulator.put(transaction)
         val items = accumulator.getItems()
 
-        val transactionItem = items.find { it.type == TransactionListItem.Type.TRANSACTION }
+        val transactionItem = items.filterIsInstance<TransactionListDisplayItem.Transaction>().firstOrNull()
         assertNotNull(transactionItem)
 
         // FakeCurrencyFormatter formats with US locale: #,##0.00
@@ -409,16 +413,16 @@ class TransactionAccumulatorTest {
             ledgerId = 1,
             date = SimpleDate(2026, 1, 15),
             description = "Test",
-            accounts = listOf(
-                createAccount("Expenses:Food", 50.00f),
-                createAccount("Assets:Cash", -50.00f)
+            lines = listOf(
+                createLine("Expenses:Food", 50.00f),
+                createLine("Assets:Cash", -50.00f)
             )
         )
 
         accumulator.put(transaction)
         val items = accumulator.getItems()
 
-        val transactionItem = items.find { it.type == TransactionListItem.Type.TRANSACTION }
+        val transactionItem = items.filterIsInstance<TransactionListDisplayItem.Transaction>().firstOrNull()
         assertNotNull(transactionItem)
         assertEquals("50.00", transactionItem!!.runningTotal)
     }
@@ -437,7 +441,7 @@ class TransactionAccumulatorTest {
 
         val items = accumulator.getItems()
         assertTrue("Should have at least 1 item (header)", items.isNotEmpty())
-        assertEquals(TransactionListItem.Type.HEADER, items[0].type)
+        assertTrue("First item should be Header", items[0] is TransactionListDisplayItem.Header)
     }
 
     @Test
@@ -450,7 +454,7 @@ class TransactionAccumulatorTest {
 
         val items = accumulator.getItems()
         assertEquals("Should have exactly 1 item (header)", 1, items.size)
-        assertEquals(TransactionListItem.Type.HEADER, items[0].type)
+        assertTrue("First item should be Header", items[0] is TransactionListDisplayItem.Header)
     }
 
     @Test
@@ -466,9 +470,9 @@ class TransactionAccumulatorTest {
                 ledgerId = i.toLong() + 1,
                 date = SimpleDate(2026, 1, 15 + i),
                 description = "Transaction $i",
-                accounts = listOf(
-                    createAccount("Expenses:Test", 10.00f),
-                    createAccount("Assets:Cash", -10.00f)
+                lines = listOf(
+                    createLine("Expenses:Test", 10.00f),
+                    createLine("Assets:Cash", -10.00f)
                 )
             )
             accumulator.put(transaction)
@@ -494,7 +498,7 @@ class TransactionAccumulatorTest {
                 1,
                 date1,
                 "First",
-                listOf(createAccount("Expenses:Test", 10.00f))
+                listOf(createLine("Expenses:Test", 10.00f))
             )
         )
         accumulator.put(
@@ -502,7 +506,7 @@ class TransactionAccumulatorTest {
                 2,
                 date2,
                 "Second",
-                listOf(createAccount("Expenses:Test", 10.00f))
+                listOf(createLine("Expenses:Test", 10.00f))
             )
         )
 

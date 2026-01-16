@@ -41,8 +41,6 @@ import net.ktnx.mobileledger.data.repository.AccountRepository
 import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.data.repository.TransactionRepository
 import net.ktnx.mobileledger.domain.model.Transaction
-import net.ktnx.mobileledger.model.LedgerTransaction
-import net.ktnx.mobileledger.model.TransactionListItem
 import net.ktnx.mobileledger.service.CurrencyFormatter
 import net.ktnx.mobileledger.utils.SimpleDate
 
@@ -335,67 +333,6 @@ class TransactionListViewModel @Inject constructor(
         }
     }
 
-    private fun updateDisplayedTransactions(items: List<TransactionListItem>) {
-        val displayItems = items.map { item ->
-            when (item.type) {
-                TransactionListItem.Type.HEADER -> TransactionListDisplayItem.Header
-
-                TransactionListItem.Type.DELIMITER -> TransactionListDisplayItem.DateDelimiter(
-                    date = item.date,
-                    isMonthShown = item.isMonthShown
-                )
-
-                TransactionListItem.Type.TRANSACTION -> {
-                    val transaction = item.getTransaction()
-                    TransactionListDisplayItem.Transaction(
-                        id = transaction.ledgerId,
-                        date = transaction.requireDate(),
-                        description = transaction.description ?: "",
-                        comment = transaction.comment,
-                        accounts = transaction.accounts.map { acc ->
-                            TransactionAccountDisplayItem(
-                                accountName = acc.accountName,
-                                amount = if (acc.isAmountSet) acc.amount else 0f,
-                                currency = acc.currency ?: "",
-                                comment = acc.comment,
-                                amountStyle = acc.amountStyle
-                            )
-                        }.toImmutableList(),
-                        boldAccountName = item.boldAccountName,
-                        runningTotal = item.runningTotal
-                    )
-                }
-            }
-        }
-
-        // Update date range
-        var first: SimpleDate? = null
-        var last: SimpleDate? = null
-        for (item in displayItems) {
-            val date = when (item) {
-                is TransactionListDisplayItem.Transaction -> item.date
-                is TransactionListDisplayItem.DateDelimiter -> item.date
-                else -> null
-            }
-            if (date != null) {
-                if (first == null || date < first) first = date
-                if (last == null || date > last) last = date
-            }
-        }
-
-        val headerText = _uiState.value.headerText.ifEmpty { "----" }
-        _uiState.update {
-            it.copy(
-                transactions = displayItems.toImmutableList(),
-                isLoading = false,
-                error = null,
-                firstTransactionDate = first,
-                lastTransactionDate = last,
-                headerText = headerText
-            )
-        }
-    }
-
     /**
      * Update the header text shown in the transaction list.
      */
@@ -410,7 +347,7 @@ class TransactionListViewModel @Inject constructor(
      * Uses viewModelScope.launch instead of Thread for proper lifecycle management
      * and deterministic testing with TestDispatcher.
      */
-    fun updateDisplayedTransactionsFromWeb(list: List<LedgerTransaction>) {
+    fun updateDisplayedTransactionsFromWeb(list: List<Transaction>) {
         // Cancel any previously running filter job
         displayedTransactionsFilterJob?.cancel()
 
@@ -422,15 +359,15 @@ class TransactionListViewModel @Inject constructor(
             for (tr in list) {
                 ensureActive() // Check for cancellation instead of isInterrupted
 
-                if (accNameFilter == null || tr.hasAccountNamedLike(accNameFilter)) {
-                    tr.date?.let { date -> acc.put(tr, date) }
+                if (accNameFilter == null || tr.hasAccountNamed(accNameFilter)) {
+                    acc.put(tr, tr.date)
                 }
             }
 
             ensureActive() // Check for cancellation before updating UI
 
             val items = acc.getItems()
-            updateDisplayedTransactions(items)
+            updateDisplayedTransactionsDirectly(items)
             logcat { "transaction list updated" }
         }
     }
