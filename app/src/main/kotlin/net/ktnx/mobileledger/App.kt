@@ -33,9 +33,19 @@ import logcat.asLog
 import logcat.logcat
 import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.service.CurrencyFormatter
-import net.ktnx.mobileledger.ui.profiles.ProfileDetailModel
 import net.ktnx.mobileledger.utils.Colors
 import net.ktnx.mobileledger.utils.Globals
+
+/**
+ * Simple data holder for temporary authentication credentials.
+ * Used during profile editing when testing connection to a server.
+ */
+data class TemporaryAuthData(
+    val url: String,
+    val useAuthentication: Boolean,
+    val authUser: String,
+    val authPassword: String
+)
 
 @HiltAndroidApp
 class App : Application() {
@@ -48,17 +58,17 @@ class App : Application() {
 
     private var monthNamesPrepared = false
 
-    private fun getAuthURL(): String = profileModel?.getUrl()
+    private fun getAuthURL(): String = temporaryAuthData?.url
         ?: profileRepository.currentProfile.value?.url ?: ""
 
     private fun getAuthUserName(): String =
-        profileModel?.getAuthUserName() ?: profileRepository.currentProfile.value?.authUser ?: ""
+        temporaryAuthData?.authUser ?: profileRepository.currentProfile.value?.authUser ?: ""
 
     private fun getAuthPassword(): String =
-        profileModel?.getAuthPassword() ?: profileRepository.currentProfile.value?.authPassword ?: ""
+        temporaryAuthData?.authPassword ?: profileRepository.currentProfile.value?.authPassword ?: ""
 
     private fun getAuthEnabled(): Boolean =
-        profileModel?.getUseAuthentication() ?: profileRepository.currentProfile.value?.isAuthEnabled() ?: false
+        temporaryAuthData?.useAuthentication ?: profileRepository.currentProfile.value?.isAuthEnabled() ?: false
 
     override fun onCreate() {
         instance = this
@@ -118,21 +128,28 @@ class App : Application() {
         @JvmStatic
         lateinit var instance: App
 
-        private var profileModel: ProfileDetailModel? = null
+        private var temporaryAuthData: TemporaryAuthData? = null
 
         @JvmStatic
         fun prepareMonthNames() {
             instance.prepareMonthNamesInternal(false)
         }
 
+        /**
+         * Set temporary authentication data for connection testing.
+         * This is used during profile editing when the profile hasn't been saved yet.
+         */
         @JvmStatic
-        fun setAuthenticationDataFromProfileModel(model: ProfileDetailModel?) {
-            profileModel = model
+        fun setTemporaryAuthData(authData: TemporaryAuthData?) {
+            temporaryAuthData = authData
         }
 
+        /**
+         * Clear temporary authentication data after connection testing.
+         */
         @JvmStatic
         fun resetAuthenticationData() {
-            profileModel = null
+            temporaryAuthData = null
         }
 
         @JvmStatic

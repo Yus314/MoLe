@@ -24,6 +24,8 @@ import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 import net.ktnx.mobileledger.service.AppStateService
 import net.ktnx.mobileledger.service.AppStateServiceImpl
+import net.ktnx.mobileledger.service.AuthDataProvider
+import net.ktnx.mobileledger.service.AuthDataProviderImpl
 import net.ktnx.mobileledger.service.BackgroundTaskManager
 import net.ktnx.mobileledger.service.BackgroundTaskManagerImpl
 import net.ktnx.mobileledger.service.CurrencyFormatter
@@ -61,4 +63,8 @@ abstract class ServiceModule {
     @Binds
     @Singleton
     abstract fun bindAppStateService(impl: AppStateServiceImpl): AppStateService
+
+    @Binds
+    @Singleton
+    abstract fun bindAuthDataProvider(impl: AuthDataProviderImpl): AuthDataProvider
 }

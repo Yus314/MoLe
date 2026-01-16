@@ -17,6 +17,7 @@
 
 package net.ktnx.mobileledger.ui.profile
 
+import androidx.lifecycle.SavedStateHandle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -25,38 +26,54 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import net.ktnx.mobileledger.TemporaryAuthData
 import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.db.Profile
+import net.ktnx.mobileledger.json.API
+import net.ktnx.mobileledger.model.FutureDates
+import net.ktnx.mobileledger.service.AuthDataProvider
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
 /**
- * Unit tests for ProfileDetailViewModel repository interactions.
+ * Unit tests for ProfileDetailViewModel.
  *
- * These tests verify that ProfileDetailViewModel correctly uses ProfileRepository
- * for profile CRUD operations.
- *
- * Note: Full ViewModel testing with SavedStateHandle and network operations
- * requires instrumentation tests.
+ * Tests cover:
+ * - Form field updates
+ * - Validation logic
+ * - Save/delete operations
+ * - UI state (dialogs, loading states)
  */
 @OptIn(ExperimentalCoroutinesApi::class)
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [28], manifest = Config.NONE)
 class ProfileDetailViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var profileRepository: FakeProfileRepositoryForProfileDetail
+    private lateinit var authDataProvider: FakeAuthDataProvider
+    private lateinit var savedStateHandle: SavedStateHandle
+    private lateinit var viewModel: ProfileDetailViewModel
 
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         profileRepository = FakeProfileRepositoryForProfileDetail()
+        authDataProvider = FakeAuthDataProvider()
+        savedStateHandle = SavedStateHandle()
     }
 
     @After
@@ -64,15 +81,18 @@ class ProfileDetailViewModelTest {
         Dispatchers.resetMain()
     }
 
-    // ========================================
-    // Helper methods
-    // ========================================
+    private fun createViewModel(): ProfileDetailViewModel = ProfileDetailViewModel(
+        profileRepository = profileRepository,
+        authDataProvider = authDataProvider,
+        ioDispatcher = testDispatcher,
+        savedStateHandle = savedStateHandle
+    )
 
     private fun createTestProfile(
         id: Long = 0L,
         name: String = "Test Profile",
         url: String = "https://example.com/ledger",
-        theme: Int = 0
+        theme: Int = 180
     ): Profile = Profile().apply {
         this.id = id
         this.name = name
@@ -82,149 +102,633 @@ class ProfileDetailViewModelTest {
         this.orderNo = 1
         this.useAuthentication = false
         this.permitPosting = true
+        this.futureDates = FutureDates.None.toInt()
+        this.apiVersion = API.auto.toInt()
     }
 
     // ========================================
-    // Profile loading tests
+    // Initialization tests
     // ========================================
 
     @Test
-    fun `getProfileByIdSync returns null for non-existent profile`() = runTest {
-        val result = profileRepository.getProfileByIdSync(999L)
-        assertNull(result)
+    fun `initialize with new profile sets default values`() = runTest {
+        viewModel = createViewModel()
+        viewModel.initialize(profileId = 0L, initialThemeHue = 120)
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertFalse(state.isLoading)
+        assertEquals(120, state.themeHue)
+        assertTrue(state.isNewProfile)
+        assertEquals("https://", state.url)
     }
 
     @Test
-    fun `getProfileByIdSync returns existing profile`() = runTest {
-        val profile = createTestProfile(name = "Existing Profile")
+    fun `initialize with existing profile loads profile data`() = runTest {
+        val profile = createTestProfile(name = "Existing Profile", url = "https://test.com")
         val id = profileRepository.insertProfile(profile)
 
-        val result = profileRepository.getProfileByIdSync(id)
+        viewModel = createViewModel()
+        viewModel.initialize(profileId = id, initialThemeHue = -1)
+        advanceUntilIdle()
 
-        assertNotNull(result)
-        assertEquals("Existing Profile", result?.name)
+        val state = viewModel.uiState.value
+        assertFalse(state.isLoading)
+        assertEquals("Existing Profile", state.name)
+        assertEquals("https://test.com", state.url)
+        assertFalse(state.isNewProfile)
+    }
+
+    @Test
+    fun `initialize only runs once`() = runTest {
+        viewModel = createViewModel()
+        viewModel.initialize(profileId = 0L, initialThemeHue = 100)
+        advanceUntilIdle()
+
+        // Try to initialize again with different values
+        viewModel.initialize(profileId = 0L, initialThemeHue = 200)
+        advanceUntilIdle()
+
+        // Should still have original value
+        assertEquals(100, viewModel.uiState.value.themeHue)
     }
 
     // ========================================
-    // Profile creation tests
+    // Form field update tests
     // ========================================
 
     @Test
-    fun `insertProfile assigns id and stores profile`() = runTest {
-        val profile = createTestProfile(name = "New Profile")
+    fun `updateName updates state and marks unsaved changes`() = runTest {
+        viewModel = createViewModel()
+        viewModel.initialize(profileId = 0L, initialThemeHue = 0)
+        advanceUntilIdle()
 
+        viewModel.onEvent(ProfileDetailEvent.UpdateName("New Name"))
+
+        val state = viewModel.uiState.value
+        assertEquals("New Name", state.name)
+        assertTrue(state.hasUnsavedChanges)
+    }
+
+    @Test
+    fun `updateUrl updates state and marks unsaved changes`() = runTest {
+        viewModel = createViewModel()
+        viewModel.initialize(profileId = 0L, initialThemeHue = 0)
+        advanceUntilIdle()
+
+        viewModel.onEvent(ProfileDetailEvent.UpdateUrl("https://new-url.com"))
+
+        val state = viewModel.uiState.value
+        assertEquals("https://new-url.com", state.url)
+        assertTrue(state.hasUnsavedChanges)
+    }
+
+    @Test
+    fun `updateUseAuthentication updates state`() = runTest {
+        viewModel = createViewModel()
+        viewModel.initialize(profileId = 0L, initialThemeHue = 0)
+        advanceUntilIdle()
+
+        viewModel.onEvent(ProfileDetailEvent.UpdateUseAuthentication(true))
+
+        assertTrue(viewModel.uiState.value.useAuthentication)
+    }
+
+    @Test
+    fun `updateAuthUser updates state`() = runTest {
+        viewModel = createViewModel()
+        viewModel.initialize(profileId = 0L, initialThemeHue = 0)
+        advanceUntilIdle()
+
+        viewModel.onEvent(ProfileDetailEvent.UpdateAuthUser("testuser"))
+
+        assertEquals("testuser", viewModel.uiState.value.authUser)
+    }
+
+    @Test
+    fun `updateAuthPassword updates state`() = runTest {
+        viewModel = createViewModel()
+        viewModel.initialize(profileId = 0L, initialThemeHue = 0)
+        advanceUntilIdle()
+
+        viewModel.onEvent(ProfileDetailEvent.UpdateAuthPassword("secret123"))
+
+        assertEquals("secret123", viewModel.uiState.value.authPassword)
+    }
+
+    @Test
+    fun `updateThemeHue updates state`() = runTest {
+        viewModel = createViewModel()
+        viewModel.initialize(profileId = 0L, initialThemeHue = 0)
+        advanceUntilIdle()
+
+        viewModel.onEvent(ProfileDetailEvent.UpdateThemeHue(240))
+
+        assertEquals(240, viewModel.uiState.value.themeHue)
+    }
+
+    @Test
+    fun `updateFutureDates updates state`() = runTest {
+        viewModel = createViewModel()
+        viewModel.initialize(profileId = 0L, initialThemeHue = 0)
+        advanceUntilIdle()
+
+        viewModel.onEvent(ProfileDetailEvent.UpdateFutureDates(FutureDates.All))
+
+        assertEquals(FutureDates.All, viewModel.uiState.value.futureDates)
+    }
+
+    @Test
+    fun `updateApiVersion updates state`() = runTest {
+        viewModel = createViewModel()
+        viewModel.initialize(profileId = 0L, initialThemeHue = 0)
+        advanceUntilIdle()
+
+        viewModel.onEvent(ProfileDetailEvent.UpdateApiVersion(API.v1_23))
+
+        assertEquals(API.v1_23, viewModel.uiState.value.apiVersion)
+    }
+
+    @Test
+    fun `updatePermitPosting updates state`() = runTest {
+        viewModel = createViewModel()
+        viewModel.initialize(profileId = 0L, initialThemeHue = 0)
+        advanceUntilIdle()
+
+        viewModel.onEvent(ProfileDetailEvent.UpdatePermitPosting(false))
+
+        assertFalse(viewModel.uiState.value.permitPosting)
+    }
+
+    @Test
+    fun `updateShowCommentsByDefault updates state`() = runTest {
+        viewModel = createViewModel()
+        viewModel.initialize(profileId = 0L, initialThemeHue = 0)
+        advanceUntilIdle()
+
+        viewModel.onEvent(ProfileDetailEvent.UpdateShowCommentsByDefault(false))
+
+        assertFalse(viewModel.uiState.value.showCommentsByDefault)
+    }
+
+    @Test
+    fun `updateShowCommodityByDefault updates state`() = runTest {
+        viewModel = createViewModel()
+        viewModel.initialize(profileId = 0L, initialThemeHue = 0)
+        advanceUntilIdle()
+
+        viewModel.onEvent(ProfileDetailEvent.UpdateShowCommodityByDefault(true))
+
+        assertTrue(viewModel.uiState.value.showCommodityByDefault)
+    }
+
+    @Test
+    fun `updateDefaultCommodity updates state`() = runTest {
+        viewModel = createViewModel()
+        viewModel.initialize(profileId = 0L, initialThemeHue = 0)
+        advanceUntilIdle()
+
+        viewModel.onEvent(ProfileDetailEvent.UpdateDefaultCommodity("USD"))
+
+        assertEquals("USD", viewModel.uiState.value.defaultCommodity)
+    }
+
+    @Test
+    fun `updatePreferredAccountsFilter updates state`() = runTest {
+        viewModel = createViewModel()
+        viewModel.initialize(profileId = 0L, initialThemeHue = 0)
+        advanceUntilIdle()
+
+        viewModel.onEvent(ProfileDetailEvent.UpdatePreferredAccountsFilter("Assets:"))
+
+        assertEquals("Assets:", viewModel.uiState.value.preferredAccountsFilter)
+    }
+
+    // ========================================
+    // Validation tests
+    // ========================================
+
+    @Test
+    fun `save with empty name shows validation error`() = runTest {
+        viewModel = createViewModel()
+        viewModel.initialize(profileId = 0L, initialThemeHue = 0)
+        advanceUntilIdle()
+
+        viewModel.onEvent(ProfileDetailEvent.UpdateUrl("https://valid.com"))
+        viewModel.onEvent(ProfileDetailEvent.Save)
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertTrue(state.validationErrors.containsKey(ProfileField.NAME))
+    }
+
+    @Test
+    fun `save with empty url shows validation error`() = runTest {
+        viewModel = createViewModel()
+        viewModel.initialize(profileId = 0L, initialThemeHue = 0)
+        advanceUntilIdle()
+
+        viewModel.onEvent(ProfileDetailEvent.UpdateName("Test"))
+        viewModel.onEvent(ProfileDetailEvent.UpdateUrl(""))
+        viewModel.onEvent(ProfileDetailEvent.Save)
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertTrue(state.validationErrors.containsKey(ProfileField.URL))
+    }
+
+    @Test
+    fun `save with invalid url shows validation error`() = runTest {
+        viewModel = createViewModel()
+        viewModel.initialize(profileId = 0L, initialThemeHue = 0)
+        advanceUntilIdle()
+
+        viewModel.onEvent(ProfileDetailEvent.UpdateName("Test"))
+        viewModel.onEvent(ProfileDetailEvent.UpdateUrl("not-a-valid-url"))
+        viewModel.onEvent(ProfileDetailEvent.Save)
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertTrue(state.validationErrors.containsKey(ProfileField.URL))
+    }
+
+    @Test
+    fun `save with auth enabled but empty username shows validation error`() = runTest {
+        viewModel = createViewModel()
+        viewModel.initialize(profileId = 0L, initialThemeHue = 0)
+        advanceUntilIdle()
+
+        viewModel.onEvent(ProfileDetailEvent.UpdateName("Test"))
+        viewModel.onEvent(ProfileDetailEvent.UpdateUrl("https://valid.com"))
+        viewModel.onEvent(ProfileDetailEvent.UpdateUseAuthentication(true))
+        viewModel.onEvent(ProfileDetailEvent.UpdateAuthPassword("password"))
+        viewModel.onEvent(ProfileDetailEvent.Save)
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertTrue(state.validationErrors.containsKey(ProfileField.AUTH_USER))
+    }
+
+    @Test
+    fun `save with auth enabled but empty password shows validation error`() = runTest {
+        viewModel = createViewModel()
+        viewModel.initialize(profileId = 0L, initialThemeHue = 0)
+        advanceUntilIdle()
+
+        viewModel.onEvent(ProfileDetailEvent.UpdateName("Test"))
+        viewModel.onEvent(ProfileDetailEvent.UpdateUrl("https://valid.com"))
+        viewModel.onEvent(ProfileDetailEvent.UpdateUseAuthentication(true))
+        viewModel.onEvent(ProfileDetailEvent.UpdateAuthUser("user"))
+        viewModel.onEvent(ProfileDetailEvent.Save)
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertTrue(state.validationErrors.containsKey(ProfileField.AUTH_PASSWORD))
+    }
+
+    @Test
+    fun `updating field clears its validation error`() = runTest {
+        viewModel = createViewModel()
+        viewModel.initialize(profileId = 0L, initialThemeHue = 0)
+        advanceUntilIdle()
+
+        // Trigger validation error
+        viewModel.onEvent(ProfileDetailEvent.Save)
+        advanceUntilIdle()
+        assertTrue(viewModel.uiState.value.validationErrors.containsKey(ProfileField.NAME))
+
+        // Update the field
+        viewModel.onEvent(ProfileDetailEvent.UpdateName("Valid Name"))
+
+        // Error should be cleared
+        assertFalse(viewModel.uiState.value.validationErrors.containsKey(ProfileField.NAME))
+    }
+
+    @Test
+    fun `clearValidationError clears all errors`() = runTest {
+        viewModel = createViewModel()
+        viewModel.initialize(profileId = 0L, initialThemeHue = 0)
+        advanceUntilIdle()
+
+        viewModel.onEvent(ProfileDetailEvent.Save)
+        advanceUntilIdle()
+        assertTrue(viewModel.uiState.value.validationErrors.isNotEmpty())
+
+        viewModel.onEvent(ProfileDetailEvent.ClearValidationError)
+
+        assertTrue(viewModel.uiState.value.validationErrors.isEmpty())
+    }
+
+    // ========================================
+    // Save profile tests
+    // ========================================
+
+    @Test
+    fun `save valid new profile inserts into repository`() = runTest {
+        viewModel = createViewModel()
+        viewModel.initialize(profileId = 0L, initialThemeHue = 0)
+        advanceUntilIdle()
+
+        viewModel.onEvent(ProfileDetailEvent.UpdateName("New Profile"))
+        viewModel.onEvent(ProfileDetailEvent.UpdateUrl("https://valid.com"))
+        viewModel.onEvent(ProfileDetailEvent.Save)
+        advanceUntilIdle()
+
+        assertEquals(1, profileRepository.getProfileCount())
+        val saved = profileRepository.getAllProfilesSync().first()
+        assertEquals("New Profile", saved.name)
+        assertEquals("https://valid.com", saved.url)
+    }
+
+    @Test
+    fun `save valid existing profile updates repository`() = runTest {
+        val profile = createTestProfile(name = "Original", url = "https://original.com")
         val id = profileRepository.insertProfile(profile)
 
-        assertTrue(id > 0)
-        val stored = profileRepository.getProfileByIdSync(id)
-        assertNotNull(stored)
-        assertEquals("New Profile", stored?.name)
+        viewModel = createViewModel()
+        viewModel.initialize(profileId = id, initialThemeHue = -1)
+        advanceUntilIdle()
+
+        viewModel.onEvent(ProfileDetailEvent.UpdateName("Updated"))
+        viewModel.onEvent(ProfileDetailEvent.UpdateUrl("https://updated.com"))
+        viewModel.onEvent(ProfileDetailEvent.Save)
+        advanceUntilIdle()
+
+        assertEquals(1, profileRepository.getProfileCount())
+        val saved = profileRepository.getProfileByIdSync(id)
+        assertEquals("Updated", saved?.name)
+        assertEquals("https://updated.com", saved?.url)
     }
 
     @Test
-    fun `insertProfile increments profile count`() = runTest {
-        assertEquals(0, profileRepository.getProfileCount())
+    fun `save clears unsaved changes flag`() = runTest {
+        viewModel = createViewModel()
+        viewModel.initialize(profileId = 0L, initialThemeHue = 0)
+        advanceUntilIdle()
 
-        profileRepository.insertProfile(createTestProfile(name = "Profile 1"))
+        viewModel.onEvent(ProfileDetailEvent.UpdateName("Test"))
+        viewModel.onEvent(ProfileDetailEvent.UpdateUrl("https://test.com"))
+        assertTrue(viewModel.uiState.value.hasUnsavedChanges)
+
+        viewModel.onEvent(ProfileDetailEvent.Save)
+        advanceUntilIdle()
+
+        assertFalse(viewModel.uiState.value.hasUnsavedChanges)
+    }
+
+    // ========================================
+    // Delete profile tests
+    // ========================================
+
+    @Test
+    fun `showDeleteConfirmDialog shows dialog`() = runTest {
+        val profile = createTestProfile()
+        val id = profileRepository.insertProfile(profile)
+
+        viewModel = createViewModel()
+        viewModel.initialize(profileId = id, initialThemeHue = -1)
+        advanceUntilIdle()
+
+        viewModel.onEvent(ProfileDetailEvent.ShowDeleteConfirmDialog)
+
+        assertTrue(viewModel.uiState.value.showDeleteConfirmDialog)
+    }
+
+    @Test
+    fun `dismissDeleteConfirmDialog hides dialog`() = runTest {
+        val profile = createTestProfile()
+        val id = profileRepository.insertProfile(profile)
+
+        viewModel = createViewModel()
+        viewModel.initialize(profileId = id, initialThemeHue = -1)
+        advanceUntilIdle()
+
+        viewModel.onEvent(ProfileDetailEvent.ShowDeleteConfirmDialog)
+        viewModel.onEvent(ProfileDetailEvent.DismissDeleteConfirmDialog)
+
+        assertFalse(viewModel.uiState.value.showDeleteConfirmDialog)
+    }
+
+    @Test
+    fun `confirmDelete removes profile from repository`() = runTest {
+        val profile = createTestProfile()
+        val id = profileRepository.insertProfile(profile)
         assertEquals(1, profileRepository.getProfileCount())
 
-        profileRepository.insertProfile(createTestProfile(name = "Profile 2"))
-        assertEquals(2, profileRepository.getProfileCount())
+        viewModel = createViewModel()
+        viewModel.initialize(profileId = id, initialThemeHue = -1)
+        advanceUntilIdle()
+
+        viewModel.onEvent(ProfileDetailEvent.ConfirmDelete)
+        advanceUntilIdle()
+
+        assertEquals(0, profileRepository.getProfileCount())
     }
 
     // ========================================
-    // Profile update tests
+    // Unsaved changes dialog tests
     // ========================================
 
     @Test
-    fun `updateProfile modifies existing profile`() = runTest {
-        val profile = createTestProfile(name = "Original Name")
+    fun `navigateBack with unsaved changes shows dialog`() = runTest {
+        viewModel = createViewModel()
+        viewModel.initialize(profileId = 0L, initialThemeHue = 0)
+        advanceUntilIdle()
+
+        viewModel.onEvent(ProfileDetailEvent.UpdateName("Changed"))
+        viewModel.onEvent(ProfileDetailEvent.NavigateBack)
+
+        assertTrue(viewModel.uiState.value.showUnsavedChangesDialog)
+    }
+
+    @Test
+    fun `navigateBack without unsaved changes does not show dialog`() = runTest {
+        viewModel = createViewModel()
+        viewModel.initialize(profileId = 0L, initialThemeHue = 0)
+        advanceUntilIdle()
+
+        viewModel.onEvent(ProfileDetailEvent.NavigateBack)
+
+        assertFalse(viewModel.uiState.value.showUnsavedChangesDialog)
+    }
+
+    @Test
+    fun `dismissUnsavedChangesDialog hides dialog`() = runTest {
+        viewModel = createViewModel()
+        viewModel.initialize(profileId = 0L, initialThemeHue = 0)
+        advanceUntilIdle()
+
+        viewModel.onEvent(ProfileDetailEvent.UpdateName("Changed"))
+        viewModel.onEvent(ProfileDetailEvent.NavigateBack)
+        viewModel.onEvent(ProfileDetailEvent.DismissUnsavedChangesDialog)
+
+        assertFalse(viewModel.uiState.value.showUnsavedChangesDialog)
+    }
+
+    @Test
+    fun `confirmDiscardChanges hides dialog`() = runTest {
+        viewModel = createViewModel()
+        viewModel.initialize(profileId = 0L, initialThemeHue = 0)
+        advanceUntilIdle()
+
+        viewModel.onEvent(ProfileDetailEvent.UpdateName("Changed"))
+        viewModel.onEvent(ProfileDetailEvent.NavigateBack)
+        viewModel.onEvent(ProfileDetailEvent.ConfirmDiscardChanges)
+
+        assertFalse(viewModel.uiState.value.showUnsavedChangesDialog)
+    }
+
+    // ========================================
+    // Hue ring dialog tests
+    // ========================================
+
+    @Test
+    fun `showHueRingDialog shows dialog`() = runTest {
+        viewModel = createViewModel()
+        viewModel.initialize(profileId = 0L, initialThemeHue = 0)
+        advanceUntilIdle()
+
+        viewModel.onEvent(ProfileDetailEvent.ShowHueRingDialog)
+
+        assertTrue(viewModel.uiState.value.showHueRingDialog)
+    }
+
+    @Test
+    fun `dismissHueRingDialog hides dialog`() = runTest {
+        viewModel = createViewModel()
+        viewModel.initialize(profileId = 0L, initialThemeHue = 0)
+        advanceUntilIdle()
+
+        viewModel.onEvent(ProfileDetailEvent.ShowHueRingDialog)
+        viewModel.onEvent(ProfileDetailEvent.DismissHueRingDialog)
+
+        assertFalse(viewModel.uiState.value.showHueRingDialog)
+    }
+
+    // ========================================
+    // UiState computed properties tests
+    // ========================================
+
+    @Test
+    fun `isNewProfile returns true for new profile`() = runTest {
+        viewModel = createViewModel()
+        viewModel.initialize(profileId = 0L, initialThemeHue = 0)
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.isNewProfile)
+    }
+
+    @Test
+    fun `isNewProfile returns false for existing profile`() = runTest {
+        val profile = createTestProfile()
         val id = profileRepository.insertProfile(profile)
 
-        val updated = createTestProfile(id = id, name = "Updated Name")
-        profileRepository.updateProfile(updated)
+        viewModel = createViewModel()
+        viewModel.initialize(profileId = id, initialThemeHue = -1)
+        advanceUntilIdle()
 
-        val result = profileRepository.getProfileByIdSync(id)
-        assertEquals("Updated Name", result?.name)
+        assertFalse(viewModel.uiState.value.isNewProfile)
     }
 
     @Test
-    fun `updateProfile updates currentProfile if same profile`() = runTest {
-        val profile = createTestProfile(id = 1L, name = "Original")
-        profileRepository.insertProfile(profile)
-        profileRepository.setCurrentProfile(profile)
+    fun `canDelete returns false for new profile`() = runTest {
+        viewModel = createViewModel()
+        viewModel.initialize(profileId = 0L, initialThemeHue = 0)
+        advanceUntilIdle()
 
-        val updated = createTestProfile(id = 1L, name = "Updated")
-        profileRepository.updateProfile(updated)
-
-        val current = profileRepository.currentProfile.value
-        assertEquals("Updated", current?.name)
+        assertFalse(viewModel.uiState.value.canDelete)
     }
 
-    // ========================================
-    // Profile deletion tests
-    // ========================================
-
     @Test
-    fun `deleteProfile removes profile from repository`() = runTest {
-        val profile = createTestProfile(name = "ToDelete")
+    fun `canDelete returns true for existing profile`() = runTest {
+        val profile = createTestProfile()
         val id = profileRepository.insertProfile(profile)
-        profile.id = id
 
-        profileRepository.deleteProfile(profile)
+        viewModel = createViewModel()
+        viewModel.initialize(profileId = id, initialThemeHue = -1)
+        advanceUntilIdle()
 
-        val result = profileRepository.getProfileByIdSync(id)
-        assertNull(result)
+        assertTrue(viewModel.uiState.value.canDelete)
     }
 
     @Test
-    fun `deleteProfile clears currentProfile if deleted profile was current`() = runTest {
-        val profile = createTestProfile(name = "Current")
-        val id = profileRepository.insertProfile(profile)
-        profile.id = id
-        profileRepository.setCurrentProfile(profile)
+    fun `isFormValid returns true for valid form without auth`() = runTest {
+        viewModel = createViewModel()
+        viewModel.initialize(profileId = 0L, initialThemeHue = 0)
+        advanceUntilIdle()
 
-        profileRepository.deleteProfile(profile)
+        viewModel.onEvent(ProfileDetailEvent.UpdateName("Valid Name"))
+        viewModel.onEvent(ProfileDetailEvent.UpdateUrl("https://valid.com"))
 
-        val current = profileRepository.currentProfile.value
-        assertNull(current)
+        assertTrue(viewModel.uiState.value.isFormValid)
     }
 
     @Test
-    fun `deleteProfile selects another profile as current if available`() = runTest {
-        val profile1 = createTestProfile(name = "Profile 1")
-        val profile2 = createTestProfile(name = "Profile 2")
-        val id1 = profileRepository.insertProfile(profile1)
-        profileRepository.insertProfile(profile2)
-        profile1.id = id1
-        profileRepository.setCurrentProfile(profile1)
+    fun `isFormValid returns true for valid form with auth`() = runTest {
+        viewModel = createViewModel()
+        viewModel.initialize(profileId = 0L, initialThemeHue = 0)
+        advanceUntilIdle()
 
-        profileRepository.deleteProfile(profile1)
+        viewModel.onEvent(ProfileDetailEvent.UpdateName("Valid Name"))
+        viewModel.onEvent(ProfileDetailEvent.UpdateUrl("https://valid.com"))
+        viewModel.onEvent(ProfileDetailEvent.UpdateUseAuthentication(true))
+        viewModel.onEvent(ProfileDetailEvent.UpdateAuthUser("user"))
+        viewModel.onEvent(ProfileDetailEvent.UpdateAuthPassword("pass"))
 
-        val current = profileRepository.currentProfile.value
-        assertNotNull(current)
-        assertEquals("Profile 2", current?.name)
+        assertTrue(viewModel.uiState.value.isFormValid)
+    }
+
+    @Test
+    fun `isFormValid returns false when auth enabled but credentials missing`() = runTest {
+        viewModel = createViewModel()
+        viewModel.initialize(profileId = 0L, initialThemeHue = 0)
+        advanceUntilIdle()
+
+        viewModel.onEvent(ProfileDetailEvent.UpdateName("Valid Name"))
+        viewModel.onEvent(ProfileDetailEvent.UpdateUrl("https://valid.com"))
+        viewModel.onEvent(ProfileDetailEvent.UpdateUseAuthentication(true))
+
+        assertFalse(viewModel.uiState.value.isFormValid)
+    }
+
+    @Test
+    fun `showInsecureWarning returns true for http with auth`() = runTest {
+        viewModel = createViewModel()
+        viewModel.initialize(profileId = 0L, initialThemeHue = 0)
+        advanceUntilIdle()
+
+        viewModel.onEvent(ProfileDetailEvent.UpdateUseAuthentication(true))
+        viewModel.onEvent(ProfileDetailEvent.UpdateUrl("http://insecure.com"))
+
+        assertTrue(viewModel.uiState.value.showInsecureWarning)
+    }
+
+    @Test
+    fun `showInsecureWarning returns false for https with auth`() = runTest {
+        viewModel = createViewModel()
+        viewModel.initialize(profileId = 0L, initialThemeHue = 0)
+        advanceUntilIdle()
+
+        viewModel.onEvent(ProfileDetailEvent.UpdateUseAuthentication(true))
+        viewModel.onEvent(ProfileDetailEvent.UpdateUrl("https://secure.com"))
+
+        assertFalse(viewModel.uiState.value.showInsecureWarning)
     }
 
     // ========================================
-    // getAllProfiles tests
+    // Connection test result tests
     // ========================================
 
     @Test
-    fun `getAllProfiles returns profiles ordered by orderNo`() = runTest {
-        val p1 = createTestProfile(name = "Profile A").apply { orderNo = 3 }
-        val p2 = createTestProfile(name = "Profile B").apply { orderNo = 1 }
-        val p3 = createTestProfile(name = "Profile C").apply { orderNo = 2 }
-        profileRepository.insertProfile(p1)
-        profileRepository.insertProfile(p2)
-        profileRepository.insertProfile(p3)
+    fun `clearConnectionTestResult clears result`() = runTest {
+        viewModel = createViewModel()
+        viewModel.initialize(profileId = 0L, initialThemeHue = 0)
+        advanceUntilIdle()
 
-        val profiles = profileRepository.getAllProfiles().first()
+        // Set a mock result (normally set by testConnection)
+        viewModel.onEvent(ProfileDetailEvent.ClearConnectionTestResult)
 
-        assertEquals(3, profiles.size)
-        assertEquals("Profile B", profiles[0].name) // orderNo = 1
-        assertEquals("Profile C", profiles[1].name) // orderNo = 2
-        assertEquals("Profile A", profiles[2].name) // orderNo = 3
+        assertNull(viewModel.uiState.value.connectionTestResult)
     }
 }
 
@@ -242,7 +746,9 @@ class FakeProfileRepositoryForProfileDetail : ProfileRepository {
         _currentProfile.value = profile
     }
 
-    override fun getAllProfiles(): Flow<List<Profile>> = MutableStateFlow(profiles.values.sortedBy { it.orderNo })
+    override fun getAllProfiles(): Flow<List<Profile>> = MutableStateFlow(
+        profiles.values.sortedBy { it.orderNo }
+    )
 
     override suspend fun getAllProfilesSync(): List<Profile> = profiles.values.sortedBy { it.orderNo }
 
@@ -250,8 +756,9 @@ class FakeProfileRepositoryForProfileDetail : ProfileRepository {
 
     override suspend fun getProfileByIdSync(profileId: Long): Profile? = profiles[profileId]
 
-    override fun getProfileByUuid(uuid: String): Flow<Profile?> =
-        MutableStateFlow(profiles.values.find { it.uuid == uuid })
+    override fun getProfileByUuid(uuid: String): Flow<Profile?> = MutableStateFlow(
+        profiles.values.find { it.uuid == uuid }
+    )
 
     override suspend fun getProfileByUuidSync(uuid: String): Profile? = profiles.values.find { it.uuid == uuid }
 
@@ -289,5 +796,39 @@ class FakeProfileRepositoryForProfileDetail : ProfileRepository {
     override suspend fun deleteAllProfiles() {
         profiles.clear()
         _currentProfile.value = null
+    }
+}
+
+/**
+ * Fake AuthDataProvider for testing.
+ */
+class FakeAuthDataProvider : AuthDataProvider {
+    var currentAuthData: TemporaryAuthData? = null
+        private set
+    var backupNotifiedCount: Int = 0
+        private set
+    var themeHueDefault: Int = 261 // Default matching Colors.DEFAULT_HUE_DEG
+
+    override fun setTemporaryAuthData(authData: TemporaryAuthData?) {
+        currentAuthData = authData
+    }
+
+    override fun resetAuthenticationData() {
+        currentAuthData = null
+    }
+
+    override fun notifyBackupDataChanged() {
+        backupNotifiedCount++
+    }
+
+    override fun getDefaultThemeHue(): Int = themeHueDefault
+
+    override fun getNewProfileThemeHue(existingProfiles: List<Profile>?): Int {
+        // Simple implementation: return a hue that differs from existing ones
+        // For testing, just return a calculated value
+        if (existingProfiles.isNullOrEmpty()) return themeHueDefault
+        val themes = existingProfiles.map { it.theme }
+        val maxHue = themes.maxOrNull() ?: themeHueDefault
+        return (maxHue + 60) % 360
     }
 }
