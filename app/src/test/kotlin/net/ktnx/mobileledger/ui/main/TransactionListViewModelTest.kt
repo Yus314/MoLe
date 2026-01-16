@@ -180,7 +180,7 @@ class TransactionListViewModelTest {
     // ========================================
 
     @Test
-    fun `profileChange clears transactions`() = runTest {
+    fun `profileChange loads new profile transactions`() = runTest {
         // Given
         val profile1 = createTestProfile(id = 1L, name = "Profile 1")
         val profile2 = createTestProfile(id = 2L, name = "Profile 2")
@@ -205,14 +205,17 @@ class TransactionListViewModelTest {
         val initialTransactions = viewModel.uiState.value.transactions
             .filterIsInstance<TransactionListDisplayItem.Transaction>()
         assertEquals(1, initialTransactions.size)
+        assertEquals("Tx1", initialTransactions[0].description)
 
         // When - change profile
         profileRepository.setCurrentProfile(profile2)
         advanceUntilIdle()
 
-        // Then - transactions should be cleared (will reload when tab selected)
+        // Then - transactions should be reloaded for new profile
         val afterChangeTransactions = viewModel.uiState.value.transactions
-        assertTrue(afterChangeTransactions.isEmpty())
+            .filterIsInstance<TransactionListDisplayItem.Transaction>()
+        assertEquals(1, afterChangeTransactions.size)
+        assertEquals("Tx2", afterChangeTransactions[0].description)
     }
 
     // ========================================

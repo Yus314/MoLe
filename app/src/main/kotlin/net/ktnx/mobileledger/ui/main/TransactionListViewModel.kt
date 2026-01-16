@@ -81,20 +81,30 @@ class TransactionListViewModel @Inject constructor(
         viewModelScope.launch {
             profileRepository.currentProfile.collect { profile ->
                 val profileId = profile?.id
-                // Only clear transactions when profile actually changes, not on initial subscription
-                if (lastProfileId != null && lastProfileId != profileId) {
-                    _uiState.update {
-                        it.copy(
-                            transactions = persistentListOf(),
-                            isLoading = false,
-                            error = null,
-                            firstTransactionDate = null,
-                            lastTransactionDate = null,
-                            accountFilter = null // Also clear filter on profile change
-                        )
+                // Clear filter and reload when profile changes
+                if (lastProfileId != profileId) {
+                    if (lastProfileId != null) {
+                        // Profile actually changed, clear filter
+                        _uiState.update {
+                            it.copy(accountFilter = null)
+                        }
+                    }
+                    lastProfileId = profileId
+                    // Load transactions for the new profile
+                    if (profileId != null) {
+                        loadTransactionsInternal(profileId, null)
+                    } else {
+                        _uiState.update {
+                            it.copy(
+                                transactions = persistentListOf(),
+                                isLoading = false,
+                                error = null,
+                                firstTransactionDate = null,
+                                lastTransactionDate = null
+                            )
+                        }
                     }
                 }
-                lastProfileId = profileId
             }
         }
     }
@@ -131,12 +141,18 @@ class TransactionListViewModel @Inject constructor(
 
     /**
      * Load transactions for the current profile.
-     * This is called when the Transactions tab is selected.
+     * This is called when the Transactions tab is selected or externally.
      */
     fun loadTransactions() {
         val profileId = profileRepository.currentProfile.value?.id ?: return
         val accountFilter = _uiState.value.accountFilter
+        loadTransactionsInternal(profileId, accountFilter)
+    }
 
+    /**
+     * Internal method to load transactions with specified profile and filter.
+     */
+    private fun loadTransactionsInternal(profileId: Long, accountFilter: String?) {
         _uiState.update { it.copy(isLoading = true, error = null) }
 
         viewModelScope.launch {
