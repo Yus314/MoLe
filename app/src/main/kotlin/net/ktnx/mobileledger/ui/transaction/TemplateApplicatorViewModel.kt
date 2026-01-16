@@ -140,14 +140,10 @@ class TemplateApplicatorViewModel @Inject constructor(
             val regex = template.pattern
             if (regex.isBlank()) continue
             try {
-                val pattern = Regex(regex)
-                val matchResult = pattern.find(text)
-                if (matchResult != null) {
-                    val javaPattern = java.util.regex.Pattern.compile(regex)
-                    val javaMatcher = javaPattern.matcher(text)
-                    if (javaMatcher.find()) {
-                        return MatchedTemplate(template, javaMatcher.toMatchResult())
-                    }
+                val javaPattern = java.util.regex.Pattern.compile(regex)
+                val javaMatcher = javaPattern.matcher(text)
+                if (javaMatcher.find()) {
+                    return MatchedTemplate(template, javaMatcher.toMatchResult())
                 }
             } catch (e: Exception) {
                 logcat { "Invalid regex in template: $regex - ${e.message}" }
