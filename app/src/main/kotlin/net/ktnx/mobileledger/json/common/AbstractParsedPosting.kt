@@ -17,7 +17,7 @@
 
 package net.ktnx.mobileledger.json.common
 
-import net.ktnx.mobileledger.App
+import net.ktnx.mobileledger.di.CurrencyFormatterEntryPoint
 import net.ktnx.mobileledger.model.Currency
 import net.ktnx.mobileledger.model.LedgerTransactionAccount
 
@@ -34,15 +34,17 @@ object PostingHelper {
      * @return 'R' for right (after), 'L' for left (before)
      */
     @JvmStatic
-    fun getCommoditySide(): Char =
-        if (App.currencyFormatter().currencySymbolPosition.value == Currency.Position.AFTER) 'R' else 'L'
+    fun getCommoditySide(): Char {
+        val formatter = CurrencyFormatterEntryPoint.getOrNull() ?: return 'L'
+        return if (formatter.currencySymbolPosition.value == Currency.Position.AFTER) 'R' else 'L'
+    }
 
     /**
      * Get whether commodity should have a gap from the amount.
      * @return true if there should be a space between amount and commodity
      */
     @JvmStatic
-    fun getCommoditySpaced(): Boolean = App.currencyFormatter().currencyGap.value
+    fun getCommoditySpaced(): Boolean = CurrencyFormatterEntryPoint.getOrNull()?.currencyGap?.value ?: false
 
     /**
      * Common conversion from LedgerTransactionAccount to posting fields.

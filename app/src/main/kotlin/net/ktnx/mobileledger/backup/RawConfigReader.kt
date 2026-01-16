@@ -27,8 +27,8 @@ import kotlin.coroutines.coroutineContext
 import kotlinx.coroutines.ensureActive
 import logcat.LogPriority
 import logcat.logcat
-import net.ktnx.mobileledger.App
 import net.ktnx.mobileledger.data.repository.CurrencyRepository
+import net.ktnx.mobileledger.data.repository.PreferencesRepository
 import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.data.repository.TemplateRepository
 import net.ktnx.mobileledger.data.repository.mapper.ProfileMapper.toDomain
@@ -248,7 +248,8 @@ class RawConfigReader(inputStream: InputStream) {
     suspend fun restoreAll(
         profileRepository: ProfileRepository,
         templateRepository: TemplateRepository,
-        currencyRepository: CurrencyRepository
+        currencyRepository: CurrencyRepository,
+        preferencesRepository: PreferencesRepository
     ) {
         coroutineContext.ensureActive()
         restoreCommodities(currencyRepository)
@@ -257,7 +258,7 @@ class RawConfigReader(inputStream: InputStream) {
         coroutineContext.ensureActive()
         restoreTemplates(templateRepository)
         coroutineContext.ensureActive()
-        restoreCurrentProfile(profileRepository)
+        restoreCurrentProfile(profileRepository, preferencesRepository)
     }
 
     private suspend fun restoreTemplates(templateRepository: TemplateRepository) {
@@ -294,7 +295,10 @@ class RawConfigReader(inputStream: InputStream) {
         }
     }
 
-    private suspend fun restoreCurrentProfile(profileRepository: ProfileRepository) {
+    private suspend fun restoreCurrentProfile(
+        profileRepository: ProfileRepository,
+        preferencesRepository: PreferencesRepository
+    ) {
         if (currentProfile == null) {
             logcat { "Not restoring current profile (not present in backup)" }
             return
@@ -306,7 +310,8 @@ class RawConfigReader(inputStream: InputStream) {
         if (p != null) {
             logcat { "Restoring current profile ${p.name}" }
             profileRepository.setCurrentProfile(p)
-            App.storeStartupProfileAndTheme(p.id ?: 0, p.theme)
+            preferencesRepository.setStartupProfileId(p.id ?: 0)
+            preferencesRepository.setStartupTheme(p.theme)
         } else {
             logcat { "Not restoring profile $currentProfile: not found in DB" }
         }

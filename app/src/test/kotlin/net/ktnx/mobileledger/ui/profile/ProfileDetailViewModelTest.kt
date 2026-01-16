@@ -818,6 +818,8 @@ class FakeAuthDataProvider : AuthDataProvider {
         currentAuthData = authData
     }
 
+    override fun getTemporaryAuthData(): TemporaryAuthData? = currentAuthData
+
     override fun resetAuthenticationData() {
         currentAuthData = null
     }

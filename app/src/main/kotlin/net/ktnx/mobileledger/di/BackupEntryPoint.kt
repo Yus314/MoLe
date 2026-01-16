@@ -23,6 +23,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
 import net.ktnx.mobileledger.data.repository.CurrencyRepository
+import net.ktnx.mobileledger.data.repository.PreferencesRepository
 import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.data.repository.TemplateRepository
 import net.ktnx.mobileledger.db.DB
@@ -47,6 +48,7 @@ interface BackupEntryPoint {
     fun profileRepository(): ProfileRepository
     fun templateRepository(): TemplateRepository
     fun currencyRepository(): CurrencyRepository
+    fun preferencesRepository(): PreferencesRepository
     fun db(): DB
 
     companion object {

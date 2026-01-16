@@ -21,20 +21,14 @@ import android.content.res.Resources
 import android.database.SQLException
 import androidx.lifecycle.MutableLiveData
 import androidx.room.Database
-import androidx.room.Room
 import androidx.room.RoomDatabase
-import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
 import java.util.Locale
-import java.util.UUID
 import java.util.regex.Pattern
-import logcat.LogPriority
-import logcat.asLog
 import logcat.logcat
-import net.ktnx.mobileledger.App
 import net.ktnx.mobileledger.dao.AccountDAO
 import net.ktnx.mobileledger.dao.AccountValueDAO
 import net.ktnx.mobileledger.dao.CurrencyDAO
@@ -91,143 +85,51 @@ abstract class DB : RoomDatabase() {
         @JvmField
         val initComplete = MutableLiveData(false)
 
+        /**
+         * Database instance for legacy code access.
+         * @deprecated Use Hilt dependency injection instead
+         */
         @Volatile
         private var instance: DB? = null
 
+        /**
+         * Initialize the database instance (called by DatabaseModule).
+         * @param db The database instance created by Hilt DI
+         */
         @JvmStatic
-        fun get(): DB = instance ?: synchronized(DB::class.java) {
-            instance ?: buildDatabase().also { instance = it }
+        fun setInstance(db: DB) {
+            instance = db
         }
 
-        private fun buildDatabase(): DB {
-            val builder = Room.databaseBuilder(App.instance, DB::class.java, DB_NAME)
-                .setJournalMode(JournalMode.WRITE_AHEAD_LOGGING)
-
-            builder.addMigrations(
-                singleVersionMigration(17),
-                singleVersionMigration(18),
-                singleVersionMigration(19),
-                singleVersionMigration(20),
-                multiVersionMigration(20, 22),
-                multiVersionMigration(22, 30),
-                multiVersionMigration(30, 32),
-                multiVersionMigration(32, 34),
-                multiVersionMigration(34, 40),
-                singleVersionMigration(41),
-                multiVersionMigration(41, 58),
-                singleVersionMigration(59),
-                singleVersionMigration(60),
-                singleVersionMigration(61),
-                singleVersionMigration(62),
-                singleVersionMigration(63),
-                singleVersionMigration(64),
-                object : Migration(64, 65) {
-                    override fun migrate(database: SupportSQLiteDatabase) {
-                        fixTransactionDescriptionUpper(database)
-                    }
-                },
-                object : Migration(64, 66) {
-                    override fun migrate(database: SupportSQLiteDatabase) {
-                        fixTransactionDescriptionUpper(database)
-                    }
-                },
-                object : Migration(65, 66) {
-                    override fun migrate(database: SupportSQLiteDatabase) {
-                        fixTransactionDescriptionUpper(database)
-                    }
-                },
-                object : Migration(66, 67) {
-                    override fun migrate(database: SupportSQLiteDatabase) {
-                        database.execSQL(
-                            "ALTER TABLE transaction_accounts ADD COLUMN amount_style TEXT"
-                        )
-                    }
-                },
-                object : Migration(67, 68) {
-                    override fun migrate(database: SupportSQLiteDatabase) {
-                        database.execSQL(
-                            "ALTER TABLE account_values ADD COLUMN amount_style TEXT"
-                        )
-                    }
-                }
+        /**
+         * Get the database instance for legacy code access.
+         * @deprecated Use Hilt @Inject instead. This remains only for
+         * backward compatibility with DAO classes that need cross-DAO access.
+         */
+        @Deprecated("Use Hilt @Inject instead")
+        @JvmStatic
+        fun get(): DB = instance
+            ?: throw IllegalStateException(
+                "DB not initialized. Ensure DatabaseModule is loaded before accessing DB.get()"
             )
 
-            builder.addCallback(object : Callback() {
-                override fun onOpen(db: SupportSQLiteDatabase) {
-                    super.onOpen(db)
-                    db.execSQL("PRAGMA foreign_keys = ON")
-                    db.execSQL("pragma case_sensitive_like=ON;")
-                }
-            })
-
-            return builder.build()
-        }
-
-        private fun fixTransactionDescriptionUpper(database: SupportSQLiteDatabase) {
-            database.query("SELECT id, description FROM transactions").use { c ->
-                while (c.moveToNext()) {
-                    val id = c.getLong(0)
-                    val description = c.getString(1)
-                    database.execSQL(
-                        "UPDATE transactions SET description_uc=? WHERE id=?",
-                        arrayOf(description.uppercase(), id)
-                    )
-                }
-            }
-        }
-
-        private fun singleVersionMigration(toVersion: Int): Migration = object : Migration(toVersion - 1, toVersion) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                val fileName = String.format(Locale.US, "db_%d", toVersion)
-                applyRevisionFile(db, fileName)
-
-                if (toVersion == 59) {
-                    db.query(
-                        "SELECT p.id, p.theme FROM profiles p WHERE p.id=(SELECT o.value " +
-                            "FROM options o WHERE o.profile_id=0 AND o.name=?)",
-                        arrayOf("profile_id")
-                    ).use { c ->
-                        if (c.moveToFirst()) {
-                            val currentProfileId = c.getLong(0)
-                            val currentTheme = c.getInt(1)
-                            if (currentProfileId >= 0 && currentTheme >= 0) {
-                                App.storeStartupProfileAndTheme(currentProfileId, currentTheme)
-                            }
-                        }
-                    }
-                }
-
-                if (toVersion == 63) {
-                    db.query("SELECT id FROM templates").use { c ->
-                        while (c.moveToNext()) {
-                            db.execSQL(
-                                "UPDATE templates SET uuid=? WHERE id=?",
-                                arrayOf(UUID.randomUUID().toString(), c.getLong(0))
-                            )
-                        }
-                    }
-                }
-            }
-        }
-
-        private fun multiVersionMigration(fromVersion: Int, toVersion: Int): Migration =
-            object : Migration(fromVersion, toVersion) {
-                override fun migrate(db: SupportSQLiteDatabase) {
-                    val fileName = String.format(Locale.US, "db_%d_%d", fromVersion, toVersion)
-                    applyRevisionFile(db, fileName)
-                }
-            }
-
+        /**
+         * Apply a SQL revision file from raw resources.
+         *
+         * @param db The SQLite database to apply the revision to
+         * @param resources The Resources instance for loading raw files
+         * @param packageName The package name for resource identification
+         * @param fileName The name of the raw resource file (without extension)
+         */
         @JvmStatic
-        fun applyRevisionFile(db: SupportSQLiteDatabase, fileName: String) {
-            val rm: Resources = App.instance.resources
-            val resId = rm.getIdentifier(fileName, "raw", App.instance.packageName)
+        fun applyRevisionFile(db: SupportSQLiteDatabase, resources: Resources, packageName: String, fileName: String) {
+            val resId = resources.getIdentifier(fileName, "raw", packageName)
             if (resId == 0) {
                 throw SQLException(String.format(Locale.US, "No resource for %s", fileName))
             }
 
             try {
-                rm.openRawResource(resId).use { res ->
+                resources.openRawResource(resId).use { res ->
                     logcat { "Applying $fileName" }
                     val reader = BufferedReader(InputStreamReader(res))
 

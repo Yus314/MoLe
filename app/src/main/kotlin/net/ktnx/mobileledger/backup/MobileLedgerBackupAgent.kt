@@ -85,7 +85,8 @@ class MobileLedgerBackupAgent : BackupAgent() {
             reader.restoreAll(
                 entryPoint.profileRepository(),
                 entryPoint.templateRepository(),
-                entryPoint.currencyRepository()
+                entryPoint.currencyRepository(),
+                entryPoint.preferencesRepository()
             )
         }
         logcat { "All data restored from the cloud" }

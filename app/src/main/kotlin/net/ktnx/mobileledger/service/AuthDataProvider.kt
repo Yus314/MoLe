@@ -33,6 +33,11 @@ interface AuthDataProvider {
     fun setTemporaryAuthData(authData: TemporaryAuthData?)
 
     /**
+     * Get temporary authentication data for connection testing.
+     */
+    fun getTemporaryAuthData(): TemporaryAuthData?
+
+    /**
      * Clear temporary authentication data after connection testing.
      */
     fun resetAuthenticationData()

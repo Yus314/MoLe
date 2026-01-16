@@ -23,9 +23,10 @@ import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.runtime.LaunchedEffect
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 import logcat.logcat
-import net.ktnx.mobileledger.App
 import net.ktnx.mobileledger.R
+import net.ktnx.mobileledger.data.repository.PreferencesRepository
 import net.ktnx.mobileledger.ui.components.CrashReportDialog
 import net.ktnx.mobileledger.ui.splash.SplashEffect
 import net.ktnx.mobileledger.ui.splash.SplashScreen
@@ -34,6 +35,9 @@ import net.ktnx.mobileledger.ui.theme.MoLeTheme
 
 @AndroidEntryPoint
 class SplashActivity : CrashReportingActivity() {
+    @Inject
+    lateinit var preferencesRepository: PreferencesRepository
+
     private val viewModel: SplashViewModel by viewModels()
     private var running = true
 
@@ -41,7 +45,7 @@ class SplashActivity : CrashReportingActivity() {
         super.onCreate(savedInstanceState)
         setTheme(R.style.AppTheme_default)
 
-        val savedHue = App.getStartupTheme()
+        val savedHue = preferencesRepository.getStartupTheme()
         setContent {
             MoLeTheme(profileHue = savedHue.toFloat()) {
                 SplashScreen()

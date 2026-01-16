@@ -24,6 +24,7 @@ import java.io.FileNotFoundException
 import java.io.IOException
 import kotlinx.coroutines.runBlocking
 import net.ktnx.mobileledger.data.repository.CurrencyRepository
+import net.ktnx.mobileledger.data.repository.PreferencesRepository
 import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.data.repository.TemplateRepository
 import net.ktnx.mobileledger.di.BackupEntryPoint
@@ -42,12 +43,14 @@ constructor(
     private val profileRepository: ProfileRepository
     private val templateRepository: TemplateRepository
     private val currencyRepository: CurrencyRepository
+    private val preferencesRepository: PreferencesRepository
 
     init {
         val entryPoint = BackupEntryPoint.get(context)
         profileRepository = entryPoint.profileRepository()
         templateRepository = entryPoint.templateRepository()
         currencyRepository = entryPoint.currencyRepository()
+        preferencesRepository = entryPoint.preferencesRepository()
     }
 
     override fun getStreamMode(): String = "r"
@@ -64,7 +67,7 @@ constructor(
         // and bypasses this class entirely.
         runBlocking {
             r.readConfig()
-            r.restoreAll(profileRepository, templateRepository, currencyRepository)
+            r.restoreAll(profileRepository, templateRepository, currencyRepository, preferencesRepository)
             val currentProfile = r.currentProfile
 
             if (profileRepository.currentProfile.value == null) {

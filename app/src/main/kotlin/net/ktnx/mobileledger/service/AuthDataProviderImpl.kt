@@ -20,7 +20,6 @@ package net.ktnx.mobileledger.service
 import android.app.backup.BackupManager
 import javax.inject.Inject
 import javax.inject.Singleton
-import net.ktnx.mobileledger.App
 import net.ktnx.mobileledger.BuildConfig
 import net.ktnx.mobileledger.TemporaryAuthData
 import net.ktnx.mobileledger.domain.model.Profile
@@ -28,16 +27,21 @@ import net.ktnx.mobileledger.utils.Colors
 
 /**
  * Production implementation of AuthDataProvider.
- * Delegates to App.setTemporaryAuthData() and App.resetAuthenticationData().
+ * Holds temporary authentication data internally instead of delegating to App singleton.
  */
 @Singleton
 class AuthDataProviderImpl @Inject constructor() : AuthDataProvider {
+    @Volatile
+    private var temporaryAuthData: TemporaryAuthData? = null
+
     override fun setTemporaryAuthData(authData: TemporaryAuthData?) {
-        App.setTemporaryAuthData(authData)
+        temporaryAuthData = authData
     }
 
+    override fun getTemporaryAuthData(): TemporaryAuthData? = temporaryAuthData
+
     override fun resetAuthenticationData() {
-        App.resetAuthenticationData()
+        temporaryAuthData = null
     }
 
     override fun notifyBackupDataChanged() {

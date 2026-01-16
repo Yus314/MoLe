@@ -27,7 +27,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import logcat.logcat
-import net.ktnx.mobileledger.App
+import net.ktnx.mobileledger.data.repository.PreferencesRepository
 import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.di.BackupEntryPoint
 import net.ktnx.mobileledger.domain.model.Profile
@@ -40,9 +40,13 @@ open class ProfileThemedActivity : CrashReportingActivity() {
     private var themeSetUp = false
     private var mThemeHue = 0
 
-    // Lazy access to ProfileRepository via EntryPoint (cannot use @Inject in base class)
+    // Lazy access to Repositories via EntryPoint (cannot use @Inject in base class)
     protected val profileRepository: ProfileRepository by lazy {
         BackupEntryPoint.get(this).profileRepository()
+    }
+
+    protected val preferencesRepository: PreferencesRepository by lazy {
+        BackupEntryPoint.get(this).preferencesRepository()
     }
 
     protected fun setupProfileColors(newHue: Int) {
@@ -98,12 +102,13 @@ open class ProfileThemedActivity : CrashReportingActivity() {
     }
 
     fun storeProfilePref(profile: Profile) {
-        App.storeStartupProfileAndTheme(profile.id ?: 0, profile.theme)
+        preferencesRepository.setStartupProfileId(profile.id ?: 0)
+        preferencesRepository.setStartupTheme(profile.theme)
     }
 
     protected open fun initProfile() {
-        val profileId = App.getStartupProfile()
-        val hue = App.getStartupTheme()
+        val profileId = preferencesRepository.getStartupProfileId()
+        val hue = preferencesRepository.getStartupTheme()
         if (profileId == -1L) {
             mThemeHue = Colors.DEFAULT_HUE_DEG
         }

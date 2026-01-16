@@ -34,6 +34,7 @@ import logcat.logcat
 import net.ktnx.mobileledger.backup.RawConfigReader
 import net.ktnx.mobileledger.backup.RawConfigWriter
 import net.ktnx.mobileledger.data.repository.CurrencyRepository
+import net.ktnx.mobileledger.data.repository.PreferencesRepository
 import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.data.repository.TemplateRepository
 import net.ktnx.mobileledger.di.IoDispatcher
@@ -57,6 +58,7 @@ class ConfigBackupImpl @Inject constructor(
     private val profileRepository: ProfileRepository,
     private val templateRepository: TemplateRepository,
     private val currencyRepository: CurrencyRepository,
+    private val preferencesRepository: PreferencesRepository,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : ConfigBackup {
 
@@ -109,7 +111,12 @@ class ConfigBackupImpl @Inject constructor(
 
                 coroutineContext.ensureActive()
 
-                reader.restoreAll(profileRepository, templateRepository, currencyRepository)
+                reader.restoreAll(
+                    profileRepository,
+                    templateRepository,
+                    currencyRepository,
+                    preferencesRepository
+                )
 
                 // Handle current profile if needed
                 val currentProfileUuid = reader.currentProfile
