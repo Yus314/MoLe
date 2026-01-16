@@ -36,13 +36,15 @@ import net.ktnx.mobileledger.data.repository.AccountRepository
 import net.ktnx.mobileledger.data.repository.CurrencyRepository
 import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.service.CurrencyFormatter
+import net.ktnx.mobileledger.service.RowIdGenerator
 
 @HiltViewModel
 class AccountRowsViewModel @Inject constructor(
     private val profileRepository: ProfileRepository,
     private val accountRepository: AccountRepository,
     private val currencyRepository: CurrencyRepository,
-    private val currencyFormatter: CurrencyFormatter
+    private val currencyFormatter: CurrencyFormatter,
+    private val rowIdGenerator: RowIdGenerator
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AccountRowsUiState())
@@ -61,14 +63,14 @@ class AccountRowsViewModel @Inject constructor(
         val profile = profileRepository.currentProfile.value
         if (profile != null) {
             val defaultCurrency = profile.defaultCommodityOrEmpty
-            AccountRowsUiState.resetIdCounter()
+            rowIdGenerator.reset()
             _uiState.update {
                 it.copy(
                     showCurrency = profile.showCommodityByDefault,
                     defaultCurrency = defaultCurrency,
                     accounts = listOf(
-                        TransactionAccountRow(id = AccountRowsUiState.nextId(), currency = defaultCurrency),
-                        TransactionAccountRow(id = AccountRowsUiState.nextId(), currency = defaultCurrency)
+                        TransactionAccountRow(id = rowIdGenerator.nextId(), currency = defaultCurrency),
+                        TransactionAccountRow(id = rowIdGenerator.nextId(), currency = defaultCurrency)
                     )
                 )
             }
@@ -251,7 +253,7 @@ class AccountRowsViewModel @Inject constructor(
     private fun addAccountRow(afterRowId: Int?) {
         val defaultCurrency = _uiState.value.defaultCurrency
         _uiState.update { state ->
-            val newRow = TransactionAccountRow(id = AccountRowsUiState.nextId(), currency = defaultCurrency)
+            val newRow = TransactionAccountRow(id = rowIdGenerator.nextId(), currency = defaultCurrency)
             val newAccounts = if (afterRowId != null) {
                 val index = state.accounts.indexOfFirst { it.id == afterRowId }
                 if (index >= 0) {
@@ -299,7 +301,7 @@ class AccountRowsViewModel @Inject constructor(
             val minRows = 2
             if (state.accounts.size < minRows) {
                 val additionalRows = (state.accounts.size until minRows).map {
-                    TransactionAccountRow(id = AccountRowsUiState.nextId(), currency = defaultCurrency)
+                    TransactionAccountRow(id = rowIdGenerator.nextId(), currency = defaultCurrency)
                 }
                 state.copy(accounts = updateLastFlags(state.accounts + additionalRows))
             } else {
@@ -389,15 +391,15 @@ class AccountRowsViewModel @Inject constructor(
         val profile = profileRepository.currentProfile.value
         val defaultCurrency = profile?.defaultCommodityOrEmpty ?: ""
 
-        AccountRowsUiState.resetIdCounter()
+        rowIdGenerator.reset()
 
         _uiState.update {
             AccountRowsUiState(
                 showCurrency = profile?.showCommodityByDefault ?: false,
                 defaultCurrency = defaultCurrency,
                 accounts = listOf(
-                    TransactionAccountRow(id = AccountRowsUiState.nextId(), currency = defaultCurrency),
-                    TransactionAccountRow(id = AccountRowsUiState.nextId(), currency = defaultCurrency)
+                    TransactionAccountRow(id = rowIdGenerator.nextId(), currency = defaultCurrency),
+                    TransactionAccountRow(id = rowIdGenerator.nextId(), currency = defaultCurrency)
                 ),
                 availableCurrencies = it.availableCurrencies
             )
@@ -411,7 +413,7 @@ class AccountRowsViewModel @Inject constructor(
             rows
         } else {
             rows + List(2 - rows.size) {
-                TransactionAccountRow(id = AccountRowsUiState.nextId(), currency = defaultCurrency)
+                TransactionAccountRow(id = rowIdGenerator.nextId(), currency = defaultCurrency)
             }
         }
 

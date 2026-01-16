@@ -17,7 +17,6 @@
 
 package net.ktnx.mobileledger.ui.transaction
 
-import java.util.concurrent.atomic.AtomicInteger
 import net.ktnx.mobileledger.model.FutureDates
 import net.ktnx.mobileledger.utils.SimpleDate
 
@@ -30,10 +29,7 @@ data class NewTransactionUiState(
     val date: SimpleDate = SimpleDate.today(),
     val description: String = "",
     val transactionComment: String = "",
-    val accounts: List<TransactionAccountRow> = listOf(
-        TransactionAccountRow(id = nextId()),
-        TransactionAccountRow(id = nextId())
-    ),
+    val accounts: List<TransactionAccountRow> = emptyList(),
     val showCurrency: Boolean = false,
     val isTransactionCommentExpanded: Boolean = false,
     val focusedRowId: Int? = null,
@@ -108,23 +104,13 @@ data class NewTransactionUiState(
         get() = description.isNotBlank() ||
             transactionComment.isNotBlank() ||
             accounts.any { !it.isEmpty }
-
-    companion object {
-        private val idCounter = AtomicInteger(0)
-
-        fun nextId(): Int = idCounter.incrementAndGet()
-
-        fun resetIdCounter() {
-            idCounter.set(0)
-        }
-    }
 }
 
 /**
  * Represents a single account row in the transaction form.
  */
 data class TransactionAccountRow(
-    val id: Int = NewTransactionUiState.nextId(),
+    val id: Int,
     val accountName: String = "",
     val amountText: String = "",
     val amountHint: String? = null,

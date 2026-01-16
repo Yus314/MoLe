@@ -24,12 +24,14 @@ import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 import net.ktnx.mobileledger.service.AppStateService
 import net.ktnx.mobileledger.service.AppStateServiceImpl
+import net.ktnx.mobileledger.service.AtomicRowIdGenerator
 import net.ktnx.mobileledger.service.AuthDataProvider
 import net.ktnx.mobileledger.service.AuthDataProviderImpl
 import net.ktnx.mobileledger.service.BackgroundTaskManager
 import net.ktnx.mobileledger.service.BackgroundTaskManagerImpl
 import net.ktnx.mobileledger.service.CurrencyFormatter
 import net.ktnx.mobileledger.service.CurrencyFormatterImpl
+import net.ktnx.mobileledger.service.RowIdGenerator
 
 /**
  * Hilt module providing application-level services.
@@ -67,4 +69,7 @@ abstract class ServiceModule {
     @Binds
     @Singleton
     abstract fun bindAuthDataProvider(impl: AuthDataProviderImpl): AuthDataProvider
+
+    @Binds
+    abstract fun bindRowIdGenerator(impl: AtomicRowIdGenerator): RowIdGenerator
 }

@@ -22,10 +22,7 @@ package net.ktnx.mobileledger.ui.transaction
  * Handles account row CRUD, amount calculation, currency selection, and focus management.
  */
 data class AccountRowsUiState(
-    val accounts: List<TransactionAccountRow> = listOf(
-        TransactionAccountRow(id = AccountRowsUiState.nextId()),
-        TransactionAccountRow(id = AccountRowsUiState.nextId())
-    ),
+    val accounts: List<TransactionAccountRow> = emptyList(),
     val showCurrency: Boolean = false,
     val defaultCurrency: String = "",
 
@@ -88,16 +85,6 @@ data class AccountRowsUiState(
 
     val hasAccountChanges: Boolean
         get() = accounts.any { !it.isEmpty }
-
-    companion object {
-        private val idCounter = java.util.concurrent.atomic.AtomicInteger(0)
-
-        fun nextId(): Int = idCounter.incrementAndGet()
-
-        fun resetIdCounter() {
-            idCounter.set(0)
-        }
-    }
 }
 
 /**

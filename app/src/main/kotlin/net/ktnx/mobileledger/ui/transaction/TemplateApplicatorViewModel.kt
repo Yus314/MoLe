@@ -36,6 +36,7 @@ import net.ktnx.mobileledger.domain.model.Template
 import net.ktnx.mobileledger.domain.model.TemplateLine
 import net.ktnx.mobileledger.model.MatchedTemplate
 import net.ktnx.mobileledger.service.CurrencyFormatter
+import net.ktnx.mobileledger.service.RowIdGenerator
 
 private fun Template.toTemplateItem() = TemplateItem(
     id = id ?: 0L,
@@ -49,7 +50,8 @@ class TemplateApplicatorViewModel @Inject constructor(
     private val profileRepository: ProfileRepository,
     private val templateRepository: TemplateRepository,
     private val currencyRepository: CurrencyRepository,
-    private val currencyFormatter: CurrencyFormatter
+    private val currencyFormatter: CurrencyFormatter,
+    private val rowIdGenerator: RowIdGenerator
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(TemplateApplicatorUiState())
@@ -106,7 +108,7 @@ class TemplateApplicatorViewModel @Inject constructor(
             val currencyName = line.currencyId?.let { currencyMap[it] } ?: defaultCurrency
 
             TransactionAccountRow(
-                id = AccountRowsUiState.nextId(),
+                id = rowIdGenerator.nextId(),
                 accountName = line.accountName ?: "",
                 amountText = if (line.amount != null) currencyFormatter.formatNumber(line.amount!!) else "",
                 currency = currencyName,
@@ -223,7 +225,7 @@ class TemplateApplicatorViewModel @Inject constructor(
         ) ?: ""
 
         return TransactionAccountRow(
-            id = AccountRowsUiState.nextId(),
+            id = rowIdGenerator.nextId(),
             accountName = accountName,
             amountText = amountText,
             currency = currencyName,
