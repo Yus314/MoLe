@@ -28,7 +28,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import java.util.Calendar
 import java.util.GregorianCalendar
-import net.ktnx.mobileledger.model.FutureDates
+import net.ktnx.mobileledger.domain.model.FutureDates
 import net.ktnx.mobileledger.utils.SimpleDate
 
 /**

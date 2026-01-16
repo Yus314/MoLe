@@ -18,6 +18,6 @@
 package net.ktnx.mobileledger.model
 
 import java.util.regex.MatchResult
-import net.ktnx.mobileledger.db.TemplateHeader
+import net.ktnx.mobileledger.domain.model.Template
 
-data class MatchedTemplate(@JvmField val templateHead: TemplateHeader, @JvmField val matchResult: MatchResult)
+data class MatchedTemplate(@JvmField val template: Template, @JvmField val matchResult: MatchResult)

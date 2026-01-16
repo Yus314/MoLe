@@ -20,12 +20,13 @@ package net.ktnx.mobileledger.ui.transaction
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import net.ktnx.mobileledger.db.Profile
+import net.ktnx.mobileledger.domain.model.Profile
 import net.ktnx.mobileledger.fake.FakeCurrencyFormatter
 import net.ktnx.mobileledger.fake.FakeCurrencyRepository
 import net.ktnx.mobileledger.ui.main.FakeAccountRepositoryForViewModel
 import net.ktnx.mobileledger.ui.main.FakeProfileRepositoryForViewModel
 import net.ktnx.mobileledger.util.MainDispatcherRule
+import net.ktnx.mobileledger.util.createTestDomainProfile
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -65,16 +66,14 @@ class AccountRowsViewModelTest {
     }
 
     private fun createTestProfile(
-        id: Long = 1L,
+        id: Long? = 1L,
         name: String = "Test Profile",
         defaultCommodity: String = "USD"
-    ): Profile = net.ktnx.mobileledger.util.createTestProfile(
+    ): Profile = createTestDomainProfile(
         id = id,
         name = name,
         defaultCommodity = defaultCommodity
-    ).apply {
-        this.showCommodityByDefault = true
-    }
+    ).copy(showCommodityByDefault = true)
 
     private suspend fun createViewModelWithProfile(profile: Profile? = null): AccountRowsViewModel {
         if (profile != null) {
@@ -533,8 +532,8 @@ class AccountRowsViewModelTest {
         viewModel = createViewModelWithProfile(profile)
         advanceUntilIdle()
 
-        accountRepository.addAccount(profile.id, "Assets:Bank:Checking")
-        accountRepository.addAccount(profile.id, "Assets:Bank:Savings")
+        accountRepository.addAccount(profile.id!!, "Assets:Bank:Checking")
+        accountRepository.addAccount(profile.id!!, "Assets:Bank:Savings")
 
         val rowId = viewModel.uiState.value.accounts[0].id
 
@@ -555,7 +554,7 @@ class AccountRowsViewModelTest {
         viewModel = createViewModelWithProfile(profile)
         advanceUntilIdle()
 
-        accountRepository.addAccount(profile.id, "Assets:Bank")
+        accountRepository.addAccount(profile.id!!, "Assets:Bank")
         val rowId = viewModel.uiState.value.accounts[0].id
 
         // First trigger suggestions

@@ -20,6 +20,7 @@ package net.ktnx.mobileledger.model
 import java.nio.charset.StandardCharsets
 import java.text.ParseException
 import net.ktnx.mobileledger.App
+import net.ktnx.mobileledger.data.repository.mapper.ProfileMapper.toEntity
 import net.ktnx.mobileledger.db.Profile
 import net.ktnx.mobileledger.db.Transaction
 import net.ktnx.mobileledger.db.TransactionAccount
@@ -28,6 +29,19 @@ import net.ktnx.mobileledger.utils.Digest
 import net.ktnx.mobileledger.utils.Globals
 import net.ktnx.mobileledger.utils.SimpleDate
 
+/**
+ * Legacy transaction model.
+ *
+ * @deprecated Use [net.ktnx.mobileledger.domain.model.Transaction] instead.
+ * This class is kept for backward compatibility with Gateway JSON serialization.
+ */
+@Deprecated(
+    "Use net.ktnx.mobileledger.domain.model.Transaction instead",
+    ReplaceWith(
+        "Transaction",
+        "net.ktnx.mobileledger.domain.model.Transaction"
+    )
+)
 class LedgerTransaction {
     val comparator: Comparator<LedgerTransactionAccount> = Comparator { o1, o2 ->
         var res = o1.accountName.compareTo(o2.accountName)
@@ -90,7 +104,7 @@ class LedgerTransaction {
             ledgerId,
             date,
             description,
-            requireNotNull(App.profileRepository().currentProfile.value) { "No profile selected" }
+            requireNotNull(App.profileRepository().currentProfile.value) { "No profile selected" }.toEntity()
         )
 
     constructor(date: SimpleDate?, description: String?) :

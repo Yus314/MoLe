@@ -24,7 +24,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
-import net.ktnx.mobileledger.db.Profile
+import net.ktnx.mobileledger.domain.model.Profile
+import net.ktnx.mobileledger.util.createTestDomainProfile
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -58,19 +59,12 @@ class ProfileRepositoryTest {
     // Helper methods
     // ========================================
 
-    private fun createTestProfile(
-        id: Long = 0L,
-        name: String = "Test Profile",
-        uuid: String = java.util.UUID.randomUUID().toString(),
-        orderNo: Int = 1
-    ): Profile = Profile().apply {
-        this.id = id
-        this.name = name
-        this.uuid = uuid
-        this.orderNo = orderNo
-        this.url = "https://example.com/ledger"
-        this.useAuthentication = false
-    }
+    private fun createTestProfile(id: Long? = null, name: String = "Test Profile", orderNo: Int = 1): Profile =
+        createTestDomainProfile(
+            id = id,
+            name = name,
+            orderNo = orderNo
+        )
 
     // ========================================
     // currentProfile tests
@@ -159,9 +153,10 @@ class ProfileRepositoryTest {
 
     @Test
     fun `getProfileByUuidSync returns profile when exists`() = runTest {
-        val uuid = "test-uuid-12345"
-        val profile = createTestProfile(name = "UUID Test", uuid = uuid)
+        // Insert profile first, then get the UUID from the inserted profile
+        val profile = createTestProfile(name = "UUID Test")
         repository.insertProfile(profile)
+        val uuid = profile.uuid
 
         val result = repository.getProfileByUuidSync(uuid)
         assertNotNull(result)
@@ -260,8 +255,9 @@ class ProfileRepositoryTest {
     fun `deleteProfile removes profile`() = runTest {
         val profile = createTestProfile(name = "ToDelete")
         val id = repository.insertProfile(profile)
+        val profileWithId = profile.copy(id = id)
 
-        repository.deleteProfile(profile.apply { this.id = id })
+        repository.deleteProfile(profileWithId)
 
         val remaining = repository.getAllProfiles().first()
         assertTrue(remaining.isEmpty())
@@ -285,10 +281,10 @@ class ProfileRepositoryTest {
         val profile2 = createTestProfile(name = "Profile 2")
         val id1 = repository.insertProfile(profile1)
         repository.insertProfile(profile2)
-        val p1 = profile1.apply { id = id1 }
-        repository.setCurrentProfile(p1)
+        val p1WithId = profile1.copy(id = id1)
+        repository.setCurrentProfile(p1WithId)
 
-        repository.deleteProfile(p1)
+        repository.deleteProfile(p1WithId)
 
         val current = repository.currentProfile.value
         assertNotNull(current)
@@ -395,32 +391,34 @@ class FakeProfileRepository : ProfileRepository {
     override suspend fun getProfileCount(): Int = profiles.size
 
     override suspend fun insertProfile(profile: Profile): Long {
-        val id = if (profile.id == 0L) nextId++ else profile.id
-        profile.id = id
-        profiles[id] = profile
+        val id = if (profile.id == null || profile.id == 0L) nextId++ else profile.id
+        val profileWithId = profile.copy(id = id)
+        profiles[id] = profileWithId
         emitChanges()
         return id
     }
 
     override suspend fun updateProfile(profile: Profile) {
-        if (profiles.containsKey(profile.id)) {
-            profiles[profile.id] = profile
+        val id = profile.id ?: return
+        if (profiles.containsKey(id)) {
+            profiles[id] = profile
             emitChanges()
         }
         // Update current profile if it's the same one being updated
         _currentProfile.value?.let { current ->
-            if (current.id == profile.id) {
+            if (current.id == id) {
                 _currentProfile.value = profile
             }
         }
     }
 
     override suspend fun deleteProfile(profile: Profile) {
-        profiles.remove(profile.id)
+        val id = profile.id ?: return
+        profiles.remove(id)
         emitChanges()
         // If deleted profile was current, select another or clear
         _currentProfile.value?.let { current ->
-            if (current.id == profile.id) {
+            if (current.id == id) {
                 _currentProfile.value = profiles.values.firstOrNull()
             }
         }
@@ -428,7 +426,10 @@ class FakeProfileRepository : ProfileRepository {
 
     override suspend fun updateProfileOrder(profiles: List<Profile>) {
         profiles.forEach { profile ->
-            this.profiles[profile.id]?.orderNo = profile.orderNo
+            val id = profile.id ?: return@forEach
+            this.profiles[id]?.let { existing ->
+                this.profiles[id] = existing.copy(orderNo = profile.orderNo)
+            }
         }
         emitChanges()
     }

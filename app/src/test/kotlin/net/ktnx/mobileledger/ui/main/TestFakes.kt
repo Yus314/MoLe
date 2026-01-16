@@ -26,16 +26,21 @@ import net.ktnx.mobileledger.data.repository.AccountRepository
 import net.ktnx.mobileledger.data.repository.OptionRepository
 import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.data.repository.TransactionRepository
-import net.ktnx.mobileledger.db.Account
+import net.ktnx.mobileledger.db.Account as DbAccount
 import net.ktnx.mobileledger.db.AccountWithAmounts
 import net.ktnx.mobileledger.db.Option
-import net.ktnx.mobileledger.db.Profile
-import net.ktnx.mobileledger.db.Transaction
+import net.ktnx.mobileledger.db.Transaction as DbTransaction
 import net.ktnx.mobileledger.db.TransactionWithAccounts
+import net.ktnx.mobileledger.domain.model.Account
+import net.ktnx.mobileledger.domain.model.AccountAmount
+import net.ktnx.mobileledger.domain.model.Profile
+import net.ktnx.mobileledger.domain.model.Transaction
+import net.ktnx.mobileledger.domain.model.TransactionLine
 import net.ktnx.mobileledger.service.AppStateService
 import net.ktnx.mobileledger.service.BackgroundTaskManager
 import net.ktnx.mobileledger.service.SyncInfo
 import net.ktnx.mobileledger.service.TaskProgress
+import net.ktnx.mobileledger.utils.SimpleDate
 
 /**
  * Fake ProfileRepository for ViewModel testing.
@@ -75,29 +80,34 @@ class FakeProfileRepositoryForViewModel : ProfileRepository {
     override suspend fun getProfileCount(): Int = profilesMap.size
 
     override suspend fun insertProfile(profile: Profile): Long {
-        val id = if (profile.id == 0L) nextId++ else profile.id
-        profile.id = id
-        profilesMap[id] = profile
+        val id = if (profile.id == null || profile.id == 0L) nextId++ else profile.id
+        val profileWithId = profile.copy(id = id)
+        profilesMap[id] = profileWithId
         return id
     }
 
     override suspend fun updateProfile(profile: Profile) {
-        profilesMap[profile.id] = profile
-        if (_currentProfile.value?.id == profile.id) {
+        val id = profile.id ?: return
+        profilesMap[id] = profile
+        if (_currentProfile.value?.id == id) {
             _currentProfile.value = profile
         }
     }
 
     override suspend fun deleteProfile(profile: Profile) {
-        profilesMap.remove(profile.id)
-        if (_currentProfile.value?.id == profile.id) {
+        val id = profile.id ?: return
+        profilesMap.remove(id)
+        if (_currentProfile.value?.id == id) {
             _currentProfile.value = profilesMap.values.firstOrNull()
         }
     }
 
     override suspend fun updateProfileOrder(profiles: List<Profile>) {
         profiles.forEachIndexed { index, profile ->
-            profilesMap[profile.id]?.orderNo = index
+            val id = profile.id ?: return@forEachIndexed
+            profilesMap[id]?.let { existing ->
+                profilesMap[id] = existing.copy(orderNo = index)
+            }
         }
     }
 
@@ -109,65 +119,124 @@ class FakeProfileRepositoryForViewModel : ProfileRepository {
 
 /**
  * Fake TransactionRepository for ViewModel testing.
+ *
+ * Now uses domain models (Transaction) for query operations.
  */
 class FakeTransactionRepositoryForViewModel : TransactionRepository {
-    private val transactions = mutableMapOf<Long, TransactionWithAccounts>()
+    // Internal storage uses domain models
+    private val domainTransactions = mutableMapOf<Long, Transaction>()
+
+    // Separate storage for db entities (for mutation operations)
+    private val dbTransactions = mutableMapOf<Long, TransactionWithAccounts>()
     private var nextId = 1L
 
-    fun getTransactionsForProfile(profileId: Long): List<TransactionWithAccounts> =
-        transactions.values.filter { it.transaction.profileId == profileId }
+    // Track profile associations
+    private val profileMap = mutableMapOf<Long, Long>() // transactionId -> profileId
 
-    override fun getAllTransactions(profileId: Long): Flow<List<TransactionWithAccounts>> =
-        MutableStateFlow(transactions.values.filter { it.transaction.profileId == profileId }.toList())
+    /**
+     * Add a domain model transaction for testing.
+     */
+    fun addTransaction(profileId: Long, transaction: Transaction) {
+        val id = transaction.id ?: nextId++
+        val tx = if (transaction.id == null) transaction.copy(id = id) else transaction
+        domainTransactions[id] = tx
+        profileMap[id] = profileId
+    }
 
-    override fun getTransactionsFiltered(profileId: Long, accountName: String?): Flow<List<TransactionWithAccounts>> =
+    fun getTransactionsForProfile(profileId: Long): List<Transaction> =
+        domainTransactions.values.filter { profileMap[it.id] == profileId }
+
+    override fun getAllTransactions(profileId: Long): Flow<List<Transaction>> =
+        MutableStateFlow(domainTransactions.values.filter { profileMap[it.id] == profileId }.toList())
+
+    override fun getTransactionsFiltered(profileId: Long, accountName: String?): Flow<List<Transaction>> =
         MutableStateFlow(
-            transactions.values.filter { twa ->
-                twa.transaction.profileId == profileId &&
-                    (accountName == null || twa.accounts.any { it.accountName.contains(accountName, true) })
+            domainTransactions.values.filter { tx ->
+                profileMap[tx.id] == profileId &&
+                    (accountName == null || tx.lines.any { it.accountName.contains(accountName, true) })
             }.toList()
         )
 
-    override fun getTransactionById(transactionId: Long): Flow<TransactionWithAccounts?> =
-        MutableStateFlow(transactions[transactionId])
+    override fun getTransactionById(transactionId: Long): Flow<Transaction?> =
+        MutableStateFlow(domainTransactions[transactionId])
 
-    override suspend fun getTransactionByIdSync(transactionId: Long): TransactionWithAccounts? =
-        transactions[transactionId]
+    override suspend fun getTransactionByIdSync(transactionId: Long): Transaction? = domainTransactions[transactionId]
 
     override suspend fun searchByDescription(term: String): List<TransactionDAO.DescriptionContainer> =
-        transactions.values
-            .filter { it.transaction.description.contains(term, true) }
-            .distinctBy { it.transaction.description }
-            .map { TransactionDAO.DescriptionContainer().apply { description = it.transaction.description } }
+        domainTransactions.values
+            .filter { it.description.contains(term, true) }
+            .distinctBy { it.description }
+            .map { TransactionDAO.DescriptionContainer().apply { description = it.description } }
 
-    override suspend fun getFirstByDescription(description: String): TransactionWithAccounts? =
-        transactions.values.find { it.transaction.description == description }
+    override suspend fun getFirstByDescription(description: String): Transaction? =
+        domainTransactions.values.find { it.description == description }
 
-    override suspend fun getFirstByDescriptionHavingAccount(
-        description: String,
-        accountTerm: String
-    ): TransactionWithAccounts? = transactions.values.find { twa ->
-        twa.transaction.description == description &&
-            twa.accounts.any { it.accountName.contains(accountTerm, true) }
+    override suspend fun getFirstByDescriptionHavingAccount(description: String, accountTerm: String): Transaction? =
+        domainTransactions.values.find { tx ->
+            tx.description == description &&
+                tx.lines.any { it.accountName.contains(accountTerm, true) }
+        }
+
+    // Domain model mutation methods
+    override suspend fun insertTransaction(transaction: Transaction, profileId: Long): Transaction {
+        val id = transaction.id ?: nextId++
+        val tx = transaction.copy(id = id)
+        domainTransactions[id] = tx
+        profileMap[id] = profileId
+        return tx
     }
 
+    override suspend fun storeTransaction(transaction: Transaction, profileId: Long) {
+        insertTransaction(transaction, profileId)
+    }
+
+    // DB entity mutation methods (legacy)
     override suspend fun insertTransaction(transaction: TransactionWithAccounts) {
         if (transaction.transaction.id == 0L) {
             transaction.transaction.id = nextId++
         }
-        transactions[transaction.transaction.id] = transaction
+        dbTransactions[transaction.transaction.id] = transaction
+        // Also add to domain transactions for query operations
+        val domainTx = Transaction(
+            id = transaction.transaction.id,
+            ledgerId = transaction.transaction.ledgerId,
+            date = SimpleDate(
+                transaction.transaction.year,
+                transaction.transaction.month,
+                transaction.transaction.day
+            ),
+            description = transaction.transaction.description,
+            comment = transaction.transaction.comment,
+            lines = transaction.accounts.map { acc ->
+                TransactionLine(
+                    id = acc.id,
+                    accountName = acc.accountName,
+                    amount = acc.amount,
+                    currency = acc.currency,
+                    comment = acc.comment
+                )
+            }
+        )
+        domainTransactions[domainTx.id!!] = domainTx
+        profileMap[domainTx.id!!] = transaction.transaction.profileId
     }
 
     override suspend fun storeTransaction(transaction: TransactionWithAccounts) {
         insertTransaction(transaction)
     }
 
-    override suspend fun deleteTransaction(transaction: Transaction) {
-        transactions.remove(transaction.id)
+    override suspend fun deleteTransaction(transaction: DbTransaction) {
+        dbTransactions.remove(transaction.id)
+        domainTransactions.remove(transaction.id)
+        profileMap.remove(transaction.id)
     }
 
-    override suspend fun deleteTransactions(transactions: List<Transaction>) {
-        transactions.forEach { this.transactions.remove(it.id) }
+    override suspend fun deleteTransactions(transactions: List<DbTransaction>) {
+        transactions.forEach {
+            dbTransactions.remove(it.id)
+            domainTransactions.remove(it.id)
+            profileMap.remove(it.id)
+        }
     }
 
     override suspend fun storeTransactions(transactions: List<TransactionWithAccounts>, profileId: Long) {
@@ -178,76 +247,122 @@ class FakeTransactionRepositoryForViewModel : TransactionRepository {
     }
 
     override suspend fun deleteAllForProfile(profileId: Long): Int {
-        val toRemove = transactions.values.filter { it.transaction.profileId == profileId }
-        toRemove.forEach { transactions.remove(it.transaction.id) }
+        val toRemove = domainTransactions.values.filter { profileMap[it.id] == profileId }
+        toRemove.forEach {
+            domainTransactions.remove(it.id)
+            dbTransactions.remove(it.id)
+            profileMap.remove(it.id)
+        }
         return toRemove.size
     }
 
-    override suspend fun getMaxLedgerId(profileId: Long): Long? = transactions.values
-        .filter { it.transaction.profileId == profileId }
-        .maxOfOrNull { it.transaction.ledgerId }
+    override suspend fun getMaxLedgerId(profileId: Long): Long? = domainTransactions.values
+        .filter { profileMap[it.id] == profileId }
+        .maxOfOrNull { it.ledgerId }
 }
 
 /**
  * Fake AccountRepository for ViewModel testing.
+ *
+ * Now uses domain models (Account) for query operations.
  */
 class FakeAccountRepositoryForViewModel : AccountRepository {
-    private val accounts = mutableMapOf<Long, MutableList<String>>()
+    // Internal storage using domain models
+    private val domainAccounts = mutableMapOf<Long, MutableList<Account>>()
 
-    fun addAccount(profileId: Long, name: String) {
-        accounts.getOrPut(profileId) { mutableListOf() }.add(name)
+    // Track account names for search operations
+    private val accountNames = mutableMapOf<Long, MutableList<String>>()
+
+    private var nextId = 1L
+
+    /**
+     * Add a domain model account for testing.
+     */
+    fun addAccount(profileId: Long, account: Account) {
+        val id = account.id ?: nextId++
+        val accountWithId = if (account.id == null) account.copy(id = id) else account
+        domainAccounts.getOrPut(profileId) { mutableListOf() }.add(accountWithId)
+        accountNames.getOrPut(profileId) { mutableListOf() }.add(account.name)
     }
 
-    override fun getAllWithAmounts(profileId: Long, includeZeroBalances: Boolean): Flow<List<AccountWithAmounts>> =
+    /**
+     * Convenience method to add an account by name only.
+     */
+    fun addAccount(profileId: Long, name: String) {
+        addAccount(
+            profileId,
+            Account(
+                id = null,
+                name = name,
+                level = name.count { it == ':' },
+                isExpanded = true,
+                amounts = emptyList()
+            )
+        )
+    }
+
+    override fun getAllWithAmounts(profileId: Long, includeZeroBalances: Boolean): Flow<List<Account>> {
+        val accounts = domainAccounts[profileId] ?: emptyList()
+        val filtered = if (includeZeroBalances) {
+            accounts
+        } else {
+            accounts.filter { it.hasAmounts && it.amounts.any { amt -> amt.amount != 0f } }
+        }
+        return MutableStateFlow(filtered)
+    }
+
+    override suspend fun getAllWithAmountsSync(profileId: Long, includeZeroBalances: Boolean): List<Account> {
+        val accounts = domainAccounts[profileId] ?: emptyList()
+        return if (includeZeroBalances) {
+            accounts
+        } else {
+            accounts.filter { it.hasAmounts && it.amounts.any { amt -> amt.amount != 0f } }
+        }
+    }
+
+    override fun getAll(profileId: Long, includeZeroBalances: Boolean): Flow<List<DbAccount>> =
         MutableStateFlow(emptyList())
 
-    override suspend fun getAllWithAmountsSync(
-        profileId: Long,
-        includeZeroBalances: Boolean
-    ): List<AccountWithAmounts> = emptyList()
+    override suspend fun getByIdSync(id: Long): DbAccount? = null
 
-    override fun getAll(profileId: Long, includeZeroBalances: Boolean): Flow<List<Account>> =
-        MutableStateFlow(emptyList())
+    override fun getByName(profileId: Long, accountName: String): Flow<DbAccount?> = MutableStateFlow(null)
 
-    override suspend fun getByIdSync(id: Long): Account? = null
+    override suspend fun getByNameSync(profileId: Long, accountName: String): DbAccount? = null
 
-    override fun getByName(profileId: Long, accountName: String): Flow<Account?> = MutableStateFlow(null)
-
-    override suspend fun getByNameSync(profileId: Long, accountName: String): Account? = null
-
-    override fun getByNameWithAmounts(profileId: Long, accountName: String): Flow<AccountWithAmounts?> =
-        MutableStateFlow(null)
+    override fun getByNameWithAmounts(profileId: Long, accountName: String): Flow<Account?> =
+        MutableStateFlow(domainAccounts[profileId]?.find { it.name == accountName })
 
     override fun searchAccountNames(profileId: Long, term: String): Flow<List<String>> = MutableStateFlow(
-        accounts[profileId]?.filter { it.contains(term, ignoreCase = true) } ?: emptyList()
+        accountNames[profileId]?.filter { it.contains(term, ignoreCase = true) } ?: emptyList()
     )
 
     override suspend fun searchAccountNamesSync(profileId: Long, term: String): List<String> =
-        accounts[profileId]?.filter { it.contains(term, ignoreCase = true) } ?: emptyList()
+        accountNames[profileId]?.filter { it.contains(term, ignoreCase = true) } ?: emptyList()
 
-    override suspend fun searchAccountsWithAmountsSync(profileId: Long, term: String): List<AccountWithAmounts> =
-        emptyList()
+    override suspend fun searchAccountsWithAmountsSync(profileId: Long, term: String): List<Account> =
+        domainAccounts[profileId]?.filter { it.name.contains(term, ignoreCase = true) } ?: emptyList()
 
     override fun searchAccountNamesGlobal(term: String): Flow<List<String>> =
-        MutableStateFlow(accounts.values.flatten().filter { it.contains(term, ignoreCase = true) })
+        MutableStateFlow(accountNames.values.flatten().filter { it.contains(term, ignoreCase = true) })
 
     override suspend fun searchAccountNamesGlobalSync(term: String): List<String> =
-        accounts.values.flatten().filter { it.contains(term, ignoreCase = true) }
+        accountNames.values.flatten().filter { it.contains(term, ignoreCase = true) }
 
-    override suspend fun insertAccount(account: Account): Long = 0L
+    override suspend fun insertAccount(account: DbAccount): Long = 0L
 
     override suspend fun insertAccountWithAmounts(accountWithAmounts: AccountWithAmounts) {}
 
-    override suspend fun updateAccount(account: Account) {}
+    override suspend fun updateAccount(account: DbAccount) {}
 
-    override suspend fun deleteAccount(account: Account) {}
+    override suspend fun deleteAccount(account: DbAccount) {}
 
     override suspend fun storeAccounts(accounts: List<AccountWithAmounts>, profileId: Long) {}
 
-    override suspend fun getCountForProfile(profileId: Long): Int = accounts[profileId]?.size ?: 0
+    override suspend fun getCountForProfile(profileId: Long): Int = domainAccounts[profileId]?.size ?: 0
 
     override suspend fun deleteAllAccounts() {
-        accounts.clear()
+        domainAccounts.clear()
+        accountNames.clear()
     }
 }
 

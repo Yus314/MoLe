@@ -351,6 +351,99 @@ class TransactionListViewModel @Inject constructor(
 - **Data.getProfile() は非推奨**: `profileRepository.currentProfile.value` を使用
 - **Data.profiles は非推奨**: `profileRepository.getAllProfiles()` を使用
 
+## Domain Model Layer (017-domain-model-layer)
+
+### 概要
+
+ViewModels はデータベースエンティティ (`net.ktnx.mobileledger.db.*`) を直接使用せず、ドメインモデル (`net.ktnx.mobileledger.domain.model.*`) を使用します。
+
+### 利用可能なドメインモデル
+
+| ドメインモデル | 対応エンティティ | 用途 |
+|---------------|-----------------|------|
+| `Transaction` | - | 取引データ |
+| `TransactionLine` | - | 取引明細行 |
+| `Account` | - | 勘定科目 |
+| `Profile` | `db.Profile` | プロファイル設定 |
+| `Template` | `db.TemplateHeader`, `db.TemplateAccount` | テンプレート |
+| `TemplateLine` | `db.TemplateAccount` | テンプレート明細行 |
+| `Currency` | `db.Currency` | 通貨設定 |
+| `CurrencyPosition` | - | 通貨表示位置（enum） |
+| `FutureDates` | - | 未来日設定（enum） |
+| `ValidationResult` | - | バリデーション結果（sealed class） |
+
+### ドメインモデル使用パターン
+
+```kotlin
+@HiltViewModel
+class MyViewModel @Inject constructor(
+    private val templateRepository: TemplateRepository
+) : ViewModel() {
+
+    // ドメインモデルで取得
+    val templates: Flow<List<Template>> = templateRepository.getAllTemplatesAsDomain()
+
+    // ドメインモデルで保存
+    suspend fun saveTemplate(template: Template) {
+        templateRepository.saveTemplate(template)
+    }
+}
+```
+
+### Mapper の使用
+
+Repository 内部で Mapper を使用してエンティティ ↔ ドメインモデル変換を行います。
+
+```kotlin
+// 例: TemplateMapper
+import net.ktnx.mobileledger.data.repository.mapper.TemplateMapper.toDomain
+import net.ktnx.mobileledger.data.repository.mapper.TemplateMapper.toEntity
+
+// ドメインモデルへ変換
+val domainModel: Template = templateWithAccounts.toDomain()
+
+// エンティティへ変換
+val entity: TemplateWithAccountsData = template.toEntity()
+```
+
+### ViewModel での注意事項
+
+- **`net.ktnx.mobileledger.db.*` のインポート禁止**: ViewModel では db パッケージを直接インポートしない
+- **Repository のドメインモデルメソッドを使用**: `getXxxAsDomain()`, `saveXxx(domainModel)` を使用
+- **旧モデル（`model.LedgerTransaction` 等）は非推奨**: `@Deprecated` が付与された `model.*` クラスは使用しない
+
+### ファイル構成
+
+```text
+app/src/main/kotlin/net/ktnx/mobileledger/
+├── domain/
+│   └── model/                              # ドメインモデル
+│       ├── Transaction.kt
+│       ├── TransactionLine.kt
+│       ├── Account.kt
+│       ├── Profile.kt
+│       ├── Template.kt
+│       ├── TemplateLine.kt
+│       ├── Currency.kt
+│       ├── CurrencyPosition.kt
+│       ├── FutureDates.kt
+│       └── ValidationResult.kt
+├── data/
+│   └── repository/
+│       ├── mapper/                         # ドメインモデル変換
+│       │   ├── TransactionMapper.kt
+│       │   ├── AccountMapper.kt
+│       │   ├── ProfileMapper.kt
+│       │   ├── TemplateMapper.kt
+│       │   └── CurrencyMapper.kt
+│       ├── *Repository.kt                  # Repository インターフェース
+│       └── *RepositoryImpl.kt              # Repository 実装
+└── model/                                  # 旧モデル（@Deprecated）
+    ├── LedgerTransaction.kt               # → domain.model.Transaction を使用
+    ├── LedgerTransactionAccount.kt        # → domain.model.TransactionLine を使用
+    └── LedgerAccount.kt                   # → domain.model.Account を使用
+```
+
 ## Jetpack Compose
 
 ### 概要
@@ -649,9 +742,9 @@ class MyViewModelTest {
 ```
 
 ## Recent Changes
+- 017-domain-model-layer: Added Kotlin 2.0.21 / JVM target 1.8 + Hilt 2.51.1, Jetpack Compose (composeBom 2024.12.01), Coroutines 1.9.0, Room 2.4.2
 - 016-viewmodel-responsibility-separation: Added Kotlin 2.0.21 / JVM target 1.8 + Hilt 2.51.1, Jetpack Compose (composeBom 2024.12.01), Coroutines 1.9.0, Room 2.4.2
 - 015-thread-wrapper-coroutines: Completed - Converted Thread wrappers to pure Coroutines. TransactionSenderImpl, ConfigBackupImpl, ViewModels now use viewModelScope.launch + delay() instead of Thread + Thread.sleep(). Removed GeneralBackgroundTasks, TaskCallback, AsyncResultCallback, BaseDAO async methods.
-- 014-async-pattern-unification: Added Kotlin 2.0.21 / JVM target 1.8 + Kotlin Coroutines 1.9.0, Hilt 2.51.1, Jetpack Compose (composeBom 2024.12.01)
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->

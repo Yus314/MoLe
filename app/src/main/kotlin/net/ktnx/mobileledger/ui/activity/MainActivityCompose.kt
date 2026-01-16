@@ -43,7 +43,7 @@ import net.ktnx.mobileledger.BackupsActivity
 import net.ktnx.mobileledger.R
 import net.ktnx.mobileledger.data.repository.OptionRepository
 import net.ktnx.mobileledger.db.Option
-import net.ktnx.mobileledger.db.Profile
+import net.ktnx.mobileledger.domain.model.Profile
 import net.ktnx.mobileledger.service.AppStateService
 import net.ktnx.mobileledger.ui.components.CrashReportDialog
 import net.ktnx.mobileledger.ui.main.AccountSummaryEffect
@@ -170,17 +170,14 @@ class MainActivityCompose : ProfileThemedActivity() {
 
                         is MainCoordinatorEffect.NavigateToProfileDetail -> {
                             if (effect.profileId != null) {
-                                val profile = profileSelectionUiState.profiles.find { it.id == effect.profileId }?.let {
-                                    Profile().apply {
-                                        id = it.id
-                                        name = it.name
-                                        theme = it.theme
-                                        permitPosting = it.canPost
-                                    }
-                                }
-                                ProfileDetailActivity.start(this@MainActivityCompose, profile)
+                                val profileItem = profileSelectionUiState.profiles.find { it.id == effect.profileId }
+                                ProfileDetailActivity.start(
+                                    this@MainActivityCompose,
+                                    profileItem?.id,
+                                    profileItem?.theme
+                                )
                             } else {
-                                ProfileDetailActivity.start(this@MainActivityCompose, null)
+                                ProfileDetailActivity.start(this@MainActivityCompose, null, null)
                             }
                         }
 
@@ -225,17 +222,10 @@ class MainActivityCompose : ProfileThemedActivity() {
                     },
                     onNavigateToProfileSettings = { profileId ->
                         if (profileId == -1L) {
-                            ProfileDetailActivity.start(this, null)
+                            ProfileDetailActivity.start(this, null, null)
                         } else {
-                            val profile = profileSelectionUiState.profiles.find { it.id == profileId }?.let {
-                                Profile().apply {
-                                    id = it.id
-                                    name = it.name
-                                    theme = it.theme
-                                    permitPosting = it.canPost
-                                }
-                            }
-                            ProfileDetailActivity.start(this, profile)
+                            val profileItem = profileSelectionUiState.profiles.find { it.id == profileId }
+                            ProfileDetailActivity.start(this, profileItem?.id, profileItem?.theme)
                         }
                     },
                     onNavigateToTemplates = {
@@ -310,14 +300,15 @@ class MainActivityCompose : ProfileThemedActivity() {
         for (p in list) {
             if (shortcuts.size >= sm.maxShortcutCountPerActivity) break
 
-            if (!p.canPost()) continue
+            if (!p.canPost) continue
 
-            val builder = ShortcutInfo.Builder(this, "new_transaction_${p.id}")
+            val profileId = p.id ?: continue
+            val builder = ShortcutInfo.Builder(this, "new_transaction_$profileId")
             val si = builder.setShortLabel(p.name)
                 .setIcon(Icon.createWithResource(this, R.drawable.thick_plus_icon))
                 .setIntent(
                     Intent(Intent.ACTION_VIEW, null, this, NewTransactionActivityCompose::class.java)
-                        .putExtra(ProfileThemedActivity.PARAM_PROFILE_ID, p.id)
+                        .putExtra(ProfileThemedActivity.PARAM_PROFILE_ID, profileId)
                         .putExtra(ProfileThemedActivity.PARAM_THEME, p.theme)
                 )
                 .setRank(i)
@@ -372,10 +363,11 @@ class MainActivityCompose : ProfileThemedActivity() {
 
     private fun updateLastUpdateTextFromDB() {
         val currentProfile = profileRepository.currentProfile.value ?: return
+        val profileId = currentProfile.id ?: return
 
         lifecycleScope.launch {
             // Use .first() instead of .collect to avoid accumulating collectors
-            val opt = optionRepository.getOption(currentProfile.id, Option.OPT_LAST_SCRAPE)
+            val opt = optionRepository.getOption(profileId, Option.OPT_LAST_SCRAPE)
                 .first()
 
             var lastUpdate = 0L

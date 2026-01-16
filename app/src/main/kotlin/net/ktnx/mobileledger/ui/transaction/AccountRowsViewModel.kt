@@ -60,7 +60,7 @@ class AccountRowsViewModel @Inject constructor(
     private fun initializeFromProfile() {
         val profile = profileRepository.currentProfile.value
         if (profile != null) {
-            val defaultCurrency = profile.getDefaultCommodityOrEmpty()
+            val defaultCurrency = profile.defaultCommodityOrEmpty
             AccountRowsUiState.resetIdCounter()
             _uiState.update {
                 it.copy(
@@ -150,9 +150,14 @@ class AccountRowsViewModel @Inject constructor(
                 return@launch
             }
 
+            val profileId = profile.id ?: run {
+                logcat { "profile has no id, returning" }
+                return@launch
+            }
+
             val termUpper = term.uppercase()
-            logcat { "querying DB: profileId=${profile.id}, term='$termUpper'" }
-            val suggestions = accountRepository.searchAccountNamesSync(profile.id, termUpper)
+            logcat { "querying DB: profileId=$profileId, term='$termUpper'" }
+            val suggestions = accountRepository.searchAccountNamesSync(profileId, termUpper)
 
             if (isActive) {
                 logcat { "got ${suggestions.size} suggestions for row $rowId: ${suggestions.take(3)}" }
@@ -325,23 +330,21 @@ class AccountRowsViewModel @Inject constructor(
         }
     }
 
-    private fun addCurrency(name: String, position: net.ktnx.mobileledger.model.Currency.Position, gap: Boolean) {
+    private fun addCurrency(name: String, position: net.ktnx.mobileledger.domain.model.CurrencyPosition, gap: Boolean) {
         viewModelScope.launch {
-            val currency = net.ktnx.mobileledger.db.Currency()
-            currency.name = name
-            currency.position = position.toString()
-            currency.hasGap = gap
-            currencyRepository.insertCurrency(currency)
+            val currency = net.ktnx.mobileledger.domain.model.Currency(
+                name = name,
+                position = position,
+                hasGap = gap
+            )
+            currencyRepository.saveCurrency(currency)
             loadCurrencies()
         }
     }
 
     private fun deleteCurrency(name: String) {
         viewModelScope.launch {
-            val currency = currencyRepository.getCurrencyByNameSync(name)
-            if (currency != null) {
-                currencyRepository.deleteCurrency(currency)
-            }
+            currencyRepository.deleteCurrencyByName(name)
             loadCurrencies()
         }
     }
@@ -349,7 +352,7 @@ class AccountRowsViewModel @Inject constructor(
     private fun toggleCurrency() {
         val profile = profileRepository.currentProfile.value ?: return
         val newShowCurrency = !_uiState.value.showCurrency
-        val defaultCurrency = if (newShowCurrency) profile.getDefaultCommodityOrEmpty() else ""
+        val defaultCurrency = if (newShowCurrency) profile.defaultCommodityOrEmpty else ""
 
         _uiState.update { state ->
             state.copy(
@@ -384,7 +387,7 @@ class AccountRowsViewModel @Inject constructor(
 
     private fun reset() {
         val profile = profileRepository.currentProfile.value
-        val defaultCurrency = profile?.getDefaultCommodityOrEmpty() ?: ""
+        val defaultCurrency = profile?.defaultCommodityOrEmpty ?: ""
 
         AccountRowsUiState.resetIdCounter()
 

@@ -19,7 +19,7 @@ package net.ktnx.mobileledger.data.repository
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
-import net.ktnx.mobileledger.db.Profile
+import net.ktnx.mobileledger.domain.model.Profile
 
 /**
  * Repository interface for Profile data access and management.

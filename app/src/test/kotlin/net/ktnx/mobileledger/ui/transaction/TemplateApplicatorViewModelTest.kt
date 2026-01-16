@@ -20,15 +20,16 @@ package net.ktnx.mobileledger.ui.transaction
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import net.ktnx.mobileledger.db.Profile
 import net.ktnx.mobileledger.db.TemplateAccount
 import net.ktnx.mobileledger.db.TemplateHeader
 import net.ktnx.mobileledger.db.TemplateWithAccounts
+import net.ktnx.mobileledger.domain.model.Profile
 import net.ktnx.mobileledger.fake.FakeCurrencyFormatter
 import net.ktnx.mobileledger.fake.FakeCurrencyRepository
 import net.ktnx.mobileledger.fake.FakeTemplateRepository
 import net.ktnx.mobileledger.ui.main.FakeProfileRepositoryForViewModel
 import net.ktnx.mobileledger.util.MainDispatcherRule
+import net.ktnx.mobileledger.util.createTestDomainProfile
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -66,10 +67,10 @@ class TemplateApplicatorViewModelTest {
     }
 
     private fun createTestProfile(
-        id: Long = 1L,
+        id: Long? = 1L,
         name: String = "Test Profile",
         defaultCommodity: String = "USD"
-    ): Profile = net.ktnx.mobileledger.util.createTestProfile(
+    ): Profile = createTestDomainProfile(
         id = id,
         name = name,
         defaultCommodity = defaultCommodity

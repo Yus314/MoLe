@@ -19,8 +19,9 @@ package net.ktnx.mobileledger.data.repository
 
 import kotlinx.coroutines.flow.Flow
 import net.ktnx.mobileledger.dao.AccountDAO
-import net.ktnx.mobileledger.db.Account
+import net.ktnx.mobileledger.db.Account as DbAccount
 import net.ktnx.mobileledger.db.AccountWithAmounts
+import net.ktnx.mobileledger.domain.model.Account
 
 /**
  * Repository interface for Account data access.
@@ -56,7 +57,7 @@ interface AccountRepository {
      * @param includeZeroBalances Whether to include accounts with zero balance
      * @return Flow that emits the account list whenever it changes
      */
-    fun getAllWithAmounts(profileId: Long, includeZeroBalances: Boolean): Flow<List<AccountWithAmounts>>
+    fun getAllWithAmounts(profileId: Long, includeZeroBalances: Boolean): Flow<List<Account>>
 
     /**
      * Get all accounts for a profile with their amounts synchronously.
@@ -65,7 +66,7 @@ interface AccountRepository {
      * @param includeZeroBalances Whether to include accounts with zero balance
      * @return The account list
      */
-    suspend fun getAllWithAmountsSync(profileId: Long, includeZeroBalances: Boolean): List<AccountWithAmounts>
+    suspend fun getAllWithAmountsSync(profileId: Long, includeZeroBalances: Boolean): List<Account>
 
     /**
      * Get all accounts for a profile (without amounts).
@@ -74,7 +75,7 @@ interface AccountRepository {
      * @param includeZeroBalances Whether to include accounts with zero balance
      * @return Flow that emits the account list whenever it changes
      */
-    fun getAll(profileId: Long, includeZeroBalances: Boolean): Flow<List<Account>>
+    fun getAll(profileId: Long, includeZeroBalances: Boolean): Flow<List<DbAccount>>
 
     /**
      * Get an account by its ID.
@@ -82,7 +83,7 @@ interface AccountRepository {
      * @param id The account ID
      * @return The account or null if not found
      */
-    suspend fun getByIdSync(id: Long): Account?
+    suspend fun getByIdSync(id: Long): DbAccount?
 
     /**
      * Get an account by name within a profile.
@@ -91,7 +92,7 @@ interface AccountRepository {
      * @param accountName The account name
      * @return Flow that emits the account when it changes
      */
-    fun getByName(profileId: Long, accountName: String): Flow<Account?>
+    fun getByName(profileId: Long, accountName: String): Flow<DbAccount?>
 
     /**
      * Get an account by name within a profile synchronously.
@@ -100,7 +101,7 @@ interface AccountRepository {
      * @param accountName The account name
      * @return The account or null if not found
      */
-    suspend fun getByNameSync(profileId: Long, accountName: String): Account?
+    suspend fun getByNameSync(profileId: Long, accountName: String): DbAccount?
 
     /**
      * Get an account by name with its amounts.
@@ -109,7 +110,7 @@ interface AccountRepository {
      * @param accountName The account name
      * @return Flow that emits the account with amounts when it changes
      */
-    fun getByNameWithAmounts(profileId: Long, accountName: String): Flow<AccountWithAmounts?>
+    fun getByNameWithAmounts(profileId: Long, accountName: String): Flow<Account?>
 
     // ========================================
     // Search Operations
@@ -140,7 +141,7 @@ interface AccountRepository {
      * @param term The search term
      * @return List of matching accounts with amounts
      */
-    suspend fun searchAccountsWithAmountsSync(profileId: Long, term: String): List<AccountWithAmounts>
+    suspend fun searchAccountsWithAmountsSync(profileId: Long, term: String): List<Account>
 
     /**
      * Search for account names matching a term across all profiles.
@@ -168,7 +169,7 @@ interface AccountRepository {
      * @param account The account to insert
      * @return The ID of the inserted account
      */
-    suspend fun insertAccount(account: Account): Long
+    suspend fun insertAccount(account: DbAccount): Long
 
     /**
      * Insert an account with its amounts.
@@ -182,14 +183,14 @@ interface AccountRepository {
      *
      * @param account The account to update
      */
-    suspend fun updateAccount(account: Account)
+    suspend fun updateAccount(account: DbAccount)
 
     /**
      * Delete an account.
      *
      * @param account The account to delete
      */
-    suspend fun deleteAccount(account: Account)
+    suspend fun deleteAccount(account: DbAccount)
 
     // ========================================
     // Sync Operations

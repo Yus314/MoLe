@@ -22,6 +22,17 @@ import net.ktnx.mobileledger.db.Account
 import net.ktnx.mobileledger.db.AccountValue
 import net.ktnx.mobileledger.db.AccountWithAmounts
 
+/**
+ * @deprecated Use net.ktnx.mobileledger.domain.model.Account instead.
+ * This class is being phased out as part of the domain model layer introduction.
+ */
+@Deprecated(
+    message = "Use net.ktnx.mobileledger.domain.model.Account instead",
+    replaceWith = ReplaceWith(
+        "Account",
+        "net.ktnx.mobileledger.domain.model.Account"
+    )
+)
 class LedgerAccount(name: String, private val parent: LedgerAccount?) {
     private var dbId: Long = 0
     private var profileId: Long = 0

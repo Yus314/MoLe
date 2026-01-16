@@ -33,7 +33,6 @@ import logcat.logcat
 import net.ktnx.mobileledger.data.repository.AccountRepository
 import net.ktnx.mobileledger.data.repository.PreferencesRepository
 import net.ktnx.mobileledger.data.repository.ProfileRepository
-import net.ktnx.mobileledger.model.LedgerAccount
 
 /**
  * ViewModel for the Account Summary tab.
@@ -71,8 +70,9 @@ class AccountSummaryViewModel @Inject constructor(
     private fun observeProfileChanges() {
         viewModelScope.launch {
             profileRepository.currentProfile.collect { profile ->
-                if (profile != null) {
-                    loadAccounts(profile.id)
+                val profileId = profile?.id
+                if (profileId != null) {
+                    loadAccounts(profileId)
                 } else {
                     _uiState.update { it.copy(accounts = emptyList(), isLoading = false) }
                 }
@@ -120,21 +120,15 @@ class AccountSummaryViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                val dbAccounts = accountRepository.getAllWithAmountsSync(profileId, showZeroBalances)
+                val domainAccounts = accountRepository.getAllWithAmountsSync(profileId, showZeroBalances)
 
-                // First pass: build LedgerAccount objects and determine hasSubAccounts
-                val accMap = HashMap<String, LedgerAccount>()
-                for (dbAcc in dbAccounts) {
-                    var parent: LedgerAccount? = null
-                    val parentName = dbAcc.account.parentName
+                // First pass: determine hasSubAccounts for each account
+                val hasSubAccountsMap = HashMap<String, Boolean>()
+                for (account in domainAccounts) {
+                    val parentName = account.parentName
                     if (parentName != null) {
-                        parent = accMap[parentName]
+                        hasSubAccountsMap[parentName] = true
                     }
-                    if (parent != null) {
-                        parent.hasSubAccounts = true
-                    }
-                    val account = LedgerAccount.fromDBO(dbAcc, parent)
-                    accMap[dbAcc.account.name] = account
                 }
 
                 // Second pass: build the display list
@@ -142,25 +136,24 @@ class AccountSummaryViewModel @Inject constructor(
                 val headerText = _uiState.value.headerText.ifEmpty { "----" }
                 adapterList.add(AccountSummaryListItem.Header(headerText))
 
-                for (dbAcc in dbAccounts) {
-                    val account = accMap[dbAcc.account.name] ?: continue
+                for (account in domainAccounts) {
                     adapterList.add(
                         AccountSummaryListItem.Account(
-                            id = dbAcc.account.id,
+                            id = account.id ?: 0L,
                             name = account.name,
                             shortName = account.shortName,
                             level = account.level,
-                            amounts = (account.getAmounts() ?: emptyList()).map { amount ->
+                            amounts = account.amounts.map { amount ->
                                 AccountAmount(
                                     amount = amount.amount,
-                                    currency = amount.currency ?: "",
+                                    currency = amount.currency,
                                     formattedAmount = formatAmount(amount.amount, amount.currency)
                                 )
                             },
-                            parentName = dbAcc.account.parentName,
-                            hasSubAccounts = account.hasSubAccounts,
+                            parentName = account.parentName,
+                            hasSubAccounts = hasSubAccountsMap[account.name] == true,
                             isExpanded = account.isExpanded,
-                            amountsExpanded = account.amountsExpanded
+                            amountsExpanded = false
                         )
                     )
                 }

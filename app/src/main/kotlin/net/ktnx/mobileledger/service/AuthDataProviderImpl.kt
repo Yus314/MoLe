@@ -23,7 +23,7 @@ import javax.inject.Singleton
 import net.ktnx.mobileledger.App
 import net.ktnx.mobileledger.BuildConfig
 import net.ktnx.mobileledger.TemporaryAuthData
-import net.ktnx.mobileledger.db.Profile
+import net.ktnx.mobileledger.domain.model.Profile
 import net.ktnx.mobileledger.utils.Colors
 
 /**

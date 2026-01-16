@@ -123,7 +123,7 @@ sealed class AccountRowsEvent {
     data object DismissCurrencySelector : AccountRowsEvent()
     data class AddCurrency(
         val name: String,
-        val position: net.ktnx.mobileledger.model.Currency.Position,
+        val position: net.ktnx.mobileledger.domain.model.CurrencyPosition,
         val gap: Boolean
     ) : AccountRowsEvent()
     data class DeleteCurrency(val name: String) : AccountRowsEvent()

@@ -19,8 +19,9 @@ package net.ktnx.mobileledger.data.repository
 
 import kotlinx.coroutines.flow.Flow
 import net.ktnx.mobileledger.dao.TransactionDAO
-import net.ktnx.mobileledger.db.Transaction
+import net.ktnx.mobileledger.db.Transaction as DbTransaction
 import net.ktnx.mobileledger.db.TransactionWithAccounts
+import net.ktnx.mobileledger.domain.model.Transaction
 
 /**
  * Repository for managing Transaction data.
@@ -35,45 +36,51 @@ import net.ktnx.mobileledger.db.TransactionWithAccounts
  *
  * Thread-safety: All suspend functions are safe to call from any coroutine context.
  * Flow emissions are safe for concurrent collectors.
+ *
+ * ## Domain Model Migration (017-domain-model-layer)
+ *
+ * Query operations now return domain models (Transaction) instead of db entities.
+ * Mutation operations still accept db entities for backward compatibility.
+ * Use the domain model methods for UI layer consumption.
  */
 interface TransactionRepository {
 
     // ========================================
-    // Query Operations
+    // Query Operations (Domain Models)
     // ========================================
 
     /**
      * Get all transactions with their accounts for a profile.
      *
      * @param profileId The profile ID to filter by.
-     * @return Flow emitting the list of transactions whenever data changes.
+     * @return Flow emitting the list of domain model transactions whenever data changes.
      */
-    fun getAllTransactions(profileId: Long): Flow<List<TransactionWithAccounts>>
+    fun getAllTransactions(profileId: Long): Flow<List<Transaction>>
 
     /**
      * Get transactions filtered by account name.
      *
      * @param profileId The profile ID to filter by.
      * @param accountName Optional account name filter. If null, returns all transactions.
-     * @return Flow emitting the filtered list of transactions.
+     * @return Flow emitting the filtered list of domain model transactions.
      */
-    fun getTransactionsFiltered(profileId: Long, accountName: String?): Flow<List<TransactionWithAccounts>>
+    fun getTransactionsFiltered(profileId: Long, accountName: String?): Flow<List<Transaction>>
 
     /**
      * Get a transaction by its ID.
      *
      * @param transactionId The transaction ID.
-     * @return Flow emitting the transaction, or null if not found.
+     * @return Flow emitting the domain model transaction, or null if not found.
      */
-    fun getTransactionById(transactionId: Long): Flow<TransactionWithAccounts?>
+    fun getTransactionById(transactionId: Long): Flow<Transaction?>
 
     /**
      * Get a transaction by its ID (synchronous version for one-time reads).
      *
      * @param transactionId The transaction ID.
-     * @return The transaction, or null if not found.
+     * @return The domain model transaction, or null if not found.
      */
-    suspend fun getTransactionByIdSync(transactionId: Long): TransactionWithAccounts?
+    suspend fun getTransactionByIdSync(transactionId: Long): Transaction?
 
     /**
      * Search transaction descriptions matching a term.
@@ -88,27 +95,50 @@ interface TransactionRepository {
      * Useful for auto-filling from previous transactions.
      *
      * @param description The exact description to match.
-     * @return The first matching transaction, or null if none found.
+     * @return The first matching domain model transaction, or null if none found.
      */
-    suspend fun getFirstByDescription(description: String): TransactionWithAccounts?
+    suspend fun getFirstByDescription(description: String): Transaction?
 
     /**
      * Get the first transaction matching a description and having a specific account.
      *
      * @param description The exact description to match.
      * @param accountTerm The account name to filter by.
-     * @return The first matching transaction, or null if none found.
+     * @return The first matching domain model transaction, or null if none found.
      */
-    suspend fun getFirstByDescriptionHavingAccount(description: String, accountTerm: String): TransactionWithAccounts?
+    suspend fun getFirstByDescriptionHavingAccount(description: String, accountTerm: String): Transaction?
 
     // ========================================
-    // Mutation Operations
+    // Mutation Operations (Domain Models)
+    // ========================================
+
+    /**
+     * Insert a new transaction using domain model.
+     *
+     * @param transaction The domain model transaction to insert.
+     * @param profileId The profile ID for the transaction.
+     * @return The inserted transaction with generated ID.
+     */
+    suspend fun insertTransaction(transaction: Transaction, profileId: Long): Transaction
+
+    /**
+     * Store (insert or update) a transaction using domain model.
+     * Uses the transaction's ledgerId to detect duplicates.
+     *
+     * @param transaction The domain model transaction to store.
+     * @param profileId The profile ID for the transaction.
+     */
+    suspend fun storeTransaction(transaction: Transaction, profileId: Long)
+
+    // ========================================
+    // Mutation Operations (DB Entities - Legacy)
+    // Note: These are kept for backward compatibility during migration.
     // ========================================
 
     /**
      * Insert a new transaction with its accounts.
      *
-     * @param transaction The transaction to insert.
+     * @param transaction The db entity transaction to insert.
      */
     suspend fun insertTransaction(transaction: TransactionWithAccounts)
 
@@ -116,23 +146,23 @@ interface TransactionRepository {
      * Store (insert or update) a transaction.
      * Uses the transaction's dataHash to detect duplicates.
      *
-     * @param transaction The transaction to store.
+     * @param transaction The db entity transaction to store.
      */
     suspend fun storeTransaction(transaction: TransactionWithAccounts)
 
     /**
      * Delete a transaction.
      *
-     * @param transaction The transaction to delete.
+     * @param transaction The db entity transaction to delete.
      */
-    suspend fun deleteTransaction(transaction: Transaction)
+    suspend fun deleteTransaction(transaction: DbTransaction)
 
     /**
      * Delete multiple transactions.
      *
-     * @param transactions The transactions to delete.
+     * @param transactions The db entity transactions to delete.
      */
-    suspend fun deleteTransactions(transactions: List<Transaction>)
+    suspend fun deleteTransactions(transactions: List<DbTransaction>)
 
     // ========================================
     // Sync Operations

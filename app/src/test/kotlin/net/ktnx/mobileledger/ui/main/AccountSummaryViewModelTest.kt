@@ -28,10 +28,13 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import net.ktnx.mobileledger.data.repository.AccountRepository
 import net.ktnx.mobileledger.data.repository.PreferencesRepository
-import net.ktnx.mobileledger.db.Account
+import net.ktnx.mobileledger.db.Account as DbAccount
 import net.ktnx.mobileledger.db.AccountValue
 import net.ktnx.mobileledger.db.AccountWithAmounts
-import net.ktnx.mobileledger.db.Profile
+import net.ktnx.mobileledger.domain.model.Account
+import net.ktnx.mobileledger.domain.model.AccountAmount as DomainAccountAmount
+import net.ktnx.mobileledger.domain.model.Profile
+import net.ktnx.mobileledger.util.createTestDomainProfile
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -86,15 +89,13 @@ class AccountSummaryViewModelTest {
         name: String = "Test Profile",
         theme: Int = 0,
         orderNo: Int = 0
-    ): Profile = Profile().apply {
-        this.id = id
-        this.name = name
-        this.theme = theme
-        this.orderNo = orderNo
-        this.uuid = java.util.UUID.randomUUID().toString()
-        this.url = "https://example.com/ledger"
-        this.permitPosting = true
-    }
+    ): Profile = createTestDomainProfile(
+        id = id,
+        name = name,
+        theme = theme,
+        orderNo = orderNo,
+        permitPosting = true
+    )
 
     private fun createTestAccount(
         id: Long,
@@ -106,7 +107,7 @@ class AccountSummaryViewModelTest {
         expanded: Boolean = true,
         amountsExpanded: Boolean = false
     ): AccountWithAmounts {
-        val account = Account().apply {
+        val account = DbAccount().apply {
             this.id = id
             this.profileId = profileId
             this.name = name
@@ -454,51 +455,69 @@ class AccountSummaryViewModelTest {
 /**
  * Fake AccountRepository specialized for AccountSummaryViewModel tests.
  * Implements AccountRepository directly to support account with amounts storage.
+ * Now uses domain models (Account) for query operations.
  */
 class FakeAccountRepositoryForAccountSummary : AccountRepository {
-    private val accountsWithAmounts = mutableMapOf<Long, MutableList<AccountWithAmounts>>()
+    private val domainAccounts = mutableMapOf<Long, MutableList<Account>>()
     private val accountNames = mutableMapOf<Long, MutableList<String>>()
     var simulateError = false
 
-    fun addAccountWithAmounts(accountWithAmounts: AccountWithAmounts) {
-        val profileId = accountWithAmounts.account.profileId
-        accountsWithAmounts.getOrPut(profileId) { mutableListOf() }.add(accountWithAmounts)
-        accountNames.getOrPut(profileId) { mutableListOf() }.add(accountWithAmounts.account.name)
+    /**
+     * Add a domain model account for testing.
+     */
+    fun addAccount(profileId: Long, account: Account) {
+        domainAccounts.getOrPut(profileId) { mutableListOf() }.add(account)
+        accountNames.getOrPut(profileId) { mutableListOf() }.add(account.name)
     }
 
-    override suspend fun getAllWithAmountsSync(
-        profileId: Long,
-        includeZeroBalances: Boolean
-    ): List<AccountWithAmounts> {
+    /**
+     * Helper to add account with amounts using db entities (converts to domain model).
+     */
+    fun addAccountWithAmounts(accountWithAmounts: AccountWithAmounts) {
+        val profileId = accountWithAmounts.account.profileId
+        val domainAccount = Account(
+            id = accountWithAmounts.account.id,
+            name = accountWithAmounts.account.name,
+            level = accountWithAmounts.account.level,
+            isExpanded = accountWithAmounts.account.expanded,
+            isVisible = true,
+            amounts = accountWithAmounts.amounts.map { av ->
+                DomainAccountAmount(currency = av.currency, amount = av.value)
+            }
+        )
+        addAccount(profileId, domainAccount)
+    }
+
+    override suspend fun getAllWithAmountsSync(profileId: Long, includeZeroBalances: Boolean): List<Account> {
         if (simulateError) {
             throw RuntimeException("Simulated error")
         }
-        val accounts = accountsWithAmounts[profileId] ?: emptyList()
+        val accounts = domainAccounts[profileId] ?: emptyList()
         return if (includeZeroBalances) {
             accounts
         } else {
             accounts.filter { acc ->
-                acc.amounts.any { it.value != 0f }
+                acc.amounts.any { it.amount != 0f }
             }
         }
     }
 
-    override suspend fun getCountForProfile(profileId: Long): Int = accountsWithAmounts[profileId]?.size ?: 0
+    override suspend fun getCountForProfile(profileId: Long): Int = domainAccounts[profileId]?.size ?: 0
 
     // Unused methods - implement with defaults
     override fun getAllWithAmounts(profileId: Long, includeZeroBalances: Boolean) =
-        MutableStateFlow(accountsWithAmounts[profileId] ?: emptyList())
+        MutableStateFlow(domainAccounts[profileId] ?: emptyList())
 
-    override fun getAll(profileId: Long, includeZeroBalances: Boolean) = MutableStateFlow<List<Account>>(emptyList())
+    override fun getAll(profileId: Long, includeZeroBalances: Boolean) = MutableStateFlow<List<DbAccount>>(emptyList())
 
-    override suspend fun getByIdSync(id: Long): Account? = null
+    override suspend fun getByIdSync(id: Long): DbAccount? = null
 
-    override fun getByName(profileId: Long, accountName: String) = MutableStateFlow<Account?>(null)
+    override fun getByName(profileId: Long, accountName: String) = MutableStateFlow<DbAccount?>(null)
 
-    override suspend fun getByNameSync(profileId: Long, accountName: String): Account? = null
+    override suspend fun getByNameSync(profileId: Long, accountName: String): DbAccount? = null
 
     override fun getByNameWithAmounts(profileId: Long, accountName: String) =
-        MutableStateFlow<AccountWithAmounts?>(null)
+        MutableStateFlow(domainAccounts[profileId]?.find { it.name == accountName })
 
     override fun searchAccountNames(profileId: Long, term: String) =
         MutableStateFlow(accountNames[profileId]?.filter { it.contains(term, ignoreCase = true) } ?: emptyList())
@@ -506,8 +525,8 @@ class FakeAccountRepositoryForAccountSummary : AccountRepository {
     override suspend fun searchAccountNamesSync(profileId: Long, term: String): List<String> =
         accountNames[profileId]?.filter { it.contains(term, ignoreCase = true) } ?: emptyList()
 
-    override suspend fun searchAccountsWithAmountsSync(profileId: Long, term: String): List<AccountWithAmounts> =
-        emptyList()
+    override suspend fun searchAccountsWithAmountsSync(profileId: Long, term: String): List<Account> =
+        domainAccounts[profileId]?.filter { it.name.contains(term, ignoreCase = true) } ?: emptyList()
 
     override fun searchAccountNamesGlobal(term: String) =
         MutableStateFlow(accountNames.values.flatten().filter { it.contains(term, ignoreCase = true) })
@@ -515,18 +534,18 @@ class FakeAccountRepositoryForAccountSummary : AccountRepository {
     override suspend fun searchAccountNamesGlobalSync(term: String): List<String> =
         accountNames.values.flatten().filter { it.contains(term, ignoreCase = true) }
 
-    override suspend fun insertAccount(account: Account): Long = 0L
+    override suspend fun insertAccount(account: DbAccount): Long = 0L
 
     override suspend fun insertAccountWithAmounts(accountWithAmounts: AccountWithAmounts) {}
 
-    override suspend fun updateAccount(account: Account) {}
+    override suspend fun updateAccount(account: DbAccount) {}
 
-    override suspend fun deleteAccount(account: Account) {}
+    override suspend fun deleteAccount(account: DbAccount) {}
 
     override suspend fun storeAccounts(accounts: List<AccountWithAmounts>, profileId: Long) {}
 
     override suspend fun deleteAllAccounts() {
-        accountsWithAmounts.clear()
+        domainAccounts.clear()
         accountNames.clear()
     }
 }

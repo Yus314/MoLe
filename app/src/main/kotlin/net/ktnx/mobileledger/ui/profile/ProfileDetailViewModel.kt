@@ -47,10 +47,12 @@ import logcat.asLog
 import logcat.logcat
 import net.ktnx.mobileledger.TemporaryAuthData
 import net.ktnx.mobileledger.data.repository.ProfileRepository
-import net.ktnx.mobileledger.db.Profile
 import net.ktnx.mobileledger.di.IoDispatcher
+import net.ktnx.mobileledger.domain.model.FutureDates
+import net.ktnx.mobileledger.domain.model.Profile
+import net.ktnx.mobileledger.domain.model.ProfileAuthentication
+import net.ktnx.mobileledger.domain.model.ServerVersion
 import net.ktnx.mobileledger.json.API
-import net.ktnx.mobileledger.model.FutureDates
 import net.ktnx.mobileledger.model.HledgerVersion
 import net.ktnx.mobileledger.service.AuthDataProvider
 import net.ktnx.mobileledger.utils.NetworkUtil
@@ -114,7 +116,7 @@ class ProfileDetailViewModel @Inject constructor(
             val profile = profileRepository.getProfileByIdSync(profileId)
             if (profile != null) {
                 orderNo = profile.orderNo
-                val detectedVersion = if (profile.isVersionPre_1_19()) {
+                val detectedVersion = if (profile.isVersionPre_1_19) {
                     HledgerVersion(true)
                 } else if (profile.detectedVersionMajor > 0) {
                     HledgerVersion(profile.detectedVersionMajor, profile.detectedVersionMinor)
@@ -125,21 +127,21 @@ class ProfileDetailViewModel @Inject constructor(
                 val defaultHue = authDataProvider.getDefaultThemeHue()
                 _uiState.update {
                     ProfileDetailUiState(
-                        profileId = profile.id,
+                        profileId = profile.id ?: 0,
                         name = profile.name,
                         url = profile.url,
-                        useAuthentication = profile.useAuthentication,
-                        authUser = profile.authUser ?: "",
-                        authPassword = profile.authPassword ?: "",
+                        useAuthentication = profile.isAuthEnabled,
+                        authUser = profile.authentication?.user ?: "",
+                        authPassword = profile.authentication?.password ?: "",
                         themeHue = if (profile.theme == -1) defaultHue else profile.theme,
                         initialThemeHue = if (profile.theme == -1) defaultHue else profile.theme,
                         preferredAccountsFilter = profile.preferredAccountsFilter ?: "",
-                        futureDates = FutureDates.valueOf(profile.futureDates),
+                        futureDates = profile.futureDates,
                         apiVersion = API.valueOf(profile.apiVersion),
                         permitPosting = profile.permitPosting,
                         showCommentsByDefault = profile.showCommentsByDefault,
                         showCommodityByDefault = profile.showCommodityByDefault,
-                        defaultCommodity = profile.getDefaultCommodityOrEmpty().ifEmpty { null },
+                        defaultCommodity = profile.defaultCommodityOrEmpty.ifEmpty { null },
                         detectedVersion = detectedVersion,
                         isLoading = false
                     )
@@ -349,30 +351,49 @@ class ProfileDetailViewModel @Inject constructor(
 
             try {
                 val state = _uiState.value
-                val profile = Profile().apply {
-                    id = state.profileId
-                    name = state.name
-                    url = state.url
-                    useAuthentication = state.useAuthentication
-                    authUser = if (state.useAuthentication) state.authUser else null
-                    authPassword = if (state.useAuthentication) state.authPassword else null
-                    theme = state.themeHue
-                    preferredAccountsFilter = state.preferredAccountsFilter.ifEmpty { null }
-                    futureDates = state.futureDates.toInt()
-                    apiVersion = state.apiVersion.toInt()
-                    permitPosting = state.permitPosting
-                    showCommentsByDefault = state.showCommentsByDefault
-                    showCommodityByDefault = state.showCommodityByDefault
-                    setDefaultCommodity(state.defaultCommodity)
-                    orderNo = this@ProfileDetailViewModel.orderNo
-
-                    val version = state.detectedVersion
-                    detectedVersionPre_1_19 = version?.isPre_1_20_1 ?: false
-                    detectedVersionMajor = version?.major ?: -1
-                    detectedVersionMinor = version?.minor ?: -1
+                val version = state.detectedVersion
+                val serverVersion = if (version != null) {
+                    ServerVersion(
+                        major = version.major,
+                        minor = version.minor,
+                        isPre_1_19 = version.isPre_1_20_1
+                    )
+                } else {
+                    null
                 }
 
-                if (profile.id > 0) {
+                val authentication = if (state.useAuthentication) {
+                    ProfileAuthentication(user = state.authUser, password = state.authPassword)
+                } else {
+                    null
+                }
+
+                // Load existing profile to get uuid if updating
+                val existingProfile = if (state.profileId > 0) {
+                    profileRepository.getProfileByIdSync(state.profileId)
+                } else {
+                    null
+                }
+
+                val profile = Profile(
+                    id = if (state.profileId > 0) state.profileId else null,
+                    name = state.name,
+                    uuid = existingProfile?.uuid ?: java.util.UUID.randomUUID().toString(),
+                    url = state.url,
+                    authentication = authentication,
+                    orderNo = this@ProfileDetailViewModel.orderNo,
+                    permitPosting = state.permitPosting,
+                    theme = state.themeHue,
+                    preferredAccountsFilter = state.preferredAccountsFilter.ifEmpty { null },
+                    futureDates = state.futureDates,
+                    apiVersion = state.apiVersion.toInt(),
+                    showCommodityByDefault = state.showCommodityByDefault,
+                    defaultCommodity = state.defaultCommodity,
+                    showCommentsByDefault = state.showCommentsByDefault,
+                    serverVersion = serverVersion
+                )
+
+                if (profile.id != null && profile.id > 0) {
                     profileRepository.updateProfile(profile)
                     logcat { "Profile updated in DB" }
                 } else {

@@ -21,12 +21,13 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import net.ktnx.mobileledger.db.Profile
+import net.ktnx.mobileledger.domain.model.Profile
 import net.ktnx.mobileledger.fake.FakeTransactionSender
 import net.ktnx.mobileledger.ui.main.FakeAppStateServiceForViewModel
 import net.ktnx.mobileledger.ui.main.FakeProfileRepositoryForViewModel
 import net.ktnx.mobileledger.ui.main.FakeTransactionRepositoryForViewModel
 import net.ktnx.mobileledger.util.MainDispatcherRule
+import net.ktnx.mobileledger.util.createTestDomainProfile
 import net.ktnx.mobileledger.utils.SimpleDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -67,10 +68,10 @@ class TransactionFormViewModelTest {
     }
 
     private fun createTestProfile(
-        id: Long = 1L,
+        id: Long? = 1L,
         name: String = "Test Profile",
         defaultCommodity: String = "USD"
-    ): Profile = net.ktnx.mobileledger.util.createTestProfile(
+    ): Profile = createTestDomainProfile(
         id = id,
         name = name,
         defaultCommodity = defaultCommodity

@@ -21,7 +21,7 @@ import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
 import logcat.logcat
-import net.ktnx.mobileledger.db.Profile
+import net.ktnx.mobileledger.domain.model.Profile
 
 object NetworkUtil {
     private const val THIRTY_SECONDS = 30000
@@ -29,7 +29,7 @@ object NetworkUtil {
     @JvmStatic
     @Throws(IOException::class)
     fun prepareConnection(profile: Profile, path: String): HttpURLConnection =
-        prepareConnection(profile.url, path, profile.isAuthEnabled())
+        prepareConnection(profile.url, path, profile.isAuthEnabled)
 
     @JvmStatic
     @Throws(IOException::class)

@@ -22,12 +22,16 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import net.ktnx.mobileledger.dao.TemplateAccountDAO
 import net.ktnx.mobileledger.dao.TemplateHeaderDAO
+import net.ktnx.mobileledger.data.repository.mapper.TemplateMapper.toDomain
+import net.ktnx.mobileledger.data.repository.mapper.TemplateMapper.toEntity
 import net.ktnx.mobileledger.db.TemplateAccount
 import net.ktnx.mobileledger.db.TemplateHeader
 import net.ktnx.mobileledger.db.TemplateWithAccounts
+import net.ktnx.mobileledger.domain.model.Template
 
 /**
  * Implementation of [TemplateRepository] that wraps the existing DAOs.
@@ -46,7 +50,27 @@ class TemplateRepositoryImpl @Inject constructor(
 ) : TemplateRepository {
 
     // ========================================
-    // Query Operations
+    // Domain Model Query Operations
+    // ========================================
+
+    override fun getAllTemplatesAsDomain(): Flow<List<Template>> =
+        templateHeaderDAO.getTemplatesWithAccounts().asFlow().map { list ->
+            list.map { it.toDomain() }
+        }
+
+    override fun getTemplateAsDomain(id: Long): Flow<Template?> =
+        templateHeaderDAO.getTemplateWithAccounts(id).asFlow().map { it?.toDomain() }
+
+    override suspend fun getTemplateAsDomainSync(id: Long): Template? = withContext(Dispatchers.IO) {
+        templateHeaderDAO.getTemplateWithAccountsSync(id)?.toDomain()
+    }
+
+    override suspend fun getAllTemplatesAsDomainSync(): List<Template> = withContext(Dispatchers.IO) {
+        templateHeaderDAO.getAllTemplatesWithAccountsSync().map { it.toDomain() }
+    }
+
+    // ========================================
+    // Database Entity Query Operations (for internal use)
     // ========================================
 
     override fun getAllTemplates(): Flow<List<TemplateHeader>> = templateHeaderDAO.getTemplates().asFlow()
@@ -105,6 +129,16 @@ class TemplateRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun deleteTemplateById(id: Long): Boolean = withContext(Dispatchers.IO) {
+        val template = templateHeaderDAO.getTemplateSync(id)
+        if (template != null) {
+            templateHeaderDAO.deleteSync(template)
+            true
+        } else {
+            false
+        }
+    }
+
     override suspend fun duplicateTemplate(id: Long): TemplateWithAccounts? {
         return withContext(Dispatchers.IO) {
             val src = templateHeaderDAO.getTemplateWithAccountsSync(id) ?: return@withContext null
@@ -151,4 +185,9 @@ class TemplateRepositoryImpl @Inject constructor(
             templateAccountDAO.finishSave(savedId)
             savedId
         }
+
+    override suspend fun saveTemplate(template: Template): Long = withContext(Dispatchers.IO) {
+        val entity = template.toEntity()
+        saveTemplateWithAccounts(entity.header, entity.accounts)
+    }
 }

@@ -24,7 +24,8 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import net.ktnx.mobileledger.db.Profile
+import net.ktnx.mobileledger.domain.model.Profile
+import net.ktnx.mobileledger.util.createTestDomainProfile
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -69,16 +70,15 @@ class ProfileSelectionViewModelTest {
         id: Long = 1L,
         name: String = "Test Profile",
         theme: Int = 0,
-        orderNo: Int = 0
-    ): Profile = Profile().apply {
-        this.id = id
-        this.name = name
-        this.theme = theme
-        this.orderNo = orderNo
-        this.uuid = java.util.UUID.randomUUID().toString()
-        this.url = "https://example.com/ledger"
-        this.permitPosting = true
-    }
+        orderNo: Int = 0,
+        permitPosting: Boolean = true
+    ): Profile = createTestDomainProfile(
+        id = id,
+        name = name,
+        theme = theme,
+        orderNo = orderNo,
+        permitPosting = permitPosting
+    )
 
     private fun createViewModel() = ProfileSelectionViewModel(profileRepository)
 
@@ -275,9 +275,7 @@ class ProfileSelectionViewModelTest {
     @Test
     fun `uiState contains canPost flag`() = runTest {
         // Given
-        val profile = createTestProfile(id = 1L, name = "CanPost").apply {
-            permitPosting = true
-        }
+        val profile = createTestProfile(id = 1L, name = "CanPost", permitPosting = true)
         profileRepository.insertProfile(profile)
         profileRepository.setCurrentProfile(profile)
 
@@ -292,9 +290,7 @@ class ProfileSelectionViewModelTest {
     @Test
     fun `uiState canPost is false when profile disallows posting`() = runTest {
         // Given
-        val profile = createTestProfile(id = 1L, name = "NoPost").apply {
-            permitPosting = false
-        }
+        val profile = createTestProfile(id = 1L, name = "NoPost", permitPosting = false)
         profileRepository.insertProfile(profile)
         profileRepository.setCurrentProfile(profile)
 
@@ -309,9 +305,7 @@ class ProfileSelectionViewModelTest {
     @Test
     fun `profiles list contains ProfileListItem with correct fields`() = runTest {
         // Given
-        val profile = createTestProfile(id = 1L, name = "Test", theme = 90).apply {
-            permitPosting = false
-        }
+        val profile = createTestProfile(id = 1L, name = "Test", theme = 90, permitPosting = false)
         profileRepository.insertProfile(profile)
 
         // When

@@ -215,8 +215,7 @@ class FakeOptionRepository : OptionRepository {
     override fun getOption(profileId: Long, name: String): Flow<Option?> =
         MutableStateFlow(options[Pair(profileId, name)])
 
-    override suspend fun getOptionSync(profileId: Long, name: String): Option? =
-        options[Pair(profileId, name)]
+    override suspend fun getOptionSync(profileId: Long, name: String): Option? = options[Pair(profileId, name)]
 
     override suspend fun getAllOptionsForProfileSync(profileId: Long): List<Option> =
         options.values.filter { it.profileId == profileId }

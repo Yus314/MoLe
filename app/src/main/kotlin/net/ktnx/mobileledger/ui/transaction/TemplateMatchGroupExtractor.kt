@@ -18,7 +18,7 @@
 package net.ktnx.mobileledger.ui.transaction
 
 import logcat.logcat
-import net.ktnx.mobileledger.db.TemplateHeader
+import net.ktnx.mobileledger.domain.model.Template
 import net.ktnx.mobileledger.utils.SimpleDate
 
 /**
@@ -68,32 +68,32 @@ object TemplateMatchGroupExtractor {
     }
 
     /**
-     * Extract date from match groups or static values in the template header.
+     * Extract date from match groups or static values in the template.
      *
      * @param matchResult The regex match result
-     * @param header The template header containing match group numbers and static values
+     * @param template The template domain model containing match group numbers and static values
      * @return SimpleDate if date can be constructed, null otherwise
      */
-    fun extractDate(matchResult: java.util.regex.MatchResult, header: TemplateHeader): SimpleDate? {
+    fun extractDate(matchResult: java.util.regex.MatchResult, template: Template): SimpleDate? {
         val today = SimpleDate.today()
 
         // Year is required - without it, we can't construct a valid date
         val year = extractFromMatchGroup(
             matchResult,
-            header.dateYearMatchGroup,
-            header.dateYear?.toString()
+            template.dateYearMatchGroup,
+            template.dateYear?.toString()
         )?.toIntOrNull() ?: return null
 
         val month = extractFromMatchGroup(
             matchResult,
-            header.dateMonthMatchGroup,
-            header.dateMonth?.toString()
+            template.dateMonthMatchGroup,
+            template.dateMonth?.toString()
         )?.toIntOrNull() ?: today.month
 
         val day = extractFromMatchGroup(
             matchResult,
-            header.dateDayMatchGroup,
-            header.dateDay?.toString()
+            template.dateDayMatchGroup,
+            template.dateDay?.toString()
         )?.toIntOrNull() ?: today.day
 
         return try {

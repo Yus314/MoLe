@@ -88,7 +88,8 @@ class NewTransactionActivityCompose :
                         startActivity(intent)
                         finish()
                     } else {
-                        formViewModel.setProfile(profile.id)
+                        val profileId = profile.id ?: return@collect
+                        formViewModel.setProfile(profileId)
                     }
                 }
             }

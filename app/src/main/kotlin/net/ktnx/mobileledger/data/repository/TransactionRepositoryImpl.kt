@@ -18,21 +18,23 @@
 package net.ktnx.mobileledger.data.repository
 
 import androidx.lifecycle.asFlow
-import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import logcat.logcat
 import net.ktnx.mobileledger.dao.AccountDAO
 import net.ktnx.mobileledger.dao.AccountValueDAO
 import net.ktnx.mobileledger.dao.TransactionAccountDAO
 import net.ktnx.mobileledger.dao.TransactionDAO
+import net.ktnx.mobileledger.data.repository.mapper.TransactionMapper
 import net.ktnx.mobileledger.db.Account
 import net.ktnx.mobileledger.db.AccountValue
-import net.ktnx.mobileledger.db.Transaction
+import net.ktnx.mobileledger.db.Transaction as DbTransaction
 import net.ktnx.mobileledger.db.TransactionWithAccounts
+import net.ktnx.mobileledger.domain.model.Transaction
 import net.ktnx.mobileledger.model.LedgerAccount
 import net.ktnx.mobileledger.utils.Misc
 
@@ -55,46 +57,64 @@ class TransactionRepositoryImpl @Inject constructor(
 ) : TransactionRepository {
 
     // ========================================
-    // Query Operations
+    // Query Operations (Domain Models)
     // ========================================
 
-    override fun getAllTransactions(profileId: Long): Flow<List<TransactionWithAccounts>> =
+    override fun getAllTransactions(profileId: Long): Flow<List<Transaction>> =
         transactionDAO.getAllWithAccounts(profileId).asFlow()
+            .map { entities -> TransactionMapper.toDomainList(entities) }
 
-    override fun getTransactionsFiltered(profileId: Long, accountName: String?): Flow<List<TransactionWithAccounts>> =
+    override fun getTransactionsFiltered(profileId: Long, accountName: String?): Flow<List<Transaction>> =
         if (accountName == null) {
             transactionDAO.getAllWithAccounts(profileId).asFlow()
         } else {
             transactionDAO.getAllWithAccountsFiltered(profileId, accountName).asFlow()
-        }
+        }.map { entities -> TransactionMapper.toDomainList(entities) }
 
-    override fun getTransactionById(transactionId: Long): Flow<TransactionWithAccounts?> =
+    override fun getTransactionById(transactionId: Long): Flow<Transaction?> =
         transactionDAO.getByIdWithAccounts(transactionId).asFlow()
+            .map { entity -> entity?.let { TransactionMapper.toDomain(it) } }
 
-    override suspend fun getTransactionByIdSync(transactionId: Long): TransactionWithAccounts? =
-        withContext(Dispatchers.IO) {
-            transactionDAO.getByIdWithAccountsSync(transactionId)
-        }
+    override suspend fun getTransactionByIdSync(transactionId: Long): Transaction? = withContext(Dispatchers.IO) {
+        transactionDAO.getByIdWithAccountsSync(transactionId)?.let { TransactionMapper.toDomain(it) }
+    }
 
     override suspend fun searchByDescription(term: String): List<TransactionDAO.DescriptionContainer> =
         withContext(Dispatchers.IO) {
-            transactionDAO.lookupDescriptionSync(term.uppercase())
+            transactionDAO.lookupDescriptionSync(term.uppercase(java.util.Locale.ROOT))
         }
 
-    override suspend fun getFirstByDescription(description: String): TransactionWithAccounts? =
+    override suspend fun getFirstByDescription(description: String): Transaction? = withContext(Dispatchers.IO) {
+        transactionDAO.getFirstByDescriptionSync(description)?.let { TransactionMapper.toDomain(it) }
+    }
+
+    override suspend fun getFirstByDescriptionHavingAccount(description: String, accountTerm: String): Transaction? =
         withContext(Dispatchers.IO) {
-            transactionDAO.getFirstByDescriptionSync(description)
+            transactionDAO.getFirstByDescriptionHavingAccountSync(description, accountTerm)
+                ?.let { TransactionMapper.toDomain(it) }
         }
 
-    override suspend fun getFirstByDescriptionHavingAccount(
-        description: String,
-        accountTerm: String
-    ): TransactionWithAccounts? = withContext(Dispatchers.IO) {
-        transactionDAO.getFirstByDescriptionHavingAccountSync(description, accountTerm)
+    // ========================================
+    // Mutation Operations (Domain Models)
+    // ========================================
+
+    override suspend fun insertTransaction(transaction: Transaction, profileId: Long): Transaction =
+        withContext(Dispatchers.IO) {
+            val entity = TransactionMapper.toEntity(transaction, profileId)
+            appendTransactionInternal(entity)
+            // Return the updated domain model with generated ID
+            TransactionMapper.toDomain(entity)
+        }
+
+    override suspend fun storeTransaction(transaction: Transaction, profileId: Long) {
+        withContext(Dispatchers.IO) {
+            val entity = TransactionMapper.toEntity(transaction, profileId)
+            storeTransactionInternal(entity)
+        }
     }
 
     // ========================================
-    // Mutation Operations
+    // Mutation Operations (DB Entities - Legacy)
     // ========================================
 
     override suspend fun insertTransaction(transaction: TransactionWithAccounts) {
@@ -192,13 +212,13 @@ class TransactionRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun deleteTransaction(transaction: Transaction) {
+    override suspend fun deleteTransaction(transaction: DbTransaction) {
         withContext(Dispatchers.IO) {
             transactionDAO.deleteSync(transaction)
         }
     }
 
-    override suspend fun deleteTransactions(transactions: List<Transaction>) {
+    override suspend fun deleteTransactions(transactions: List<DbTransaction>) {
         withContext(Dispatchers.IO) {
             transactionDAO.deleteSync(transactions)
         }

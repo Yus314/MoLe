@@ -22,9 +22,13 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import net.ktnx.mobileledger.dao.CurrencyDAO
+import net.ktnx.mobileledger.data.repository.mapper.CurrencyMapper.toDomain
+import net.ktnx.mobileledger.data.repository.mapper.CurrencyMapper.toEntity
 import net.ktnx.mobileledger.db.Currency
+import net.ktnx.mobileledger.domain.model.Currency as DomainCurrency
 
 /**
  * Implementation of [CurrencyRepository] that wraps the existing [CurrencyDAO].
@@ -40,7 +44,29 @@ import net.ktnx.mobileledger.db.Currency
 class CurrencyRepositoryImpl @Inject constructor(private val currencyDAO: CurrencyDAO) : CurrencyRepository {
 
     // ========================================
-    // Query Operations
+    // Domain Model Query Operations
+    // ========================================
+
+    override fun getAllCurrenciesAsDomain(): Flow<List<DomainCurrency>> =
+        currencyDAO.getAll().asFlow().map { list -> list.map { it.toDomain() } }
+
+    override suspend fun getAllCurrenciesAsDomainSync(): List<DomainCurrency> = withContext(Dispatchers.IO) {
+        currencyDAO.getAllSync().map { it.toDomain() }
+    }
+
+    override fun getCurrencyAsDomain(id: Long): Flow<DomainCurrency?> =
+        currencyDAO.getById(id).asFlow().map { it?.toDomain() }
+
+    override suspend fun getCurrencyAsDomainSync(id: Long): DomainCurrency? = withContext(Dispatchers.IO) {
+        currencyDAO.getByIdSync(id)?.toDomain()
+    }
+
+    override suspend fun getCurrencyAsDomainByNameSync(name: String): DomainCurrency? = withContext(Dispatchers.IO) {
+        currencyDAO.getByNameSync(name)?.toDomain()
+    }
+
+    // ========================================
+    // Database Entity Query Operations (for internal use)
     // ========================================
 
     override fun getAllCurrencies(): Flow<List<Currency>> = currencyDAO.getAll().asFlow()
@@ -84,6 +110,26 @@ class CurrencyRepositoryImpl @Inject constructor(private val currencyDAO: Curren
     override suspend fun deleteAllCurrencies() {
         withContext(Dispatchers.IO) {
             currencyDAO.deleteAllSync()
+        }
+    }
+
+    override suspend fun saveCurrency(currency: DomainCurrency): Long = withContext(Dispatchers.IO) {
+        val entity = currency.toEntity()
+        if (entity.id == 0L) {
+            currencyDAO.insertSync(entity)
+        } else {
+            currencyDAO.updateSync(entity)
+            entity.id
+        }
+    }
+
+    override suspend fun deleteCurrencyByName(name: String): Boolean = withContext(Dispatchers.IO) {
+        val currency = currencyDAO.getByNameSync(name)
+        if (currency != null) {
+            currencyDAO.deleteSync(currency)
+            true
+        } else {
+            false
         }
     }
 }

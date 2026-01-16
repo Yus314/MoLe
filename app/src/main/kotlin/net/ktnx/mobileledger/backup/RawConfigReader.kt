@@ -31,6 +31,8 @@ import net.ktnx.mobileledger.App
 import net.ktnx.mobileledger.data.repository.CurrencyRepository
 import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.data.repository.TemplateRepository
+import net.ktnx.mobileledger.data.repository.mapper.ProfileMapper.toDomain
+import net.ktnx.mobileledger.data.repository.mapper.ProfileMapper.toEntity
 import net.ktnx.mobileledger.db.Currency
 import net.ktnx.mobileledger.db.Profile
 import net.ktnx.mobileledger.db.TemplateAccount
@@ -275,7 +277,8 @@ class RawConfigReader(inputStream: InputStream) {
         for (p in profilesList) {
             coroutineContext.ensureActive()
             if (profileRepository.getProfileByUuidSync(p.uuid) == null) {
-                profileRepository.insertProfile(p)
+                // Convert db.Profile to domain.Profile for repository
+                profileRepository.insertProfile(p.toDomain())
             }
         }
     }
@@ -303,7 +306,7 @@ class RawConfigReader(inputStream: InputStream) {
         if (p != null) {
             logcat { "Restoring current profile ${p.name}" }
             profileRepository.setCurrentProfile(p)
-            App.storeStartupProfileAndTheme(p.id, p.theme)
+            App.storeStartupProfileAndTheme(p.id ?: 0, p.theme)
         } else {
             logcat { "Not restoring profile $currentProfile: not found in DB" }
         }

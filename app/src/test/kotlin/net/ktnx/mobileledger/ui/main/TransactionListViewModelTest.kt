@@ -28,11 +28,15 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import net.ktnx.mobileledger.db.Profile
 import net.ktnx.mobileledger.db.Transaction
+import net.ktnx.mobileledger.db.Transaction as DbTransaction
 import net.ktnx.mobileledger.db.TransactionAccount
 import net.ktnx.mobileledger.db.TransactionWithAccounts
+import net.ktnx.mobileledger.domain.model.Profile
+import net.ktnx.mobileledger.domain.model.Transaction as DomainTransaction
+import net.ktnx.mobileledger.domain.model.TransactionLine
 import net.ktnx.mobileledger.fake.FakeCurrencyFormatter
+import net.ktnx.mobileledger.util.createTestDomainProfile
 import net.ktnx.mobileledger.utils.SimpleDate
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -91,15 +95,13 @@ class TransactionListViewModelTest {
         name: String = "Test Profile",
         theme: Int = 0,
         orderNo: Int = 0
-    ): Profile = Profile().apply {
-        this.id = id
-        this.name = name
-        this.theme = theme
-        this.orderNo = orderNo
-        this.uuid = java.util.UUID.randomUUID().toString()
-        this.url = "https://example.com/ledger"
-        this.permitPosting = true
-    }
+    ): Profile = createTestDomainProfile(
+        id = id,
+        name = name,
+        theme = theme,
+        orderNo = orderNo,
+        permitPosting = true
+    )
 
     private fun createTestTransaction(
         id: Long,
@@ -362,7 +364,7 @@ class TransactionListViewModelTest {
         // Verify repository filtering works directly
         val filteredFromRepo = transactionRepository.getTransactionsFiltered(1L, "Checking").first()
         assertEquals("Repository should return 1 filtered transaction", 1, filteredFromRepo.size)
-        assertEquals("ATM", filteredFromRepo[0].transaction.description)
+        assertEquals("ATM", filteredFromRepo[0].description)
 
         viewModel = createViewModel()
         advanceUntilIdle()
@@ -715,13 +717,39 @@ class FakeTransactionRepositoryForTransactionList : net.ktnx.mobileledger.data.r
         transactions.add(transaction)
     }
 
-    override fun getAllTransactions(profileId: Long) =
-        MutableStateFlow(transactions.filter { it.transaction.profileId == profileId })
+    /**
+     * Convert TransactionWithAccounts (db entity) to DomainTransaction (domain model)
+     */
+    private fun TransactionWithAccounts.toDomainModel(): DomainTransaction {
+        val tx = this.transaction
+        return DomainTransaction(
+            id = tx.id,
+            ledgerId = tx.ledgerId,
+            date = SimpleDate(tx.year, tx.month, tx.day),
+            description = tx.description,
+            comment = tx.comment,
+            lines = this.accounts.map { acc ->
+                TransactionLine(
+                    id = acc.id,
+                    accountName = acc.accountName,
+                    amount = acc.amount,
+                    currency = acc.currency ?: "",
+                    comment = acc.comment
+                )
+            }
+        )
+    }
+
+    override fun getAllTransactions(profileId: Long) = MutableStateFlow(
+        transactions
+            .filter { it.transaction.profileId == profileId }
+            .map { it.toDomainModel() }
+    )
 
     override fun getTransactionsFiltered(
         profileId: Long,
         accountName: String?
-    ): kotlinx.coroutines.flow.Flow<List<TransactionWithAccounts>> {
+    ): kotlinx.coroutines.flow.Flow<List<DomainTransaction>> {
         if (simulateError) {
             // Return a flow that throws when collected
             return kotlinx.coroutines.flow.flow {
@@ -736,17 +764,17 @@ class FakeTransactionRepositoryForTransactionList : net.ktnx.mobileledger.data.r
                             it.accountName.contains(accountName, ignoreCase = true)
                         }
                         )
-            }
+            }.map { it.toDomainModel() }
         )
     }
 
     override fun getTransactionById(transactionId: Long) =
-        MutableStateFlow(transactions.find { it.transaction.id == transactionId })
+        MutableStateFlow(transactions.find { it.transaction.id == transactionId }?.toDomainModel())
 
-    override suspend fun getTransactionByIdSync(transactionId: Long) = if (simulateError) {
+    override suspend fun getTransactionByIdSync(transactionId: Long): DomainTransaction? = if (simulateError) {
         throw RuntimeException("Simulated error")
     } else {
-        transactions.find { it.transaction.id == transactionId }
+        transactions.find { it.transaction.id == transactionId }?.toDomainModel()
     }
 
     override suspend fun searchByDescription(term: String) = transactions
@@ -757,15 +785,28 @@ class FakeTransactionRepositoryForTransactionList : net.ktnx.mobileledger.data.r
                 .apply { description = it.transaction.description }
         }
 
-    override suspend fun getFirstByDescription(description: String) =
-        transactions.find { it.transaction.description == description }
+    override suspend fun getFirstByDescription(description: String): DomainTransaction? =
+        transactions.find { it.transaction.description == description }?.toDomainModel()
 
-    override suspend fun getFirstByDescriptionHavingAccount(description: String, accountTerm: String) =
-        transactions.find { twa ->
-            twa.transaction.description == description &&
-                twa.accounts.any { it.accountName.contains(accountTerm, ignoreCase = true) }
-        }
+    override suspend fun getFirstByDescriptionHavingAccount(
+        description: String,
+        accountTerm: String
+    ): DomainTransaction? = transactions.find { twa ->
+        twa.transaction.description == description &&
+            twa.accounts.any { it.accountName.contains(accountTerm, ignoreCase = true) }
+    }?.toDomainModel()
 
+    // Domain model mutation methods
+    override suspend fun insertTransaction(transaction: DomainTransaction, profileId: Long): DomainTransaction {
+        val id = transaction.id ?: (transactions.maxOfOrNull { it.transaction.id } ?: 0L) + 1
+        return transaction.copy(id = id)
+    }
+
+    override suspend fun storeTransaction(transaction: DomainTransaction, profileId: Long) {
+        insertTransaction(transaction, profileId)
+    }
+
+    // DB entity mutation methods (legacy)
     override suspend fun insertTransaction(transaction: TransactionWithAccounts) {
         transactions.add(transaction)
     }
@@ -774,11 +815,11 @@ class FakeTransactionRepositoryForTransactionList : net.ktnx.mobileledger.data.r
         insertTransaction(transaction)
     }
 
-    override suspend fun deleteTransaction(transaction: net.ktnx.mobileledger.db.Transaction) {
+    override suspend fun deleteTransaction(transaction: DbTransaction) {
         transactions.removeAll { it.transaction.id == transaction.id }
     }
 
-    override suspend fun deleteTransactions(txs: List<net.ktnx.mobileledger.db.Transaction>) {
+    override suspend fun deleteTransactions(txs: List<DbTransaction>) {
         txs.forEach { tx -> transactions.removeAll { it.transaction.id == tx.id } }
     }
 
@@ -801,6 +842,7 @@ class FakeTransactionRepositoryForTransactionList : net.ktnx.mobileledger.data.r
 
 /**
  * Fake AccountRepository specialized for TransactionListViewModel tests.
+ * Now uses domain models (Account) for query operations.
  */
 class FakeAccountRepositoryForTransactionList : net.ktnx.mobileledger.data.repository.AccountRepository {
     private val accountNames = mutableMapOf<Long, MutableList<String>>()
@@ -810,10 +852,10 @@ class FakeAccountRepositoryForTransactionList : net.ktnx.mobileledger.data.repos
     }
 
     override fun getAllWithAmounts(profileId: Long, includeZeroBalances: Boolean) =
-        MutableStateFlow<List<net.ktnx.mobileledger.db.AccountWithAmounts>>(emptyList())
+        MutableStateFlow<List<net.ktnx.mobileledger.domain.model.Account>>(emptyList())
 
     override suspend fun getAllWithAmountsSync(profileId: Long, includeZeroBalances: Boolean) =
-        emptyList<net.ktnx.mobileledger.db.AccountWithAmounts>()
+        emptyList<net.ktnx.mobileledger.domain.model.Account>()
 
     override fun getAll(profileId: Long, includeZeroBalances: Boolean) =
         MutableStateFlow<List<net.ktnx.mobileledger.db.Account>>(emptyList())
@@ -826,7 +868,7 @@ class FakeAccountRepositoryForTransactionList : net.ktnx.mobileledger.data.repos
     override suspend fun getByNameSync(profileId: Long, accountName: String): net.ktnx.mobileledger.db.Account? = null
 
     override fun getByNameWithAmounts(profileId: Long, accountName: String) =
-        MutableStateFlow<net.ktnx.mobileledger.db.AccountWithAmounts?>(null)
+        MutableStateFlow<net.ktnx.mobileledger.domain.model.Account?>(null)
 
     override fun searchAccountNames(profileId: Long, term: String) =
         MutableStateFlow(accountNames[profileId]?.filter { it.contains(term, ignoreCase = true) } ?: emptyList())
@@ -835,7 +877,7 @@ class FakeAccountRepositoryForTransactionList : net.ktnx.mobileledger.data.repos
         accountNames[profileId]?.filter { it.contains(term, ignoreCase = true) } ?: emptyList()
 
     override suspend fun searchAccountsWithAmountsSync(profileId: Long, term: String) =
-        emptyList<net.ktnx.mobileledger.db.AccountWithAmounts>()
+        emptyList<net.ktnx.mobileledger.domain.model.Account>()
 
     override fun searchAccountNamesGlobal(term: String) =
         MutableStateFlow(accountNames.values.flatten().filter { it.contains(term, ignoreCase = true) })

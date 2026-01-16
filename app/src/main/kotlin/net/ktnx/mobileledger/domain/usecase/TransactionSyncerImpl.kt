@@ -47,9 +47,9 @@ import net.ktnx.mobileledger.data.repository.TransactionRepository
 import net.ktnx.mobileledger.db.Account
 import net.ktnx.mobileledger.db.AccountWithAmounts
 import net.ktnx.mobileledger.db.Option
-import net.ktnx.mobileledger.db.Profile
 import net.ktnx.mobileledger.db.TransactionWithAccounts
 import net.ktnx.mobileledger.di.IoDispatcher
+import net.ktnx.mobileledger.domain.model.Profile
 import net.ktnx.mobileledger.domain.model.SyncError
 import net.ktnx.mobileledger.domain.model.SyncException
 import net.ktnx.mobileledger.domain.model.SyncProgress
@@ -455,12 +455,14 @@ class TransactionSyncerImpl @Inject constructor(
         accounts: List<LedgerAccount>,
         transactions: List<LedgerTransaction>
     ) {
+        val profileId = profile.id ?: throw IllegalStateException("Cannot sync unsaved profile")
+
         logcat { "Preparing account list" }
         val list = ArrayList<AccountWithAmounts>()
         for (acc in accounts) {
             coroutineContext.ensureActive()
             val a = acc.toDBOWithAmounts()
-            val existing: Account? = accountRepository.getByNameSync(profile.id, acc.name)
+            val existing: Account? = accountRepository.getByNameSync(profileId, acc.name)
             if (existing != null) {
                 a.account.expanded = existing.expanded
                 a.account.amountsExpanded = existing.amountsExpanded
@@ -469,7 +471,7 @@ class TransactionSyncerImpl @Inject constructor(
             list.add(a)
         }
         logcat { "Account list prepared. Storing" }
-        accountRepository.storeAccounts(list, profile.id)
+        accountRepository.storeAccounts(list, profileId)
         logcat { "Account list stored" }
 
         logcat { "Preparing transaction list" }
@@ -480,11 +482,11 @@ class TransactionSyncerImpl @Inject constructor(
         }
 
         logcat { "Storing transaction list" }
-        transactionRepository.storeTransactions(tranList, profile.id)
+        transactionRepository.storeTransactions(tranList, profileId)
         logcat { "Transactions stored" }
 
         optionRepository.insertOption(
-            Option(profile.id, Option.OPT_LAST_SCRAPE, Date().time.toString())
+            Option(profileId, Option.OPT_LAST_SCRAPE, Date().time.toString())
         )
     }
 

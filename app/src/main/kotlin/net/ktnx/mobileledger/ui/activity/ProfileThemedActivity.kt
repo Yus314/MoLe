@@ -29,8 +29,8 @@ import kotlinx.coroutines.withContext
 import logcat.logcat
 import net.ktnx.mobileledger.App
 import net.ktnx.mobileledger.data.repository.ProfileRepository
-import net.ktnx.mobileledger.db.Profile
 import net.ktnx.mobileledger.di.BackupEntryPoint
+import net.ktnx.mobileledger.domain.model.Profile
 import net.ktnx.mobileledger.utils.Colors
 
 @SuppressLint("Registered")
@@ -98,7 +98,7 @@ open class ProfileThemedActivity : CrashReportingActivity() {
     }
 
     fun storeProfilePref(profile: Profile) {
-        App.storeStartupProfileAndTheme(profile.id, profile.theme)
+        App.storeStartupProfileAndTheme(profile.id ?: 0, profile.theme)
     }
 
     protected open fun initProfile() {

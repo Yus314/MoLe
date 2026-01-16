@@ -206,7 +206,7 @@ sealed class NewTransactionEvent {
     data object DismissCurrencySelector : NewTransactionEvent()
     data class AddCurrency(
         val name: String,
-        val position: net.ktnx.mobileledger.model.Currency.Position,
+        val position: net.ktnx.mobileledger.domain.model.CurrencyPosition,
         val gap: Boolean
     ) : NewTransactionEvent()
     data class DeleteCurrency(val name: String) : NewTransactionEvent()

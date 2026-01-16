@@ -34,12 +34,14 @@ import kotlinx.coroutines.withContext
 import logcat.LogPriority
 import logcat.asLog
 import logcat.logcat
-import net.ktnx.mobileledger.db.Profile
 import net.ktnx.mobileledger.di.IoDispatcher
+import net.ktnx.mobileledger.domain.model.Profile
+import net.ktnx.mobileledger.domain.model.Transaction
 import net.ktnx.mobileledger.json.API
 import net.ktnx.mobileledger.json.ApiNotSupportedException
 import net.ktnx.mobileledger.json.Gateway
 import net.ktnx.mobileledger.model.LedgerTransaction
+import net.ktnx.mobileledger.model.LedgerTransactionAccount
 import net.ktnx.mobileledger.utils.Globals
 import net.ktnx.mobileledger.utils.NetworkUtil
 import net.ktnx.mobileledger.utils.SimpleDate
@@ -66,49 +68,84 @@ class TransactionSenderImpl @Inject constructor(
     private var token: String? = null
     private var session: String? = null
 
-    override suspend fun send(profile: Profile, transaction: LedgerTransaction, simulate: Boolean): Result<Unit> =
-        withContext(ioDispatcher) {
-            try {
-                coroutineContext.ensureActive()
+    override suspend fun send(profile: Profile, transaction: Transaction, simulate: Boolean): Result<Unit> {
+        // Convert domain model to LedgerTransaction and delegate to internal implementation
+        val profileId = profile.id ?: return Result.failure(IllegalStateException("Cannot send from unsaved profile"))
+        val legacyTransaction = toLedgerTransaction(transaction, profileId)
+        return sendInternal(profile, legacyTransaction, simulate)
+    }
 
-                val profileApiVersion = API.valueOf(profile.apiVersion)
-                when (profileApiVersion) {
-                    API.auto -> {
-                        var sendOK = false
-                        for (ver in API.allVersions) {
-                            coroutineContext.ensureActive()
-                            logcat { "Trying version $ver" }
-                            try {
-                                sendOKViaAPI(profile, transaction, ver, simulate)
-                                sendOK = true
-                                logcat { "Version $ver request succeeded" }
-                                break
-                            } catch (e: ApiNotSupportedException) {
-                                logcat { "Version $ver not supported: ${e.message}" }
-                            }
-                        }
+    @Deprecated("Use send(Profile, Transaction, Boolean) instead")
+    override suspend fun sendLegacy(profile: Profile, transaction: LedgerTransaction, simulate: Boolean): Result<Unit> =
+        sendInternal(profile, transaction, simulate)
 
-                        if (!sendOK) {
-                            logcat { "Trying HTML form emulation" }
-                            legacySendOkWithRetry(profile, transaction, simulate)
+    /**
+     * Convert domain model Transaction to LedgerTransaction for server communication.
+     */
+    private fun toLedgerTransaction(transaction: Transaction, profileId: Long): LedgerTransaction {
+        val ledgerTx = LedgerTransaction(transaction.ledgerId, profileId)
+        ledgerTx.date = transaction.date
+        ledgerTx.description = transaction.description
+        ledgerTx.comment = transaction.comment
+
+        for (line in transaction.lines) {
+            val acc = LedgerTransactionAccount(line.accountName, line.currency)
+            acc.comment = line.comment
+            if (line.amount != null) {
+                acc.setAmount(line.amount)
+            }
+            ledgerTx.addAccount(acc)
+        }
+
+        return ledgerTx
+    }
+
+    private suspend fun sendInternal(
+        profile: Profile,
+        transaction: LedgerTransaction,
+        simulate: Boolean
+    ): Result<Unit> = withContext(ioDispatcher) {
+        try {
+            coroutineContext.ensureActive()
+
+            val profileApiVersion = API.valueOf(profile.apiVersion)
+            when (profileApiVersion) {
+                API.auto -> {
+                    var sendOK = false
+                    for (ver in API.allVersions) {
+                        coroutineContext.ensureActive()
+                        logcat { "Trying version $ver" }
+                        try {
+                            sendOKViaAPI(profile, transaction, ver, simulate)
+                            sendOK = true
+                            logcat { "Version $ver request succeeded" }
+                            break
+                        } catch (e: ApiNotSupportedException) {
+                            logcat { "Version $ver not supported: ${e.message}" }
                         }
                     }
 
-                    API.html -> legacySendOkWithRetry(profile, transaction, simulate)
-
-                    API.v1_14, API.v1_15, API.v1_19_1, API.v1_23 -> {
-                        sendOKViaAPI(profile, transaction, profileApiVersion, simulate)
+                    if (!sendOK) {
+                        logcat { "Trying HTML form emulation" }
+                        legacySendOkWithRetry(profile, transaction, simulate)
                     }
-
-                    else -> error("Unexpected API version: $profileApiVersion")
                 }
 
-                Result.success(Unit)
-            } catch (e: Exception) {
-                logcat(LogPriority.WARN) { "Error sending transaction: ${e.asLog()}" }
-                Result.failure(e)
+                API.html -> legacySendOkWithRetry(profile, transaction, simulate)
+
+                API.v1_14, API.v1_15, API.v1_19_1, API.v1_23 -> {
+                    sendOKViaAPI(profile, transaction, profileApiVersion, simulate)
+                }
+
+                else -> error("Unexpected API version: $profileApiVersion")
             }
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            logcat(LogPriority.WARN) { "Error sending transaction: ${e.asLog()}" }
+            Result.failure(e)
         }
+    }
 
     /**
      * Send transaction via JSON API

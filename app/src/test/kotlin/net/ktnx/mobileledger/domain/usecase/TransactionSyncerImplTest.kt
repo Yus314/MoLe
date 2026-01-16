@@ -28,11 +28,12 @@ import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.test.runTest
-import net.ktnx.mobileledger.db.Profile
+import net.ktnx.mobileledger.domain.model.Profile
 import net.ktnx.mobileledger.domain.model.SyncError
 import net.ktnx.mobileledger.domain.model.SyncException
 import net.ktnx.mobileledger.domain.model.SyncProgress
 import net.ktnx.mobileledger.fake.FakeTransactionSyncer
+import net.ktnx.mobileledger.util.createTestDomainProfile
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -55,24 +56,17 @@ class TransactionSyncerImplTest {
     @Before
     fun setup() {
         syncer = FakeTransactionSyncer()
-        testProfile = Profile().apply {
-            id = 1L
-            name = "Test Profile"
-            uuid = "test-uuid"
-            url = "https://test.example.com"
-            useAuthentication = false
-            authUser = null
-            authPassword = null
-            apiVersion = 0
-            permitPosting = true
-            showCommentsByDefault = true
-            setDefaultCommodity("JPY")
-            theme = -1
+        testProfile = createTestDomainProfile(
+            id = 1L,
+            name = "Test Profile",
+            url = "https://test.example.com",
+            authentication = null,
+            apiVersion = 0,
+            permitPosting = true,
+            defaultCommodity = "JPY",
+            theme = -1,
             orderNo = 1
-            showCommodityByDefault = true
-            futureDates = 0
-            preferredAccountsFilter = null
-        }
+        )
     }
 
     // T018: sync success test case

@@ -52,7 +52,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import net.ktnx.mobileledger.R
-import net.ktnx.mobileledger.model.Currency
+import net.ktnx.mobileledger.domain.model.CurrencyPosition
 
 /**
  * Material3 Currency picker dialog.
@@ -74,14 +74,14 @@ import net.ktnx.mobileledger.model.Currency
 @Composable
 fun CurrencyPickerDialog(
     currencies: List<String>,
-    initialPosition: Currency.Position = Currency.Position.BEFORE,
+    initialPosition: CurrencyPosition = CurrencyPosition.BEFORE,
     initialGap: Boolean = true,
     showPositionSettings: Boolean = true,
     onCurrencySelected: (String) -> Unit,
-    onCurrencyAdded: (String, Currency.Position, Boolean) -> Unit,
+    onCurrencyAdded: (String, CurrencyPosition, Boolean) -> Unit,
     onCurrencyDeleted: (String) -> Unit,
     onNoCurrencySelected: () -> Unit,
-    onPositionChanged: (Currency.Position) -> Unit,
+    onPositionChanged: (CurrencyPosition) -> Unit,
     onGapChanged: (Boolean) -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -267,9 +267,9 @@ private fun AddCurrencySection(
 
 @Composable
 private fun PositionSettings(
-    position: Currency.Position,
+    position: CurrencyPosition,
     gap: Boolean,
-    onPositionChange: (Currency.Position) -> Unit,
+    onPositionChange: (CurrencyPosition) -> Unit,
     onGapChange: (Boolean) -> Unit
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
@@ -284,8 +284,8 @@ private fun PositionSettings(
             verticalAlignment = Alignment.CenterVertically
         ) {
             RadioButton(
-                selected = position == Currency.Position.BEFORE,
-                onClick = { onPositionChange(Currency.Position.BEFORE) }
+                selected = position == CurrencyPosition.BEFORE,
+                onClick = { onPositionChange(CurrencyPosition.BEFORE) }
             )
             Text(
                 text = stringResource(R.string.currency_position_left),
@@ -293,8 +293,8 @@ private fun PositionSettings(
             )
 
             RadioButton(
-                selected = position == Currency.Position.AFTER,
-                onClick = { onPositionChange(Currency.Position.AFTER) }
+                selected = position == CurrencyPosition.AFTER,
+                onClick = { onPositionChange(CurrencyPosition.AFTER) }
             )
             Text(
                 text = stringResource(R.string.currency_position_right),

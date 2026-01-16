@@ -24,14 +24,18 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import net.ktnx.mobileledger.dao.TransactionDAO
-import net.ktnx.mobileledger.db.Profile
-import net.ktnx.mobileledger.db.Transaction
+import net.ktnx.mobileledger.data.repository.mapper.TransactionMapper
+import net.ktnx.mobileledger.db.Transaction as DbTransaction
 import net.ktnx.mobileledger.db.TransactionWithAccounts
+import net.ktnx.mobileledger.domain.model.Profile
+import net.ktnx.mobileledger.domain.model.Transaction
+import net.ktnx.mobileledger.util.createTestDomainProfile
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -73,20 +77,14 @@ class ProfileSwitchingEdgeCaseTest {
     // Helper methods
     // ========================================
 
-    private fun createTestProfile(id: Long = 0L, name: String = "Test Profile", orderNo: Int = 1): Profile =
-        Profile().apply {
-            this.id = id
-            this.name = name
-            this.uuid = java.util.UUID.randomUUID().toString()
-            this.url = "https://example.com/ledger"
-            this.orderNo = orderNo
-        }
+    private fun createTestProfile(id: Long? = null, name: String = "Test Profile", orderNo: Int = 1): Profile =
+        createTestDomainProfile(id = id, name = name, orderNo = orderNo)
 
     private fun createTestTransaction(
         profileId: Long,
         description: String = "Test Transaction"
     ): TransactionWithAccounts {
-        val transaction = Transaction().apply {
+        val transaction = DbTransaction().apply {
             this.profileId = profileId
             this.description = description
             this.year = 2026
@@ -128,10 +126,10 @@ class ProfileSwitchingEdgeCaseTest {
     fun `deleting current profile sets currentProfile to null when last profile`() = runTest {
         val profile = createTestProfile(name = "Only Profile")
         val id = profileRepository.insertProfile(profile)
-        profile.id = id
-        profileRepository.setCurrentProfile(profile)
+        val profileWithId = profile.copy(id = id)
+        profileRepository.setCurrentProfile(profileWithId)
 
-        profileRepository.deleteProfile(profile)
+        profileRepository.deleteProfile(profileWithId)
 
         assertNull(profileRepository.currentProfile.value)
         assertEquals(0, profileRepository.getProfileCount())
@@ -143,10 +141,10 @@ class ProfileSwitchingEdgeCaseTest {
         val profile2 = createTestProfile(name = "Profile 2", orderNo = 2)
         val id1 = profileRepository.insertProfile(profile1)
         profileRepository.insertProfile(profile2)
-        profile1.id = id1
-        profileRepository.setCurrentProfile(profile1)
+        val profile1WithId = profile1.copy(id = id1)
+        profileRepository.setCurrentProfile(profile1WithId)
 
-        profileRepository.deleteProfile(profile1)
+        profileRepository.deleteProfile(profile1WithId)
 
         val current = profileRepository.currentProfile.value
         assertNotNull(current)
@@ -159,11 +157,11 @@ class ProfileSwitchingEdgeCaseTest {
         val profile2 = createTestProfile(name = "Profile 2")
         val id1 = profileRepository.insertProfile(profile1)
         val id2 = profileRepository.insertProfile(profile2)
-        profile1.id = id1
-        profile2.id = id2
-        profileRepository.setCurrentProfile(profile1)
+        val profile1WithId = profile1.copy(id = id1)
+        val profile2WithId = profile2.copy(id = id2)
+        profileRepository.setCurrentProfile(profile1WithId)
 
-        profileRepository.deleteProfile(profile2)
+        profileRepository.deleteProfile(profile2WithId)
 
         val current = profileRepository.currentProfile.value
         assertNotNull(current)
@@ -178,8 +176,8 @@ class ProfileSwitchingEdgeCaseTest {
     fun `switching to null profile clears currentProfile`() = runTest {
         val profile = createTestProfile(name = "Profile")
         val id = profileRepository.insertProfile(profile)
-        profile.id = id
-        profileRepository.setCurrentProfile(profile)
+        val profileWithId = profile.copy(id = id)
+        profileRepository.setCurrentProfile(profileWithId)
         assertNotNull(profileRepository.currentProfile.value)
 
         profileRepository.setCurrentProfile(null)
@@ -191,8 +189,8 @@ class ProfileSwitchingEdgeCaseTest {
     fun `switching profile multiple times maintains consistency`() = runTest {
         val profiles = (1..5).map { i ->
             val p = createTestProfile(name = "Profile $i", orderNo = i)
-            p.id = profileRepository.insertProfile(p)
-            p
+            val insertedId = profileRepository.insertProfile(p)
+            p.copy(id = insertedId)
         }
 
         // Switch through all profiles
@@ -213,8 +211,8 @@ class ProfileSwitchingEdgeCaseTest {
     fun `updating current profile updates StateFlow`() = runTest {
         val profile = createTestProfile(name = "Original Name")
         val id = profileRepository.insertProfile(profile)
-        profile.id = id
-        profileRepository.setCurrentProfile(profile)
+        val profileWithId = profile.copy(id = id)
+        profileRepository.setCurrentProfile(profileWithId)
 
         val updated = createTestProfile(id = id, name = "Updated Name")
         profileRepository.updateProfile(updated)
@@ -239,14 +237,15 @@ class ProfileSwitchingEdgeCaseTest {
         transactionRepository.insertTransaction(createTestTransaction(id1, "TX2 for P1"))
         transactionRepository.insertTransaction(createTestTransaction(id2, "TX1 for P2"))
 
-        // Verify isolation
+        // Verify isolation - check count and descriptions
         val p1Transactions = transactionRepository.getAllTransactions(id1).first()
         val p2Transactions = transactionRepository.getAllTransactions(id2).first()
 
         assertEquals(2, p1Transactions.size)
         assertEquals(1, p2Transactions.size)
-        assertTrue(p1Transactions.all { it.transaction.profileId == id1 })
-        assertTrue(p2Transactions.all { it.transaction.profileId == id2 })
+        // Verify by description since domain model doesn't expose profileId
+        assertTrue(p1Transactions.all { it.description.contains("P1") })
+        assertTrue(p2Transactions.all { it.description.contains("P2") })
     }
 
     @Test
@@ -276,8 +275,8 @@ class ProfileSwitchingEdgeCaseTest {
         val profile2 = createTestProfile(name = "Profile 2")
         val id1 = profileRepository.insertProfile(profile1)
         profileRepository.insertProfile(profile2)
-        profile1.id = id1
-        profileRepository.setCurrentProfile(profile1)
+        val profile1WithId = profile1.copy(id = id1)
+        profileRepository.setCurrentProfile(profile1WithId)
 
         profileRepository.deleteAllProfiles()
 
@@ -329,29 +328,34 @@ class EdgeCaseFakeProfileRepository : ProfileRepository {
     override suspend fun getProfileCount(): Int = profiles.size
 
     override suspend fun insertProfile(profile: Profile): Long {
-        val id = if (profile.id == 0L) nextId++ else profile.id
-        profile.id = id
-        profiles[id] = profile
+        val id = if (profile.id == null || profile.id == 0L) nextId++ else profile.id
+        val profileWithId = profile.copy(id = id)
+        profiles[id] = profileWithId
         return id
     }
 
     override suspend fun updateProfile(profile: Profile) {
-        profiles[profile.id] = profile
-        if (_currentProfile.value?.id == profile.id) {
+        val id = profile.id ?: return
+        profiles[id] = profile
+        if (_currentProfile.value?.id == id) {
             _currentProfile.value = profile
         }
     }
 
     override suspend fun deleteProfile(profile: Profile) {
-        profiles.remove(profile.id)
-        if (_currentProfile.value?.id == profile.id) {
+        val id = profile.id ?: return
+        profiles.remove(id)
+        if (_currentProfile.value?.id == id) {
             _currentProfile.value = profiles.values.firstOrNull()
         }
     }
 
     override suspend fun updateProfileOrder(profiles: List<Profile>) {
         profiles.forEachIndexed { index, profile ->
-            this.profiles[profile.id]?.orderNo = index
+            val id = profile.id ?: return@forEachIndexed
+            this.profiles[id]?.let { existing ->
+                this.profiles[id] = existing.copy(orderNo = index)
+            }
         }
     }
 
@@ -368,29 +372,40 @@ class EdgeCaseFakeTransactionRepository : TransactionRepository {
     private val transactions = mutableMapOf<Long, TransactionWithAccounts>()
     private var nextId = 1L
 
-    override fun getAllTransactions(profileId: Long): Flow<List<TransactionWithAccounts>> =
+    override fun getAllTransactions(profileId: Long): Flow<List<Transaction>> =
         MutableStateFlow(transactions.values.filter { it.transaction.profileId == profileId }.toList())
+            .map { TransactionMapper.toDomainList(it) }
 
-    override fun getTransactionsFiltered(profileId: Long, accountName: String?): Flow<List<TransactionWithAccounts>> =
+    override fun getTransactionsFiltered(profileId: Long, accountName: String?): Flow<List<Transaction>> =
         MutableStateFlow(
             transactions.values.filter { it.transaction.profileId == profileId }.toList()
-        )
+        ).map { TransactionMapper.toDomainList(it) }
 
-    override fun getTransactionById(transactionId: Long): Flow<TransactionWithAccounts?> =
+    override fun getTransactionById(transactionId: Long): Flow<Transaction?> =
         MutableStateFlow(transactions[transactionId])
+            .map { it?.let { TransactionMapper.toDomain(it) } }
 
-    override suspend fun getTransactionByIdSync(transactionId: Long): TransactionWithAccounts? =
-        transactions[transactionId]
+    override suspend fun getTransactionByIdSync(transactionId: Long): Transaction? =
+        transactions[transactionId]?.let { TransactionMapper.toDomain(it) }
 
     override suspend fun searchByDescription(term: String): List<TransactionDAO.DescriptionContainer> = emptyList()
 
-    override suspend fun getFirstByDescription(description: String): TransactionWithAccounts? = null
+    override suspend fun getFirstByDescription(description: String): Transaction? = null
 
-    override suspend fun getFirstByDescriptionHavingAccount(
-        description: String,
-        accountTerm: String
-    ): TransactionWithAccounts? = null
+    override suspend fun getFirstByDescriptionHavingAccount(description: String, accountTerm: String): Transaction? =
+        null
 
+    // Domain model mutation methods
+    override suspend fun insertTransaction(transaction: Transaction, profileId: Long): Transaction {
+        val id = transaction.id ?: nextId++
+        return transaction.copy(id = id)
+    }
+
+    override suspend fun storeTransaction(transaction: Transaction, profileId: Long) {
+        insertTransaction(transaction, profileId)
+    }
+
+    // DB entity mutation methods (legacy)
     override suspend fun insertTransaction(transaction: TransactionWithAccounts) {
         if (transaction.transaction.id == 0L) {
             transaction.transaction.id = nextId++
@@ -402,11 +417,11 @@ class EdgeCaseFakeTransactionRepository : TransactionRepository {
         insertTransaction(transaction)
     }
 
-    override suspend fun deleteTransaction(transaction: Transaction) {
+    override suspend fun deleteTransaction(transaction: DbTransaction) {
         transactions.remove(transaction.id)
     }
 
-    override suspend fun deleteTransactions(transactions: List<Transaction>) {
+    override suspend fun deleteTransactions(transactions: List<DbTransaction>) {
         transactions.forEach { this.transactions.remove(it.id) }
     }
 

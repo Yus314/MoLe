@@ -31,10 +31,10 @@ import kotlinx.coroutines.launch
 import logcat.logcat
 import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.data.repository.TransactionRepository
+import net.ktnx.mobileledger.domain.model.FutureDates
+import net.ktnx.mobileledger.domain.model.Transaction
+import net.ktnx.mobileledger.domain.model.TransactionLine
 import net.ktnx.mobileledger.domain.usecase.TransactionSender
-import net.ktnx.mobileledger.model.FutureDates
-import net.ktnx.mobileledger.model.LedgerTransaction
-import net.ktnx.mobileledger.model.LedgerTransactionAccount
 import net.ktnx.mobileledger.service.AppStateService
 import net.ktnx.mobileledger.utils.SimpleDate
 
@@ -59,11 +59,10 @@ class TransactionFormViewModel @Inject constructor(
     private fun initializeFromProfile() {
         val profile = profileRepository.currentProfile.value
         if (profile != null) {
-            val futureDates = FutureDates.valueOf(profile.futureDates)
             _uiState.update {
                 it.copy(
-                    profileId = profile.id,
-                    futureDates = futureDates
+                    profileId = profile.id ?: 0,
+                    futureDates = profile.futureDates
                 )
             }
         }
@@ -156,7 +155,7 @@ class TransactionFormViewModel @Inject constructor(
 
         _uiState.update { it.copy(isSubmitting = true, isBusy = true) }
 
-        val transaction = constructLedgerTransaction(accountRows)
+        val transaction = constructTransaction(accountRows)
 
         viewModelScope.launch {
             _effects.send(TransactionFormEffect.HideKeyboard)
@@ -164,7 +163,7 @@ class TransactionFormViewModel @Inject constructor(
             val result = transactionSender.send(profile, transaction, state.isSimulateSave)
             result.fold(
                 onSuccess = {
-                    handleTransactionSendSuccess(transaction)
+                    handleTransactionSendSuccess(transaction, profile.id ?: 0)
                 },
                 onFailure = { exception ->
                     handleTransactionSendFailure(exception.message ?: "送信に失敗しました")
@@ -173,9 +172,9 @@ class TransactionFormViewModel @Inject constructor(
         }
     }
 
-    private suspend fun handleTransactionSendSuccess(transaction: LedgerTransaction) {
+    private suspend fun handleTransactionSendSuccess(transaction: Transaction, profileId: Long) {
         try {
-            transactionRepository.storeTransaction(transaction.toDBO())
+            transactionRepository.storeTransaction(transaction, profileId)
             logcat { "Transaction saved to DB" }
             appStateService.signalDataChanged()
         } catch (e: Exception) {
@@ -199,47 +198,64 @@ class TransactionFormViewModel @Inject constructor(
         }
     }
 
-    private fun constructLedgerTransaction(accountRows: List<TransactionAccountRow>): LedgerTransaction {
+    /**
+     * Construct a domain model Transaction from the form state and account rows.
+     *
+     * This method handles:
+     * - Balance calculation for accounts with empty amounts
+     * - Currency grouping for auto-balance
+     * - Conversion from UI rows to TransactionLine domain objects
+     */
+    private fun constructTransaction(accountRows: List<TransactionAccountRow>): Transaction {
         val state = _uiState.value
-        val profile = profileRepository.currentProfile.value!!
 
-        val transaction = LedgerTransaction(
-            0,
-            state.date,
-            state.description,
-            profile
-        )
-        transaction.comment = state.transactionComment.ifBlank { null }
-
+        // Build transaction lines, tracking balances for auto-balance calculation
         val currencyBalances = mutableMapOf<String, Float>()
-        val accountsWithEmptyAmount = mutableMapOf<String, MutableList<LedgerTransactionAccount>>()
+        val linesWithEmptyAmount = mutableMapOf<String, MutableList<Int>>() // currency -> indices
+        val lines = mutableListOf<TransactionLine>()
 
         for (row in accountRows) {
             if (row.accountName.isBlank()) continue
 
-            val acc = LedgerTransactionAccount(row.accountName.trim(), row.currency)
-            acc.comment = row.comment.ifBlank { null }
+            val lineIndex = lines.size
+            val amount: Float?
 
             if (row.isAmountSet && row.isAmountValid) {
-                val amount = row.amount ?: 0f
-                acc.setAmount(amount)
-                currencyBalances[row.currency] =
-                    (currencyBalances[row.currency] ?: 0f) + amount
+                amount = row.amount ?: 0f
+                currencyBalances[row.currency] = (currencyBalances[row.currency] ?: 0f) + amount
             } else {
-                accountsWithEmptyAmount.getOrPut(row.currency) { mutableListOf() }.add(acc)
+                amount = null
+                linesWithEmptyAmount.getOrPut(row.currency) { mutableListOf() }.add(lineIndex)
             }
 
-            transaction.addAccount(acc)
+            lines.add(
+                TransactionLine(
+                    id = null,
+                    accountName = row.accountName.trim(),
+                    amount = amount,
+                    currency = row.currency,
+                    comment = row.comment.ifBlank { null }
+                )
+            )
         }
 
-        for ((currency, accounts) in accountsWithEmptyAmount) {
-            val balance = currencyBalances[currency] ?: 0f
-            if (accounts.size == 1) {
-                accounts[0].setAmount(-balance)
+        // Auto-balance: set amount for accounts with empty amount (one per currency)
+        for ((currency, indices) in linesWithEmptyAmount) {
+            if (indices.size == 1) {
+                val balance = currencyBalances[currency] ?: 0f
+                val idx = indices[0]
+                lines[idx] = lines[idx].copy(amount = -balance)
             }
         }
 
-        return transaction
+        return Transaction(
+            id = null,
+            ledgerId = 0L,
+            date = state.date,
+            description = state.description,
+            comment = state.transactionComment.ifBlank { null },
+            lines = lines
+        )
     }
 
     private fun reset() {
@@ -259,13 +275,13 @@ class TransactionFormViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isBusy = true) }
 
-            val transactionWithAccounts = transactionRepository.getTransactionByIdSync(transactionId)
+            val transaction = transactionRepository.getTransactionByIdSync(transactionId)
 
-            if (transactionWithAccounts != null) {
+            if (transaction != null) {
                 _uiState.update { state ->
                     state.copy(
-                        description = transactionWithAccounts.transaction.description,
-                        transactionComment = transactionWithAccounts.transaction.comment ?: "",
+                        description = transaction.description,
+                        transactionComment = transaction.comment ?: "",
                         isBusy = false
                     )
                 }

@@ -21,8 +21,12 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.runTest
+import net.ktnx.mobileledger.data.repository.mapper.CurrencyMapper.toDomain
+import net.ktnx.mobileledger.data.repository.mapper.CurrencyMapper.toEntity
 import net.ktnx.mobileledger.db.Currency
+import net.ktnx.mobileledger.domain.model.Currency as DomainCurrency
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -249,6 +253,21 @@ class FakeCurrencyRepository : CurrencyRepository {
         currenciesFlow.value = currencies.values.toList()
     }
 
+    // Domain Model Query Operations
+    override fun getAllCurrenciesAsDomain(): Flow<List<DomainCurrency>> =
+        currenciesFlow.map { list -> list.map { it.toDomain() } }
+
+    override suspend fun getAllCurrenciesAsDomainSync(): List<DomainCurrency> = currencies.values.map { it.toDomain() }
+
+    override fun getCurrencyAsDomain(id: Long): Flow<DomainCurrency?> =
+        currenciesFlow.map { list -> list.find { it.id == id }?.toDomain() }
+
+    override suspend fun getCurrencyAsDomainSync(id: Long): DomainCurrency? = currencies[id]?.toDomain()
+
+    override suspend fun getCurrencyAsDomainByNameSync(name: String): DomainCurrency? =
+        currencies.values.find { it.name == name }?.toDomain()
+
+    // Database Entity Query Operations
     override fun getAllCurrencies(): Flow<List<Currency>> = MutableStateFlow(currencies.values.toList())
 
     override suspend fun getAllCurrenciesSync(): List<Currency> = currencies.values.toList()
@@ -285,5 +304,26 @@ class FakeCurrencyRepository : CurrencyRepository {
     override suspend fun deleteAllCurrencies() {
         currencies.clear()
         emitChanges()
+    }
+
+    override suspend fun saveCurrency(currency: DomainCurrency): Long {
+        val entity = currency.toEntity()
+        return if (entity.id == 0L) {
+            insertCurrency(entity)
+        } else {
+            updateCurrency(entity)
+            entity.id
+        }
+    }
+
+    override suspend fun deleteCurrencyByName(name: String): Boolean {
+        val currency = currencies.values.find { it.name == name }
+        return if (currency != null) {
+            currencies.remove(currency.id)
+            emitChanges()
+            true
+        } else {
+            false
+        }
     }
 }

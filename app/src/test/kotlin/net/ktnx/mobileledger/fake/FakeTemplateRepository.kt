@@ -19,10 +19,14 @@ package net.ktnx.mobileledger.fake
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.map
 import net.ktnx.mobileledger.data.repository.TemplateRepository
+import net.ktnx.mobileledger.data.repository.mapper.TemplateMapper.toDomain
+import net.ktnx.mobileledger.data.repository.mapper.TemplateMapper.toEntity
 import net.ktnx.mobileledger.db.TemplateAccount
 import net.ktnx.mobileledger.db.TemplateHeader
 import net.ktnx.mobileledger.db.TemplateWithAccounts
+import net.ktnx.mobileledger.domain.model.Template
 
 /**
  * Fake implementation of [TemplateRepository] for testing.
@@ -30,7 +34,26 @@ import net.ktnx.mobileledger.db.TemplateWithAccounts
 class FakeTemplateRepository : TemplateRepository {
 
     private val templates = mutableMapOf<Long, TemplateWithAccounts>()
+    private val templatesFlow = MutableStateFlow<List<TemplateWithAccounts>>(emptyList())
     private var nextId = 1L
+
+    // ========================================
+    // Domain Model Query Operations
+    // ========================================
+
+    override fun getAllTemplatesAsDomain(): Flow<List<Template>> =
+        templatesFlow.map { list -> list.map { it.toDomain() } }
+
+    override fun getTemplateAsDomain(id: Long): Flow<Template?> =
+        templatesFlow.map { list -> list.find { it.header.id == id }?.toDomain() }
+
+    override suspend fun getTemplateAsDomainSync(id: Long): Template? = templates[id]?.toDomain()
+
+    override suspend fun getAllTemplatesAsDomainSync(): List<Template> = templates.values.map { it.toDomain() }
+
+    // ========================================
+    // Database Entity Query Operations
+    // ========================================
 
     override fun getAllTemplates(): Flow<List<TemplateHeader>> =
         MutableStateFlow(templates.values.map { it.header }.sortedBy { it.name })
@@ -55,6 +78,7 @@ class FakeTemplateRepository : TemplateRepository {
             header = template
             accounts = emptyList()
         }
+        emitFlow()
         return id
     }
 
@@ -62,6 +86,7 @@ class FakeTemplateRepository : TemplateRepository {
         val id = if (templateWithAccounts.header.id == 0L) nextId++ else templateWithAccounts.header.id
         templateWithAccounts.header.id = id
         templates[id] = templateWithAccounts
+        emitFlow()
     }
 
     override suspend fun updateTemplate(template: TemplateHeader) {
@@ -70,10 +95,19 @@ class FakeTemplateRepository : TemplateRepository {
             updated.header = template
             templates[template.id] = updated
         }
+        emitFlow()
     }
 
     override suspend fun deleteTemplate(template: TemplateHeader) {
         templates.remove(template.id)
+        emitFlow()
+    }
+
+    override suspend fun deleteTemplateById(id: Long): Boolean {
+        val existed = templates.containsKey(id)
+        templates.remove(id)
+        emitFlow()
+        return existed
     }
 
     override suspend fun duplicateTemplate(id: Long): TemplateWithAccounts? {
@@ -84,11 +118,13 @@ class FakeTemplateRepository : TemplateRepository {
         duplicate.header.name = "${source.header.name} (copy)"
         duplicate.accounts.forEach { it.templateId = newId }
         templates[newId] = duplicate
+        emitFlow()
         return duplicate
     }
 
     override suspend fun deleteAllTemplates() {
         templates.clear()
+        emitFlow()
     }
 
     override suspend fun saveTemplateWithAccounts(header: TemplateHeader, accounts: List<TemplateAccount>): Long {
@@ -99,11 +135,22 @@ class FakeTemplateRepository : TemplateRepository {
             this.header = header
             this.accounts = accounts
         }
+        emitFlow()
         return id
+    }
+
+    override suspend fun saveTemplate(template: Template): Long {
+        val entity = template.toEntity()
+        return saveTemplateWithAccounts(entity.header, entity.accounts)
+    }
+
+    private fun emitFlow() {
+        templatesFlow.value = templates.values.toList()
     }
 
     fun reset() {
         templates.clear()
         nextId = 1L
+        emitFlow()
     }
 }

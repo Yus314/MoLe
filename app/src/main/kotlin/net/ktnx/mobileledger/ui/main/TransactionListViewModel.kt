@@ -40,7 +40,7 @@ import net.ktnx.mobileledger.async.TransactionAccumulator
 import net.ktnx.mobileledger.data.repository.AccountRepository
 import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.data.repository.TransactionRepository
-import net.ktnx.mobileledger.db.TransactionWithAccounts
+import net.ktnx.mobileledger.domain.model.Transaction
 import net.ktnx.mobileledger.model.LedgerTransaction
 import net.ktnx.mobileledger.model.TransactionListItem
 import net.ktnx.mobileledger.service.CurrencyFormatter
@@ -179,23 +179,21 @@ class TransactionListViewModel @Inject constructor(
     }
 
     /**
-     * Convert database transactions to display items without using TransactionAccumulator.
+     * Convert domain model transactions to display items without using TransactionAccumulator.
      */
     private fun convertToDisplayItems(
-        transactions: List<TransactionWithAccounts>,
+        transactions: List<Transaction>,
         accountFilter: String?
     ): List<TransactionListDisplayItem> {
         val items = mutableListOf<TransactionListDisplayItem>()
         items.add(TransactionListDisplayItem.Header)
 
         // Sort by date (newest first)
-        val sortedTx = transactions.sortedByDescending { tx ->
-            SimpleDate(tx.transaction.year, tx.transaction.month, tx.transaction.day)
-        }
+        val sortedTx = transactions.sortedByDescending { it.date }
 
         var lastDate: SimpleDate? = null
         for (tx in sortedTx) {
-            val date = SimpleDate(tx.transaction.year, tx.transaction.month, tx.transaction.day)
+            val date = tx.date
 
             // Add date delimiter if date changed
             if (lastDate != null && date != lastDate) {
@@ -206,16 +204,16 @@ class TransactionListViewModel @Inject constructor(
             // Add transaction
             items.add(
                 TransactionListDisplayItem.Transaction(
-                    id = tx.transaction.ledgerId,
+                    id = tx.ledgerId,
                     date = date,
-                    description = tx.transaction.description ?: "",
-                    comment = tx.transaction.comment,
-                    accounts = tx.accounts.map { acc ->
+                    description = tx.description,
+                    comment = tx.comment,
+                    accounts = tx.lines.map { line ->
                         TransactionAccountDisplayItem(
-                            accountName = acc.accountName,
-                            amount = acc.amount,
-                            currency = acc.currency ?: "",
-                            comment = acc.comment,
+                            accountName = line.accountName,
+                            amount = line.amount ?: 0f,
+                            currency = line.currency,
+                            comment = line.comment,
                             amountStyle = null
                         )
                     }.toImmutableList(),

@@ -18,7 +18,7 @@
 package net.ktnx.mobileledger.ui.transaction
 
 import java.util.regex.Pattern
-import net.ktnx.mobileledger.db.TemplateHeader
+import net.ktnx.mobileledger.domain.model.Template
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -164,13 +164,15 @@ class TemplateMatchGroupExtractorTest {
             "(\\d{4})-(\\d{2})-(\\d{2})",
             "2024-01-15"
         )
-        val header = TemplateHeader(0, "test", "").apply {
-            dateYearMatchGroup = 1
-            dateMonthMatchGroup = 2
+        val template = Template(
+            name = "test",
+            pattern = "",
+            dateYearMatchGroup = 1,
+            dateMonthMatchGroup = 2,
             dateDayMatchGroup = 3
-        }
+        )
 
-        val result = TemplateMatchGroupExtractor.extractDate(matchResult, header)
+        val result = TemplateMatchGroupExtractor.extractDate(matchResult, template)
 
         assertNotNull(result)
         assertEquals(2024, result!!.year)
@@ -181,13 +183,15 @@ class TemplateMatchGroupExtractorTest {
     @Test
     fun `extractDate returns SimpleDate when year from group and others from static`() {
         val matchResult = createMatchResult("YEAR:(\\d{4})", "YEAR:2024")
-        val header = TemplateHeader(0, "test", "").apply {
-            dateYearMatchGroup = 1
-            dateMonth = 6
+        val template = Template(
+            name = "test",
+            pattern = "",
+            dateYearMatchGroup = 1,
+            dateMonth = 6,
             dateDay = 20
-        }
+        )
 
-        val result = TemplateMatchGroupExtractor.extractDate(matchResult, header)
+        val result = TemplateMatchGroupExtractor.extractDate(matchResult, template)
 
         assertNotNull(result)
         assertEquals(2024, result!!.year)
@@ -198,13 +202,15 @@ class TemplateMatchGroupExtractorTest {
     @Test
     fun `extractDate returns null when year is missing`() {
         val matchResult = createMatchResult("(\\d{2})-(\\d{2})", "01-15")
-        val header = TemplateHeader(0, "test", "").apply {
+        val template = Template(
+            name = "test",
+            pattern = "",
             // No year match group and no static year
-            dateMonthMatchGroup = 1
+            dateMonthMatchGroup = 1,
             dateDayMatchGroup = 2
-        }
+        )
 
-        val result = TemplateMatchGroupExtractor.extractDate(matchResult, header)
+        val result = TemplateMatchGroupExtractor.extractDate(matchResult, template)
 
         assertNull(result)
     }
@@ -212,13 +218,15 @@ class TemplateMatchGroupExtractorTest {
     @Test
     fun `extractDate uses static year when no match group`() {
         val matchResult = createMatchResult("(\\d{2})-(\\d{2})", "01-15")
-        val header = TemplateHeader(0, "test", "").apply {
-            dateYear = 2024
-            dateMonthMatchGroup = 1
+        val template = Template(
+            name = "test",
+            pattern = "",
+            dateYear = 2024,
+            dateMonthMatchGroup = 1,
             dateDayMatchGroup = 2
-        }
+        )
 
-        val result = TemplateMatchGroupExtractor.extractDate(matchResult, header)
+        val result = TemplateMatchGroupExtractor.extractDate(matchResult, template)
 
         assertNotNull(result)
         assertEquals(2024, result!!.year)
@@ -229,12 +237,14 @@ class TemplateMatchGroupExtractorTest {
     @Test
     fun `extractDate uses today for missing month and day`() {
         val matchResult = createMatchResult("YEAR:(\\d{4})", "YEAR:2024")
-        val header = TemplateHeader(0, "test", "").apply {
+        val template = Template(
+            name = "test",
+            pattern = "",
             dateYearMatchGroup = 1
             // No month or day - should use today's values
-        }
+        )
 
-        val result = TemplateMatchGroupExtractor.extractDate(matchResult, header)
+        val result = TemplateMatchGroupExtractor.extractDate(matchResult, template)
 
         assertNotNull(result)
         assertEquals(2024, result!!.year)
