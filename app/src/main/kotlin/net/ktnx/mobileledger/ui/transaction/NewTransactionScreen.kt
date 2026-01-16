@@ -38,7 +38,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
@@ -70,68 +69,100 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import java.text.SimpleDateFormat
 import java.util.GregorianCalendar
 import java.util.Locale
-import net.ktnx.mobileledger.model.Currency
 import net.ktnx.mobileledger.ui.components.CurrencyPickerDialog
 import net.ktnx.mobileledger.ui.components.MoleDatePickerDialog
 
 /**
  * Main composable for the New Transaction screen.
  * Displays a form for creating new transactions with dynamic account rows.
+ *
+ * Uses three specialized ViewModels:
+ * - TransactionFormViewModel: Form fields (date, description, comment) and submission
+ * - AccountRowsViewModel: Account row CRUD, amount calculation, currency selection
+ * - TemplateApplicatorViewModel: Template search and application
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NewTransactionScreen(viewModel: NewTransactionViewModel = hiltViewModel(), onNavigateBack: () -> Unit) {
-    val uiState by viewModel.uiState.collectAsState()
+fun NewTransactionScreen(
+    formViewModel: TransactionFormViewModel = hiltViewModel(),
+    accountRowsViewModel: AccountRowsViewModel = hiltViewModel(),
+    templateApplicatorViewModel: TemplateApplicatorViewModel = hiltViewModel(),
+    onNavigateBack: () -> Unit
+) {
+    val formUiState by formViewModel.uiState.collectAsState()
+    val accountRowsUiState by accountRowsViewModel.uiState.collectAsState()
+    val templateUiState by templateApplicatorViewModel.uiState.collectAsState()
+
     val snackbarHostState = remember { SnackbarHostState() }
     val keyboardController = LocalSoftwareKeyboardController.current
     val descriptionFocusRequester = remember { FocusRequester() }
     var showDiscardDialog by remember { mutableStateOf(false) }
     var showMenuExpanded by remember { mutableStateOf(false) }
 
+    // Compute combined state for submittability
+    val isSubmittable = formUiState.isFormValid && accountRowsUiState.isBalanced
+    val hasUnsavedChanges = formUiState.hasUnsavedChanges || accountRowsUiState.hasAccountChanges
+
     // Handle back navigation with unsaved changes check
     BackHandler {
-        if (uiState.hasUnsavedChanges) {
+        if (hasUnsavedChanges) {
             showDiscardDialog = true
         } else {
             onNavigateBack()
         }
     }
 
-    // Handle effects
+    // Handle form effects
     LaunchedEffect(Unit) {
-        viewModel.effects.collect { effect ->
+        formViewModel.effects.collect { effect ->
             when (effect) {
-                is NewTransactionEffect.NavigateBack -> onNavigateBack()
+                is TransactionFormEffect.NavigateBack -> onNavigateBack()
 
-                is NewTransactionEffect.TransactionSaved -> {
+                is TransactionFormEffect.TransactionSaved -> {
                     snackbarHostState.showSnackbar(
                         message = "Transaction saved",
                         duration = SnackbarDuration.Short
                     )
+                    // Reset account rows when transaction is saved
+                    accountRowsViewModel.onEvent(AccountRowsEvent.Reset)
                 }
 
-                is NewTransactionEffect.ShowError -> {
+                is TransactionFormEffect.ShowError -> {
                     snackbarHostState.showSnackbar(
                         message = effect.message,
                         duration = SnackbarDuration.Long
                     )
                 }
 
-                is NewTransactionEffect.HideKeyboard -> {
+                is TransactionFormEffect.HideKeyboard -> {
                     keyboardController?.hide()
                 }
 
-                is NewTransactionEffect.RequestFocus -> {
+                is TransactionFormEffect.RequestFocus -> {
                     if (effect.element == FocusedElement.Description) {
                         descriptionFocusRequester.requestFocus()
                     }
+                }
+            }
+        }
+    }
+
+    // Handle account rows effects
+    LaunchedEffect(Unit) {
+        accountRowsViewModel.effects.collect { effect ->
+            when (effect) {
+                is AccountRowsEffect.RequestFocus -> {
+                    // Focus handling for account rows is handled by TransactionRowItem
+                }
+
+                is AccountRowsEffect.HideKeyboard -> {
+                    keyboardController?.hide()
                 }
             }
         }
@@ -167,61 +198,59 @@ fun NewTransactionScreen(viewModel: NewTransactionViewModel = hiltViewModel(), o
     }
 
     // Date picker dialog
-    if (uiState.showDatePicker) {
+    if (formUiState.showDatePicker) {
         MoleDatePickerDialog(
-            initialDate = uiState.date,
-            futureDates = uiState.futureDates,
+            initialDate = formUiState.date,
+            futureDates = formUiState.futureDates,
             onDateSelected = { date ->
-                viewModel.onEvent(NewTransactionEvent.UpdateDate(date))
+                formViewModel.onEvent(TransactionFormEvent.UpdateDate(date))
             },
             onDismiss = {
-                viewModel.onEvent(NewTransactionEvent.DismissDatePicker)
+                formViewModel.onEvent(TransactionFormEvent.DismissDatePicker)
             }
         )
     }
 
     // Currency picker dialog
-    if (uiState.showCurrencySelector) {
+    if (accountRowsUiState.showCurrencySelector) {
         CurrencyPickerDialog(
-            currencies = uiState.availableCurrencies,
+            currencies = accountRowsUiState.availableCurrencies,
             showPositionSettings = true,
             onCurrencySelected = { currency ->
-                uiState.currencySelectorRowId?.let { rowId ->
-                    viewModel.onEvent(NewTransactionEvent.UpdateCurrency(rowId, currency))
+                accountRowsUiState.currencySelectorRowId?.let { rowId ->
+                    accountRowsViewModel.onEvent(AccountRowsEvent.UpdateCurrency(rowId, currency))
                 }
-                viewModel.onEvent(NewTransactionEvent.DismissCurrencySelector)
+                accountRowsViewModel.onEvent(AccountRowsEvent.DismissCurrencySelector)
             },
             onCurrencyAdded = { name, position, gap ->
-                viewModel.onEvent(NewTransactionEvent.AddCurrency(name, position, gap))
+                accountRowsViewModel.onEvent(AccountRowsEvent.AddCurrency(name, position, gap))
             },
             onCurrencyDeleted = { name ->
-                viewModel.onEvent(NewTransactionEvent.DeleteCurrency(name))
+                accountRowsViewModel.onEvent(AccountRowsEvent.DeleteCurrency(name))
             },
             onNoCurrencySelected = {
-                uiState.currencySelectorRowId?.let { rowId ->
-                    viewModel.onEvent(NewTransactionEvent.UpdateCurrency(rowId, ""))
+                accountRowsUiState.currencySelectorRowId?.let { rowId ->
+                    accountRowsViewModel.onEvent(AccountRowsEvent.UpdateCurrency(rowId, ""))
                 }
-                viewModel.onEvent(NewTransactionEvent.DismissCurrencySelector)
+                accountRowsViewModel.onEvent(AccountRowsEvent.DismissCurrencySelector)
             },
-            // Position settings are stored in currency DB
             onPositionChanged = { },
-            // Gap settings are stored in currency DB
             onGapChanged = { },
             onDismiss = {
-                viewModel.onEvent(NewTransactionEvent.DismissCurrencySelector)
+                accountRowsViewModel.onEvent(AccountRowsEvent.DismissCurrencySelector)
             }
         )
     }
 
     // Template selector dialog
-    if (uiState.showTemplateSelector) {
+    if (templateUiState.showTemplateSelector) {
         TemplateSelectorDialog(
-            templates = uiState.availableTemplates,
+            templates = templateUiState.availableTemplates,
             onTemplateSelected = { templateId ->
-                viewModel.onEvent(NewTransactionEvent.ApplyTemplate(templateId))
+                templateApplicatorViewModel.onEvent(TemplateApplicatorEvent.ApplyTemplate(templateId))
             },
             onDismiss = {
-                viewModel.onEvent(NewTransactionEvent.DismissTemplateSelector)
+                templateApplicatorViewModel.onEvent(TemplateApplicatorEvent.DismissTemplateSelector)
             }
         )
     }
@@ -233,7 +262,7 @@ fun NewTransactionScreen(viewModel: NewTransactionViewModel = hiltViewModel(), o
                 navigationIcon = {
                     IconButton(
                         onClick = {
-                            if (uiState.hasUnsavedChanges) {
+                            if (hasUnsavedChanges) {
                                 showDiscardDialog = true
                             } else {
                                 onNavigateBack()
@@ -260,9 +289,13 @@ fun NewTransactionScreen(viewModel: NewTransactionViewModel = hiltViewModel(), o
                             onDismissRequest = { showMenuExpanded = false }
                         ) {
                             DropdownMenuItem(
-                                text = { Text(if (uiState.showCurrency) "Hide currency" else "Show currency") },
+                                text = {
+                                    Text(
+                                        if (accountRowsUiState.showCurrency) "Hide currency" else "Show currency"
+                                    )
+                                },
                                 onClick = {
-                                    viewModel.onEvent(NewTransactionEvent.ToggleCurrency)
+                                    accountRowsViewModel.onEvent(AccountRowsEvent.ToggleCurrency)
                                     showMenuExpanded = false
                                 }
                             )
@@ -270,22 +303,25 @@ fun NewTransactionScreen(viewModel: NewTransactionViewModel = hiltViewModel(), o
                             DropdownMenuItem(
                                 text = { Text("Use template") },
                                 onClick = {
-                                    viewModel.onEvent(NewTransactionEvent.ShowTemplateSelector)
+                                    templateApplicatorViewModel.onEvent(
+                                        TemplateApplicatorEvent.ShowTemplateSelector
+                                    )
                                     showMenuExpanded = false
                                 }
                             )
                             DropdownMenuItem(
                                 text = { Text("Reset") },
                                 onClick = {
-                                    viewModel.onEvent(NewTransactionEvent.Reset)
+                                    formViewModel.onEvent(TransactionFormEvent.Reset)
+                                    accountRowsViewModel.onEvent(AccountRowsEvent.Reset)
                                     showMenuExpanded = false
                                 }
                             )
-                            if (uiState.isSimulateSave) {
+                            if (formUiState.isSimulateSave) {
                                 DropdownMenuItem(
                                     text = { Text("Disable simulate save") },
                                     onClick = {
-                                        viewModel.onEvent(NewTransactionEvent.ToggleSimulateSave)
+                                        formViewModel.onEvent(TransactionFormEvent.ToggleSimulateSave)
                                         showMenuExpanded = false
                                     }
                                 )
@@ -293,7 +329,7 @@ fun NewTransactionScreen(viewModel: NewTransactionViewModel = hiltViewModel(), o
                                 DropdownMenuItem(
                                     text = { Text("Enable simulate save") },
                                     onClick = {
-                                        viewModel.onEvent(NewTransactionEvent.ToggleSimulateSave)
+                                        formViewModel.onEvent(TransactionFormEvent.ToggleSimulateSave)
                                         showMenuExpanded = false
                                     }
                                 )
@@ -306,19 +342,21 @@ fun NewTransactionScreen(viewModel: NewTransactionViewModel = hiltViewModel(), o
         },
         floatingActionButton = {
             val fabAlpha by animateFloatAsState(
-                targetValue = if (uiState.isSubmittable && !uiState.isSubmitting) 1f else 0.5f,
+                targetValue = if (isSubmittable && !formUiState.isSubmitting) 1f else 0.5f,
                 label = "fabAlpha"
             )
 
             FloatingActionButton(
                 onClick = {
-                    if (uiState.isSubmittable && !uiState.isSubmitting) {
-                        viewModel.onEvent(NewTransactionEvent.Submit)
+                    if (isSubmittable && !formUiState.isSubmitting) {
+                        formViewModel.onEvent(
+                            TransactionFormEvent.Submit(accountRowsUiState.accounts)
+                        )
                     }
                 },
                 modifier = Modifier.alpha(fabAlpha)
             ) {
-                if (uiState.isSubmitting) {
+                if (formUiState.isSubmitting) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(24.dp),
                         color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -338,14 +376,16 @@ fun NewTransactionScreen(viewModel: NewTransactionViewModel = hiltViewModel(), o
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            if (uiState.isBusy && !uiState.isSubmitting) {
+            if (formUiState.isBusy && !formUiState.isSubmitting) {
                 CircularProgressIndicator(
                     modifier = Modifier.align(Alignment.Center)
                 )
             } else {
                 NewTransactionContent(
-                    uiState = uiState,
-                    onEvent = viewModel::onEvent,
+                    formUiState = formUiState,
+                    accountRowsUiState = accountRowsUiState,
+                    onFormEvent = formViewModel::onEvent,
+                    onAccountRowsEvent = accountRowsViewModel::onEvent,
                     descriptionFocusRequester = descriptionFocusRequester
                 )
             }
@@ -355,13 +395,19 @@ fun NewTransactionScreen(viewModel: NewTransactionViewModel = hiltViewModel(), o
 
 @Composable
 private fun NewTransactionContent(
-    uiState: NewTransactionUiState,
-    onEvent: (NewTransactionEvent) -> Unit,
+    formUiState: TransactionFormUiState,
+    accountRowsUiState: AccountRowsUiState,
+    onFormEvent: (TransactionFormEvent) -> Unit,
+    onAccountRowsEvent: (AccountRowsEvent) -> Unit,
     descriptionFocusRequester: FocusRequester
 ) {
     val dateFormat = remember { SimpleDateFormat("yyyy/MM/dd", Locale.US) }
-    val formattedDate = remember(uiState.date) {
-        val calendar = GregorianCalendar(uiState.date.year, uiState.date.month - 1, uiState.date.day)
+    val formattedDate = remember(formUiState.date) {
+        val calendar = GregorianCalendar(
+            formUiState.date.year,
+            formUiState.date.month - 1,
+            formUiState.date.day
+        )
         dateFormat.format(calendar.time)
     }
 
@@ -372,20 +418,22 @@ private fun NewTransactionContent(
         item(key = "header") {
             TransactionHeaderRow(
                 date = formattedDate,
-                description = uiState.description,
-                descriptionSuggestions = uiState.descriptionSuggestions,
-                transactionComment = uiState.transactionComment,
-                isCommentExpanded = uiState.isTransactionCommentExpanded,
-                onDateClick = { onEvent(NewTransactionEvent.ShowDatePicker) },
-                onDescriptionChange = { onEvent(NewTransactionEvent.UpdateDescription(it)) },
+                description = formUiState.description,
+                descriptionSuggestions = formUiState.descriptionSuggestions,
+                transactionComment = formUiState.transactionComment,
+                isCommentExpanded = formUiState.isTransactionCommentExpanded,
+                onDateClick = { onFormEvent(TransactionFormEvent.ShowDatePicker) },
+                onDescriptionChange = { onFormEvent(TransactionFormEvent.UpdateDescription(it)) },
                 onDescriptionSuggestionSelected = { description ->
-                    onEvent(NewTransactionEvent.UpdateDescription(description))
-                    onEvent(NewTransactionEvent.LoadFromDescription(description))
+                    onFormEvent(TransactionFormEvent.UpdateDescription(description))
+                    onFormEvent(TransactionFormEvent.LoadFromDescription(description))
                 },
-                onTransactionCommentChange = { onEvent(NewTransactionEvent.UpdateTransactionComment(it)) },
-                onToggleComment = { onEvent(NewTransactionEvent.ToggleTransactionComment) },
+                onTransactionCommentChange = {
+                    onFormEvent(TransactionFormEvent.UpdateTransactionComment(it))
+                },
+                onToggleComment = { onFormEvent(TransactionFormEvent.ToggleTransactionComment) },
                 onFocusChanged = { element ->
-                    onEvent(NewTransactionEvent.NoteFocus(null, element))
+                    onAccountRowsEvent(AccountRowsEvent.NoteFocus(null, element))
                 },
                 descriptionFocusRequester = descriptionFocusRequester
             )
@@ -395,7 +443,7 @@ private fun NewTransactionContent(
 
         // Account rows
         itemsIndexed(
-            items = uiState.accounts,
+            items = accountRowsUiState.accounts,
             key = { _, row -> row.id }
         ) { index, row ->
             AnimatedVisibility(
@@ -405,37 +453,37 @@ private fun NewTransactionContent(
             ) {
                 TransactionRowItem(
                     row = row,
-                    accountSuggestions = if (uiState.accountSuggestionsForRowId == row.id) {
-                        uiState.accountSuggestions
+                    accountSuggestions = if (accountRowsUiState.accountSuggestionsForRowId == row.id) {
+                        accountRowsUiState.accountSuggestions
                     } else {
                         emptyList()
                     },
-                    accountSuggestionsVersion = uiState.accountSuggestionsVersion,
-                    showCurrency = uiState.showCurrency,
-                    canDelete = uiState.accounts.size > 2,
+                    accountSuggestionsVersion = accountRowsUiState.accountSuggestionsVersion,
+                    showCurrency = accountRowsUiState.showCurrency,
+                    canDelete = accountRowsUiState.accounts.size > 2,
                     onAccountNameChange = { name ->
-                        onEvent(NewTransactionEvent.UpdateAccountName(row.id, name))
+                        onAccountRowsEvent(AccountRowsEvent.UpdateAccountName(row.id, name))
                     },
                     onAccountSuggestionSelected = { name ->
-                        onEvent(NewTransactionEvent.UpdateAccountName(row.id, name))
+                        onAccountRowsEvent(AccountRowsEvent.UpdateAccountName(row.id, name))
                     },
                     onAmountChange = { amount ->
-                        onEvent(NewTransactionEvent.UpdateAmount(row.id, amount))
+                        onAccountRowsEvent(AccountRowsEvent.UpdateAmount(row.id, amount))
                     },
                     onCurrencyClick = {
-                        onEvent(NewTransactionEvent.ShowCurrencySelector(row.id))
+                        onAccountRowsEvent(AccountRowsEvent.ShowCurrencySelector(row.id))
                     },
                     onCommentChange = { comment ->
-                        onEvent(NewTransactionEvent.UpdateAccountComment(row.id, comment))
+                        onAccountRowsEvent(AccountRowsEvent.UpdateAccountComment(row.id, comment))
                     },
                     onToggleComment = {
-                        onEvent(NewTransactionEvent.ToggleAccountComment(row.id))
+                        onAccountRowsEvent(AccountRowsEvent.ToggleAccountComment(row.id))
                     },
                     onDelete = {
-                        onEvent(NewTransactionEvent.RemoveAccountRow(row.id))
+                        onAccountRowsEvent(AccountRowsEvent.RemoveAccountRow(row.id))
                     },
                     onFocusChanged = { element ->
-                        onEvent(NewTransactionEvent.NoteFocus(row.id, element))
+                        onAccountRowsEvent(AccountRowsEvent.NoteFocus(row.id, element))
                     }
                 )
             }
@@ -450,7 +498,7 @@ private fun NewTransactionContent(
                 horizontalArrangement = Arrangement.Center
             ) {
                 TextButton(
-                    onClick = { onEvent(NewTransactionEvent.AddAccountRow(null)) }
+                    onClick = { onAccountRowsEvent(AccountRowsEvent.AddAccountRow(null)) }
                 ) {
                     Icon(
                         imageVector = Icons.Default.Add,

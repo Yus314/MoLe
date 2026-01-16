@@ -108,7 +108,7 @@
 
 ---
 
-## Phase 4: User Story 2 - NewTransactionViewModel 責務分離 (Priority: P2)
+## Phase 4: User Story 2 - NewTransactionViewModel 責務分離 (Priority: P2) ✅ COMPLETE
 
 **Goal**: Split NewTransactionViewModel (961行) into TransactionFormViewModel, AccountRowsViewModel, TemplateApplicatorViewModel
 
@@ -148,16 +148,16 @@
 - [X] T064 [US2] Create TemplateApplicatorViewModelTest with template search tests in `app/src/test/kotlin/net/ktnx/mobileledger/ui/transaction/TemplateApplicatorViewModelTest.kt`
 - [X] T065 [US2] Add TemplateApplicatorViewModel tests for template application in `app/src/test/kotlin/net/ktnx/mobileledger/ui/transaction/TemplateApplicatorViewModelTest.kt`
 
-### 4.4 Activity Integration & NewTransactionViewModel Cleanup
+### 4.4 Activity Integration & NewTransactionViewModel Cleanup ✅ COMPLETE
 
-- [ ] T066 [US2] Update NewTransactionActivityCompose to use three specialized ViewModels in `app/src/main/kotlin/net/ktnx/mobileledger/ui/activity/NewTransactionActivityCompose.kt`
-- [ ] T067 [US2] Update NewTransactionScreen.kt to consume states from specialized ViewModels in `app/src/main/kotlin/net/ktnx/mobileledger/ui/transaction/NewTransactionScreen.kt`
-- [ ] T068 [US2] Implement template apply effect handling in Activity (coordinate between ViewModels) in `app/src/main/kotlin/net/ktnx/mobileledger/ui/activity/NewTransactionActivityCompose.kt`
-- [ ] T069 [US2] Remove/minimize NewTransactionViewModel after all logic migrated in `app/src/main/kotlin/net/ktnx/mobileledger/ui/transaction/NewTransactionViewModel.kt`
-- [ ] T070 [US2] Update/remove NewTransactionViewModelTest after migration in `app/src/test/kotlin/net/ktnx/mobileledger/ui/transaction/NewTransactionViewModelTest.kt`
-- [ ] T071 [US2] Verify all new ViewModels are ≤300 lines (document exceptions)
-- [ ] T072 [US2] Run full test suite and verify no regressions with `nix run .#test`
-- [ ] T073 [US2] Run `nix run .#verify` for real device validation of transaction registration
+- [X] T066 [US2] Update NewTransactionActivityCompose to use three specialized ViewModels in `app/src/main/kotlin/net/ktnx/mobileledger/ui/activity/NewTransactionActivityCompose.kt`
+- [X] T067 [US2] Update NewTransactionScreen.kt to consume states from specialized ViewModels in `app/src/main/kotlin/net/ktnx/mobileledger/ui/transaction/NewTransactionScreen.kt`
+- [X] T068 [US2] Implement template apply effect handling in Activity (coordinate between ViewModels) in `app/src/main/kotlin/net/ktnx/mobileledger/ui/activity/NewTransactionActivityCompose.kt`
+- [X] T069 [US2] Remove/minimize NewTransactionViewModel after all logic migrated (DELETED)
+- [X] T070 [US2] Update/remove NewTransactionViewModelTest after migration (DELETED - tests covered by specialized ViewModel tests)
+- [X] T071 [US2] Verify all new ViewModels are ≤300 lines - TransactionFormViewModel: 324, AccountRowsViewModel: 420, TemplateApplicatorViewModel: 276 (justified exceptions due to cohesive functionality)
+- [X] T072 [US2] Run full test suite and verify no regressions with `nix run .#test`
+- [X] T073 [US2] Run `nix run .#verify` for real device validation of transaction registration
 
 **Checkpoint**: User Story 2 complete - NewTransactionViewModel split into 3 specialized ViewModels
 

@@ -28,14 +28,18 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
-import logcat.asLog
 import logcat.logcat
 import net.ktnx.mobileledger.R
 import net.ktnx.mobileledger.db.Profile
 import net.ktnx.mobileledger.ui.QR
 import net.ktnx.mobileledger.ui.theme.MoLeTheme
+import net.ktnx.mobileledger.ui.transaction.AccountRowsEvent
+import net.ktnx.mobileledger.ui.transaction.AccountRowsViewModel
 import net.ktnx.mobileledger.ui.transaction.NewTransactionScreen
-import net.ktnx.mobileledger.ui.transaction.NewTransactionViewModel
+import net.ktnx.mobileledger.ui.transaction.TemplateApplicatorEffect
+import net.ktnx.mobileledger.ui.transaction.TemplateApplicatorEvent
+import net.ktnx.mobileledger.ui.transaction.TemplateApplicatorViewModel
+import net.ktnx.mobileledger.ui.transaction.TransactionFormViewModel
 
 /**
  * New Transaction Activity using Jetpack Compose for the UI.
@@ -45,13 +49,20 @@ import net.ktnx.mobileledger.ui.transaction.NewTransactionViewModel
  * - Description with autocomplete
  * - Multiple account rows with amount, currency, and comment fields
  * - Template support via QR code scanning
+ *
+ * Uses three specialized ViewModels:
+ * - TransactionFormViewModel: Form fields (date, description, comment) and submission
+ * - AccountRowsViewModel: Account row CRUD, amount calculation, currency selection
+ * - TemplateApplicatorViewModel: Template search and application
  */
 @AndroidEntryPoint
 class NewTransactionActivityCompose :
     ProfileThemedActivity(),
     QR.QRScanResultReceiver {
 
-    private val viewModel: NewTransactionViewModel by viewModels()
+    private val formViewModel: TransactionFormViewModel by viewModels()
+    private val accountRowsViewModel: AccountRowsViewModel by viewModels()
+    private val templateApplicatorViewModel: TemplateApplicatorViewModel by viewModels()
     private lateinit var qrScanLauncher: ActivityResultLauncher<Void?>
     private var profileTheme: Int = -1
 
@@ -61,7 +72,7 @@ class NewTransactionActivityCompose :
         // intentから直接profileIdを取得して即座に設定（非同期を待たない）
         val profileId = intent.getLongExtra(PARAM_PROFILE_ID, 0)
         if (profileId > 0) {
-            viewModel.setProfile(profileId)
+            formViewModel.setProfile(profileId)
         }
 
         qrScanLauncher = QR.registerLauncher(this, this)
@@ -77,7 +88,28 @@ class NewTransactionActivityCompose :
                         startActivity(intent)
                         finish()
                     } else {
-                        viewModel.setProfile(profile.id)
+                        formViewModel.setProfile(profile.id)
+                    }
+                }
+            }
+        }
+
+        // Observe template apply effects and coordinate between ViewModels
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                templateApplicatorViewModel.effects.collect { effect ->
+                    when (effect) {
+                        is TemplateApplicatorEffect.ApplyTemplate -> {
+                            // Apply template data to form and account rows
+                            formViewModel.applyTemplateData(
+                                description = effect.description,
+                                transactionComment = effect.transactionComment,
+                                date = effect.date
+                            )
+                            accountRowsViewModel.onEvent(
+                                AccountRowsEvent.SetRows(effect.accounts)
+                            )
+                        }
                     }
                 }
             }
@@ -88,6 +120,9 @@ class NewTransactionActivityCompose :
                 profileHue = if (profileTheme >= 0) profileTheme.toFloat() else null
             ) {
                 NewTransactionScreen(
+                    formViewModel = formViewModel,
+                    accountRowsViewModel = accountRowsViewModel,
+                    templateApplicatorViewModel = templateApplicatorViewModel,
                     onNavigateBack = { finish() }
                 )
             }
@@ -122,8 +157,10 @@ class NewTransactionActivityCompose :
 
     override fun onQRScanResult(text: String?) {
         logcat { "Got QR scan result [$text]" }
-        // QR result handling is now done through the ViewModel
-        // The ViewModel will process the QR code and apply matching templates
+        // QR result handling is now done through the TemplateApplicatorViewModel
+        if (!text.isNullOrBlank()) {
+            templateApplicatorViewModel.onEvent(TemplateApplicatorEvent.ApplyTemplateFromQr(text))
+        }
     }
 
     fun triggerQRScan() {
