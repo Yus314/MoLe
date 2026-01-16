@@ -95,7 +95,26 @@ class TransactionRepositoryImpl @Inject constructor(
         }
 
     // ========================================
-    // Mutation Operations
+    // Mutation Operations (Domain Models)
+    // ========================================
+
+    override suspend fun insertTransaction(transaction: Transaction, profileId: Long): Transaction =
+        withContext(Dispatchers.IO) {
+            val entity = TransactionMapper.toEntity(transaction, profileId)
+            appendTransactionInternal(entity)
+            // Return the updated domain model with generated ID
+            TransactionMapper.toDomain(entity)
+        }
+
+    override suspend fun storeTransaction(transaction: Transaction, profileId: Long) {
+        withContext(Dispatchers.IO) {
+            val entity = TransactionMapper.toEntity(transaction, profileId)
+            storeTransactionInternal(entity)
+        }
+    }
+
+    // ========================================
+    // Mutation Operations (DB Entities - Legacy)
     // ========================================
 
     override suspend fun insertTransaction(transaction: TransactionWithAccounts) {

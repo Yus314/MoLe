@@ -170,6 +170,20 @@ class FakeTransactionRepositoryForViewModel : TransactionRepository {
                 tx.lines.any { it.accountName.contains(accountTerm, true) }
         }
 
+    // Domain model mutation methods
+    override suspend fun insertTransaction(transaction: Transaction, profileId: Long): Transaction {
+        val id = transaction.id ?: nextId++
+        val tx = transaction.copy(id = id)
+        domainTransactions[id] = tx
+        profileMap[id] = profileId
+        return tx
+    }
+
+    override suspend fun storeTransaction(transaction: Transaction, profileId: Long) {
+        insertTransaction(transaction, profileId)
+    }
+
+    // DB entity mutation methods (legacy)
     override suspend fun insertTransaction(transaction: TransactionWithAccounts) {
         if (transaction.transaction.id == 0L) {
             transaction.transaction.id = nextId++

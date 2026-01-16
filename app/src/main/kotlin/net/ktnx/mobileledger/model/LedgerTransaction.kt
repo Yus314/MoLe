@@ -28,6 +28,19 @@ import net.ktnx.mobileledger.utils.Digest
 import net.ktnx.mobileledger.utils.Globals
 import net.ktnx.mobileledger.utils.SimpleDate
 
+/**
+ * Legacy transaction model.
+ *
+ * @deprecated Use [net.ktnx.mobileledger.domain.model.Transaction] instead.
+ * This class is kept for backward compatibility with Gateway JSON serialization.
+ */
+@Deprecated(
+    "Use net.ktnx.mobileledger.domain.model.Transaction instead",
+    ReplaceWith(
+        "Transaction",
+        "net.ktnx.mobileledger.domain.model.Transaction"
+    )
+)
 class LedgerTransaction {
     val comparator: Comparator<LedgerTransactionAccount> = Comparator { o1, o2 ->
         var res = o1.accountName.compareTo(o2.accountName)

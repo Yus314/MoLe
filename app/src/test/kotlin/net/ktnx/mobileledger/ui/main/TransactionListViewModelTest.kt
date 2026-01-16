@@ -797,6 +797,17 @@ class FakeTransactionRepositoryForTransactionList : net.ktnx.mobileledger.data.r
             twa.accounts.any { it.accountName.contains(accountTerm, ignoreCase = true) }
     }?.toDomainModel()
 
+    // Domain model mutation methods
+    override suspend fun insertTransaction(transaction: DomainTransaction, profileId: Long): DomainTransaction {
+        val id = transaction.id ?: (transactions.maxOfOrNull { it.transaction.id } ?: 0L) + 1
+        return transaction.copy(id = id)
+    }
+
+    override suspend fun storeTransaction(transaction: DomainTransaction, profileId: Long) {
+        insertTransaction(transaction, profileId)
+    }
+
+    // DB entity mutation methods (legacy)
     override suspend fun insertTransaction(transaction: TransactionWithAccounts) {
         transactions.add(transaction)
     }

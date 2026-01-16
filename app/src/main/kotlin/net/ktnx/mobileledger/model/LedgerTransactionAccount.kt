@@ -23,6 +23,19 @@ import kotlin.math.round
 import net.ktnx.mobileledger.db.TransactionAccount
 import net.ktnx.mobileledger.utils.Misc
 
+/**
+ * Legacy transaction account/line model.
+ *
+ * @deprecated Use [net.ktnx.mobileledger.domain.model.TransactionLine] instead.
+ * This class is kept for backward compatibility with Gateway JSON serialization.
+ */
+@Deprecated(
+    "Use net.ktnx.mobileledger.domain.model.TransactionLine instead",
+    ReplaceWith(
+        "TransactionLine",
+        "net.ktnx.mobileledger.domain.model.TransactionLine"
+    )
+)
 class LedgerTransactionAccount {
     var accountName: String = ""
         set(value) {

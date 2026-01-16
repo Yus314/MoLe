@@ -74,4 +74,52 @@ object TransactionMapper {
      * List of TransactionWithAccounts をドメインモデルに変換
      */
     fun toDomainList(entities: List<TransactionWithAccounts>): List<Transaction> = entities.map { toDomain(it) }
+
+    /**
+     * ドメインモデルからデータベースエンティティへ変換
+     *
+     * Mapping rules:
+     * - transaction.id: domain.id ?: 0
+     * - transaction.ledgerId: domain.ledgerId
+     * - transaction.profileId: profileId (parameter)
+     * - transaction.year: domain.date.year
+     * - transaction.month: domain.date.month
+     * - transaction.day: domain.date.day
+     * - transaction.description: domain.description
+     * - transaction.comment: domain.comment
+     * - accounts: domain.lines.mapIndexed { index, line -> line.toEntity(index + 1) }
+     */
+    fun toEntity(domain: Transaction, profileId: Long): TransactionWithAccounts {
+        val dbTransaction = DbTransaction().apply {
+            id = domain.id ?: 0L
+            ledgerId = domain.ledgerId
+            this.profileId = profileId
+            year = domain.date.year
+            month = domain.date.month
+            day = domain.date.day
+            description = domain.description
+            comment = domain.comment
+        }
+
+        val dbAccounts = domain.lines.mapIndexed { index, line ->
+            toEntity(line, index + 1)
+        }
+
+        return TransactionWithAccounts().apply {
+            transaction = dbTransaction
+            accounts = dbAccounts
+        }
+    }
+
+    /**
+     * TransactionLine のエンティティへの変換
+     */
+    fun toEntity(domain: TransactionLine, orderNo: Int): TransactionAccount = TransactionAccount().apply {
+        id = domain.id ?: 0L
+        this.orderNo = orderNo
+        accountName = domain.accountName
+        amount = domain.amount ?: 0f
+        currency = domain.currency
+        comment = domain.comment
+    }
 }

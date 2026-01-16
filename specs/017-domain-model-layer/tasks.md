@@ -85,21 +85,21 @@
 
 ### TDD: Tests First (Red Phase)
 
-- [ ] T015a [US2] Add toEntity tests to TransactionMapperTest (test toEntity for new/existing transaction, roundTrip preservation)
+- [X] T015a [US2] Add toEntity tests to TransactionMapperTest (test toEntity for new/existing transaction, roundTrip preservation)
 
 ### Implementation (Green Phase)
 
-- [ ] T015 [US2] Add toEntity methods to TransactionMapper for saving in app/src/main/kotlin/net/ktnx/mobileledger/data/repository/mapper/TransactionMapper.kt
-- [ ] T016 [US2] Add insertTransaction/storeTransaction with domain model to TransactionRepository in app/src/main/kotlin/net/ktnx/mobileledger/data/repository/TransactionRepository.kt
-- [ ] T017 [US2] Implement insertTransaction/storeTransaction in TransactionRepositoryImpl in app/src/main/kotlin/net/ktnx/mobileledger/data/repository/TransactionRepositoryImpl.kt
-- [ ] T018 [US2] Update NewTransactionViewModel to use domain model Transaction in app/src/main/kotlin/net/ktnx/mobileledger/ui/transaction/NewTransactionViewModel.kt
-- [ ] T019 [US2] Update NewTransactionUiState to use domain model in app/src/main/kotlin/net/ktnx/mobileledger/ui/transaction/NewTransactionUiState.kt
-- [ ] T020 [US2] Update NewTransactionScreen.kt to use domain model in app/src/main/kotlin/net/ktnx/mobileledger/ui/transaction/NewTransactionScreen.kt
-- [ ] T021 [US2] Update TransactionSender/TransactionSenderImpl to accept domain model Transaction in app/src/main/kotlin/net/ktnx/mobileledger/domain/usecase/
-- [ ] T022 [US2] Mark LedgerTransaction as @Deprecated in app/src/main/kotlin/net/ktnx/mobileledger/model/LedgerTransaction.kt
-- [ ] T023 [US2] Mark LedgerTransactionAccount as @Deprecated in app/src/main/kotlin/net/ktnx/mobileledger/model/LedgerTransactionAccount.kt
-- [ ] T024 [US2] Remove db package imports from NewTransactionViewModel and verify no db entity references
-- [ ] T024a [US2] **CHECKPOINT**: Run `nix run .#verify` and manually test transaction creation flow
+- [X] T015 [US2] Add toEntity methods to TransactionMapper for saving in app/src/main/kotlin/net/ktnx/mobileledger/data/repository/mapper/TransactionMapper.kt
+- [X] T016 [US2] Add insertTransaction/storeTransaction with domain model to TransactionRepository in app/src/main/kotlin/net/ktnx/mobileledger/data/repository/TransactionRepository.kt
+- [X] T017 [US2] Implement insertTransaction/storeTransaction in TransactionRepositoryImpl in app/src/main/kotlin/net/ktnx/mobileledger/data/repository/TransactionRepositoryImpl.kt
+- [X] T018 [US2] Update NewTransactionViewModel (TransactionFormViewModel) to use domain model Transaction in app/src/main/kotlin/net/ktnx/mobileledger/ui/transaction/TransactionFormViewModel.kt
+- [X] T019 [US2] Update NewTransactionUiState to use domain model in app/src/main/kotlin/net/ktnx/mobileledger/ui/transaction/NewTransactionUiState.kt (no changes needed - uses separate TransactionAccountRow)
+- [X] T020 [US2] Update NewTransactionScreen.kt to use domain model in app/src/main/kotlin/net/ktnx/mobileledger/ui/transaction/NewTransactionScreen.kt (no changes needed - uses TransactionAccountRow)
+- [X] T021 [US2] Update TransactionSender/TransactionSenderImpl to accept domain model Transaction in app/src/main/kotlin/net/ktnx/mobileledger/domain/usecase/
+- [X] T022 [US2] Mark LedgerTransaction as @Deprecated in app/src/main/kotlin/net/ktnx/mobileledger/model/LedgerTransaction.kt
+- [X] T023 [US2] Mark LedgerTransactionAccount as @Deprecated in app/src/main/kotlin/net/ktnx/mobileledger/model/LedgerTransactionAccount.kt
+- [X] T024 [US2] Remove db package imports from NewTransactionViewModel and verify no db entity references
+- [X] T024a [US2] **CHECKPOINT**: Run `nix run .#verify` and manually test transaction creation flow
 
 **Checkpoint**: User Story 2 complete - NewTransactionViewModel uses domain models for validation and saving
 

@@ -109,9 +109,30 @@ interface TransactionRepository {
     suspend fun getFirstByDescriptionHavingAccount(description: String, accountTerm: String): Transaction?
 
     // ========================================
-    // Mutation Operations (DB Entities)
-    // Note: These still use db entities for backward compatibility.
-    // Domain model versions will be added in US2.
+    // Mutation Operations (Domain Models)
+    // ========================================
+
+    /**
+     * Insert a new transaction using domain model.
+     *
+     * @param transaction The domain model transaction to insert.
+     * @param profileId The profile ID for the transaction.
+     * @return The inserted transaction with generated ID.
+     */
+    suspend fun insertTransaction(transaction: Transaction, profileId: Long): Transaction
+
+    /**
+     * Store (insert or update) a transaction using domain model.
+     * Uses the transaction's ledgerId to detect duplicates.
+     *
+     * @param transaction The domain model transaction to store.
+     * @param profileId The profile ID for the transaction.
+     */
+    suspend fun storeTransaction(transaction: Transaction, profileId: Long)
+
+    // ========================================
+    // Mutation Operations (DB Entities - Legacy)
+    // Note: These are kept for backward compatibility during migration.
     // ========================================
 
     /**

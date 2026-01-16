@@ -125,6 +125,189 @@ class TransactionMapperTest {
         assertEquals("", result.lines[0].currency)
     }
 
+    // === toEntity Tests ===
+
+    @Test
+    fun `toEntity maps new transaction with null id to entity with id=0`() {
+        val domainTransaction = Transaction(
+            id = null,
+            ledgerId = 789L,
+            date = SimpleDate(2026, 3, 15),
+            description = "New Transaction",
+            comment = "New comment",
+            lines = listOf(
+                TransactionLine(
+                    id = null,
+                    accountName = "Assets:Bank",
+                    amount = 500f,
+                    currency = "EUR",
+                    comment = "Line note"
+                ),
+                TransactionLine(
+                    id = null,
+                    accountName = "Income:Salary",
+                    amount = -500f,
+                    currency = "EUR",
+                    comment = null
+                )
+            )
+        )
+        val profileId = 42L
+
+        val result = TransactionMapper.toEntity(domainTransaction, profileId)
+
+        assertEquals(0L, result.transaction.id)
+        assertEquals(789L, result.transaction.ledgerId)
+        assertEquals(profileId, result.transaction.profileId)
+        assertEquals(2026, result.transaction.year)
+        assertEquals(3, result.transaction.month)
+        assertEquals(15, result.transaction.day)
+        assertEquals("New Transaction", result.transaction.description)
+        assertEquals("New comment", result.transaction.comment)
+        assertEquals(2, result.accounts.size)
+    }
+
+    @Test
+    fun `toEntity maps existing transaction with id to entity`() {
+        val domainTransaction = Transaction(
+            id = 123L,
+            ledgerId = 456L,
+            date = SimpleDate(2026, 1, 16),
+            description = "Existing Transaction",
+            comment = null,
+            lines = listOf(
+                TransactionLine(id = 10L, accountName = "Assets:Cash", amount = 100f, currency = "USD", comment = null)
+            )
+        )
+        val profileId = 1L
+
+        val result = TransactionMapper.toEntity(domainTransaction, profileId)
+
+        assertEquals(123L, result.transaction.id)
+        assertEquals(456L, result.transaction.ledgerId)
+        assertEquals(profileId, result.transaction.profileId)
+        assertEquals("Existing Transaction", result.transaction.description)
+        assertNull(result.transaction.comment)
+        assertEquals(1, result.accounts.size)
+    }
+
+    @Test
+    fun `toEntity sets orderNo based on line index`() {
+        val domainTransaction = Transaction(
+            id = null,
+            ledgerId = 0L,
+            date = SimpleDate(2026, 1, 1),
+            description = "Test",
+            lines = listOf(
+                TransactionLine(accountName = "Account1"),
+                TransactionLine(accountName = "Account2"),
+                TransactionLine(accountName = "Account3")
+            )
+        )
+        val profileId = 1L
+
+        val result = TransactionMapper.toEntity(domainTransaction, profileId)
+
+        assertEquals(3, result.accounts.size)
+        assertEquals(1, result.accounts[0].orderNo)
+        assertEquals(2, result.accounts[1].orderNo)
+        assertEquals(3, result.accounts[2].orderNo)
+    }
+
+    @Test
+    fun `toEntity maps TransactionLine fields correctly`() {
+        val domainTransaction = Transaction(
+            id = 1L,
+            ledgerId = 1L,
+            date = SimpleDate(2026, 1, 1),
+            description = "Test",
+            lines = listOf(
+                TransactionLine(
+                    id = 50L,
+                    accountName = "Assets:Cash",
+                    amount = 123.45f,
+                    currency = "JPY",
+                    comment = "Test comment"
+                )
+            )
+        )
+        val profileId = 1L
+
+        val result = TransactionMapper.toEntity(domainTransaction, profileId)
+
+        val account = result.accounts[0]
+        assertEquals(50L, account.id)
+        assertEquals("Assets:Cash", account.accountName)
+        assertEquals(123.45f, account.amount)
+        assertEquals("JPY", account.currency)
+        assertEquals("Test comment", account.comment)
+        assertEquals(1, account.orderNo)
+    }
+
+    @Test
+    fun `toEntity handles null amount as 0f`() {
+        val domainTransaction = Transaction(
+            id = 1L,
+            ledgerId = 1L,
+            date = SimpleDate(2026, 1, 1),
+            description = "Test",
+            lines = listOf(
+                TransactionLine(accountName = "Assets:Cash", amount = null)
+            )
+        )
+        val profileId = 1L
+
+        val result = TransactionMapper.toEntity(domainTransaction, profileId)
+
+        assertEquals(0f, result.accounts[0].amount)
+    }
+
+    @Test
+    fun `roundTrip preserves transaction data`() {
+        val original = Transaction(
+            id = 100L,
+            ledgerId = 200L,
+            date = SimpleDate(2026, 6, 15),
+            description = "Round Trip Test",
+            comment = "Original comment",
+            lines = listOf(
+                TransactionLine(
+                    id = 1L,
+                    accountName = "Assets:Bank",
+                    amount = 1000f,
+                    currency = "USD",
+                    comment = "Line 1"
+                ),
+                TransactionLine(
+                    id = 2L,
+                    accountName = "Expenses:Food",
+                    amount = -1000f,
+                    currency = "USD",
+                    comment = null
+                )
+            )
+        )
+        val profileId = 5L
+
+        val entity = TransactionMapper.toEntity(original, profileId)
+        val roundTripped = TransactionMapper.toDomain(entity)
+
+        assertEquals(original.id, roundTripped.id)
+        assertEquals(original.ledgerId, roundTripped.ledgerId)
+        assertEquals(original.date, roundTripped.date)
+        assertEquals(original.description, roundTripped.description)
+        assertEquals(original.comment, roundTripped.comment)
+        assertEquals(original.lines.size, roundTripped.lines.size)
+
+        for (i in original.lines.indices) {
+            assertEquals(original.lines[i].id, roundTripped.lines[i].id)
+            assertEquals(original.lines[i].accountName, roundTripped.lines[i].accountName)
+            assertEquals(original.lines[i].amount, roundTripped.lines[i].amount)
+            assertEquals(original.lines[i].currency, roundTripped.lines[i].currency)
+            assertEquals(original.lines[i].comment, roundTripped.lines[i].comment)
+        }
+    }
+
     // Helper functions to create test data
 
     private fun createDbTransaction(

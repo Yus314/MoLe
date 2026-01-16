@@ -25,9 +25,9 @@ import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import net.ktnx.mobileledger.db.Profile
+import net.ktnx.mobileledger.domain.model.Transaction
+import net.ktnx.mobileledger.domain.model.TransactionLine
 import net.ktnx.mobileledger.fake.FakeTransactionSender
-import net.ktnx.mobileledger.model.LedgerTransaction
-import net.ktnx.mobileledger.model.LedgerTransactionAccount
 import net.ktnx.mobileledger.utils.SimpleDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -57,7 +57,7 @@ class TransactionSenderImplTest {
     private lateinit var testScope: TestScope
     private lateinit var fakeSender: FakeTransactionSender
     private lateinit var testProfile: Profile
-    private lateinit var testTransaction: LedgerTransaction
+    private lateinit var testTransaction: Transaction
 
     @Before
     fun setup() {
@@ -72,15 +72,29 @@ class TransactionSenderImplTest {
             apiVersion = 0 // auto
         }
 
-        testTransaction = LedgerTransaction(
+        testTransaction = Transaction(
+            id = null,
             ledgerId = 0L,
             date = SimpleDate.today(),
             description = "Test transaction",
-            profile = testProfile
-        ).apply {
-            accounts.add(LedgerTransactionAccount("Expenses:Test", 100.0f, "USD", null))
-            accounts.add(LedgerTransactionAccount("Assets:Bank", -100.0f, "USD", null))
-        }
+            comment = null,
+            lines = listOf(
+                TransactionLine(
+                    id = null,
+                    accountName = "Expenses:Test",
+                    amount = 100.0f,
+                    currency = "USD",
+                    comment = null
+                ),
+                TransactionLine(
+                    id = null,
+                    accountName = "Assets:Bank",
+                    amount = -100.0f,
+                    currency = "USD",
+                    comment = null
+                )
+            )
+        )
     }
 
     /**

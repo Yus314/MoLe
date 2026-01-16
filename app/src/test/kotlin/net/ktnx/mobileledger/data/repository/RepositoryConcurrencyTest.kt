@@ -391,6 +391,17 @@ class ConcurrentFakeTransactionRepository : TransactionRepository {
             }?.let { TransactionMapper.toDomain(it) }
         }
 
+    // Domain model mutation methods
+    override suspend fun insertTransaction(transaction: Transaction, profileId: Long): Transaction {
+        val id = synchronized(lock) { transaction.id ?: idCounter.getAndIncrement().toLong() }
+        return transaction.copy(id = id)
+    }
+
+    override suspend fun storeTransaction(transaction: Transaction, profileId: Long) {
+        insertTransaction(transaction, profileId)
+    }
+
+    // DB entity mutation methods (legacy)
     override suspend fun insertTransaction(transaction: TransactionWithAccounts): Unit = synchronized(lock) {
         if (transaction.transaction.id == 0L) {
             transaction.transaction.id = idCounter.getAndIncrement().toLong()
