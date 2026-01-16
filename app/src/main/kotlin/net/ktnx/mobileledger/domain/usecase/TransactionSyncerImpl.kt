@@ -41,30 +41,29 @@ import kotlinx.coroutines.flow.flowOn
 import logcat.LogPriority
 import logcat.asLog
 import logcat.logcat
+import net.ktnx.mobileledger.async.TransactionParser
 import net.ktnx.mobileledger.data.repository.AccountRepository
 import net.ktnx.mobileledger.data.repository.OptionRepository
 import net.ktnx.mobileledger.data.repository.TransactionRepository
 import net.ktnx.mobileledger.data.repository.mapper.AccountMapper.withStateFrom
-import net.ktnx.mobileledger.data.repository.mapper.LegacyModelMapper.toDomainAccounts
-import net.ktnx.mobileledger.data.repository.mapper.LegacyModelMapper.toDomainTransactions
 import net.ktnx.mobileledger.di.IoDispatcher
 import net.ktnx.mobileledger.domain.model.Account
+import net.ktnx.mobileledger.domain.model.AccountAmount
 import net.ktnx.mobileledger.domain.model.Profile
 import net.ktnx.mobileledger.domain.model.SyncError
 import net.ktnx.mobileledger.domain.model.SyncException
 import net.ktnx.mobileledger.domain.model.SyncProgress
 import net.ktnx.mobileledger.domain.model.SyncResult
 import net.ktnx.mobileledger.domain.model.Transaction
+import net.ktnx.mobileledger.domain.model.TransactionLine
 import net.ktnx.mobileledger.err.HTTPException
 import net.ktnx.mobileledger.json.API
 import net.ktnx.mobileledger.json.AccountListParser
 import net.ktnx.mobileledger.json.ApiNotSupportedException
 import net.ktnx.mobileledger.json.TransactionListParser
-import net.ktnx.mobileledger.model.LedgerAccount
-import net.ktnx.mobileledger.model.LedgerTransaction
-import net.ktnx.mobileledger.model.LedgerTransactionAccount
 import net.ktnx.mobileledger.service.AppStateService
 import net.ktnx.mobileledger.service.SyncInfo
+import net.ktnx.mobileledger.utils.Globals
 import net.ktnx.mobileledger.utils.NetworkUtil
 import net.ktnx.mobileledger.utils.SimpleDate
 
@@ -116,17 +115,17 @@ class TransactionSyncerImpl @Inject constructor(
             }
 
             // Fall back to legacy HTML parsing if JSON API is not available
-            @Suppress("DEPRECATION") // LedgerAccount/LedgerTransaction used in HTML parsing
             if (accounts == null || transactions == null) {
                 emit(SyncProgress.Indeterminate("HTMLモードで取得中..."))
-                val mutableAccounts = ArrayList<LedgerAccount>()
-                val mutableTransactions = ArrayList<LedgerTransaction>()
+                val mutableAccounts = ArrayList<Account>()
+                val mutableTransactions = ArrayList<Transaction>()
                 retrieveTransactionListLegacy(profile, mutableAccounts, mutableTransactions) { current, total ->
                     emit(SyncProgress.Running(current, total, "取引を処理中..."))
                 }
-                // Convert legacy models to domain models
-                accounts = mutableAccounts.toDomainAccounts()
-                transactions = mutableTransactions.toDomainTransactions()
+                val existingNames = mutableAccounts.map { it.name }.toMutableSet()
+                ensureParentAccountsExist(mutableAccounts, existingNames)
+                accounts = mutableAccounts
+                transactions = mutableTransactions
             }
 
             // Save to database
@@ -344,11 +343,14 @@ class TransactionSyncerImpl @Inject constructor(
 
     /**
      * レガシー HTML パーシングで取引とアカウントを取得する
+     *
+     * hledger-web の /journal エンドポイントから HTML をパースし、
+     * ドメインモデル (Account, Transaction) を直接生成する。
      */
     private suspend fun retrieveTransactionListLegacy(
         profile: Profile,
-        accounts: MutableList<LedgerAccount>,
-        transactions: MutableList<LedgerTransaction>,
+        accounts: MutableList<Account>,
+        transactions: MutableList<Transaction>,
         onProgress: suspend (Int, Int) -> Unit
     ) {
         coroutineContext.ensureActive()
@@ -361,16 +363,16 @@ class TransactionSyncerImpl @Inject constructor(
             }
 
             var maxTransactionId = -1
-            val map = HashMap<String, LedgerAccount>()
-            var lastAccount: LedgerAccount? = null
-            val syntheticAccounts = ArrayList<LedgerAccount>()
+            val existingNames = HashSet<String>()
+            val accountAmounts = HashMap<String, MutableList<AccountAmount>>()
+            var lastAccountName: String? = null
 
             http.inputStream.use { resp ->
                 val buf = BufferedReader(InputStreamReader(resp, StandardCharsets.UTF_8))
                 var state = ParserState.EXPECTING_ACCOUNT
                 var processedTransactionCount = 0
                 var transactionId = 0
-                var transaction: LedgerTransaction? = null
+                var transactionBuilder: TransactionBuilder? = null
 
                 lines@ while (true) {
                     val line = buf.readLine() ?: break
@@ -381,6 +383,8 @@ class TransactionSyncerImpl @Inject constructor(
                     when (state) {
                         ParserState.EXPECTING_ACCOUNT -> {
                             if (line == "<h2>General Journal</h2>") {
+                                // Finalize accounts with their amounts
+                                finalizeAccountAmounts(accounts, accountAmounts)
                                 state = ParserState.EXPECTING_TRANSACTION
                                 continue
                             }
@@ -390,19 +394,22 @@ class TransactionSyncerImpl @Inject constructor(
                                 var accName = URLDecoder.decode(acctEncoded, "UTF-8")
                                 accName = accName.replace("\"", "")
 
-                                if (map.containsKey(accName)) continue
+                                if (existingNames.contains(accName)) continue
 
-                                val parentAccountName = LedgerAccount.extractParentName(accName)
-                                val parentAccount = if (parentAccountName != null) {
-                                    ensureAccountExists(parentAccountName, map, syntheticAccounts)
-                                } else {
-                                    null
-                                }
-
-                                val newAccount = LedgerAccount(accName, parentAccount)
-                                lastAccount = newAccount
-                                accounts.add(newAccount)
-                                map[accName] = newAccount
+                                val level = accName.count { it == ':' }
+                                accounts.add(
+                                    Account(
+                                        id = null,
+                                        name = accName,
+                                        level = level,
+                                        isExpanded = false,
+                                        isVisible = true,
+                                        amounts = emptyList() // Will be filled later
+                                    )
+                                )
+                                existingNames.add(accName)
+                                accountAmounts[accName] = mutableListOf()
+                                lastAccountName = accName
                                 state = ParserState.EXPECTING_ACCOUNT_AMOUNT
                             }
                         }
@@ -424,13 +431,11 @@ class TransactionSyncerImpl @Inject constructor(
                                 }
 
                                 val floatVal = value.toFloat()
-                                lastAccount?.addAmount(floatVal, currency)
-                                for (syn in syntheticAccounts) {
-                                    syn.addAmount(floatVal, currency)
+                                lastAccountName?.let { name ->
+                                    accountAmounts[name]?.add(AccountAmount(currency, floatVal))
                                 }
                             }
                             if (matchFound) {
-                                syntheticAccounts.clear()
                                 state = ParserState.EXPECTING_ACCOUNT
                             }
                         }
@@ -461,21 +466,26 @@ class TransactionSyncerImpl @Inject constructor(
                                 if (equalsIndex >= 0) {
                                     date = date.substring(equalsIndex + 1)
                                 }
-                                transaction = LedgerTransaction(transactionId.toLong(), date, m.group(2))
+                                val parsedDate = Globals.parseIsoDate(date)
+                                transactionBuilder = TransactionBuilder(
+                                    ledgerId = transactionId.toLong(),
+                                    date = parsedDate,
+                                    description = m.group(2) ?: ""
+                                )
                                 state = ParserState.EXPECTING_TRANSACTION_DETAILS
                             }
                         }
 
                         ParserState.EXPECTING_TRANSACTION_DETAILS -> {
-                            val currentTransaction = transaction ?: continue
+                            val builder = transactionBuilder ?: continue
                             if (line.isEmpty()) {
-                                currentTransaction.finishLoading()
-                                transactions.add(currentTransaction)
+                                transactions.add(builder.build())
+                                transactionBuilder = null
                                 state = ParserState.EXPECTING_TRANSACTION
                             } else {
-                                val lta = parseTransactionAccountLine(line)
-                                if (lta != null) {
-                                    currentTransaction.addAccount(lta)
+                                val txLine = TransactionParser.parseTransactionAccountLine(line)
+                                if (txLine != null) {
+                                    builder.addLine(txLine)
                                 }
                             }
                         }
@@ -485,6 +495,46 @@ class TransactionSyncerImpl @Inject constructor(
         } finally {
             http.disconnect()
         }
+    }
+
+    /**
+     * パース中に収集したアカウント残高を Account オブジェクトに設定する
+     */
+    private fun finalizeAccountAmounts(
+        accounts: MutableList<Account>,
+        accountAmounts: Map<String, List<AccountAmount>>
+    ) {
+        for (i in accounts.indices) {
+            val account = accounts[i]
+            val amounts = accountAmounts[account.name] ?: emptyList()
+            if (amounts.isNotEmpty()) {
+                accounts[i] = account.copy(amounts = amounts)
+            }
+        }
+    }
+
+    /**
+     * HTML パーシング用トランザクションビルダー
+     */
+    private class TransactionBuilder(
+        private val ledgerId: Long,
+        private val date: SimpleDate,
+        private val description: String
+    ) {
+        private val lines = mutableListOf<TransactionLine>()
+
+        fun addLine(line: TransactionLine) {
+            lines.add(line)
+        }
+
+        fun build(): Transaction = Transaction(
+            id = null,
+            ledgerId = ledgerId,
+            date = date,
+            description = description,
+            comment = null,
+            lines = lines.toList()
+        )
     }
 
     /**
@@ -516,26 +566,6 @@ class TransactionSyncerImpl @Inject constructor(
         logcat { "Transactions stored" }
 
         optionRepository.setLastSyncTimestamp(profileId, Date().time)
-    }
-
-    private fun ensureAccountExists(
-        accountName: String,
-        map: HashMap<String, LedgerAccount>,
-        createdAccounts: ArrayList<LedgerAccount>
-    ): LedgerAccount {
-        map[accountName]?.let { return it }
-
-        val parentName = LedgerAccount.extractParentName(accountName)
-        val parentAccount = if (parentName != null) {
-            ensureAccountExists(parentName, map, createdAccounts)
-        } else {
-            null
-        }
-
-        val acc = LedgerAccount(accountName, parentAccount)
-        createdAccounts.add(acc)
-        map[accountName] = acc
-        return acc
     }
 
     /**
@@ -588,10 +618,6 @@ class TransactionSyncerImpl @Inject constructor(
             "<tr class=\"title\" id=\"transaction-(\\d+)\"><td class=\"date\"[^\"]*>([\\d.-]+)</td>"
         )
         private val reTransactionDescription = Pattern.compile("<tr class=\"posting\" title=\"(\\S+)\\s(.+)")
-        private val reTransactionDetails = Pattern.compile(
-            "^\\s+([!*]\\s+)?(\\S[\\S\\s]+\\S)\\s\\s+" +
-                "(?:([^\\d\\s+\\-]+)\\s*)?([-+]?\\d[\\d,.]*)(?:\\s*([^\\d\\s+\\-]+)\\s*\$)?"
-        )
         private val reEnd = Pattern.compile("\\bid=\"addmodal\"")
         private val reDecimalPoint = Pattern.compile("\\.\\d\\d?$")
         private val reDecimalComma = Pattern.compile(",\\d\\d?$")
@@ -599,31 +625,5 @@ class TransactionSyncerImpl @Inject constructor(
         private val reAccountValue = Pattern.compile(
             "<span class=\"[^\"]*\\bamount\\b[^\"]*\">\\s*([-+]?[\\d.,]+)(?:\\s+(\\S+))?</span>"
         )
-
-        @JvmStatic
-        fun parseTransactionAccountLine(line: String): LedgerTransactionAccount? {
-            val m = reTransactionDetails.matcher(line)
-            if (m.find()) {
-                val accName = m.group(2) ?: return null
-                val currencyPre = m.group(3)
-                var amount = m.group(4) ?: return null
-                val currencyPost = m.group(5)
-
-                val currency: String? = when {
-                    !currencyPre.isNullOrEmpty() -> {
-                        if (!currencyPost.isNullOrEmpty()) return null
-                        currencyPre
-                    }
-
-                    !currencyPost.isNullOrEmpty() -> currencyPost
-
-                    else -> null
-                }
-
-                amount = amount.replace(',', '.')
-                return LedgerTransactionAccount(accName, amount.toFloat(), currency, null)
-            }
-            return null
-        }
     }
 }
