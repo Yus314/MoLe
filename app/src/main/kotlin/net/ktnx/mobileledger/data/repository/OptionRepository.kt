@@ -18,7 +18,7 @@
 package net.ktnx.mobileledger.data.repository
 
 import kotlinx.coroutines.flow.Flow
-import net.ktnx.mobileledger.db.Option
+import net.ktnx.mobileledger.domain.model.AppOption
 
 /**
  * Repository for managing application options.
@@ -37,17 +37,17 @@ interface OptionRepository {
     /**
      * Observes an option by profile ID and name as a Flow.
      */
-    fun observeOption(profileId: Long, name: String): Flow<Option?>
+    fun observeOption(profileId: Long, name: String): Flow<AppOption?>
 
     /**
      * Gets an option by profile ID and name.
      */
-    suspend fun getOption(profileId: Long, name: String): Option?
+    suspend fun getOption(profileId: Long, name: String): AppOption?
 
     /**
      * Gets all options for a profile.
      */
-    suspend fun getAllOptionsForProfile(profileId: Long): List<Option>
+    suspend fun getAllOptionsForProfile(profileId: Long): List<AppOption>
 
     // ========================================
     // Mutation Operations
@@ -58,12 +58,12 @@ interface OptionRepository {
      * Uses OnConflictStrategy.REPLACE, so existing options with the same
      * profile ID and name will be updated.
      */
-    suspend fun insertOption(option: Option): Long
+    suspend fun insertOption(option: AppOption): Long
 
     /**
      * Deletes an option.
      */
-    suspend fun deleteOption(option: Option)
+    suspend fun deleteOption(option: AppOption)
 
     /**
      * Deletes all options for a profile.
@@ -88,4 +88,12 @@ interface OptionRepository {
      * @param timestamp The timestamp in milliseconds
      */
     suspend fun setLastSyncTimestamp(profileId: Long, timestamp: Long)
+
+    /**
+     * Gets the last sync timestamp for a profile.
+     *
+     * @param profileId The profile ID
+     * @return The timestamp in milliseconds, or null if not set
+     */
+    suspend fun getLastSyncTimestamp(profileId: Long): Long?
 }

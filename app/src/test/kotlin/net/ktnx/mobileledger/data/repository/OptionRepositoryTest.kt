@@ -22,7 +22,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
-import net.ktnx.mobileledger.db.Option
+import net.ktnx.mobileledger.domain.model.AppOption
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -56,7 +56,7 @@ class OptionRepositoryTest {
         profileId: Long = 1L,
         name: String = "test_option",
         value: String? = "test_value"
-    ): Option = Option(profileId, name, value)
+    ): AppOption = AppOption(profileId, name, value)
 
     // ========================================
     // getOption tests
@@ -199,6 +199,33 @@ class OptionRepositoryTest {
         assertTrue(repository.getAllOptionsForProfile(2L).isEmpty())
         assertTrue(repository.getAllOptionsForProfile(3L).isEmpty())
     }
+
+    // ========================================
+    // setLastSyncTimestamp / getLastSyncTimestamp tests
+    // ========================================
+
+    @Test
+    fun `setLastSyncTimestamp stores timestamp as option`() = runTest {
+        repository.setLastSyncTimestamp(1L, 1234567890L)
+
+        val option = repository.getOption(1L, AppOption.OPT_LAST_SCRAPE)
+        assertNotNull(option)
+        assertEquals("1234567890", option?.value)
+    }
+
+    @Test
+    fun `getLastSyncTimestamp returns null when not set`() = runTest {
+        val result = repository.getLastSyncTimestamp(1L)
+        assertNull(result)
+    }
+
+    @Test
+    fun `getLastSyncTimestamp returns timestamp when set`() = runTest {
+        repository.setLastSyncTimestamp(1L, 1234567890L)
+
+        val result = repository.getLastSyncTimestamp(1L)
+        assertEquals(1234567890L, result)
+    }
 }
 
 /**
@@ -209,23 +236,23 @@ class OptionRepositoryTest {
  */
 class FakeOptionRepository : OptionRepository {
 
-    // Key: Pair(profileId, name) -> Value: Option
-    private val options = mutableMapOf<Pair<Long, String>, Option>()
+    // Key: Pair(profileId, name) -> Value: AppOption
+    private val options = mutableMapOf<Pair<Long, String>, AppOption>()
 
-    override fun observeOption(profileId: Long, name: String): Flow<Option?> =
+    override fun observeOption(profileId: Long, name: String): Flow<AppOption?> =
         MutableStateFlow(options[Pair(profileId, name)])
 
-    override suspend fun getOption(profileId: Long, name: String): Option? = options[Pair(profileId, name)]
+    override suspend fun getOption(profileId: Long, name: String): AppOption? = options[Pair(profileId, name)]
 
-    override suspend fun getAllOptionsForProfile(profileId: Long): List<Option> =
+    override suspend fun getAllOptionsForProfile(profileId: Long): List<AppOption> =
         options.values.filter { it.profileId == profileId }
 
-    override suspend fun insertOption(option: Option): Long {
+    override suspend fun insertOption(option: AppOption): Long {
         options[Pair(option.profileId, option.name)] = option
         return 1L
     }
 
-    override suspend fun deleteOption(option: Option) {
+    override suspend fun deleteOption(option: AppOption) {
         options.remove(Pair(option.profileId, option.name))
     }
 
@@ -239,6 +266,9 @@ class FakeOptionRepository : OptionRepository {
     }
 
     override suspend fun setLastSyncTimestamp(profileId: Long, timestamp: Long) {
-        insertOption(Option(profileId, Option.OPT_LAST_SCRAPE, timestamp.toString()))
+        insertOption(AppOption(profileId, AppOption.OPT_LAST_SCRAPE, timestamp.toString()))
     }
+
+    override suspend fun getLastSyncTimestamp(profileId: Long): Long? =
+        options[Pair(profileId, AppOption.OPT_LAST_SCRAPE)]?.valueAsLong()
 }

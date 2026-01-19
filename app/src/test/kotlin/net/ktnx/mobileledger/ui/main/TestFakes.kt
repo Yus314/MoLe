@@ -28,11 +28,11 @@ import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.data.repository.TransactionRepository
 import net.ktnx.mobileledger.db.Account as DbAccount
 import net.ktnx.mobileledger.db.AccountWithAmounts
-import net.ktnx.mobileledger.db.Option
 import net.ktnx.mobileledger.db.Transaction as DbTransaction
 import net.ktnx.mobileledger.db.TransactionWithAccounts
 import net.ktnx.mobileledger.domain.model.Account
 import net.ktnx.mobileledger.domain.model.AccountAmount
+import net.ktnx.mobileledger.domain.model.AppOption
 import net.ktnx.mobileledger.domain.model.Profile
 import net.ktnx.mobileledger.domain.model.Transaction
 import net.ktnx.mobileledger.domain.model.TransactionLine
@@ -395,24 +395,24 @@ class FakeAccountRepositoryForViewModel : AccountRepository {
  * Fake OptionRepository for ViewModel testing.
  */
 class FakeOptionRepositoryForViewModel : OptionRepository {
-    private val options = mutableMapOf<String, Option>()
+    private val options = mutableMapOf<String, AppOption>()
 
     private fun makeKey(profileId: Long, name: String): String = "$profileId:$name"
 
-    override fun observeOption(profileId: Long, name: String): Flow<Option?> =
+    override fun observeOption(profileId: Long, name: String): Flow<AppOption?> =
         MutableStateFlow(options[makeKey(profileId, name)])
 
-    override suspend fun getOption(profileId: Long, name: String): Option? = options[makeKey(profileId, name)]
+    override suspend fun getOption(profileId: Long, name: String): AppOption? = options[makeKey(profileId, name)]
 
-    override suspend fun getAllOptionsForProfile(profileId: Long): List<Option> =
+    override suspend fun getAllOptionsForProfile(profileId: Long): List<AppOption> =
         options.values.filter { it.profileId == profileId }
 
-    override suspend fun insertOption(option: Option): Long {
+    override suspend fun insertOption(option: AppOption): Long {
         options[makeKey(option.profileId, option.name)] = option
         return 1L
     }
 
-    override suspend fun deleteOption(option: Option) {
+    override suspend fun deleteOption(option: AppOption) {
         options.remove(makeKey(option.profileId, option.name))
     }
 
@@ -425,8 +425,11 @@ class FakeOptionRepositoryForViewModel : OptionRepository {
     }
 
     override suspend fun setLastSyncTimestamp(profileId: Long, timestamp: Long) {
-        insertOption(Option(profileId, Option.OPT_LAST_SCRAPE, timestamp.toString()))
+        insertOption(AppOption(profileId, AppOption.OPT_LAST_SCRAPE, timestamp.toString()))
     }
+
+    override suspend fun getLastSyncTimestamp(profileId: Long): Long? =
+        options[makeKey(profileId, AppOption.OPT_LAST_SCRAPE)]?.valueAsLong()
 }
 
 /**

@@ -42,7 +42,6 @@ import logcat.logcat
 import net.ktnx.mobileledger.BackupsActivity
 import net.ktnx.mobileledger.R
 import net.ktnx.mobileledger.data.repository.OptionRepository
-import net.ktnx.mobileledger.db.Option
 import net.ktnx.mobileledger.domain.model.Profile
 import net.ktnx.mobileledger.service.AppStateService
 import net.ktnx.mobileledger.ui.components.CrashReportDialog
@@ -366,16 +365,7 @@ class MainActivityCompose : ProfileThemedActivity() {
         val profileId = currentProfile.id ?: return
 
         lifecycleScope.launch {
-            val opt = optionRepository.getOption(profileId, Option.OPT_LAST_SCRAPE)
-
-            var lastUpdate = 0L
-            if (opt != null) {
-                try {
-                    lastUpdate = opt.value?.toLong() ?: 0L
-                } catch (ex: NumberFormatException) {
-                    logcat { "Error parsing '${opt.value}' as long: ${ex.message}" }
-                }
-            }
+            val lastUpdate = optionRepository.getLastSyncTimestamp(profileId) ?: 0L
 
             val syncInfo = coordinatorViewModel.lastSyncInfo.value
             if (lastUpdate == 0L) {
