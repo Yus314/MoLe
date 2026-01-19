@@ -391,12 +391,12 @@ class FakeOptionRepositoryForViewModel : OptionRepository {
 
     private fun makeKey(profileId: Long, name: String): String = "$profileId:$name"
 
-    override fun getOption(profileId: Long, name: String): Flow<Option?> =
+    override fun observeOption(profileId: Long, name: String): Flow<Option?> =
         MutableStateFlow(options[makeKey(profileId, name)])
 
-    override suspend fun getOptionSync(profileId: Long, name: String): Option? = options[makeKey(profileId, name)]
+    override suspend fun getOption(profileId: Long, name: String): Option? = options[makeKey(profileId, name)]
 
-    override suspend fun getAllOptionsForProfileSync(profileId: Long): List<Option> =
+    override suspend fun getAllOptionsForProfile(profileId: Long): List<Option> =
         options.values.filter { it.profileId == profileId }
 
     override suspend fun insertOption(option: Option): Long {

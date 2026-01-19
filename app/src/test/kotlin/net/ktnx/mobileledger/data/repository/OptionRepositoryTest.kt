@@ -63,17 +63,17 @@ class OptionRepositoryTest {
     // ========================================
 
     @Test
-    fun `getOption returns null for non-existent option`() = runTest {
-        val result = repository.getOption(1L, "non_existent").first()
+    fun `observeOption returns null for non-existent option`() = runTest {
+        val result = repository.observeOption(1L, "non_existent").first()
         assertNull(result)
     }
 
     @Test
-    fun `getOption returns option when exists`() = runTest {
+    fun `observeOption returns option when exists`() = runTest {
         val option = createTestOption(profileId = 1L, name = "last_scrape", value = "12345")
         repository.insertOption(option)
 
-        val result = repository.getOption(1L, "last_scrape").first()
+        val result = repository.observeOption(1L, "last_scrape").first()
 
         assertNotNull(result)
         assertEquals("last_scrape", result?.name)
@@ -81,21 +81,21 @@ class OptionRepositoryTest {
     }
 
     // ========================================
-    // getOptionSync tests
+    // getOption tests
     // ========================================
 
     @Test
-    fun `getOptionSync returns null for non-existent option`() = runTest {
-        val result = repository.getOptionSync(999L, "non_existent")
+    fun `getOption returns null for non-existent option`() = runTest {
+        val result = repository.getOption(999L, "non_existent")
         assertNull(result)
     }
 
     @Test
-    fun `getOptionSync returns option when exists`() = runTest {
+    fun `getOption returns option when exists`() = runTest {
         val option = createTestOption(profileId = 2L, name = "setting", value = "enabled")
         repository.insertOption(option)
 
-        val result = repository.getOptionSync(2L, "setting")
+        val result = repository.getOption(2L, "setting")
 
         assertNotNull(result)
         assertEquals("setting", result?.name)
@@ -103,22 +103,22 @@ class OptionRepositoryTest {
     }
 
     // ========================================
-    // getAllOptionsForProfileSync tests
+    // getAllOptionsForProfile tests
     // ========================================
 
     @Test
-    fun `getAllOptionsForProfileSync returns empty list when no options`() = runTest {
-        val result = repository.getAllOptionsForProfileSync(1L)
+    fun `getAllOptionsForProfile returns empty list when no options`() = runTest {
+        val result = repository.getAllOptionsForProfile(1L)
         assertTrue(result.isEmpty())
     }
 
     @Test
-    fun `getAllOptionsForProfileSync returns only options for specified profile`() = runTest {
+    fun `getAllOptionsForProfile returns only options for specified profile`() = runTest {
         repository.insertOption(createTestOption(profileId = 1L, name = "opt1", value = "val1"))
         repository.insertOption(createTestOption(profileId = 1L, name = "opt2", value = "val2"))
         repository.insertOption(createTestOption(profileId = 2L, name = "opt3", value = "val3"))
 
-        val result = repository.getAllOptionsForProfileSync(1L)
+        val result = repository.getAllOptionsForProfile(1L)
 
         assertEquals(2, result.size)
         assertTrue(result.all { it.profileId == 1L })
@@ -134,7 +134,7 @@ class OptionRepositoryTest {
 
         repository.insertOption(option)
 
-        val stored = repository.getOptionSync(1L, "new_option")
+        val stored = repository.getOption(1L, "new_option")
         assertNotNull(stored)
         assertEquals("new_value", stored?.value)
     }
@@ -147,9 +147,9 @@ class OptionRepositoryTest {
         val updated = createTestOption(profileId = 1L, name = "key", value = "updated")
         repository.insertOption(updated)
 
-        val result = repository.getOptionSync(1L, "key")
+        val result = repository.getOption(1L, "key")
         assertEquals("updated", result?.value)
-        assertEquals(1, repository.getAllOptionsForProfileSync(1L).size)
+        assertEquals(1, repository.getAllOptionsForProfile(1L).size)
     }
 
     // ========================================
@@ -163,7 +163,7 @@ class OptionRepositoryTest {
 
         repository.deleteOption(option)
 
-        val result = repository.getOptionSync(1L, "to_delete")
+        val result = repository.getOption(1L, "to_delete")
         assertNull(result)
     }
 
@@ -179,8 +179,8 @@ class OptionRepositoryTest {
 
         repository.deleteOptionsForProfile(1L)
 
-        assertTrue(repository.getAllOptionsForProfileSync(1L).isEmpty())
-        assertEquals(1, repository.getAllOptionsForProfileSync(2L).size)
+        assertTrue(repository.getAllOptionsForProfile(1L).isEmpty())
+        assertEquals(1, repository.getAllOptionsForProfile(2L).size)
     }
 
     // ========================================
@@ -195,9 +195,9 @@ class OptionRepositoryTest {
 
         repository.deleteAllOptions()
 
-        assertTrue(repository.getAllOptionsForProfileSync(1L).isEmpty())
-        assertTrue(repository.getAllOptionsForProfileSync(2L).isEmpty())
-        assertTrue(repository.getAllOptionsForProfileSync(3L).isEmpty())
+        assertTrue(repository.getAllOptionsForProfile(1L).isEmpty())
+        assertTrue(repository.getAllOptionsForProfile(2L).isEmpty())
+        assertTrue(repository.getAllOptionsForProfile(3L).isEmpty())
     }
 }
 
@@ -212,12 +212,12 @@ class FakeOptionRepository : OptionRepository {
     // Key: Pair(profileId, name) -> Value: Option
     private val options = mutableMapOf<Pair<Long, String>, Option>()
 
-    override fun getOption(profileId: Long, name: String): Flow<Option?> =
+    override fun observeOption(profileId: Long, name: String): Flow<Option?> =
         MutableStateFlow(options[Pair(profileId, name)])
 
-    override suspend fun getOptionSync(profileId: Long, name: String): Option? = options[Pair(profileId, name)]
+    override suspend fun getOption(profileId: Long, name: String): Option? = options[Pair(profileId, name)]
 
-    override suspend fun getAllOptionsForProfileSync(profileId: Long): List<Option> =
+    override suspend fun getAllOptionsForProfile(profileId: Long): List<Option> =
         options.values.filter { it.profileId == profileId }
 
     override suspend fun insertOption(option: Option): Long {

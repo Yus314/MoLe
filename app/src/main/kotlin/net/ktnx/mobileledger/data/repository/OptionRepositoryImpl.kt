@@ -44,13 +44,13 @@ class OptionRepositoryImpl @Inject constructor(
     // Query Operations
     // ========================================
 
-    override fun getOption(profileId: Long, name: String): Flow<Option?> = optionDAO.load(profileId, name)
+    override fun observeOption(profileId: Long, name: String): Flow<Option?> = optionDAO.load(profileId, name)
 
-    override suspend fun getOptionSync(profileId: Long, name: String): Option? = withContext(Dispatchers.IO) {
+    override suspend fun getOption(profileId: Long, name: String): Option? = withContext(Dispatchers.IO) {
         optionDAO.loadSync(profileId, name)
     }
 
-    override suspend fun getAllOptionsForProfileSync(profileId: Long): List<Option> = withContext(Dispatchers.IO) {
+    override suspend fun getAllOptionsForProfile(profileId: Long): List<Option> = withContext(Dispatchers.IO) {
         optionDAO.allForProfileSync(profileId)
     }
 

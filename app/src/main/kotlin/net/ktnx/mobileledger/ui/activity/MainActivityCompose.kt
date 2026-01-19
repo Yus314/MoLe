@@ -366,9 +366,7 @@ class MainActivityCompose : ProfileThemedActivity() {
         val profileId = currentProfile.id ?: return
 
         lifecycleScope.launch {
-            // Use .first() instead of .collect to avoid accumulating collectors
             val opt = optionRepository.getOption(profileId, Option.OPT_LAST_SCRAPE)
-                .first()
 
             var lastUpdate = 0L
             if (opt != null) {

@@ -35,19 +35,19 @@ interface OptionRepository {
     // ========================================
 
     /**
-     * Gets an option by profile ID and name as a Flow.
+     * Observes an option by profile ID and name as a Flow.
      */
-    fun getOption(profileId: Long, name: String): Flow<Option?>
+    fun observeOption(profileId: Long, name: String): Flow<Option?>
 
     /**
-     * Gets an option by profile ID and name synchronously.
+     * Gets an option by profile ID and name.
      */
-    suspend fun getOptionSync(profileId: Long, name: String): Option?
+    suspend fun getOption(profileId: Long, name: String): Option?
 
     /**
-     * Gets all options for a profile synchronously.
+     * Gets all options for a profile.
      */
-    suspend fun getAllOptionsForProfileSync(profileId: Long): List<Option>
+    suspend fun getAllOptionsForProfile(profileId: Long): List<Option>
 
     // ========================================
     // Mutation Operations
