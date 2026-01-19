@@ -53,8 +53,4 @@ object QR {
     fun interface QRScanResultReceiver {
         fun onQRScanResult(scanned: String?)
     }
-
-    interface QRScanTrigger {
-        fun triggerQRScan()
-    }
 }

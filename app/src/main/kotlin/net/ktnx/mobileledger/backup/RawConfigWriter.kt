@@ -89,35 +89,35 @@ class RawConfigWriter(
         for (t in templates) {
             w.beginObject()
 
-            w.name(ConfigIO.Keys.UUID).value(t.header.uuid)
-            w.name(ConfigIO.Keys.NAME).value(t.header.name)
-            w.name(ConfigIO.Keys.REGEX).value(t.header.regularExpression)
-            writeKey(ConfigIO.Keys.TEST_TEXT, t.header.testText)
-            writeKey(ConfigIO.Keys.DATE_YEAR, t.header.dateYear)
-            writeKey(ConfigIO.Keys.DATE_YEAR_GROUP, t.header.dateYearMatchGroup)
-            writeKey(ConfigIO.Keys.DATE_MONTH, t.header.dateMonth)
-            writeKey(ConfigIO.Keys.DATE_MONTH_GROUP, t.header.dateMonthMatchGroup)
-            writeKey(ConfigIO.Keys.DATE_DAY, t.header.dateDay)
-            writeKey(ConfigIO.Keys.DATE_DAY_GROUP, t.header.dateDayMatchGroup)
-            writeKey(ConfigIO.Keys.TRANSACTION, t.header.transactionDescription)
-            writeKey(ConfigIO.Keys.TRANSACTION_GROUP, t.header.transactionDescriptionMatchGroup)
-            writeKey(ConfigIO.Keys.COMMENT, t.header.transactionComment)
-            writeKey(ConfigIO.Keys.COMMENT_GROUP, t.header.transactionCommentMatchGroup)
-            w.name(ConfigIO.Keys.IS_FALLBACK).value(t.header.isFallback)
+            w.name(BackupKeys.UUID).value(t.header.uuid)
+            w.name(BackupKeys.NAME).value(t.header.name)
+            w.name(BackupKeys.REGEX).value(t.header.regularExpression)
+            writeKey(BackupKeys.TEST_TEXT, t.header.testText)
+            writeKey(BackupKeys.DATE_YEAR, t.header.dateYear)
+            writeKey(BackupKeys.DATE_YEAR_GROUP, t.header.dateYearMatchGroup)
+            writeKey(BackupKeys.DATE_MONTH, t.header.dateMonth)
+            writeKey(BackupKeys.DATE_MONTH_GROUP, t.header.dateMonthMatchGroup)
+            writeKey(BackupKeys.DATE_DAY, t.header.dateDay)
+            writeKey(BackupKeys.DATE_DAY_GROUP, t.header.dateDayMatchGroup)
+            writeKey(BackupKeys.TRANSACTION, t.header.transactionDescription)
+            writeKey(BackupKeys.TRANSACTION_GROUP, t.header.transactionDescriptionMatchGroup)
+            writeKey(BackupKeys.COMMENT, t.header.transactionComment)
+            writeKey(BackupKeys.COMMENT_GROUP, t.header.transactionCommentMatchGroup)
+            w.name(BackupKeys.IS_FALLBACK).value(t.header.isFallback)
 
             if (t.accounts.isNotEmpty()) {
-                w.name(ConfigIO.Keys.ACCOUNTS).beginArray()
+                w.name(BackupKeys.ACCOUNTS).beginArray()
                 for (a in t.accounts) {
                     w.beginObject()
-                    writeKey(ConfigIO.Keys.NAME, a.accountName)
-                    writeKey(ConfigIO.Keys.NAME_GROUP, a.accountNameMatchGroup)
-                    writeKey(ConfigIO.Keys.COMMENT, a.accountComment)
-                    writeKey(ConfigIO.Keys.COMMENT_GROUP, a.accountCommentMatchGroup)
-                    writeKey(ConfigIO.Keys.AMOUNT, a.amount)
-                    writeKey(ConfigIO.Keys.AMOUNT_GROUP, a.amountMatchGroup)
-                    writeKey(ConfigIO.Keys.NEGATE_AMOUNT, a.negateAmount)
-                    writeKey(ConfigIO.Keys.CURRENCY, a.currency)
-                    writeKey(ConfigIO.Keys.CURRENCY_GROUP, a.currencyMatchGroup)
+                    writeKey(BackupKeys.NAME, a.accountName)
+                    writeKey(BackupKeys.NAME_GROUP, a.accountNameMatchGroup)
+                    writeKey(BackupKeys.COMMENT, a.accountComment)
+                    writeKey(BackupKeys.COMMENT_GROUP, a.accountCommentMatchGroup)
+                    writeKey(BackupKeys.AMOUNT, a.amount)
+                    writeKey(BackupKeys.AMOUNT_GROUP, a.amountMatchGroup)
+                    writeKey(BackupKeys.NEGATE_AMOUNT, a.negateAmount)
+                    writeKey(BackupKeys.CURRENCY, a.currency)
+                    writeKey(BackupKeys.CURRENCY_GROUP, a.currencyMatchGroup)
                     w.endObject()
                 }
                 w.endArray()
@@ -132,12 +132,12 @@ class RawConfigWriter(
         val list = currencyRepository.getAllCurrenciesSync()
         if (list.isEmpty()) return
 
-        w.name(ConfigIO.Keys.COMMODITIES).beginArray()
+        w.name(BackupKeys.COMMODITIES).beginArray()
         for (c in list) {
             w.beginObject()
-            writeKey(ConfigIO.Keys.NAME, c.name)
-            writeKey(ConfigIO.Keys.POSITION, c.position)
-            writeKey(ConfigIO.Keys.HAS_GAP, c.hasGap)
+            writeKey(BackupKeys.NAME, c.name)
+            writeKey(BackupKeys.POSITION, c.position)
+            writeKey(BackupKeys.HAS_GAP, c.hasGap)
             w.endObject()
         }
         w.endArray()
@@ -149,33 +149,33 @@ class RawConfigWriter(
 
         if (profiles.isEmpty()) return
 
-        w.name(ConfigIO.Keys.PROFILES).beginArray()
+        w.name(BackupKeys.PROFILES).beginArray()
         for (p in profiles) {
             w.beginObject()
 
-            w.name(ConfigIO.Keys.NAME).value(p.name)
-            w.name(ConfigIO.Keys.UUID).value(p.uuid)
-            w.name(ConfigIO.Keys.URL).value(p.url)
-            w.name(ConfigIO.Keys.USE_AUTH).value(p.isAuthEnabled)
+            w.name(BackupKeys.NAME).value(p.name)
+            w.name(BackupKeys.UUID).value(p.uuid)
+            w.name(BackupKeys.URL).value(p.url)
+            w.name(BackupKeys.USE_AUTH).value(p.isAuthEnabled)
             if (p.isAuthEnabled) {
-                w.name(ConfigIO.Keys.AUTH_USER).value(p.authentication?.user)
-                w.name(ConfigIO.Keys.AUTH_PASS).value(p.authentication?.password)
+                w.name(BackupKeys.AUTH_USER).value(p.authentication?.user)
+                w.name(BackupKeys.AUTH_PASS).value(p.authentication?.password)
             }
             if (p.apiVersion != API.auto.toInt()) {
-                w.name(ConfigIO.Keys.API_VER).value(p.apiVersion.toLong())
+                w.name(BackupKeys.API_VER).value(p.apiVersion.toLong())
             }
-            w.name(ConfigIO.Keys.CAN_POST).value(p.canPost)
+            w.name(BackupKeys.CAN_POST).value(p.canPost)
             if (p.canPost) {
                 val defaultCommodity = p.defaultCommodityOrEmpty
                 if (defaultCommodity.isNotEmpty()) {
-                    w.name(ConfigIO.Keys.DEFAULT_COMMODITY).value(defaultCommodity)
+                    w.name(BackupKeys.DEFAULT_COMMODITY).value(defaultCommodity)
                 }
-                w.name(ConfigIO.Keys.SHOW_COMMODITY).value(p.showCommodityByDefault)
-                w.name(ConfigIO.Keys.SHOW_COMMENTS).value(p.showCommentsByDefault)
-                w.name(ConfigIO.Keys.FUTURE_DATES).value(p.futureDates.toInt().toLong())
-                w.name(ConfigIO.Keys.PREF_ACCOUNT).value(p.preferredAccountsFilter)
+                w.name(BackupKeys.SHOW_COMMODITY).value(p.showCommodityByDefault)
+                w.name(BackupKeys.SHOW_COMMENTS).value(p.showCommentsByDefault)
+                w.name(BackupKeys.FUTURE_DATES).value(p.futureDates.toInt().toLong())
+                w.name(BackupKeys.PREF_ACCOUNT).value(p.preferredAccountsFilter)
             }
-            w.name(ConfigIO.Keys.COLOUR).value(p.theme)
+            w.name(BackupKeys.COLOUR).value(p.theme)
 
             w.endObject()
         }
@@ -185,6 +185,6 @@ class RawConfigWriter(
     @Throws(IOException::class)
     private fun writeCurrentProfile() {
         val currentProfile = profileRepository.currentProfile.value ?: return
-        w.name(ConfigIO.Keys.CURRENT_PROFILE).value(currentProfile.uuid)
+        w.name(BackupKeys.CURRENT_PROFILE).value(currentProfile.uuid)
     }
 }

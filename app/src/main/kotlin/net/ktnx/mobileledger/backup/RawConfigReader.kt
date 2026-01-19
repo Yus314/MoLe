@@ -66,10 +66,10 @@ class RawConfigReader(inputStream: InputStream) {
                 continue
             }
             when (item) {
-                ConfigIO.Keys.COMMODITIES -> commodities = readCommodities()
-                ConfigIO.Keys.PROFILES -> profiles = readProfiles()
-                ConfigIO.Keys.TEMPLATES -> templates = readTemplates()
-                ConfigIO.Keys.CURRENT_PROFILE -> currentProfile = r.nextString()
+                BackupKeys.COMMODITIES -> commodities = readCommodities()
+                BackupKeys.PROFILES -> profiles = readProfiles()
+                BackupKeys.TEMPLATES -> templates = readTemplates()
+                BackupKeys.CURRENT_PROFILE -> currentProfile = r.nextString()
                 else -> throw RuntimeException("unexpected top-level item $item")
             }
         }
@@ -87,15 +87,15 @@ class RawConfigReader(inputStream: InputStream) {
                 continue
             }
             when (item) {
-                ConfigIO.Keys.NAME -> result.accountName = r.nextString()
-                ConfigIO.Keys.NAME_GROUP -> result.accountNameMatchGroup = r.nextInt()
-                ConfigIO.Keys.COMMENT -> result.accountComment = r.nextString()
-                ConfigIO.Keys.COMMENT_GROUP -> result.accountCommentMatchGroup = r.nextInt()
-                ConfigIO.Keys.AMOUNT -> result.amount = r.nextDouble().toFloat()
-                ConfigIO.Keys.AMOUNT_GROUP -> result.amountMatchGroup = r.nextInt()
-                ConfigIO.Keys.NEGATE_AMOUNT -> result.negateAmount = r.nextBoolean()
-                ConfigIO.Keys.CURRENCY -> result.currency = r.nextLong()
-                ConfigIO.Keys.CURRENCY_GROUP -> result.currencyMatchGroup = r.nextInt()
+                BackupKeys.NAME -> result.accountName = r.nextString()
+                BackupKeys.NAME_GROUP -> result.accountNameMatchGroup = r.nextInt()
+                BackupKeys.COMMENT -> result.accountComment = r.nextString()
+                BackupKeys.COMMENT_GROUP -> result.accountCommentMatchGroup = r.nextInt()
+                BackupKeys.AMOUNT -> result.amount = r.nextDouble().toFloat()
+                BackupKeys.AMOUNT_GROUP -> result.amountMatchGroup = r.nextInt()
+                BackupKeys.NEGATE_AMOUNT -> result.negateAmount = r.nextBoolean()
+                BackupKeys.CURRENCY -> result.currency = r.nextLong()
+                BackupKeys.CURRENCY_GROUP -> result.currencyMatchGroup = r.nextInt()
                 else -> throw IllegalStateException("Unexpected template account item: $item")
             }
         }
@@ -116,37 +116,37 @@ class RawConfigReader(inputStream: InputStream) {
                 continue
             }
             when (item) {
-                ConfigIO.Keys.UUID -> t.uuid = r.nextString()
+                BackupKeys.UUID -> t.uuid = r.nextString()
 
-                ConfigIO.Keys.NAME -> t.name = r.nextString()
+                BackupKeys.NAME -> t.name = r.nextString()
 
-                ConfigIO.Keys.REGEX -> t.regularExpression = r.nextString()
+                BackupKeys.REGEX -> t.regularExpression = r.nextString()
 
-                ConfigIO.Keys.TEST_TEXT -> t.testText = r.nextString()
+                BackupKeys.TEST_TEXT -> t.testText = r.nextString()
 
-                ConfigIO.Keys.DATE_YEAR -> t.dateYear = r.nextInt()
+                BackupKeys.DATE_YEAR -> t.dateYear = r.nextInt()
 
-                ConfigIO.Keys.DATE_YEAR_GROUP -> t.dateYearMatchGroup = r.nextInt()
+                BackupKeys.DATE_YEAR_GROUP -> t.dateYearMatchGroup = r.nextInt()
 
-                ConfigIO.Keys.DATE_MONTH -> t.dateMonth = r.nextInt()
+                BackupKeys.DATE_MONTH -> t.dateMonth = r.nextInt()
 
-                ConfigIO.Keys.DATE_MONTH_GROUP -> t.dateMonthMatchGroup = r.nextInt()
+                BackupKeys.DATE_MONTH_GROUP -> t.dateMonthMatchGroup = r.nextInt()
 
-                ConfigIO.Keys.DATE_DAY -> t.dateDay = r.nextInt()
+                BackupKeys.DATE_DAY -> t.dateDay = r.nextInt()
 
-                ConfigIO.Keys.DATE_DAY_GROUP -> t.dateDayMatchGroup = r.nextInt()
+                BackupKeys.DATE_DAY_GROUP -> t.dateDayMatchGroup = r.nextInt()
 
-                ConfigIO.Keys.TRANSACTION -> t.transactionDescription = r.nextString()
+                BackupKeys.TRANSACTION -> t.transactionDescription = r.nextString()
 
-                ConfigIO.Keys.TRANSACTION_GROUP -> t.transactionDescriptionMatchGroup = r.nextInt()
+                BackupKeys.TRANSACTION_GROUP -> t.transactionDescriptionMatchGroup = r.nextInt()
 
-                ConfigIO.Keys.COMMENT -> t.transactionComment = r.nextString()
+                BackupKeys.COMMENT -> t.transactionComment = r.nextString()
 
-                ConfigIO.Keys.COMMENT_GROUP -> t.transactionCommentMatchGroup = r.nextInt()
+                BackupKeys.COMMENT_GROUP -> t.transactionCommentMatchGroup = r.nextInt()
 
-                ConfigIO.Keys.IS_FALLBACK -> t.isFallback = r.nextBoolean()
+                BackupKeys.IS_FALLBACK -> t.isFallback = r.nextBoolean()
 
-                ConfigIO.Keys.ACCOUNTS -> {
+                BackupKeys.ACCOUNTS -> {
                     r.beginArray()
                     while (r.peek() == JsonToken.BEGIN_OBJECT) {
                         accounts.add(readTemplateAccount())
@@ -190,9 +190,9 @@ class RawConfigReader(inputStream: InputStream) {
                     continue
                 }
                 when (item) {
-                    ConfigIO.Keys.NAME -> c.name = r.nextString()
-                    ConfigIO.Keys.POSITION -> c.position = r.nextString()
-                    ConfigIO.Keys.HAS_GAP -> c.hasGap = r.nextBoolean()
+                    BackupKeys.NAME -> c.name = r.nextString()
+                    BackupKeys.POSITION -> c.position = r.nextString()
+                    BackupKeys.HAS_GAP -> c.hasGap = r.nextBoolean()
                     else -> throw RuntimeException("Unknown commodity key: $item")
                 }
             }
@@ -221,20 +221,20 @@ class RawConfigReader(inputStream: InputStream) {
                     continue
                 }
                 when (item) {
-                    ConfigIO.Keys.UUID -> p.uuid = r.nextString()
-                    ConfigIO.Keys.NAME -> p.name = r.nextString()
-                    ConfigIO.Keys.URL -> p.url = r.nextString()
-                    ConfigIO.Keys.USE_AUTH -> p.useAuthentication = r.nextBoolean()
-                    ConfigIO.Keys.AUTH_USER -> p.authUser = r.nextString()
-                    ConfigIO.Keys.AUTH_PASS -> p.authPassword = r.nextString()
-                    ConfigIO.Keys.API_VER -> p.apiVersion = r.nextInt()
-                    ConfigIO.Keys.CAN_POST -> p.permitPosting = r.nextBoolean()
-                    ConfigIO.Keys.DEFAULT_COMMODITY -> p.setDefaultCommodity(r.nextString())
-                    ConfigIO.Keys.SHOW_COMMODITY -> p.showCommodityByDefault = r.nextBoolean()
-                    ConfigIO.Keys.SHOW_COMMENTS -> p.showCommentsByDefault = r.nextBoolean()
-                    ConfigIO.Keys.FUTURE_DATES -> p.futureDates = r.nextInt()
-                    ConfigIO.Keys.PREF_ACCOUNT -> p.preferredAccountsFilter = r.nextString()
-                    ConfigIO.Keys.COLOUR -> p.theme = r.nextInt()
+                    BackupKeys.UUID -> p.uuid = r.nextString()
+                    BackupKeys.NAME -> p.name = r.nextString()
+                    BackupKeys.URL -> p.url = r.nextString()
+                    BackupKeys.USE_AUTH -> p.useAuthentication = r.nextBoolean()
+                    BackupKeys.AUTH_USER -> p.authUser = r.nextString()
+                    BackupKeys.AUTH_PASS -> p.authPassword = r.nextString()
+                    BackupKeys.API_VER -> p.apiVersion = r.nextInt()
+                    BackupKeys.CAN_POST -> p.permitPosting = r.nextBoolean()
+                    BackupKeys.DEFAULT_COMMODITY -> p.setDefaultCommodity(r.nextString())
+                    BackupKeys.SHOW_COMMODITY -> p.showCommodityByDefault = r.nextBoolean()
+                    BackupKeys.SHOW_COMMENTS -> p.showCommentsByDefault = r.nextBoolean()
+                    BackupKeys.FUTURE_DATES -> p.futureDates = r.nextInt()
+                    BackupKeys.PREF_ACCOUNT -> p.preferredAccountsFilter = r.nextString()
+                    BackupKeys.COLOUR -> p.theme = r.nextInt()
                     else -> throw IllegalStateException("Unexpected profile item: $item")
                 }
             }

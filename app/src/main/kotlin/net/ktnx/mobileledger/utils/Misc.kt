@@ -19,8 +19,6 @@ package net.ktnx.mobileledger.utils
 
 import android.app.Activity
 import android.content.res.Configuration
-import android.os.Handler
-import android.os.Looper
 import android.text.Editable
 import android.view.WindowManager
 
@@ -83,11 +81,6 @@ object Misc {
         if (a == null && b == null) return true
         if (a == null || b == null) return false
         return a == b
-    }
-
-    @JvmStatic
-    fun onMainThread(r: Runnable) {
-        Handler(Looper.getMainLooper()).post(r)
     }
 
     @JvmStatic
