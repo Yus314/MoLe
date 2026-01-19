@@ -320,11 +320,20 @@ MoLe は **Repository パターン**を採用し、データアクセスをカ�
 
 | Repository | 用途 | 主なメソッド |
 |------------|------|-------------|
-| `ProfileRepository` | プロファイル管理 | `currentProfile`, `getAllProfiles()`, `insertProfile()` |
-| `TransactionRepository` | 取引管理 | `getAllTransactions()`, `insertTransaction()`, `searchByDescription()` |
-| `AccountRepository` | 勘定科目管理 | `getAllWithAmounts()`, `searchAccountNames()` |
-| `TemplateRepository` | テンプレート管理 | `getAllTemplates()`, `getTemplateWithAccounts()` |
-| `CurrencyRepository` | 通貨管理 | `getAllCurrencies()`, `getCurrencyByName()` |
+| `ProfileRepository` | プロファイル管理 | `currentProfile`, `observeAllProfiles()`, `getAllProfiles()`, `insertProfile()` |
+| `TransactionRepository` | 取引管理 | `observeAllTransactions()`, `getTransactionById()`, `insertTransaction()` |
+| `AccountRepository` | 勘定科目管理 | `observeAllWithAmounts()`, `getAllWithAmounts()`, `searchAccountNames()` |
+| `TemplateRepository` | テンプレート管理 | `observeAllTemplatesAsDomain()`, `getTemplateAsDomain()`, `getTemplateWithAccounts()` |
+| `CurrencyRepository` | 通貨管理 | `observeAllCurrenciesAsDomain()`, `getCurrencyAsDomain()`, `getCurrencyByName()` |
+
+### 命名規則
+
+Repository メソッドは以下の命名規則に従います:
+
+- **Flow を返すメソッド**: `observe*` プレフィックス（リアクティブな監視）
+  - 例: `observeAllProfiles()`, `observeAllTransactions()`, `observeTemplateById()`
+- **suspend 関数（一回きりの取得）**: サフィックスなし
+  - 例: `getAllProfiles()`, `getTransactionById()`, `getTemplateAsDomain()`
 
 ### ViewModel での使用例
 
@@ -337,7 +346,7 @@ class TransactionListViewModel @Inject constructor(
 
     val transactions = profileRepository.currentProfile
         .flatMapLatest { profile ->
-            profile?.let { transactionRepository.getAllTransactions(it.id) }
+            profile?.let { transactionRepository.observeAllTransactions(it.id) }
                 ?: flowOf(emptyList())
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -347,9 +356,9 @@ class TransactionListViewModel @Inject constructor(
 ### 注意事項
 
 - **DAO 直接アクセスは非推奨**: ViewModel では Repository を使用
-- **Flow を使用**: リアクティブデータストリーム
+- **Flow を使用**: リアクティブデータストリームには `observe*` メソッドを使用
 - **Data.getProfile() は非推奨**: `profileRepository.currentProfile.value` を使用
-- **Data.profiles は非推奨**: `profileRepository.getAllProfiles()` を使用
+- **Data.profiles は非推奨**: `profileRepository.observeAllProfiles()` を使用
 
 ## Domain Model Layer (017-domain-model-layer)
 
@@ -380,8 +389,13 @@ class MyViewModel @Inject constructor(
     private val templateRepository: TemplateRepository
 ) : ViewModel() {
 
-    // ドメインモデルで取得
-    val templates: Flow<List<Template>> = templateRepository.getAllTemplatesAsDomain()
+    // ドメインモデルで取得（リアクティブ）
+    val templates: Flow<List<Template>> = templateRepository.observeAllTemplatesAsDomain()
+
+    // ドメインモデルで一回きり取得
+    suspend fun loadTemplate(id: Long): Template? {
+        return templateRepository.getTemplateAsDomain(id)
+    }
 
     // ドメインモデルで保存
     suspend fun saveTemplate(template: Template) {
@@ -409,7 +423,10 @@ val entity: TemplateWithAccountsData = template.toEntity()
 ### ViewModel での注意事項
 
 - **`net.ktnx.mobileledger.db.*` のインポート禁止**: ViewModel では db パッケージを直接インポートしない
-- **Repository のドメインモデルメソッドを使用**: `getXxxAsDomain()`, `saveXxx(domainModel)` を使用
+- **Repository のドメインモデルメソッドを使用**:
+  - リアクティブ監視: `observeXxxAsDomain()` (Flow を返す)
+  - 一回きり取得: `getXxxAsDomain()` (suspend 関数)
+  - 保存: `saveXxx(domainModel)`
 - **旧モデル（`model.LedgerTransaction` 等）は非推奨**: `@Deprecated` が付与された `model.*` クラスは使用しない
 
 ### ファイル構成
