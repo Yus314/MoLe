@@ -141,7 +141,6 @@ dependencies {
     implementation(libs.androidx.legacy.support.v4)
     implementation(libs.google.material)
     implementation(libs.androidx.constraintlayout)
-    implementation(libs.androidx.lifecycle.extensions)
     implementation(libs.androidx.recyclerview)
     implementation(libs.androidx.appcompat)
 

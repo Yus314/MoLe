@@ -12,7 +12,6 @@ jackson = "2.17.1"
 legacySupport = "1.0.0"
 material = "1.5.0"
 constraintlayout = "2.1.4"
-lifecycleExtensions = "2.2.0"
 recyclerview = "1.2.1"
 appcompat = "1.6.1"
 annotations = "24.1.0"
@@ -37,7 +36,6 @@ kotlinx-collections-immutable = { module = "org.jetbrains.kotlinx:kotlinx-collec
 
 androidx-lifecycle-livedata-ktx = { module = "androidx.lifecycle:lifecycle-livedata-ktx", version.ref = "lifecycle" }
 androidx-lifecycle-viewmodel-ktx = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "lifecycle" }
-androidx-lifecycle-extensions = { module = "androidx.lifecycle:lifecycle-extensions", version.ref = "lifecycleExtensions" }
 
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
 androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
