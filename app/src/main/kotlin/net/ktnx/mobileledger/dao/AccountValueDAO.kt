@@ -17,13 +17,13 @@
 
 package net.ktnx.mobileledger.dao
 
-import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
+import kotlinx.coroutines.flow.Flow
 import net.ktnx.mobileledger.db.AccountValue
 
 @Dao
@@ -41,7 +41,7 @@ abstract class AccountValueDAO : BaseDAO<AccountValue>() {
     abstract fun deleteAllSync()
 
     @Query("SELECT * FROM account_values WHERE account_id=:accountId")
-    abstract fun getAll(accountId: Long): LiveData<List<AccountValue>>
+    abstract fun getAll(accountId: Long): Flow<List<AccountValue>>
 
     @Query("SELECT * FROM account_values WHERE account_id = :accountId AND currency = :currency")
     abstract fun getByCurrencySync(accountId: Long, currency: String): AccountValue?

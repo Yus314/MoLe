@@ -17,13 +17,13 @@
 
 package net.ktnx.mobileledger.dao
 
-import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
+import kotlinx.coroutines.flow.Flow
 import net.ktnx.mobileledger.db.Option
 
 @Dao
@@ -44,7 +44,7 @@ abstract class OptionDAO : BaseDAO<Option>() {
     abstract fun deleteAllSync()
 
     @Query("SELECT * FROM options WHERE profile_id = :profileId AND name = :name")
-    abstract fun load(profileId: Long, name: String?): LiveData<Option>
+    abstract fun load(profileId: Long, name: String?): Flow<Option>
 
     @Query("SELECT * FROM options WHERE profile_id = :profileId AND name = :name")
     abstract fun loadSync(profileId: Long, name: String?): Option?

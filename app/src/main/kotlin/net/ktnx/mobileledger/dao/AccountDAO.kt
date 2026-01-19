@@ -17,7 +17,6 @@
 
 package net.ktnx.mobileledger.dao
 
-import androidx.lifecycle.LiveData
 import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Delete
@@ -26,6 +25,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
+import kotlinx.coroutines.flow.Flow
 import net.ktnx.mobileledger.db.Account
 import net.ktnx.mobileledger.db.AccountWithAmounts
 import net.ktnx.mobileledger.db.DB
@@ -69,7 +69,7 @@ abstract class AccountDAO : BaseDAO<Account>() {
             " <> 0) OR EXISTS(SELECT 1 FROM accounts a WHERE a.parent_name = accounts.name))) " +
             "ORDER BY name"
     )
-    abstract fun getAll(profileId: Long, includeZeroBalances: Boolean): LiveData<List<Account>>
+    abstract fun getAll(profileId: Long, includeZeroBalances: Boolean): Flow<List<Account>>
 
     @Transaction
     @Query(
@@ -78,7 +78,7 @@ abstract class AccountDAO : BaseDAO<Account>() {
             ".value <> 0) OR EXISTS(SELECT 1 FROM accounts a WHERE a.parent_name = accounts.name))" +
             ") ORDER BY name"
     )
-    abstract fun getAllWithAmounts(profileId: Long, includeZeroBalances: Boolean): LiveData<List<AccountWithAmounts>>
+    abstract fun getAllWithAmounts(profileId: Long, includeZeroBalances: Boolean): Flow<List<AccountWithAmounts>>
 
     @Transaction
     @Query(
@@ -93,14 +93,14 @@ abstract class AccountDAO : BaseDAO<Account>() {
     abstract fun getByIdSync(id: Long): Account?
 
     @Query("SELECT * FROM accounts WHERE profile_id = :profileId AND name = :accountName")
-    abstract fun getByName(profileId: Long, accountName: String): LiveData<Account>
+    abstract fun getByName(profileId: Long, accountName: String): Flow<Account>
 
     @Query("SELECT * FROM accounts WHERE profile_id = :profileId AND name = :accountName")
     abstract fun getByNameSync(profileId: Long, accountName: String): Account?
 
     @Transaction
     @Query("SELECT * FROM accounts WHERE profile_id = :profileId AND name = :accountName")
-    abstract fun getByNameWithAmounts(profileId: Long, accountName: String): LiveData<AccountWithAmounts>
+    abstract fun getByNameWithAmounts(profileId: Long, accountName: String): Flow<AccountWithAmounts>
 
     @Transaction
     @Query("SELECT * FROM accounts WHERE profile_id = :profileId AND name = :accountName")
@@ -114,7 +114,7 @@ abstract class AccountDAO : BaseDAO<Account>() {
             "WHERE profile_id=:profileId AND name_upper LIKE '%'||:term||'%' " +
             "ORDER BY ordering, name_upper, rowid "
     )
-    abstract fun lookupNamesInProfileByName(profileId: Long, term: String): LiveData<List<AccountNameContainer>>
+    abstract fun lookupNamesInProfileByName(profileId: Long, term: String): Flow<List<AccountNameContainer>>
 
     @Query(
         "SELECT name, CASE WHEN name_upper LIKE :term||'%' THEN 1 " +
@@ -144,7 +144,7 @@ abstract class AccountDAO : BaseDAO<Account>() {
             "               ELSE 9 END AS ordering " + "FROM accounts " +
             "WHERE name_upper LIKE '%'||:term||'%' " + "ORDER BY ordering, name_upper, rowid "
     )
-    abstract fun lookupNamesByName(term: String): LiveData<List<AccountNameContainer>>
+    abstract fun lookupNamesByName(term: String): Flow<List<AccountNameContainer>>
 
     @Query(
         "SELECT DISTINCT name, CASE WHEN name_upper LIKE :term||'%' THEN 1 " +

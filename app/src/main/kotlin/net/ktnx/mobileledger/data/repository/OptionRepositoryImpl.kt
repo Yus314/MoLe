@@ -17,7 +17,6 @@
 
 package net.ktnx.mobileledger.data.repository
 
-import androidx.lifecycle.asFlow
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.Dispatchers
@@ -45,7 +44,7 @@ class OptionRepositoryImpl @Inject constructor(
     // Query Operations
     // ========================================
 
-    override fun getOption(profileId: Long, name: String): Flow<Option?> = optionDAO.load(profileId, name).asFlow()
+    override fun getOption(profileId: Long, name: String): Flow<Option?> = optionDAO.load(profileId, name)
 
     override suspend fun getOptionSync(profileId: Long, name: String): Option? = withContext(Dispatchers.IO) {
         optionDAO.loadSync(profileId, name)

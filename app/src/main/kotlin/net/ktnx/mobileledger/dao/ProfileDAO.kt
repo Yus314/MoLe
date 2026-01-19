@@ -17,7 +17,6 @@
 
 package net.ktnx.mobileledger.dao
 
-import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
@@ -25,6 +24,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
+import kotlinx.coroutines.flow.Flow
 import net.ktnx.mobileledger.db.Profile
 
 @Dao
@@ -52,19 +52,19 @@ abstract class ProfileDAO : BaseDAO<Profile>() {
     abstract fun getByIdSync(profileId: Long): Profile?
 
     @Query("SELECT * FROM profiles WHERE id=:profileId")
-    abstract fun getById(profileId: Long): LiveData<Profile>
+    abstract fun getById(profileId: Long): Flow<Profile>
 
     @Query("SELECT * FROM profiles ORDER BY order_no")
     abstract fun getAllOrderedSync(): List<Profile>
 
     @Query("SELECT * FROM profiles ORDER BY order_no")
-    abstract fun getAllOrdered(): LiveData<List<Profile>>
+    abstract fun getAllOrdered(): Flow<List<Profile>>
 
     @Query("SELECT * FROM profiles LIMIT 1")
     abstract fun getAnySync(): Profile?
 
     @Query("SELECT * FROM profiles WHERE uuid=:uuid")
-    abstract fun getByUuid(uuid: String?): LiveData<Profile>
+    abstract fun getByUuid(uuid: String?): Flow<Profile>
 
     @Query("SELECT * FROM profiles WHERE uuid=:uuid")
     abstract fun getByUuidSync(uuid: String?): Profile?

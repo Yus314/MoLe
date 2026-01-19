@@ -17,13 +17,13 @@
 
 package net.ktnx.mobileledger.dao
 
-import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
+import kotlinx.coroutines.flow.Flow
 import net.ktnx.mobileledger.db.TransactionAccount
 
 @Dao
@@ -44,7 +44,7 @@ abstract class TransactionAccountDAO : BaseDAO<TransactionAccount>() {
     abstract fun deleteAllSync()
 
     @Query("SELECT * FROM transaction_accounts WHERE id = :id")
-    abstract fun getById(id: Long): LiveData<TransactionAccount>
+    abstract fun getById(id: Long): Flow<TransactionAccount>
 
     @Query("SELECT * FROM transaction_accounts WHERE transaction_id = :transactionId AND order_no = :orderNo")
     abstract fun getByOrderNoSync(transactionId: Long, orderNo: Int): TransactionAccount?

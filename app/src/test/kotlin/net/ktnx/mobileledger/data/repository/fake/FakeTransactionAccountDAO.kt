@@ -17,8 +17,8 @@
 
 package net.ktnx.mobileledger.data.repository.fake
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import net.ktnx.mobileledger.dao.TransactionAccountDAO
 import net.ktnx.mobileledger.db.TransactionAccount
 
@@ -66,10 +66,9 @@ class FakeTransactionAccountDAO : TransactionAccountDAO() {
     // Query implementations
     // ========================================
 
-    override fun getById(id: Long): LiveData<TransactionAccount> {
-        val liveData = MutableLiveData<TransactionAccount>()
-        liveData.value = accounts[id]
-        return liveData
+    override fun getById(id: Long): Flow<TransactionAccount> {
+        val account = accounts[id]
+        return flowOf(account ?: throw NoSuchElementException("TransactionAccount not found: $id"))
     }
 
     override fun getByOrderNoSync(transactionId: Long, orderNo: Int): TransactionAccount? = accounts.values.find {

@@ -17,7 +17,6 @@
 
 package net.ktnx.mobileledger.data.repository
 
-import androidx.lifecycle.asFlow
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.Dispatchers
@@ -61,18 +60,18 @@ class TransactionRepositoryImpl @Inject constructor(
     // ========================================
 
     override fun getAllTransactions(profileId: Long): Flow<List<Transaction>> =
-        transactionDAO.getAllWithAccounts(profileId).asFlow()
+        transactionDAO.getAllWithAccounts(profileId)
             .map { entities -> TransactionMapper.toDomainList(entities) }
 
     override fun getTransactionsFiltered(profileId: Long, accountName: String?): Flow<List<Transaction>> =
         if (accountName == null) {
-            transactionDAO.getAllWithAccounts(profileId).asFlow()
+            transactionDAO.getAllWithAccounts(profileId)
         } else {
-            transactionDAO.getAllWithAccountsFiltered(profileId, accountName).asFlow()
+            transactionDAO.getAllWithAccountsFiltered(profileId, accountName)
         }.map { entities -> TransactionMapper.toDomainList(entities) }
 
     override fun getTransactionById(transactionId: Long): Flow<Transaction?> =
-        transactionDAO.getByIdWithAccounts(transactionId).asFlow()
+        transactionDAO.getByIdWithAccounts(transactionId)
             .map { entity -> entity?.let { TransactionMapper.toDomain(it) } }
 
     override suspend fun getTransactionByIdSync(transactionId: Long): Transaction? = withContext(Dispatchers.IO) {

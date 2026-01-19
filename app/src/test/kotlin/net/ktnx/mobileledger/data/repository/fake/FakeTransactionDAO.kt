@@ -17,8 +17,9 @@
 
 package net.ktnx.mobileledger.data.repository.fake
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.map
 import net.ktnx.mobileledger.dao.TransactionDAO
 import net.ktnx.mobileledger.db.Transaction
 import net.ktnx.mobileledger.db.TransactionWithAccounts
@@ -41,11 +42,11 @@ class FakeTransactionDAO : TransactionDAO() {
     private var nextId = 1L
     private var currentGeneration = mutableMapOf<Long, Long>() // profileId -> generation
 
-    // LiveData for observing changes
-    private val allTransactionsLiveData = mutableMapOf<Long, MutableLiveData<List<TransactionWithAccounts>>>()
-    private val filteredTransactionsLiveData =
-        mutableMapOf<Pair<Long, String?>, MutableLiveData<List<TransactionWithAccounts>>>()
-    private val transactionByIdLiveData = mutableMapOf<Long, MutableLiveData<TransactionWithAccounts>>()
+    // StateFlow for observing changes
+    private val allTransactionsFlow = mutableMapOf<Long, MutableStateFlow<List<TransactionWithAccounts>>>()
+    private val filteredTransactionsFlow =
+        mutableMapOf<Pair<Long, String?>, MutableStateFlow<List<TransactionWithAccounts>>>()
+    private val transactionByIdFlow = mutableMapOf<Long, MutableStateFlow<TransactionWithAccounts?>>()
 
     // Callbacks for notifying about changes (useful for Flow conversion)
     private val changeListeners = mutableListOf<() -> Unit>()
@@ -59,23 +60,23 @@ class FakeTransactionDAO : TransactionDAO() {
     }
 
     private fun notifyChange() {
-        updateAllLiveData()
+        updateAllFlows()
         changeListeners.forEach { it() }
     }
 
-    private fun updateAllLiveData() {
-        // Update per-profile LiveData
-        allTransactionsLiveData.forEach { (profileId, liveData) ->
-            liveData.postValue(getTransactionsForProfile(profileId))
+    private fun updateAllFlows() {
+        // Update per-profile Flow
+        allTransactionsFlow.forEach { (profileId, flow) ->
+            flow.value = getTransactionsForProfile(profileId)
         }
-        // Update filtered LiveData
-        filteredTransactionsLiveData.forEach { (key, liveData) ->
+        // Update filtered Flow
+        filteredTransactionsFlow.forEach { (key, flow) ->
             val (profileId, accountName) = key
-            liveData.postValue(getFilteredTransactions(profileId, accountName))
+            flow.value = getFilteredTransactions(profileId, accountName)
         }
-        // Update individual transaction LiveData
-        transactionByIdLiveData.forEach { (id, liveData) ->
-            liveData.postValue(transactionsWithAccounts[id])
+        // Update individual transaction Flow
+        transactionByIdFlow.forEach { (id, flow) ->
+            flow.value = transactionsWithAccounts[id]
         }
     }
 
@@ -157,16 +158,15 @@ class FakeTransactionDAO : TransactionDAO() {
     // Query implementations
     // ========================================
 
-    override fun getById(id: Long): LiveData<Transaction> {
-        val liveData = MutableLiveData<Transaction>()
-        liveData.value = transactions[id]
-        return liveData
+    override fun getById(id: Long): Flow<Transaction> {
+        val flow = MutableStateFlow(transactions[id])
+        return flow.map { it ?: throw NoSuchElementException("Transaction not found: $id") }
     }
 
-    override fun getByIdWithAccounts(transactionId: Long): LiveData<TransactionWithAccounts> =
-        transactionByIdLiveData.getOrPut(transactionId) {
-            MutableLiveData(transactionsWithAccounts[transactionId])
-        }
+    override fun getByIdWithAccounts(transactionId: Long): Flow<TransactionWithAccounts> =
+        transactionByIdFlow.getOrPut(transactionId) {
+            MutableStateFlow(transactionsWithAccounts[transactionId])
+        }.map { it ?: throw NoSuchElementException("Transaction not found: $transactionId") }
 
     override fun getByIdWithAccountsSync(transactionId: Long): TransactionWithAccounts? =
         transactionsWithAccounts[transactionId]
@@ -218,18 +218,18 @@ class FakeTransactionDAO : TransactionDAO() {
         return TransactionGenerationContainer(generation)
     }
 
-    override fun getAllWithAccounts(profileId: Long): LiveData<List<TransactionWithAccounts>> =
-        allTransactionsLiveData.getOrPut(profileId) {
-            MutableLiveData(getTransactionsForProfile(profileId))
+    override fun getAllWithAccounts(profileId: Long): Flow<List<TransactionWithAccounts>> =
+        allTransactionsFlow.getOrPut(profileId) {
+            MutableStateFlow(getTransactionsForProfile(profileId))
         }
 
     override fun getAllWithAccountsFiltered(
         profileId: Long,
         accountName: String?
-    ): LiveData<List<TransactionWithAccounts>> {
+    ): Flow<List<TransactionWithAccounts>> {
         val key = profileId to accountName
-        return filteredTransactionsLiveData.getOrPut(key) {
-            MutableLiveData(getFilteredTransactions(profileId, accountName))
+        return filteredTransactionsFlow.getOrPut(key) {
+            MutableStateFlow(getFilteredTransactions(profileId, accountName))
         }
     }
 

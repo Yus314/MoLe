@@ -17,13 +17,13 @@
 
 package net.ktnx.mobileledger.dao
 
-import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
+import kotlinx.coroutines.flow.Flow
 import net.ktnx.mobileledger.db.Currency
 
 @Dao
@@ -41,19 +41,19 @@ abstract class CurrencyDAO : BaseDAO<Currency>() {
     abstract fun deleteAllSync()
 
     @Query("SELECT * FROM currencies")
-    abstract fun getAll(): LiveData<List<Currency>>
+    abstract fun getAll(): Flow<List<Currency>>
 
     @Query("SELECT * FROM currencies")
     abstract fun getAllSync(): List<Currency>
 
     @Query("SELECT * FROM currencies WHERE id = :id")
-    abstract fun getById(id: Long): LiveData<Currency>
+    abstract fun getById(id: Long): Flow<Currency>
 
     @Query("SELECT * FROM currencies WHERE id = :id")
     abstract fun getByIdSync(id: Long): Currency?
 
     @Query("SELECT * FROM currencies WHERE name = :name")
-    abstract fun getByName(name: String?): LiveData<Currency>
+    abstract fun getByName(name: String?): Flow<Currency>
 
     @Query("SELECT * FROM currencies WHERE name = :name")
     abstract fun getByNameSync(name: String?): Currency?

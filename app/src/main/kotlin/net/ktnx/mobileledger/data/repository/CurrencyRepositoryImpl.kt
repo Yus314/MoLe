@@ -17,7 +17,6 @@
 
 package net.ktnx.mobileledger.data.repository
 
-import androidx.lifecycle.asFlow
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.Dispatchers
@@ -48,14 +47,14 @@ class CurrencyRepositoryImpl @Inject constructor(private val currencyDAO: Curren
     // ========================================
 
     override fun getAllCurrenciesAsDomain(): Flow<List<DomainCurrency>> =
-        currencyDAO.getAll().asFlow().map { list -> list.map { it.toDomain() } }
+        currencyDAO.getAll().map { list -> list.map { it.toDomain() } }
 
     override suspend fun getAllCurrenciesAsDomainSync(): List<DomainCurrency> = withContext(Dispatchers.IO) {
         currencyDAO.getAllSync().map { it.toDomain() }
     }
 
     override fun getCurrencyAsDomain(id: Long): Flow<DomainCurrency?> =
-        currencyDAO.getById(id).asFlow().map { it?.toDomain() }
+        currencyDAO.getById(id).map { it?.toDomain() }
 
     override suspend fun getCurrencyAsDomainSync(id: Long): DomainCurrency? = withContext(Dispatchers.IO) {
         currencyDAO.getByIdSync(id)?.toDomain()
@@ -69,19 +68,19 @@ class CurrencyRepositoryImpl @Inject constructor(private val currencyDAO: Curren
     // Database Entity Query Operations (for internal use)
     // ========================================
 
-    override fun getAllCurrencies(): Flow<List<Currency>> = currencyDAO.getAll().asFlow()
+    override fun getAllCurrencies(): Flow<List<Currency>> = currencyDAO.getAll()
 
     override suspend fun getAllCurrenciesSync(): List<Currency> = withContext(Dispatchers.IO) {
         currencyDAO.getAllSync()
     }
 
-    override fun getCurrencyById(id: Long): Flow<Currency?> = currencyDAO.getById(id).asFlow()
+    override fun getCurrencyById(id: Long): Flow<Currency?> = currencyDAO.getById(id)
 
     override suspend fun getCurrencyByIdSync(id: Long): Currency? = withContext(Dispatchers.IO) {
         currencyDAO.getByIdSync(id)
     }
 
-    override fun getCurrencyByName(name: String): Flow<Currency?> = currencyDAO.getByName(name).asFlow()
+    override fun getCurrencyByName(name: String): Flow<Currency?> = currencyDAO.getByName(name)
 
     override suspend fun getCurrencyByNameSync(name: String): Currency? = withContext(Dispatchers.IO) {
         currencyDAO.getByNameSync(name)

@@ -19,7 +19,6 @@ package net.ktnx.mobileledger.db
 
 import android.content.res.Resources
 import android.database.SQLException
-import androidx.lifecycle.MutableLiveData
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
@@ -81,9 +80,6 @@ abstract class DB : RoomDatabase() {
     companion object {
         const val REVISION = 68
         const val DB_NAME = "MoLe.db"
-
-        @JvmField
-        val initComplete = MutableLiveData(false)
 
         /**
          * Database instance for legacy code access.

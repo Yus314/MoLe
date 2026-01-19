@@ -17,7 +17,6 @@
 
 package net.ktnx.mobileledger.data.repository
 
-import androidx.lifecycle.asFlow
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.Dispatchers
@@ -53,7 +52,7 @@ class AccountRepositoryImpl @Inject constructor(
     // ========================================
 
     override fun getAllWithAmounts(profileId: Long, includeZeroBalances: Boolean): Flow<List<Account>> =
-        accountDAO.getAllWithAmounts(profileId, includeZeroBalances).asFlow()
+        accountDAO.getAllWithAmounts(profileId, includeZeroBalances)
             .map { entities -> entities.map { it.toDomain() } }
 
     override suspend fun getAllWithAmountsSync(profileId: Long, includeZeroBalances: Boolean): List<Account> =
@@ -63,21 +62,21 @@ class AccountRepositoryImpl @Inject constructor(
         }
 
     override fun getAll(profileId: Long, includeZeroBalances: Boolean): Flow<List<DbAccount>> =
-        accountDAO.getAll(profileId, includeZeroBalances).asFlow()
+        accountDAO.getAll(profileId, includeZeroBalances)
 
     override suspend fun getByIdSync(id: Long): DbAccount? = withContext(Dispatchers.IO) {
         accountDAO.getByIdSync(id)
     }
 
     override fun getByName(profileId: Long, accountName: String): Flow<DbAccount?> =
-        accountDAO.getByName(profileId, accountName).asFlow()
+        accountDAO.getByName(profileId, accountName)
 
     override suspend fun getByNameSync(profileId: Long, accountName: String): DbAccount? = withContext(Dispatchers.IO) {
         accountDAO.getByNameSync(profileId, accountName)
     }
 
     override fun getByNameWithAmounts(profileId: Long, accountName: String): Flow<Account?> =
-        accountDAO.getByNameWithAmounts(profileId, accountName).asFlow()
+        accountDAO.getByNameWithAmounts(profileId, accountName)
             .map { it?.toDomain() }
 
     override suspend fun getByNameWithAmountsSync(profileId: Long, accountName: String): Account? =
@@ -90,7 +89,7 @@ class AccountRepositoryImpl @Inject constructor(
     // ========================================
 
     override fun searchAccountNames(profileId: Long, term: String): Flow<List<String>> =
-        accountDAO.lookupNamesInProfileByName(profileId, term.uppercase()).asFlow()
+        accountDAO.lookupNamesInProfileByName(profileId, term.uppercase())
             .map { containers -> AccountDAO.unbox(containers) }
 
     override suspend fun searchAccountNamesSync(profileId: Long, term: String): List<String> =
@@ -105,7 +104,7 @@ class AccountRepositoryImpl @Inject constructor(
         }
 
     override fun searchAccountNamesGlobal(term: String): Flow<List<String>> =
-        accountDAO.lookupNamesByName(term.uppercase()).asFlow()
+        accountDAO.lookupNamesByName(term.uppercase())
             .map { containers -> AccountDAO.unbox(containers) }
 
     override suspend fun searchAccountNamesGlobalSync(term: String): List<String> = withContext(Dispatchers.IO) {

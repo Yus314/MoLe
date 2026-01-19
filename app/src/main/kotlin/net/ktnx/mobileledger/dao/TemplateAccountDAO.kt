@@ -17,12 +17,12 @@
 
 package net.ktnx.mobileledger.dao
 
-import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Update
+import kotlinx.coroutines.flow.Flow
 import net.ktnx.mobileledger.db.TemplateAccount
 
 @Dao
@@ -40,10 +40,10 @@ interface TemplateAccountDAO {
     fun deleteAllSync()
 
     @Query("SELECT * FROM template_accounts WHERE template_id=:templateId")
-    fun getTemplateAccounts(templateId: Long?): LiveData<List<TemplateAccount>>
+    fun getTemplateAccounts(templateId: Long?): Flow<List<TemplateAccount>>
 
     @Query("SELECT * FROM template_accounts WHERE id = :id")
-    fun getPatternAccountById(id: Long?): LiveData<TemplateAccount>
+    fun getPatternAccountById(id: Long?): Flow<TemplateAccount>
 
     @Query("UPDATE template_accounts set position=-1 WHERE template_id=:templateId")
     fun prepareForSave(templateId: Long)

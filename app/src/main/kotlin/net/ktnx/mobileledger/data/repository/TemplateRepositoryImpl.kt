@@ -17,7 +17,6 @@
 
 package net.ktnx.mobileledger.data.repository
 
-import androidx.lifecycle.asFlow
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.Dispatchers
@@ -54,12 +53,12 @@ class TemplateRepositoryImpl @Inject constructor(
     // ========================================
 
     override fun getAllTemplatesAsDomain(): Flow<List<Template>> =
-        templateHeaderDAO.getTemplatesWithAccounts().asFlow().map { list ->
+        templateHeaderDAO.getTemplatesWithAccounts().map { list ->
             list.map { it.toDomain() }
         }
 
     override fun getTemplateAsDomain(id: Long): Flow<Template?> =
-        templateHeaderDAO.getTemplateWithAccounts(id).asFlow().map { it?.toDomain() }
+        templateHeaderDAO.getTemplateWithAccounts(id).map { it?.toDomain() }
 
     override suspend fun getTemplateAsDomainSync(id: Long): Template? = withContext(Dispatchers.IO) {
         templateHeaderDAO.getTemplateWithAccountsSync(id)?.toDomain()
@@ -73,16 +72,16 @@ class TemplateRepositoryImpl @Inject constructor(
     // Database Entity Query Operations (for internal use)
     // ========================================
 
-    override fun getAllTemplates(): Flow<List<TemplateHeader>> = templateHeaderDAO.getTemplates().asFlow()
+    override fun getAllTemplates(): Flow<List<TemplateHeader>> = templateHeaderDAO.getTemplates()
 
-    override fun getTemplateById(id: Long): Flow<TemplateHeader?> = templateHeaderDAO.getTemplate(id).asFlow()
+    override fun getTemplateById(id: Long): Flow<TemplateHeader?> = templateHeaderDAO.getTemplate(id)
 
     override suspend fun getTemplateByIdSync(id: Long): TemplateHeader? = withContext(Dispatchers.IO) {
         templateHeaderDAO.getTemplateSync(id)
     }
 
     override fun getTemplateWithAccounts(id: Long): Flow<TemplateWithAccounts?> =
-        templateHeaderDAO.getTemplateWithAccounts(id).asFlow()
+        templateHeaderDAO.getTemplateWithAccounts(id)
 
     override suspend fun getTemplateWithAccountsSync(id: Long): TemplateWithAccounts? = withContext(Dispatchers.IO) {
         templateHeaderDAO.getTemplateWithAccountsSync(id)

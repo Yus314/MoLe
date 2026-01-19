@@ -17,7 +17,6 @@
 
 package net.ktnx.mobileledger.dao
 
-import androidx.lifecycle.LiveData
 import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Delete
@@ -26,6 +25,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import java.util.Locale
+import kotlinx.coroutines.flow.Flow
 import logcat.logcat
 import net.ktnx.mobileledger.db.Account
 import net.ktnx.mobileledger.db.AccountValue
@@ -57,11 +57,11 @@ abstract class TransactionDAO : BaseDAO<Transaction>() {
     abstract fun deleteAllSync()
 
     @Query("SELECT * FROM transactions WHERE id = :id")
-    abstract fun getById(id: Long): LiveData<Transaction>
+    abstract fun getById(id: Long): Flow<Transaction>
 
     @androidx.room.Transaction
     @Query("SELECT * FROM transactions WHERE id = :transactionId")
-    abstract fun getByIdWithAccounts(transactionId: Long): LiveData<TransactionWithAccounts>
+    abstract fun getByIdWithAccounts(transactionId: Long): Flow<TransactionWithAccounts>
 
     @androidx.room.Transaction
     @Query("SELECT * FROM transactions WHERE id = :transactionId")
@@ -107,7 +107,7 @@ abstract class TransactionDAO : BaseDAO<Transaction>() {
         "SELECT * FROM transactions WHERE profile_id = :profileId ORDER BY year " +
             " asc, month asc, day asc, ledger_id asc"
     )
-    abstract fun getAllWithAccounts(profileId: Long): LiveData<List<TransactionWithAccounts>>
+    abstract fun getAllWithAccounts(profileId: Long): Flow<List<TransactionWithAccounts>>
 
     @androidx.room.Transaction
     @Query(
@@ -120,7 +120,7 @@ abstract class TransactionDAO : BaseDAO<Transaction>() {
     abstract fun getAllWithAccountsFiltered(
         profileId: Long,
         accountName: String?
-    ): LiveData<List<TransactionWithAccounts>>
+    ): Flow<List<TransactionWithAccounts>>
 
     @androidx.room.Transaction
     @Query(

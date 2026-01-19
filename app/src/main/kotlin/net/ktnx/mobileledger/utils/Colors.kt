@@ -22,7 +22,6 @@ import android.content.res.ColorStateList
 import android.content.res.Resources
 import android.util.TypedValue
 import androidx.annotation.ColorInt
-import androidx.lifecycle.MutableLiveData
 import java.util.Locale
 import logcat.LogPriority
 import logcat.logcat
@@ -33,9 +32,6 @@ import net.ktnx.mobileledger.ui.HueRing
 
 object Colors {
     const val DEFAULT_HUE_DEG = 261
-
-    @JvmField
-    val themeWatch = MutableLiveData(0)
 
     private val EMPTY_STATES = arrayOf(intArrayOf())
     private const val SWIPE_COLOR_COUNT = 6
@@ -91,9 +87,6 @@ object Colors {
                 themePrimaryColor[themeId] = tv.data
             }
         }
-
-        // trigger theme observers
-        themeWatch.postValue((themeWatch.value ?: 0) + 1)
     }
 
     @JvmStatic

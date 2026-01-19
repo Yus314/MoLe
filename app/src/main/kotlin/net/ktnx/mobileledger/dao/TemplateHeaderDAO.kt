@@ -17,13 +17,13 @@
 
 package net.ktnx.mobileledger.dao
 
-import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
+import kotlinx.coroutines.flow.Flow
 import net.ktnx.mobileledger.db.DB
 import net.ktnx.mobileledger.db.TemplateHeader
 import net.ktnx.mobileledger.db.TemplateWithAccounts
@@ -43,17 +43,17 @@ abstract class TemplateHeaderDAO {
     abstract fun deleteAllSync()
 
     @Query("SELECT * FROM templates ORDER BY is_fallback, UPPER(name)")
-    abstract fun getTemplates(): LiveData<List<TemplateHeader>>
+    abstract fun getTemplates(): Flow<List<TemplateHeader>>
 
     @Query("SELECT * FROM templates WHERE id = :id")
-    abstract fun getTemplate(id: Long?): LiveData<TemplateHeader>
+    abstract fun getTemplate(id: Long?): Flow<TemplateHeader>
 
     @Query("SELECT * FROM templates WHERE id = :id")
     abstract fun getTemplateSync(id: Long?): TemplateHeader?
 
     @Transaction
     @Query("SELECT * FROM templates WHERE id = :id")
-    abstract fun getTemplateWithAccounts(id: Long): LiveData<TemplateWithAccounts>
+    abstract fun getTemplateWithAccounts(id: Long): Flow<TemplateWithAccounts>
 
     @Transaction
     @Query("SELECT * FROM templates WHERE id = :id")
@@ -69,7 +69,7 @@ abstract class TemplateHeaderDAO {
 
     @Transaction
     @Query("SELECT * FROM templates ORDER BY is_fallback, UPPER(name)")
-    abstract fun getTemplatesWithAccounts(): LiveData<List<TemplateWithAccounts>>
+    abstract fun getTemplatesWithAccounts(): Flow<List<TemplateWithAccounts>>
 
     @Transaction
     open fun insertSync(templateWithAccounts: TemplateWithAccounts) {
