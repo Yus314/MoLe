@@ -170,7 +170,7 @@ class HledgerClientImplTest {
 
         assertTrue(result.isFailure)
         val exception = result.exceptionOrNull()
-        assertTrue(exception is AuthenticationException)
+        assertTrue(exception is NetworkAuthenticationException)
     }
 
     @Test
@@ -184,7 +184,7 @@ class HledgerClientImplTest {
 
         assertTrue(result.isFailure)
         val exception = result.exceptionOrNull()
-        assertTrue(exception is NotFoundException)
+        assertTrue(exception is NetworkNotFoundException)
     }
 
     @Test
@@ -221,7 +221,7 @@ class HledgerClientImplTest {
 
         assertTrue(result.isFailure)
         val exception = result.exceptionOrNull()
-        assertTrue(exception is ApiNotSupportedException)
+        assertTrue(exception is NetworkApiNotSupportedException)
     }
 
     @Test
@@ -239,7 +239,7 @@ class HledgerClientImplTest {
 
         assertTrue(result.isFailure)
         val exception = result.exceptionOrNull()
-        assertTrue(exception is ApiNotSupportedException)
+        assertTrue(exception is NetworkApiNotSupportedException)
     }
 
     @Test

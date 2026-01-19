@@ -33,7 +33,7 @@ import net.ktnx.mobileledger.TemporaryAuthData
 import net.ktnx.mobileledger.di.IoDispatcher
 import net.ktnx.mobileledger.domain.model.Profile
 import net.ktnx.mobileledger.network.HledgerClient
-import net.ktnx.mobileledger.network.NotFoundException
+import net.ktnx.mobileledger.network.NetworkNotFoundException
 
 /**
  * VersionDetector の実装
@@ -81,7 +81,7 @@ class VersionDetectorImpl @Inject constructor(
                     },
                     onFailure = { error ->
                         when (error) {
-                            is NotFoundException -> {
+                            is NetworkNotFoundException -> {
                                 // 404 means old hledger-web version (pre-1.19)
                                 logcat { "Version endpoint not found, assuming pre-1.19" }
                                 Result.success("pre-1.19")

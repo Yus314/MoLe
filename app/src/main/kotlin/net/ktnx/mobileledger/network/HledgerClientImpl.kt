@@ -87,15 +87,15 @@ class HledgerClientImpl @Inject constructor(
 
             400, 405 -> {
                 val responseBody = response.bodyAsText()
-                throw ApiNotSupportedException(
+                throw NetworkApiNotSupportedException(
                     "API not supported: HTTP ${response.status.value}",
                     responseBody
                 )
             }
 
-            401 -> throw AuthenticationException("Authentication required")
+            401 -> throw NetworkAuthenticationException("Authentication required")
 
-            else -> throw HttpException(
+            else -> throw NetworkHttpException(
                 response.status.value,
                 "HTTP ${response.status.value}: ${response.status.description}"
             )
@@ -183,40 +183,14 @@ class HledgerClientImpl @Inject constructor(
                 return ByteArrayInputStream(bodyText.toByteArray(StandardCharsets.UTF_8))
             }
 
-            401 -> throw AuthenticationException("Authentication required")
+            401 -> throw NetworkAuthenticationException("Authentication required")
 
-            404 -> throw NotFoundException("Resource not found")
+            404 -> throw NetworkNotFoundException("Resource not found")
 
-            else -> throw HttpException(
+            else -> throw NetworkHttpException(
                 response.status.value,
                 "HTTP ${response.status.value}: ${response.status.description}"
             )
         }
     }
 }
-
-/**
- * Exception thrown when the API version is not supported.
- */
-class ApiNotSupportedException(
-    message: String,
-    val responseBody: String? = null
-) : Exception(message)
-
-/**
- * Exception thrown when authentication fails.
- */
-class AuthenticationException(message: String) : Exception(message)
-
-/**
- * Exception thrown when a resource is not found.
- */
-class NotFoundException(message: String) : Exception(message)
-
-/**
- * General HTTP exception with status code.
- */
-class HttpException(
-    val statusCode: Int,
-    message: String
-) : Exception(message)

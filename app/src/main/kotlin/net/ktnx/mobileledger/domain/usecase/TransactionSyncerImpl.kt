@@ -56,15 +56,14 @@ import net.ktnx.mobileledger.domain.model.SyncProgress
 import net.ktnx.mobileledger.domain.model.SyncResult
 import net.ktnx.mobileledger.domain.model.Transaction
 import net.ktnx.mobileledger.domain.model.TransactionLine
-import net.ktnx.mobileledger.err.HTTPException
 import net.ktnx.mobileledger.json.API
 import net.ktnx.mobileledger.json.AccountListParser
 import net.ktnx.mobileledger.json.ApiNotSupportedException
 import net.ktnx.mobileledger.json.TransactionListParser
-import net.ktnx.mobileledger.network.AuthenticationException
 import net.ktnx.mobileledger.network.HledgerClient
-import net.ktnx.mobileledger.network.HttpException
-import net.ktnx.mobileledger.network.NotFoundException
+import net.ktnx.mobileledger.network.NetworkAuthenticationException
+import net.ktnx.mobileledger.network.NetworkHttpException
+import net.ktnx.mobileledger.network.NetworkNotFoundException
 import net.ktnx.mobileledger.service.AppStateService
 import net.ktnx.mobileledger.service.SyncInfo
 import net.ktnx.mobileledger.utils.Globals
@@ -223,9 +222,13 @@ class TransactionSyncerImpl @Inject constructor(
             },
             onFailure = { error ->
                 when (error) {
-                    is NotFoundException -> null
-                    is AuthenticationException -> throw HTTPException(401, error.message ?: "Authentication required")
-                    is HttpException -> throw HTTPException(error.statusCode, error.message ?: "HTTP error")
+                    is NetworkNotFoundException -> null
+
+                    is NetworkAuthenticationException ->
+                        throw NetworkHttpException(401, error.message ?: "Authentication required")
+
+                    is NetworkHttpException -> throw error
+
                     else -> throw error
                 }
             }
@@ -342,9 +345,13 @@ class TransactionSyncerImpl @Inject constructor(
             },
             onFailure = { error ->
                 when (error) {
-                    is NotFoundException -> null
-                    is AuthenticationException -> throw HTTPException(401, error.message ?: "Authentication required")
-                    is HttpException -> throw HTTPException(error.statusCode, error.message ?: "HTTP error")
+                    is NetworkNotFoundException -> null
+
+                    is NetworkAuthenticationException ->
+                        throw NetworkHttpException(401, error.message ?: "Authentication required")
+
+                    is NetworkHttpException -> throw error
+
                     else -> throw error
                 }
             }
@@ -502,8 +509,11 @@ class TransactionSyncerImpl @Inject constructor(
             },
             onFailure = { error ->
                 when (error) {
-                    is AuthenticationException -> throw HTTPException(401, error.message ?: "Authentication required")
-                    is HttpException -> throw HTTPException(error.statusCode, error.message ?: "HTTP error")
+                    is NetworkAuthenticationException ->
+                        throw NetworkHttpException(401, error.message ?: "Authentication required")
+
+                    is NetworkHttpException -> throw error
+
                     else -> throw error
                 }
             }
@@ -590,16 +600,13 @@ class TransactionSyncerImpl @Inject constructor(
 
             is SocketTimeoutException -> SyncError.TimeoutError(message = "サーバーが応答しません")
 
-            is MalformedURLException -> SyncError.ValidationError(message = "無効なサーバーURLです")
+            is MalformedURLException -> SyncError.NetworkError(message = "無効なサーバーURLです", cause = e)
 
-            is AuthenticationException -> SyncError.AuthenticationError(message = "認証に失敗しました", httpCode = 401)
+            is NetworkAuthenticationException ->
+                SyncError.AuthenticationError(message = "認証に失敗しました", httpCode = 401)
 
-            is HttpException -> SyncError.ServerError(message = e.message ?: "サーバーエラー", httpCode = e.statusCode)
-
-            is HTTPException -> when (e.responseCode) {
-                401 -> SyncError.AuthenticationError(message = "認証に失敗しました", httpCode = e.responseCode)
-                else -> SyncError.ServerError(message = e.message ?: "サーバーエラー", httpCode = e.responseCode)
-            }
+            is NetworkHttpException ->
+                SyncError.ServerError(message = e.message ?: "サーバーエラー", httpCode = e.statusCode)
 
             is IOException -> SyncError.NetworkError(message = e.localizedMessage ?: "ネットワークエラー", cause = e)
 

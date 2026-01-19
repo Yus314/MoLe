@@ -36,8 +36,8 @@ import net.ktnx.mobileledger.domain.model.Transaction
 import net.ktnx.mobileledger.json.API
 import net.ktnx.mobileledger.json.ApiNotSupportedException
 import net.ktnx.mobileledger.json.Gateway
-import net.ktnx.mobileledger.network.ApiNotSupportedException as KtorApiNotSupportedException
 import net.ktnx.mobileledger.network.HledgerClient
+import net.ktnx.mobileledger.network.NetworkApiNotSupportedException
 import net.ktnx.mobileledger.utils.Globals
 
 /**
@@ -154,7 +154,7 @@ class TransactionSenderImpl @Inject constructor(
             },
             onFailure = { error ->
                 when (error) {
-                    is KtorApiNotSupportedException -> {
+                    is NetworkApiNotSupportedException -> {
                         logcat { "API not supported: ${error.message}" }
                         throw ApiNotSupportedException(error.responseBody ?: error.message ?: "")
                     }
