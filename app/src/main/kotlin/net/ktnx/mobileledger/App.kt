@@ -20,19 +20,13 @@ package net.ktnx.mobileledger
 import android.app.Application
 import android.content.res.Configuration
 import dagger.hilt.android.HiltAndroidApp
-import java.net.Authenticator
-import java.net.MalformedURLException
-import java.net.PasswordAuthentication
-import java.net.URL
 import java.util.Locale
 import javax.inject.Inject
 import logcat.AndroidLogcatLogger
 import logcat.LogPriority
-import logcat.asLog
 import logcat.logcat
 import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.di.CurrencyFormatterEntryPoint
-import net.ktnx.mobileledger.service.AuthDataProvider
 import net.ktnx.mobileledger.service.CurrencyFormatter
 import net.ktnx.mobileledger.utils.Globals
 
@@ -56,22 +50,7 @@ class App : Application() {
     @Inject
     lateinit var profileRepository: ProfileRepository
 
-    @Inject
-    lateinit var authDataProvider: AuthDataProvider
-
     private var monthNamesPrepared = false
-
-    private fun getAuthURL(): String = authDataProvider.getTemporaryAuthData()?.url
-        ?: profileRepository.currentProfile.value?.url ?: ""
-
-    private fun getAuthUserName(): String = authDataProvider.getTemporaryAuthData()?.authUser
-        ?: profileRepository.currentProfile.value?.authentication?.user ?: ""
-
-    private fun getAuthPassword(): String = authDataProvider.getTemporaryAuthData()?.authPassword
-        ?: profileRepository.currentProfile.value?.authentication?.password ?: ""
-
-    private fun getAuthEnabled(): Boolean = authDataProvider.getTemporaryAuthData()?.useAuthentication
-        ?: profileRepository.currentProfile.value?.isAuthEnabled ?: false
 
     override fun onCreate() {
         instance = this
@@ -85,32 +64,6 @@ class App : Application() {
 
         // Initialize CurrencyFormatterEntryPoint for static access in JSON parsers
         CurrencyFormatterEntryPoint.initialize(this)
-
-        Authenticator.setDefault(object : Authenticator() {
-            override fun getPasswordAuthentication(): PasswordAuthentication? {
-                if (getAuthEnabled()) {
-                    try {
-                        val url = URL(getAuthURL())
-                        val requestingHost = getRequestingHost()
-                        val expectedHost = url.host
-                        if (requestingHost.equals(expectedHost, ignoreCase = true)) {
-                            return PasswordAuthentication(
-                                getAuthUserName(),
-                                getAuthPassword().toCharArray()
-                            )
-                        } else {
-                            logcat(LogPriority.WARN) {
-                                "Requesting host [$requestingHost] differs from expected [$expectedHost]"
-                            }
-                        }
-                    } catch (e: MalformedURLException) {
-                        logcat { "Malformed URL for authentication: ${e.asLog()}" }
-                    }
-                }
-
-                return super.getPasswordAuthentication()
-            }
-        })
     }
 
     private fun prepareMonthNamesInternal(force: Boolean) {

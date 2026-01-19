@@ -34,6 +34,8 @@ import net.ktnx.mobileledger.TemporaryAuthData
 import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.domain.model.FutureDates
 import net.ktnx.mobileledger.domain.model.Profile
+import net.ktnx.mobileledger.domain.usecase.VersionDetector
+import net.ktnx.mobileledger.fake.FakeVersionDetector
 import net.ktnx.mobileledger.json.API
 import net.ktnx.mobileledger.service.AuthDataProvider
 import net.ktnx.mobileledger.util.createTestDomainProfile
@@ -66,6 +68,7 @@ class ProfileDetailViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var profileRepository: FakeProfileRepositoryForProfileDetail
     private lateinit var authDataProvider: FakeAuthDataProvider
+    private lateinit var versionDetector: FakeVersionDetector
     private lateinit var savedStateHandle: SavedStateHandle
     private lateinit var viewModel: ProfileDetailViewModel
 
@@ -74,6 +77,7 @@ class ProfileDetailViewModelTest {
         Dispatchers.setMain(testDispatcher)
         profileRepository = FakeProfileRepositoryForProfileDetail()
         authDataProvider = FakeAuthDataProvider()
+        versionDetector = FakeVersionDetector()
         savedStateHandle = SavedStateHandle()
     }
 
@@ -85,6 +89,7 @@ class ProfileDetailViewModelTest {
     private fun createViewModel(): ProfileDetailViewModel = ProfileDetailViewModel(
         profileRepository = profileRepository,
         authDataProvider = authDataProvider,
+        versionDetector = versionDetector,
         ioDispatcher = testDispatcher,
         savedStateHandle = savedStateHandle
     )

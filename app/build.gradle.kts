@@ -150,6 +150,10 @@ dependencies {
     // Logging
     implementation(libs.logcat)
 
+    // Ktor HTTP Client
+    implementation(libs.bundles.ktor)
+    testImplementation(libs.ktor.client.mock)
+
     // Hilt Dependency Injection
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)

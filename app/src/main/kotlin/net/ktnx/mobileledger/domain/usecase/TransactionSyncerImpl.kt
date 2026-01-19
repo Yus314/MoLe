@@ -61,10 +61,13 @@ import net.ktnx.mobileledger.json.API
 import net.ktnx.mobileledger.json.AccountListParser
 import net.ktnx.mobileledger.json.ApiNotSupportedException
 import net.ktnx.mobileledger.json.TransactionListParser
+import net.ktnx.mobileledger.network.AuthenticationException
+import net.ktnx.mobileledger.network.HledgerClient
+import net.ktnx.mobileledger.network.HttpException
+import net.ktnx.mobileledger.network.NotFoundException
 import net.ktnx.mobileledger.service.AppStateService
 import net.ktnx.mobileledger.service.SyncInfo
 import net.ktnx.mobileledger.utils.Globals
-import net.ktnx.mobileledger.utils.NetworkUtil
 import net.ktnx.mobileledger.utils.SimpleDate
 
 /**
@@ -81,6 +84,7 @@ import net.ktnx.mobileledger.utils.SimpleDate
  */
 @Singleton
 class TransactionSyncerImpl @Inject constructor(
+    private val hledgerClient: HledgerClient,
     private val accountRepository: AccountRepository,
     private val transactionRepository: TransactionRepository,
     private val optionRepository: OptionRepository,
@@ -188,42 +192,44 @@ class TransactionSyncerImpl @Inject constructor(
 
     private suspend fun retrieveAccountListForVersion(profile: Profile, version: API): List<Account>? {
         coroutineContext.ensureActive()
-        val http = NetworkUtil.prepareConnection(profile, "accounts")
-        http.allowUserInteraction = false
 
-        return try {
-            when (http.responseCode) {
-                200 -> { /* continue */ }
-                404 -> return null
-                else -> throw HTTPException(http.responseCode, http.responseMessage)
-            }
+        val result = hledgerClient.get(profile, "accounts")
 
-            val list = ArrayList<Account>()
-            val existingNames = HashSet<String>()
+        return result.fold(
+            onSuccess = { inputStream ->
+                val list = ArrayList<Account>()
+                val existingNames = HashSet<String>()
 
-            http.inputStream.use { resp ->
-                coroutineContext.ensureActive()
-                val parser = AccountListParser.forApiVersion(version, resp)
-                expectedPostingsCount = 0
-
-                while (true) {
+                inputStream.use { resp ->
                     coroutineContext.ensureActive()
-                    val acc = parser.nextAccountDomain() ?: break
-                    list.add(acc)
-                    existingNames.add(acc.name)
-                    expectedPostingsCount += acc.amounts.size
+                    val parser = AccountListParser.forApiVersion(version, resp)
+                    expectedPostingsCount = 0
+
+                    while (true) {
+                        coroutineContext.ensureActive()
+                        val acc = parser.nextAccountDomain() ?: break
+                        list.add(acc)
+                        existingNames.add(acc.name)
+                        expectedPostingsCount += acc.amounts.size
+                    }
+
+                    logcat(LogPriority.WARN) { "Got ${list.size} accounts using protocol ${version.description}" }
                 }
 
-                logcat(LogPriority.WARN) { "Got ${list.size} accounts using protocol ${version.description}" }
+                // Generate parent accounts that don't exist
+                ensureParentAccountsExist(list, existingNames)
+
+                list
+            },
+            onFailure = { error ->
+                when (error) {
+                    is NotFoundException -> null
+                    is AuthenticationException -> throw HTTPException(401, error.message ?: "Authentication required")
+                    is HttpException -> throw HTTPException(error.statusCode, error.message ?: "HTTP error")
+                    else -> throw error
+                }
             }
-
-            // Generate parent accounts that don't exist
-            ensureParentAccountsExist(list, existingNames)
-
-            list
-        } finally {
-            http.disconnect()
-        }
+        )
     }
 
     /**
@@ -300,45 +306,49 @@ class TransactionSyncerImpl @Inject constructor(
         onProgress: suspend (Int, Int) -> Unit
     ): List<Transaction>? {
         coroutineContext.ensureActive()
-        val http = NetworkUtil.prepareConnection(profile, "transactions")
-        http.allowUserInteraction = false
 
-        return try {
-            when (http.responseCode) {
-                200 -> { /* continue */ }
-                404 -> return null
-                else -> throw HTTPException(http.responseCode, http.responseMessage)
-            }
+        val result = hledgerClient.get(profile, "transactions")
 
-            val trList = ArrayList<Transaction>()
-            http.inputStream.use { resp ->
-                coroutineContext.ensureActive()
-                val parser = TransactionListParser.forApiVersion(apiVersion, resp)
-                var processedPostings = 0
-
-                while (true) {
+        return result.fold(
+            onSuccess = { inputStream ->
+                val trList = ArrayList<Transaction>()
+                inputStream.use { resp ->
                     coroutineContext.ensureActive()
-                    val transaction = parser.nextTransactionDomain() ?: break
-                    trList.add(transaction)
+                    val parser = TransactionListParser.forApiVersion(apiVersion, resp)
+                    var processedPostings = 0
 
-                    processedPostings += transaction.lines.size
-                    if (expectedPostingsCount > 0) {
-                        onProgress(processedPostings, expectedPostingsCount)
+                    while (true) {
+                        coroutineContext.ensureActive()
+                        val transaction = parser.nextTransactionDomain() ?: break
+                        trList.add(transaction)
+
+                        processedPostings += transaction.lines.size
+                        if (expectedPostingsCount > 0) {
+                            onProgress(processedPostings, expectedPostingsCount)
+                        }
+                    }
+
+                    logcat(LogPriority.WARN) {
+                        "Got ${trList.size} transactions using protocol ${apiVersion.description}"
                     }
                 }
 
-                logcat(LogPriority.WARN) { "Got ${trList.size} transactions using protocol ${apiVersion.description}" }
+                // Sort transactions in reverse chronological order
+                trList.sortWith { o1, o2 ->
+                    val res = o2.date.compareTo(o1.date)
+                    if (res != 0) res else o2.ledgerId.compareTo(o1.ledgerId)
+                }
+                trList
+            },
+            onFailure = { error ->
+                when (error) {
+                    is NotFoundException -> null
+                    is AuthenticationException -> throw HTTPException(401, error.message ?: "Authentication required")
+                    is HttpException -> throw HTTPException(error.statusCode, error.message ?: "HTTP error")
+                    else -> throw error
+                }
             }
-
-            // Sort transactions in reverse chronological order
-            trList.sortWith { o1, o2 ->
-                val res = o2.date.compareTo(o1.date)
-                if (res != 0) res else o2.ledgerId.compareTo(o1.ledgerId)
-            }
-            trList
-        } finally {
-            http.disconnect()
-        }
+        )
     }
 
     /**
@@ -354,147 +364,150 @@ class TransactionSyncerImpl @Inject constructor(
         onProgress: suspend (Int, Int) -> Unit
     ) {
         coroutineContext.ensureActive()
-        val http = NetworkUtil.prepareConnection(profile, "journal")
-        http.allowUserInteraction = false
 
-        try {
-            if (http.responseCode != 200) {
-                throw HTTPException(http.responseCode, http.responseMessage)
-            }
+        val result = hledgerClient.get(profile, "journal")
 
-            var maxTransactionId = -1
-            val existingNames = HashSet<String>()
-            val accountAmounts = HashMap<String, MutableList<AccountAmount>>()
-            var lastAccountName: String? = null
+        result.fold(
+            onSuccess = { inputStream ->
+                var maxTransactionId = -1
+                val existingNames = HashSet<String>()
+                val accountAmounts = HashMap<String, MutableList<AccountAmount>>()
+                var lastAccountName: String? = null
 
-            http.inputStream.use { resp ->
-                val buf = BufferedReader(InputStreamReader(resp, StandardCharsets.UTF_8))
-                var state = ParserState.EXPECTING_ACCOUNT
-                var processedTransactionCount = 0
-                var transactionId = 0
-                var transactionBuilder: TransactionBuilder? = null
+                inputStream.use { resp ->
+                    val buf = BufferedReader(InputStreamReader(resp, StandardCharsets.UTF_8))
+                    var state = ParserState.EXPECTING_ACCOUNT
+                    var processedTransactionCount = 0
+                    var transactionId = 0
+                    var transactionBuilder: TransactionBuilder? = null
 
-                lines@ while (true) {
-                    val line = buf.readLine() ?: break
-                    coroutineContext.ensureActive()
+                    lines@ while (true) {
+                        val line = buf.readLine() ?: break
+                        coroutineContext.ensureActive()
 
-                    if (reComment.matcher(line).find()) continue
+                        if (reComment.matcher(line).find()) continue
 
-                    when (state) {
-                        ParserState.EXPECTING_ACCOUNT -> {
-                            if (line == "<h2>General Journal</h2>") {
-                                // Finalize accounts with their amounts
-                                finalizeAccountAmounts(accounts, accountAmounts)
-                                state = ParserState.EXPECTING_TRANSACTION
-                                continue
-                            }
-                            val m = reAccountName.matcher(line)
-                            if (m.find()) {
-                                val acctEncoded = m.group(1) ?: continue
-                                var accName = URLDecoder.decode(acctEncoded, "UTF-8")
-                                accName = accName.replace("\"", "")
+                        when (state) {
+                            ParserState.EXPECTING_ACCOUNT -> {
+                                if (line == "<h2>General Journal</h2>") {
+                                    // Finalize accounts with their amounts
+                                    finalizeAccountAmounts(accounts, accountAmounts)
+                                    state = ParserState.EXPECTING_TRANSACTION
+                                    continue
+                                }
+                                val m = reAccountName.matcher(line)
+                                if (m.find()) {
+                                    val acctEncoded = m.group(1) ?: continue
+                                    var accName = URLDecoder.decode(acctEncoded, "UTF-8")
+                                    accName = accName.replace("\"", "")
 
-                                if (existingNames.contains(accName)) continue
+                                    if (existingNames.contains(accName)) continue
 
-                                val level = accName.count { it == ':' }
-                                accounts.add(
-                                    Account(
-                                        id = null,
-                                        name = accName,
-                                        level = level,
-                                        isExpanded = false,
-                                        isVisible = true,
-                                        amounts = emptyList() // Will be filled later
+                                    val level = accName.count { it == ':' }
+                                    accounts.add(
+                                        Account(
+                                            id = null,
+                                            name = accName,
+                                            level = level,
+                                            isExpanded = false,
+                                            isVisible = true,
+                                            amounts = emptyList() // Will be filled later
+                                        )
                                     )
-                                )
-                                existingNames.add(accName)
-                                accountAmounts[accName] = mutableListOf()
-                                lastAccountName = accName
-                                state = ParserState.EXPECTING_ACCOUNT_AMOUNT
-                            }
-                        }
-
-                        ParserState.EXPECTING_ACCOUNT_AMOUNT -> {
-                            val m = reAccountValue.matcher(line)
-                            var matchFound = false
-                            while (m.find()) {
-                                coroutineContext.ensureActive()
-                                matchFound = true
-                                var value = m.group(1) ?: continue
-                                val currency = m.group(2) ?: ""
-
-                                if (reDecimalComma.matcher(value).find()) {
-                                    value = value.replace(".", "").replace(',', '.')
-                                }
-                                if (reDecimalPoint.matcher(value).find()) {
-                                    value = value.replace(",", "").replace(" ", "")
-                                }
-
-                                val floatVal = value.toFloat()
-                                lastAccountName?.let { name ->
-                                    accountAmounts[name]?.add(AccountAmount(currency, floatVal))
+                                    existingNames.add(accName)
+                                    accountAmounts[accName] = mutableListOf()
+                                    lastAccountName = accName
+                                    state = ParserState.EXPECTING_ACCOUNT_AMOUNT
                                 }
                             }
-                            if (matchFound) {
-                                state = ParserState.EXPECTING_ACCOUNT
-                            }
-                        }
 
-                        ParserState.EXPECTING_TRANSACTION -> {
-                            if (line.isNotEmpty() && line[0] == ' ') continue
-                            val m = reTransactionStart.matcher(line)
-                            if (m.find()) {
-                                transactionId = (m.group(1) ?: "0").toInt()
-                                state = ParserState.EXPECTING_TRANSACTION_DESCRIPTION
-                                processedTransactionCount++
-                                if (maxTransactionId < transactionId) {
-                                    maxTransactionId = transactionId
+                            ParserState.EXPECTING_ACCOUNT_AMOUNT -> {
+                                val m = reAccountValue.matcher(line)
+                                var matchFound = false
+                                while (m.find()) {
+                                    coroutineContext.ensureActive()
+                                    matchFound = true
+                                    var value = m.group(1) ?: continue
+                                    val currency = m.group(2) ?: ""
+
+                                    if (reDecimalComma.matcher(value).find()) {
+                                        value = value.replace(".", "").replace(',', '.')
+                                    }
+                                    if (reDecimalPoint.matcher(value).find()) {
+                                        value = value.replace(",", "").replace(" ", "")
+                                    }
+
+                                    val floatVal = value.toFloat()
+                                    lastAccountName?.let { name ->
+                                        accountAmounts[name]?.add(AccountAmount(currency, floatVal))
+                                    }
                                 }
-                                if (expectedPostingsCount > 0) {
-                                    onProgress(processedTransactionCount, expectedPostingsCount)
+                                if (matchFound) {
+                                    state = ParserState.EXPECTING_ACCOUNT
                                 }
                             }
-                            if (reEnd.matcher(line).find()) break@lines
-                        }
 
-                        ParserState.EXPECTING_TRANSACTION_DESCRIPTION -> {
-                            if (line.isNotEmpty() && line[0] == ' ') continue
-                            val m = reTransactionDescription.matcher(line)
-                            if (m.find()) {
-                                var date = m.group(1) ?: continue
-                                val equalsIndex = date.indexOf('=')
-                                if (equalsIndex >= 0) {
-                                    date = date.substring(equalsIndex + 1)
+                            ParserState.EXPECTING_TRANSACTION -> {
+                                if (line.isNotEmpty() && line[0] == ' ') continue
+                                val m = reTransactionStart.matcher(line)
+                                if (m.find()) {
+                                    transactionId = (m.group(1) ?: "0").toInt()
+                                    state = ParserState.EXPECTING_TRANSACTION_DESCRIPTION
+                                    processedTransactionCount++
+                                    if (maxTransactionId < transactionId) {
+                                        maxTransactionId = transactionId
+                                    }
+                                    if (expectedPostingsCount > 0) {
+                                        onProgress(processedTransactionCount, expectedPostingsCount)
+                                    }
                                 }
-                                val parsedDate = Globals.parseIsoDate(date)
-                                transactionBuilder = TransactionBuilder(
-                                    ledgerId = transactionId.toLong(),
-                                    date = parsedDate,
-                                    description = m.group(2) ?: ""
-                                )
-                                state = ParserState.EXPECTING_TRANSACTION_DETAILS
+                                if (reEnd.matcher(line).find()) break@lines
                             }
-                        }
 
-                        ParserState.EXPECTING_TRANSACTION_DETAILS -> {
-                            val builder = transactionBuilder ?: continue
-                            if (line.isEmpty()) {
-                                transactions.add(builder.build())
-                                transactionBuilder = null
-                                state = ParserState.EXPECTING_TRANSACTION
-                            } else {
-                                val txLine = TransactionParser.parseTransactionAccountLine(line)
-                                if (txLine != null) {
-                                    builder.addLine(txLine)
+                            ParserState.EXPECTING_TRANSACTION_DESCRIPTION -> {
+                                if (line.isNotEmpty() && line[0] == ' ') continue
+                                val m = reTransactionDescription.matcher(line)
+                                if (m.find()) {
+                                    var date = m.group(1) ?: continue
+                                    val equalsIndex = date.indexOf('=')
+                                    if (equalsIndex >= 0) {
+                                        date = date.substring(equalsIndex + 1)
+                                    }
+                                    val parsedDate = Globals.parseIsoDate(date)
+                                    transactionBuilder = TransactionBuilder(
+                                        ledgerId = transactionId.toLong(),
+                                        date = parsedDate,
+                                        description = m.group(2) ?: ""
+                                    )
+                                    state = ParserState.EXPECTING_TRANSACTION_DETAILS
+                                }
+                            }
+
+                            ParserState.EXPECTING_TRANSACTION_DETAILS -> {
+                                val builder = transactionBuilder ?: continue
+                                if (line.isEmpty()) {
+                                    transactions.add(builder.build())
+                                    transactionBuilder = null
+                                    state = ParserState.EXPECTING_TRANSACTION
+                                } else {
+                                    val txLine = TransactionParser.parseTransactionAccountLine(line)
+                                    if (txLine != null) {
+                                        builder.addLine(txLine)
+                                    }
                                 }
                             }
                         }
                     }
                 }
+            },
+            onFailure = { error ->
+                when (error) {
+                    is AuthenticationException -> throw HTTPException(401, error.message ?: "Authentication required")
+                    is HttpException -> throw HTTPException(error.statusCode, error.message ?: "HTTP error")
+                    else -> throw error
+                }
             }
-        } finally {
-            http.disconnect()
-        }
+        )
     }
 
     /**
@@ -578,6 +591,10 @@ class TransactionSyncerImpl @Inject constructor(
             is SocketTimeoutException -> SyncError.TimeoutError(message = "サーバーが応答しません")
 
             is MalformedURLException -> SyncError.ValidationError(message = "無効なサーバーURLです")
+
+            is AuthenticationException -> SyncError.AuthenticationError(message = "認証に失敗しました", httpCode = 401)
+
+            is HttpException -> SyncError.ServerError(message = e.message ?: "サーバーエラー", httpCode = e.statusCode)
 
             is HTTPException -> when (e.responseCode) {
                 401 -> SyncError.AuthenticationError(message = "認証に失敗しました", httpCode = e.responseCode)

@@ -18,28 +18,31 @@
 package net.ktnx.mobileledger.domain.usecase
 
 import java.io.BufferedReader
+import java.io.InputStream
 import java.io.InputStreamReader
-import java.net.HttpURLConnection
+import java.util.UUID
 import java.util.regex.Pattern
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 import logcat.LogPriority
 import logcat.asLog
 import logcat.logcat
+import net.ktnx.mobileledger.TemporaryAuthData
 import net.ktnx.mobileledger.di.IoDispatcher
-import net.ktnx.mobileledger.utils.NetworkUtil
+import net.ktnx.mobileledger.domain.model.Profile
+import net.ktnx.mobileledger.network.HledgerClient
+import net.ktnx.mobileledger.network.NotFoundException
 
 /**
  * VersionDetector の実装
  *
- * HttpURLConnection を使用して hledger-web のバージョンを検出する。
- * 既存の VersionDetectionThread のロジックを suspend 関数として提供。
+ * Ktor HttpClient を使用して hledger-web のバージョンを検出する。
  */
 @Singleton
 class VersionDetectorImpl @Inject constructor(
+    private val hledgerClient: HledgerClient,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : VersionDetector {
 
@@ -48,48 +51,66 @@ class VersionDetectorImpl @Inject constructor(
             try {
                 logcat { "Detecting version for URL: $url" }
 
-                ensureActive()
+                // Create temporary auth data if authentication is required
+                val temporaryAuth = if (useAuth && !user.isNullOrEmpty()) {
+                    TemporaryAuthData(
+                        url = url,
+                        useAuthentication = true,
+                        authUser = user,
+                        authPassword = password ?: ""
+                    )
+                } else {
+                    null
+                }
 
-                val http = NetworkUtil.prepareConnection(url, "version", useAuth)
-                try {
-                    ensureActive()
+                // Create a minimal profile for the request
+                val tempProfile = createTempProfile(url)
 
-                    when (val responseCode = http.responseCode) {
-                        HttpURLConnection.HTTP_OK -> {
-                            ensureActive()
-                            val version = parseVersionFromStream(http)
-                            if (version != null) {
-                                logcat { "Detected version: $version" }
-                                Result.success(version)
-                            } else {
-                                logcat(LogPriority.WARN) { "Could not parse version from response" }
-                                Result.failure(Exception("Could not parse version from response"))
+                val result = hledgerClient.get(tempProfile, "version", temporaryAuth)
+
+                result.fold(
+                    onSuccess = { inputStream ->
+                        val version = parseVersionFromStream(inputStream)
+                        if (version != null) {
+                            logcat { "Detected version: $version" }
+                            Result.success(version)
+                        } else {
+                            logcat(LogPriority.WARN) { "Could not parse version from response" }
+                            Result.failure(Exception("Could not parse version from response"))
+                        }
+                    },
+                    onFailure = { error ->
+                        when (error) {
+                            is NotFoundException -> {
+                                // 404 means old hledger-web version (pre-1.19)
+                                logcat { "Version endpoint not found, assuming pre-1.19" }
+                                Result.success("pre-1.19")
+                            }
+
+                            else -> {
+                                logcat(LogPriority.WARN) { "Version detection failed: ${error.asLog()}" }
+                                Result.failure(error)
                             }
                         }
-
-                        HttpURLConnection.HTTP_NOT_FOUND -> {
-                            // 404 means old hledger-web version (pre-1.19)
-                            logcat { "Version endpoint not found, assuming pre-1.19" }
-                            Result.success("pre-1.19")
-                        }
-
-                        else -> {
-                            logcat(LogPriority.WARN) { "HTTP error: [$responseCode] ${http.responseMessage}" }
-                            Result.failure(Exception("HTTP error: $responseCode ${http.responseMessage}"))
-                        }
                     }
-                } finally {
-                    http.disconnect()
-                }
+                )
             } catch (e: Exception) {
                 logcat(LogPriority.WARN) { "Version detection failed: ${e.asLog()}" }
                 Result.failure(e)
             }
         }
 
-    private fun parseVersionFromStream(http: HttpURLConnection): String? {
+    private fun createTempProfile(url: String): Profile = Profile(
+        id = null,
+        name = "Temp",
+        uuid = UUID.randomUUID().toString(),
+        url = url,
+        authentication = null
+    )
+
+    private fun parseVersionFromStream(inputStream: InputStream): String? {
         return try {
-            val reader = BufferedReader(InputStreamReader(http.inputStream))
+            val reader = BufferedReader(InputStreamReader(inputStream))
             val versionLine = reader.readLine() ?: return null
 
             // Parse version string like "1.32" or "\"1.32\""
@@ -117,8 +138,6 @@ class VersionDetectorImpl @Inject constructor(
     }
 
     companion object {
-        private const val TAG = "VersionDetectorImpl"
-
         // Pattern for quoted version: "1.32" or "1.32.1"
         private val VERSION_PATTERN = Pattern.compile("^\"(\\d+)\\.(\\d+)(?:\\.(\\d+))?\"$")
 

@@ -21,14 +21,9 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import java.io.BufferedReader
-import java.io.IOException
-import java.io.InputStreamReader
-import java.net.HttpURLConnection
 import java.net.MalformedURLException
 import java.net.URL
 import java.util.Locale
-import java.util.regex.Pattern
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -52,15 +47,16 @@ import net.ktnx.mobileledger.domain.model.FutureDates
 import net.ktnx.mobileledger.domain.model.Profile
 import net.ktnx.mobileledger.domain.model.ProfileAuthentication
 import net.ktnx.mobileledger.domain.model.ServerVersion
+import net.ktnx.mobileledger.domain.usecase.VersionDetector
 import net.ktnx.mobileledger.json.API
 import net.ktnx.mobileledger.model.HledgerVersion
 import net.ktnx.mobileledger.service.AuthDataProvider
-import net.ktnx.mobileledger.utils.NetworkUtil
 
 @HiltViewModel
 class ProfileDetailViewModel @Inject constructor(
     private val profileRepository: ProfileRepository,
     private val authDataProvider: AuthDataProvider,
+    private val versionDetector: VersionDetector,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     @Suppress("unused") private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -78,7 +74,6 @@ class ProfileDetailViewModel @Inject constructor(
         const val ARG_PROFILE_ID = "profileId"
         const val ARG_THEME_HUE = "themeHue"
         private const val VERSION_DETECTION_MIN_DURATION = 1000L
-        private val VERSION_PATTERN = Pattern.compile("^\"(\\d+)\\.(\\d+)(?:\\.(\\d+))?\"$")
     }
 
     fun initialize(profileId: Long, initialThemeHue: Int) {
@@ -449,63 +444,49 @@ class ProfileDetailViewModel @Inject constructor(
         }
     }
 
-    private fun detectVersion(): HledgerVersion? {
+    private suspend fun detectVersion(): HledgerVersion? {
         val state = _uiState.value
 
-        try {
-            val http: HttpURLConnection = NetworkUtil.prepareConnection(
-                state.url,
-                "version",
-                state.useAuthentication
-            )
+        val result = versionDetector.detect(
+            url = state.url,
+            useAuth = state.useAuthentication,
+            user = state.authUser,
+            password = state.authPassword
+        )
 
-            // Set up authentication if needed
-            if (state.useAuthentication) {
-                // Authentication is handled by the global Authenticator in App
-                // We need to temporarily set the profile model data
-                setAuthenticationData()
+        return result.fold(
+            onSuccess = { versionString ->
+                parseVersionString(versionString)
+            },
+            onFailure = { error ->
+                logcat { "Version detection failed: ${error.message}" }
+                null
             }
+        )
+    }
 
-            try {
-                when (http.responseCode) {
-                    200 -> { /* continue */ }
-
-                    404 -> return HledgerVersion(true)
-
-                    else -> {
-                        logcat {
-                            "HTTP error detecting hledger-web version: [${http.responseCode}] ${http.responseMessage}"
-                        }
-                        return null
-                    }
-                }
-
-                val reader = BufferedReader(InputStreamReader(http.inputStream))
-                val version = reader.readLine()
-                val m = VERSION_PATTERN.matcher(version)
-                if (m.matches()) {
-                    val major = m.group(1)?.toIntOrNull() ?: return null
-                    val minor = m.group(2)?.toIntOrNull() ?: return null
-                    val patchText = m.group(3)
-                    val hasPatch = patchText != null
-                    val patch = if (hasPatch) patchText?.toIntOrNull() ?: 0 else 0
-
-                    return if (hasPatch) {
-                        HledgerVersion(major, minor, patch)
-                    } else {
-                        HledgerVersion(major, minor)
-                    }
-                } else {
-                    logcat { "Unrecognised version string '$version'" }
-                    return null
-                }
-            } finally {
-                resetAuthenticationData()
-            }
-        } catch (e: IOException) {
-            logcat { "IOException during version detection: ${e.message}" }
-            return null
+    private fun parseVersionString(versionString: String): HledgerVersion? {
+        // Handle pre-1.19 case
+        if (versionString == "pre-1.19") {
+            return HledgerVersion(true)
         }
+
+        // Parse "major.minor" format
+        val parts = versionString.split(".")
+        if (parts.size >= 2) {
+            val major = parts[0].toIntOrNull() ?: return null
+            val minor = parts[1].toIntOrNull() ?: return null
+            val patch = if (parts.size >= 3) parts[2].toIntOrNull() else null
+
+            return if (patch != null) {
+                HledgerVersion(major, minor, patch)
+            } else {
+                HledgerVersion(major, minor)
+            }
+        }
+
+        logcat { "Unrecognised version string '$versionString'" }
+        return null
     }
 
     private fun setAuthenticationData() {
