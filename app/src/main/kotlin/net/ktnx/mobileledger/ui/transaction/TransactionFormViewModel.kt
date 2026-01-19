@@ -285,7 +285,7 @@ class TransactionFormViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isBusy = true) }
             try {
-                val transaction = transactionRepository.getTransactionByIdSync(transactionId)
+                val transaction = transactionRepository.getTransactionById(transactionId)
                 if (transaction != null) {
                     _uiState.update { state ->
                         state.copy(

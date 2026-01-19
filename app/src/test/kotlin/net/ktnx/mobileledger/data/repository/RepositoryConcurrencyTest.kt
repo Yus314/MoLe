@@ -196,7 +196,7 @@ class RepositoryConcurrencyTest {
             }
         }.awaitAll()
 
-        val allTransactions = transactionRepository.getAllTransactions(profileId).first()
+        val allTransactions = transactionRepository.observeAllTransactions(profileId).first()
         assertEquals(insertCount, allTransactions.size)
     }
 
@@ -220,7 +220,7 @@ class RepositoryConcurrencyTest {
 
         // Verify each profile has correct number of transactions
         (1..profileCount).forEach { profileId ->
-            val transactions = transactionRepository.getAllTransactions(profileId.toLong()).first()
+            val transactions = transactionRepository.observeAllTransactions(profileId.toLong()).first()
             assertEquals(
                 "Profile $profileId should have $txPerProfile transactions",
                 txPerProfile,
@@ -240,13 +240,13 @@ class RepositoryConcurrencyTest {
             )
         }
 
-        assertEquals(10, transactionRepository.getAllTransactions(profileId).first().size)
+        assertEquals(10, transactionRepository.observeAllTransactions(profileId).first().size)
 
         // Delete all
         val deleted = transactionRepository.deleteAllForProfile(profileId)
 
         assertEquals(10, deleted)
-        assertEquals(0, transactionRepository.getAllTransactions(profileId).first().size)
+        assertEquals(0, transactionRepository.observeAllTransactions(profileId).first().size)
     }
 }
 
@@ -343,12 +343,13 @@ class ConcurrentFakeTransactionRepository : TransactionRepository {
     private val idCounter = AtomicInteger(1)
     private val lock = Any()
 
-    override fun getAllTransactions(profileId: Long): Flow<List<Transaction>> = synchronized(lock) {
+    // Flow methods (observe prefix)
+    override fun observeAllTransactions(profileId: Long): Flow<List<Transaction>> = synchronized(lock) {
         MutableStateFlow(transactions.values.filter { it.transaction.profileId == profileId }.toList())
             .map { TransactionMapper.toDomainList(it) }
     }
 
-    override fun getTransactionsFiltered(profileId: Long, accountName: String?): Flow<List<Transaction>> =
+    override fun observeTransactionsFiltered(profileId: Long, accountName: String?): Flow<List<Transaction>> =
         synchronized(lock) {
             MutableStateFlow(
                 transactions.values.filter { twa ->
@@ -358,12 +359,13 @@ class ConcurrentFakeTransactionRepository : TransactionRepository {
             ).map { TransactionMapper.toDomainList(it) }
         }
 
-    override fun getTransactionById(transactionId: Long): Flow<Transaction?> = synchronized(lock) {
+    override fun observeTransactionById(transactionId: Long): Flow<Transaction?> = synchronized(lock) {
         MutableStateFlow(transactions[transactionId])
             .map { it?.let { TransactionMapper.toDomain(it) } }
     }
 
-    override suspend fun getTransactionByIdSync(transactionId: Long): Transaction? = synchronized(lock) {
+    // Suspend methods (no suffix)
+    override suspend fun getTransactionById(transactionId: Long): Transaction? = synchronized(lock) {
         transactions[transactionId]?.let { TransactionMapper.toDomain(it) }
     }
 

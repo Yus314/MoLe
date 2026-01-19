@@ -102,52 +102,52 @@ class TransactionRepositoryTest {
         }
 
     // ========================================
-    // getAllTransactions tests
+    // observeAllTransactions tests (Flow)
     // ========================================
 
     @Test
-    fun `getAllTransactions returns empty list when no transactions`() = runTest {
-        val transactions = repository.getAllTransactions(testProfileId).first()
+    fun `observeAllTransactions returns empty list when no transactions`() = runTest {
+        val transactions = repository.observeAllTransactions(testProfileId).first()
         assertTrue(transactions.isEmpty())
     }
 
     @Test
-    fun `getAllTransactions returns transactions for profile`() = runTest {
+    fun `observeAllTransactions returns transactions for profile`() = runTest {
         val testTx = createTestTransaction(description = "Groceries")
         repository.insertTransaction(testTx)
 
-        val transactions = repository.getAllTransactions(testProfileId).first()
+        val transactions = repository.observeAllTransactions(testProfileId).first()
         assertEquals(1, transactions.size)
         assertEquals("Groceries", transactions[0].description)
     }
 
     @Test
-    fun `getAllTransactions filters by profile`() = runTest {
+    fun `observeAllTransactions filters by profile`() = runTest {
         val tx1 = createTestTransaction(profileId = 1L, description = "Profile 1")
         val tx2 = createTestTransaction(profileId = 2L, description = "Profile 2", ledgerId = 2L)
         repository.insertTransaction(tx1)
         repository.insertTransaction(tx2)
 
-        val transactions = repository.getAllTransactions(1L).first()
+        val transactions = repository.observeAllTransactions(1L).first()
         assertEquals(1, transactions.size)
         assertEquals("Profile 1", transactions[0].description)
     }
 
     // ========================================
-    // getTransactionsFiltered tests
+    // observeTransactionsFiltered tests (Flow)
     // ========================================
 
     @Test
-    fun `getTransactionsFiltered with null accountName returns all transactions`() = runTest {
+    fun `observeTransactionsFiltered with null accountName returns all transactions`() = runTest {
         val tx = createTestTransaction()
         repository.insertTransaction(tx)
 
-        val transactions = repository.getTransactionsFiltered(testProfileId, null).first()
+        val transactions = repository.observeTransactionsFiltered(testProfileId, null).first()
         assertEquals(1, transactions.size)
     }
 
     @Test
-    fun `getTransactionsFiltered with accountName filters correctly`() = runTest {
+    fun `observeTransactionsFiltered with accountName filters correctly`() = runTest {
         val tx1 = createTestTransaction(
             description = "Cash payment",
             accounts = listOf(
@@ -166,27 +166,31 @@ class TransactionRepositoryTest {
         repository.insertTransaction(tx1)
         repository.insertTransaction(tx2)
 
-        val transactions = repository.getTransactionsFiltered(testProfileId, "Cash").first()
+        val transactions = repository.observeTransactionsFiltered(testProfileId, "Cash").first()
         assertEquals(1, transactions.size)
         assertEquals("Cash payment", transactions[0].description)
     }
 
     // ========================================
-    // getTransactionById tests
+    // observeTransactionById tests (Flow)
     // ========================================
 
     @Test
-    fun `getTransactionById returns null for non-existent id`() = runTest {
-        val result = repository.getTransactionById(999L).first()
+    fun `observeTransactionById returns null for non-existent id`() = runTest {
+        val result = repository.observeTransactionById(999L).first()
         assertNull(result)
     }
 
+    // ========================================
+    // getTransactionById tests (suspend)
+    // ========================================
+
     @Test
-    fun `getTransactionByIdSync returns transaction when exists`() = runTest {
+    fun `getTransactionById returns transaction when exists`() = runTest {
         val testTx = createTestTransaction(description = "Test")
         repository.insertTransaction(testTx)
 
-        val result = repository.getTransactionByIdSync(testTx.transaction.id)
+        val result = repository.getTransactionById(testTx.transaction.id)
         assertNotNull(result)
         assertEquals("Test", result?.description)
     }
@@ -296,7 +300,7 @@ class TransactionRepositoryTest {
 
         repository.deleteTransaction(tx.transaction)
 
-        val remaining = repository.getAllTransactions(testProfileId).first()
+        val remaining = repository.observeAllTransactions(testProfileId).first()
         assertTrue(remaining.isEmpty())
     }
 
@@ -313,7 +317,7 @@ class TransactionRepositoryTest {
 
         repository.deleteTransactions(listOf(tx1.transaction, tx2.transaction))
 
-        val remaining = repository.getAllTransactions(testProfileId).first()
+        val remaining = repository.observeAllTransactions(testProfileId).first()
         assertTrue(remaining.isEmpty())
     }
 
@@ -331,7 +335,7 @@ class TransactionRepositoryTest {
 
         repository.storeTransactions(transactions, testProfileId)
 
-        val stored = repository.getAllTransactions(testProfileId).first()
+        val stored = repository.observeAllTransactions(testProfileId).first()
         assertEquals(3, stored.size)
     }
 
@@ -347,7 +351,7 @@ class TransactionRepositoryTest {
         val deleted = repository.deleteAllForProfile(1L)
 
         assertEquals(1, deleted)
-        val remaining = repository.getAllTransactions(2L).first()
+        val remaining = repository.observeAllTransactions(2L).first()
         assertEquals(1, remaining.size)
         assertEquals("P2", remaining[0].description)
     }
@@ -390,7 +394,8 @@ class FakeTransactionRepository : TransactionRepository {
         transactionsFlow.value = transactions.values.toList()
     }
 
-    override fun getAllTransactions(profileId: Long): Flow<List<Transaction>> = MutableStateFlow(
+    // Flow methods (observe prefix)
+    override fun observeAllTransactions(profileId: Long): Flow<List<Transaction>> = MutableStateFlow(
         transactions.values
             .filter { it.transaction.profileId == profileId }
             .sortedWith(
@@ -403,7 +408,7 @@ class FakeTransactionRepository : TransactionRepository {
             )
     ).map { TransactionMapper.toDomainList(it) }
 
-    override fun getTransactionsFiltered(profileId: Long, accountName: String?): Flow<List<Transaction>> =
+    override fun observeTransactionsFiltered(profileId: Long, accountName: String?): Flow<List<Transaction>> =
         MutableStateFlow(
             transactions.values
                 .filter { twa ->
@@ -424,10 +429,11 @@ class FakeTransactionRepository : TransactionRepository {
                 )
         ).map { TransactionMapper.toDomainList(it) }
 
-    override fun getTransactionById(transactionId: Long): Flow<Transaction?> =
+    override fun observeTransactionById(transactionId: Long): Flow<Transaction?> =
         MutableStateFlow(transactions[transactionId]).map { it?.let { TransactionMapper.toDomain(it) } }
 
-    override suspend fun getTransactionByIdSync(transactionId: Long): Transaction? =
+    // Suspend methods (no suffix)
+    override suspend fun getTransactionById(transactionId: Long): Transaction? =
         transactions[transactionId]?.let { TransactionMapper.toDomain(it) }
 
     override suspend fun searchByDescription(term: String): List<TransactionDAO.DescriptionContainer> {

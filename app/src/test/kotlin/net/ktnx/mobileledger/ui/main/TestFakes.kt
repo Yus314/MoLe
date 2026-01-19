@@ -150,10 +150,11 @@ class FakeTransactionRepositoryForViewModel : TransactionRepository {
     fun getTransactionsForProfile(profileId: Long): List<Transaction> =
         domainTransactions.values.filter { profileMap[it.id] == profileId }
 
-    override fun getAllTransactions(profileId: Long): Flow<List<Transaction>> =
+    // Flow methods (observe prefix)
+    override fun observeAllTransactions(profileId: Long): Flow<List<Transaction>> =
         MutableStateFlow(domainTransactions.values.filter { profileMap[it.id] == profileId }.toList())
 
-    override fun getTransactionsFiltered(profileId: Long, accountName: String?): Flow<List<Transaction>> =
+    override fun observeTransactionsFiltered(profileId: Long, accountName: String?): Flow<List<Transaction>> =
         MutableStateFlow(
             domainTransactions.values.filter { tx ->
                 profileMap[tx.id] == profileId &&
@@ -161,10 +162,11 @@ class FakeTransactionRepositoryForViewModel : TransactionRepository {
             }.toList()
         )
 
-    override fun getTransactionById(transactionId: Long): Flow<Transaction?> =
+    override fun observeTransactionById(transactionId: Long): Flow<Transaction?> =
         MutableStateFlow(domainTransactions[transactionId])
 
-    override suspend fun getTransactionByIdSync(transactionId: Long): Transaction? = domainTransactions[transactionId]
+    // Suspend methods (no suffix)
+    override suspend fun getTransactionById(transactionId: Long): Transaction? = domainTransactions[transactionId]
 
     override suspend fun searchByDescription(term: String): List<TransactionDAO.DescriptionContainer> =
         domainTransactions.values

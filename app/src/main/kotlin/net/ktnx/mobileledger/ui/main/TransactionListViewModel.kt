@@ -155,7 +155,7 @@ class TransactionListViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                val dbTransactions = transactionRepository.getTransactionsFiltered(
+                val dbTransactions = transactionRepository.observeTransactionsFiltered(
                     profileId,
                     accountFilter
                 ).first()

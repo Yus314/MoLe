@@ -362,7 +362,7 @@ class TransactionListViewModelTest {
         )
 
         // Verify repository filtering works directly
-        val filteredFromRepo = transactionRepository.getTransactionsFiltered(1L, "Checking").first()
+        val filteredFromRepo = transactionRepository.observeTransactionsFiltered(1L, "Checking").first()
         assertEquals("Repository should return 1 filtered transaction", 1, filteredFromRepo.size)
         assertEquals("ATM", filteredFromRepo[0].description)
 
@@ -740,13 +740,14 @@ class FakeTransactionRepositoryForTransactionList : net.ktnx.mobileledger.data.r
         )
     }
 
-    override fun getAllTransactions(profileId: Long) = MutableStateFlow(
+    // Flow methods (observe prefix)
+    override fun observeAllTransactions(profileId: Long) = MutableStateFlow(
         transactions
             .filter { it.transaction.profileId == profileId }
             .map { it.toDomainModel() }
     )
 
-    override fun getTransactionsFiltered(
+    override fun observeTransactionsFiltered(
         profileId: Long,
         accountName: String?
     ): kotlinx.coroutines.flow.Flow<List<DomainTransaction>> {
@@ -768,10 +769,11 @@ class FakeTransactionRepositoryForTransactionList : net.ktnx.mobileledger.data.r
         )
     }
 
-    override fun getTransactionById(transactionId: Long) =
+    override fun observeTransactionById(transactionId: Long) =
         MutableStateFlow(transactions.find { it.transaction.id == transactionId }?.toDomainModel())
 
-    override suspend fun getTransactionByIdSync(transactionId: Long): DomainTransaction? = if (simulateError) {
+    // Suspend methods (no suffix)
+    override suspend fun getTransactionById(transactionId: Long): DomainTransaction? = if (simulateError) {
         throw RuntimeException("Simulated error")
     } else {
         transactions.find { it.transaction.id == transactionId }?.toDomainModel()

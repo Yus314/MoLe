@@ -238,8 +238,8 @@ class ProfileSwitchingEdgeCaseTest {
         transactionRepository.insertTransaction(createTestTransaction(id2, "TX1 for P2"))
 
         // Verify isolation - check count and descriptions
-        val p1Transactions = transactionRepository.getAllTransactions(id1).first()
-        val p2Transactions = transactionRepository.getAllTransactions(id2).first()
+        val p1Transactions = transactionRepository.observeAllTransactions(id1).first()
+        val p2Transactions = transactionRepository.observeAllTransactions(id2).first()
 
         assertEquals(2, p1Transactions.size)
         assertEquals(1, p2Transactions.size)
@@ -258,8 +258,8 @@ class ProfileSwitchingEdgeCaseTest {
 
         transactionRepository.deleteAllForProfile(profile1Id)
 
-        val p1Transactions = transactionRepository.getAllTransactions(profile1Id).first()
-        val p2Transactions = transactionRepository.getAllTransactions(profile2Id).first()
+        val p1Transactions = transactionRepository.observeAllTransactions(profile1Id).first()
+        val p2Transactions = transactionRepository.observeAllTransactions(profile2Id).first()
 
         assertEquals(0, p1Transactions.size)
         assertEquals(1, p2Transactions.size)
@@ -372,20 +372,22 @@ class EdgeCaseFakeTransactionRepository : TransactionRepository {
     private val transactions = mutableMapOf<Long, TransactionWithAccounts>()
     private var nextId = 1L
 
-    override fun getAllTransactions(profileId: Long): Flow<List<Transaction>> =
+    // Flow methods (observe prefix)
+    override fun observeAllTransactions(profileId: Long): Flow<List<Transaction>> =
         MutableStateFlow(transactions.values.filter { it.transaction.profileId == profileId }.toList())
             .map { TransactionMapper.toDomainList(it) }
 
-    override fun getTransactionsFiltered(profileId: Long, accountName: String?): Flow<List<Transaction>> =
+    override fun observeTransactionsFiltered(profileId: Long, accountName: String?): Flow<List<Transaction>> =
         MutableStateFlow(
             transactions.values.filter { it.transaction.profileId == profileId }.toList()
         ).map { TransactionMapper.toDomainList(it) }
 
-    override fun getTransactionById(transactionId: Long): Flow<Transaction?> =
+    override fun observeTransactionById(transactionId: Long): Flow<Transaction?> =
         MutableStateFlow(transactions[transactionId])
             .map { it?.let { TransactionMapper.toDomain(it) } }
 
-    override suspend fun getTransactionByIdSync(transactionId: Long): Transaction? =
+    // Suspend methods (no suffix)
+    override suspend fun getTransactionById(transactionId: Long): Transaction? =
         transactions[transactionId]?.let { TransactionMapper.toDomain(it) }
 
     override suspend fun searchByDescription(term: String): List<TransactionDAO.DescriptionContainer> = emptyList()

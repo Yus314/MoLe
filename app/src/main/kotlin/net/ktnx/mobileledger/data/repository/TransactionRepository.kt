@@ -46,41 +46,45 @@ import net.ktnx.mobileledger.domain.model.Transaction
 interface TransactionRepository {
 
     // ========================================
-    // Query Operations (Domain Models)
+    // Query Operations - Flow (observe prefix)
     // ========================================
 
     /**
-     * Get all transactions with their accounts for a profile.
+     * Observe all transactions with their accounts for a profile.
      *
      * @param profileId The profile ID to filter by.
      * @return Flow emitting the list of domain model transactions whenever data changes.
      */
-    fun getAllTransactions(profileId: Long): Flow<List<Transaction>>
+    fun observeAllTransactions(profileId: Long): Flow<List<Transaction>>
 
     /**
-     * Get transactions filtered by account name.
+     * Observe transactions filtered by account name.
      *
      * @param profileId The profile ID to filter by.
      * @param accountName Optional account name filter. If null, returns all transactions.
      * @return Flow emitting the filtered list of domain model transactions.
      */
-    fun getTransactionsFiltered(profileId: Long, accountName: String?): Flow<List<Transaction>>
+    fun observeTransactionsFiltered(profileId: Long, accountName: String?): Flow<List<Transaction>>
+
+    /**
+     * Observe a transaction by its ID.
+     *
+     * @param transactionId The transaction ID.
+     * @return Flow emitting the domain model transaction, or null if not found.
+     */
+    fun observeTransactionById(transactionId: Long): Flow<Transaction?>
+
+    // ========================================
+    // Query Operations - Suspend (no suffix)
+    // ========================================
 
     /**
      * Get a transaction by its ID.
      *
      * @param transactionId The transaction ID.
-     * @return Flow emitting the domain model transaction, or null if not found.
-     */
-    fun getTransactionById(transactionId: Long): Flow<Transaction?>
-
-    /**
-     * Get a transaction by its ID (synchronous version for one-time reads).
-     *
-     * @param transactionId The transaction ID.
      * @return The domain model transaction, or null if not found.
      */
-    suspend fun getTransactionByIdSync(transactionId: Long): Transaction?
+    suspend fun getTransactionById(transactionId: Long): Transaction?
 
     /**
      * Search transaction descriptions matching a term.

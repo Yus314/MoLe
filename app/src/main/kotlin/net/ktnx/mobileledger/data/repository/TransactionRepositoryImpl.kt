@@ -56,25 +56,29 @@ class TransactionRepositoryImpl @Inject constructor(
 ) : TransactionRepository {
 
     // ========================================
-    // Query Operations (Domain Models)
+    // Query Operations - Flow (observe prefix)
     // ========================================
 
-    override fun getAllTransactions(profileId: Long): Flow<List<Transaction>> =
+    override fun observeAllTransactions(profileId: Long): Flow<List<Transaction>> =
         transactionDAO.getAllWithAccounts(profileId)
             .map { entities -> TransactionMapper.toDomainList(entities) }
 
-    override fun getTransactionsFiltered(profileId: Long, accountName: String?): Flow<List<Transaction>> =
+    override fun observeTransactionsFiltered(profileId: Long, accountName: String?): Flow<List<Transaction>> =
         if (accountName == null) {
             transactionDAO.getAllWithAccounts(profileId)
         } else {
             transactionDAO.getAllWithAccountsFiltered(profileId, accountName)
         }.map { entities -> TransactionMapper.toDomainList(entities) }
 
-    override fun getTransactionById(transactionId: Long): Flow<Transaction?> =
+    override fun observeTransactionById(transactionId: Long): Flow<Transaction?> =
         transactionDAO.getByIdWithAccounts(transactionId)
             .map { entity -> entity?.let { TransactionMapper.toDomain(it) } }
 
-    override suspend fun getTransactionByIdSync(transactionId: Long): Transaction? = withContext(Dispatchers.IO) {
+    // ========================================
+    // Query Operations - Suspend (no suffix)
+    // ========================================
+
+    override suspend fun getTransactionById(transactionId: Long): Transaction? = withContext(Dispatchers.IO) {
         transactionDAO.getByIdWithAccountsSync(transactionId)?.let { TransactionMapper.toDomain(it) }
     }
 
