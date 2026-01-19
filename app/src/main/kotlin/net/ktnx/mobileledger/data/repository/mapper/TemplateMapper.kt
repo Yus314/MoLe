@@ -32,9 +32,10 @@ object TemplateMapper {
      * データベースエンティティからドメインモデルへ変換
      *
      * @receiver TemplateWithAccounts (Room Relation)
+     * @param currencyMap 通貨IDから通貨名へのマップ（Repository層で構築）
      * @return Template ドメインモデル
      */
-    fun TemplateWithAccounts.toDomain(): Template = Template(
+    fun TemplateWithAccounts.toDomain(currencyMap: Map<Long, String> = emptyMap()): Template = Template(
         id = header.id,
         name = header.name,
         pattern = header.regularExpression,
@@ -50,19 +51,25 @@ object TemplateMapper {
         dateDay = header.dateDay,
         dateDayMatchGroup = header.dateDayMatchGroup,
         isFallback = header.isFallback,
-        lines = accounts.sortedBy { it.position }.map { it.toDomain() }
+        lines = accounts.sortedBy { it.position }.map { account ->
+            val currencyName = account.currency?.let { currencyMap[it] }
+            account.toDomain(currencyName)
+        }
     )
 
     /**
      * TemplateAccount のドメインモデルへの変換
+     *
+     * @param currencyName 解決済み通貨名（nullの場合は未解決）
      */
-    fun TemplateAccount.toDomain(): TemplateLine = TemplateLine(
+    fun TemplateAccount.toDomain(currencyName: String? = null): TemplateLine = TemplateLine(
         id = id,
         accountName = accountName,
         accountNameGroup = accountNameMatchGroup,
         amount = amount,
         amountGroup = amountMatchGroup,
         currencyId = currency,
+        currencyName = currencyName,
         currencyGroup = currencyMatchGroup,
         comment = accountComment,
         commentGroup = accountCommentMatchGroup,

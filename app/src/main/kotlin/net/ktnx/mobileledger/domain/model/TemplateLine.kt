@@ -42,6 +42,9 @@ data class TemplateLine(
     /** 通貨ID（リテラル値） */
     val currencyId: Long? = null,
 
+    /** 通貨名（解決済み） */
+    val currencyName: String? = null,
+
     /** 通貨マッチグループ番号 */
     val currencyGroup: Int? = null,
 
@@ -53,8 +56,4 @@ data class TemplateLine(
 
     /** 金額の符号を反転するか */
     val negateAmount: Boolean = false
-) {
-    /** 通貨（互換性のためのプロパティ） */
-    val currency: String?
-        get() = currencyId?.toString()
-}
+)

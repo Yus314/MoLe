@@ -135,7 +135,8 @@ class TemplateLineTest {
         assertNull(line.accountNameGroup)
         assertNull(line.amount)
         assertNull(line.amountGroup)
-        assertNull(line.currency)
+        assertNull(line.currencyId)
+        assertNull(line.currencyName)
         assertNull(line.currencyGroup)
         assertNull(line.comment)
         assertNull(line.commentGroup)
@@ -148,11 +149,13 @@ class TemplateLineTest {
             accountName = "Assets:Cash",
             amount = 100f,
             currencyId = 5L,
+            currencyName = "USD",
             comment = "Payment"
         )
         assertEquals("Assets:Cash", line.accountName)
         assertEquals(100f, line.amount)
         assertEquals(5L, line.currencyId)
+        assertEquals("USD", line.currencyName)
         assertEquals("Payment", line.comment)
     }
 

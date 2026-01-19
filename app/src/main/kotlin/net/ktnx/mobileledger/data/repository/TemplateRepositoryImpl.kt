@@ -45,8 +45,19 @@ import net.ktnx.mobileledger.domain.model.Template
 @Singleton
 class TemplateRepositoryImpl @Inject constructor(
     private val templateHeaderDAO: TemplateHeaderDAO,
-    private val templateAccountDAO: TemplateAccountDAO
+    private val templateAccountDAO: TemplateAccountDAO,
+    private val currencyRepository: CurrencyRepository
 ) : TemplateRepository {
+
+    /**
+     * 通貨IDから通貨名へのマップを構築
+     */
+    private suspend fun buildCurrencyMap(currencyIds: Set<Long>): Map<Long, String> {
+        if (currencyIds.isEmpty()) return emptyMap()
+        return currencyIds.mapNotNull { id ->
+            currencyRepository.getCurrencyById(id)?.let { id to it.name }
+        }.toMap()
+    }
 
     // ========================================
     // Domain Model Query Operations
@@ -54,18 +65,32 @@ class TemplateRepositoryImpl @Inject constructor(
 
     override fun observeAllTemplatesAsDomain(): Flow<List<Template>> =
         templateHeaderDAO.getTemplatesWithAccounts().map { list ->
-            list.map { it.toDomain() }
+            val allCurrencyIds = list.flatMap { it.accounts.mapNotNull { acc -> acc.currency } }.toSet()
+            val currencyMap = buildCurrencyMap(allCurrencyIds)
+            list.map { it.toDomain(currencyMap) }
         }
 
     override fun observeTemplateAsDomain(id: Long): Flow<Template?> =
-        templateHeaderDAO.getTemplateWithAccounts(id).map { it?.toDomain() }
+        templateHeaderDAO.getTemplateWithAccounts(id).map { entity ->
+            entity?.let {
+                val currencyIds = it.accounts.mapNotNull { acc -> acc.currency }.toSet()
+                val currencyMap = buildCurrencyMap(currencyIds)
+                it.toDomain(currencyMap)
+            }
+        }
 
     override suspend fun getTemplateAsDomain(id: Long): Template? = withContext(Dispatchers.IO) {
-        templateHeaderDAO.getTemplateWithAccountsSync(id)?.toDomain()
+        val entity = templateHeaderDAO.getTemplateWithAccountsSync(id) ?: return@withContext null
+        val currencyIds = entity.accounts.mapNotNull { it.currency }.toSet()
+        val currencyMap = buildCurrencyMap(currencyIds)
+        entity.toDomain(currencyMap)
     }
 
     override suspend fun getAllTemplatesAsDomain(): List<Template> = withContext(Dispatchers.IO) {
-        templateHeaderDAO.getAllTemplatesWithAccountsSync().map { it.toDomain() }
+        val entities = templateHeaderDAO.getAllTemplatesWithAccountsSync()
+        val allCurrencyIds = entities.flatMap { it.accounts.mapNotNull { acc -> acc.currency } }.toSet()
+        val currencyMap = buildCurrencyMap(allCurrencyIds)
+        entities.map { it.toDomain(currencyMap) }
     }
 
     // ========================================

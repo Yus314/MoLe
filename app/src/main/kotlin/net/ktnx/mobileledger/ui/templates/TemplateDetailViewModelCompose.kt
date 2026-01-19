@@ -171,11 +171,11 @@ class TemplateDetailViewModelCompose @Inject constructor(
             MatchableValue.Literal(literal?.toString() ?: "")
         }
 
-    private fun extractMatchableValueCurrency(literal: Long?, matchGroup: Int?): MatchableValue =
+    private fun extractMatchableValueCurrency(currencyId: Long?, matchGroup: Int?): MatchableValue =
         if (matchGroup != null && matchGroup > 0) {
             MatchableValue.MatchGroup(matchGroup)
         } else {
-            MatchableValue.Literal(literal?.toString() ?: "")
+            MatchableValue.Literal(currencyId?.toString() ?: "")
         }
 
     fun onEvent(event: TemplateDetailEvent) {

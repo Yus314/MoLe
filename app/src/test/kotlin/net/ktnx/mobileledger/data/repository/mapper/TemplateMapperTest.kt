@@ -172,10 +172,70 @@ class TemplateMapperTest {
         assertEquals(100f, line.amount)
         assertEquals(2, line.amountGroup)
         assertEquals(5L, line.currencyId)
+        assertNull(line.currencyName) // currencyMap が空なので null
         assertEquals(3, line.currencyGroup)
         assertEquals("Comment", line.comment)
         assertEquals(4, line.commentGroup)
         assertTrue(line.negateAmount)
+    }
+
+    @Test
+    fun `toDomain with currencyMap resolves currencyName`() {
+        val header = createTemplateHeader(id = 1L, name = "Test", regularExpression = ".*")
+        val account = createTemplateAccount(
+            id = 1L,
+            templateId = 1L,
+            position = 0,
+            accountName = "Assets:Cash"
+        ).apply {
+            currency = 5L
+        }
+        val entity = createTemplateWithAccounts(header, listOf(account))
+        val currencyMap = mapOf(5L to "USD")
+
+        val domain = entity.toDomain(currencyMap)
+        val line = domain.lines[0]
+
+        assertEquals(5L, line.currencyId)
+        assertEquals("USD", line.currencyName)
+    }
+
+    @Test
+    fun `toDomain without currencyMap has null currencyName`() {
+        val header = createTemplateHeader(id = 1L, name = "Test", regularExpression = ".*")
+        val account = createTemplateAccount(
+            id = 1L,
+            templateId = 1L,
+            position = 0,
+            accountName = "Assets:Cash"
+        ).apply {
+            currency = 5L
+        }
+        val entity = createTemplateWithAccounts(header, listOf(account))
+
+        val domain = entity.toDomain()
+        val line = domain.lines[0]
+
+        assertEquals(5L, line.currencyId)
+        assertNull(line.currencyName)
+    }
+
+    @Test
+    fun `toDomain with multiple currencies resolves all currencyNames`() {
+        val header = createTemplateHeader(id = 1L, name = "Test", regularExpression = ".*")
+        val accounts = listOf(
+            createTemplateAccount(id = 1L, templateId = 1L, position = 0).apply { currency = 1L },
+            createTemplateAccount(id = 2L, templateId = 1L, position = 1).apply { currency = 2L },
+            createTemplateAccount(id = 3L, templateId = 1L, position = 2).apply { currency = null }
+        )
+        val entity = createTemplateWithAccounts(header, accounts)
+        val currencyMap = mapOf(1L to "USD", 2L to "EUR")
+
+        val domain = entity.toDomain(currencyMap)
+
+        assertEquals("USD", domain.lines[0].currencyName)
+        assertEquals("EUR", domain.lines[1].currencyName)
+        assertNull(domain.lines[2].currencyName)
     }
 
     // ========================================

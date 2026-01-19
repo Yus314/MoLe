@@ -25,7 +25,6 @@ import net.ktnx.mobileledger.db.TemplateHeader
 import net.ktnx.mobileledger.db.TemplateWithAccounts
 import net.ktnx.mobileledger.domain.model.Profile
 import net.ktnx.mobileledger.fake.FakeCurrencyFormatter
-import net.ktnx.mobileledger.fake.FakeCurrencyRepository
 import net.ktnx.mobileledger.fake.FakeRowIdGenerator
 import net.ktnx.mobileledger.fake.FakeTemplateRepository
 import net.ktnx.mobileledger.ui.main.FakeProfileRepositoryForViewModel
@@ -54,7 +53,6 @@ class TemplateApplicatorViewModelTest {
 
     private lateinit var profileRepository: FakeProfileRepositoryForViewModel
     private lateinit var templateRepository: FakeTemplateRepository
-    private lateinit var currencyRepository: FakeCurrencyRepository
     private lateinit var currencyFormatter: FakeCurrencyFormatter
     private lateinit var rowIdGenerator: FakeRowIdGenerator
 
@@ -64,7 +62,6 @@ class TemplateApplicatorViewModelTest {
     fun setup() {
         profileRepository = FakeProfileRepositoryForViewModel()
         templateRepository = FakeTemplateRepository()
-        currencyRepository = FakeCurrencyRepository()
         currencyFormatter = FakeCurrencyFormatter()
         rowIdGenerator = FakeRowIdGenerator()
     }
@@ -88,7 +85,6 @@ class TemplateApplicatorViewModelTest {
         return TemplateApplicatorViewModel(
             profileRepository = profileRepository,
             templateRepository = templateRepository,
-            currencyRepository = currencyRepository,
             currencyFormatter = currencyFormatter,
             rowIdGenerator = rowIdGenerator
         )
