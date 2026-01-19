@@ -73,7 +73,7 @@ class TemplateDetailViewModelCompose @Inject constructor(
             _uiState.update { it.copy(isLoading = true) }
 
             try {
-                val template = templateRepository.getTemplateAsDomainSync(templateId)
+                val template = templateRepository.getTemplateAsDomain(templateId)
 
                 if (template != null) {
                     val accountRows = template.lines.mapIndexed { index, line ->

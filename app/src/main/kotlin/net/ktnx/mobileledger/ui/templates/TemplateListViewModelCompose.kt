@@ -60,7 +60,7 @@ class TemplateListViewModelCompose @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
 
-            templateRepository.getAllTemplatesAsDomain()
+            templateRepository.observeAllTemplatesAsDomain()
                 .catch { e ->
                     logcat { "Error loading templates: ${e.message}" }
                     _uiState.update {
@@ -107,7 +107,7 @@ class TemplateListViewModelCompose @Inject constructor(
     private fun deleteTemplate(templateId: Long) {
         viewModelScope.launch {
             try {
-                val template = templateRepository.getTemplateAsDomainSync(templateId)
+                val template = templateRepository.getTemplateAsDomain(templateId)
                 if (template != null) {
                     deletedTemplate = template
                     templateRepository.deleteTemplateById(templateId)

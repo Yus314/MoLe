@@ -50,92 +50,92 @@ interface TemplateRepository {
     // ========================================
 
     /**
-     * Get all templates as domain models ordered by fallback status and name.
+     * Observe all templates as domain models ordered by fallback status and name.
      *
      * @return Flow that emits the template domain model list whenever it changes
      */
-    fun getAllTemplatesAsDomain(): Flow<List<Template>>
+    fun observeAllTemplatesAsDomain(): Flow<List<Template>>
+
+    /**
+     * Observe a template as domain model by its ID.
+     *
+     * @param id The template ID
+     * @return Flow that emits the template domain model when it changes
+     */
+    fun observeTemplateAsDomain(id: Long): Flow<Template?>
 
     /**
      * Get a template as domain model by its ID.
      *
      * @param id The template ID
-     * @return Flow that emits the template domain model when it changes
-     */
-    fun getTemplateAsDomain(id: Long): Flow<Template?>
-
-    /**
-     * Get a template as domain model by its ID synchronously.
-     *
-     * @param id The template ID
      * @return The template domain model or null if not found
      */
-    suspend fun getTemplateAsDomainSync(id: Long): Template?
+    suspend fun getTemplateAsDomain(id: Long): Template?
 
     /**
-     * Get all templates as domain models synchronously.
+     * Get all templates as domain models.
      *
      * @return List of all template domain models
      */
-    suspend fun getAllTemplatesAsDomainSync(): List<Template>
+    suspend fun getAllTemplatesAsDomain(): List<Template>
 
     // ========================================
     // Database Entity Query Operations (for internal use)
     // ========================================
 
     /**
-     * Get all templates ordered by fallback status and name.
+     * Observe all templates ordered by fallback status and name.
      *
      * @return Flow that emits the template list whenever it changes
      */
-    fun getAllTemplates(): Flow<List<TemplateHeader>>
+    fun observeAllTemplates(): Flow<List<TemplateHeader>>
+
+    /**
+     * Observe a template by its ID.
+     *
+     * @param id The template ID
+     * @return Flow that emits the template when it changes
+     */
+    fun observeTemplateById(id: Long): Flow<TemplateHeader?>
 
     /**
      * Get a template by its ID.
      *
      * @param id The template ID
-     * @return Flow that emits the template when it changes
-     */
-    fun getTemplateById(id: Long): Flow<TemplateHeader?>
-
-    /**
-     * Get a template by its ID synchronously.
-     *
-     * @param id The template ID
      * @return The template or null if not found
      */
-    suspend fun getTemplateByIdSync(id: Long): TemplateHeader?
+    suspend fun getTemplateById(id: Long): TemplateHeader?
+
+    /**
+     * Observe a template with its accounts.
+     *
+     * @param id The template ID
+     * @return Flow that emits the template with accounts when it changes
+     */
+    fun observeTemplateWithAccounts(id: Long): Flow<TemplateWithAccounts?>
 
     /**
      * Get a template with its accounts.
      *
      * @param id The template ID
-     * @return Flow that emits the template with accounts when it changes
-     */
-    fun getTemplateWithAccounts(id: Long): Flow<TemplateWithAccounts?>
-
-    /**
-     * Get a template with its accounts synchronously.
-     *
-     * @param id The template ID
      * @return The template with accounts or null if not found
      */
-    suspend fun getTemplateWithAccountsSync(id: Long): TemplateWithAccounts?
+    suspend fun getTemplateWithAccounts(id: Long): TemplateWithAccounts?
 
     /**
-     * Get a template with its accounts by UUID synchronously.
+     * Get a template with its accounts by UUID.
      *
      * @param uuid The template UUID
      * @return The template with accounts or null if not found
      */
-    suspend fun getTemplateWithAccountsByUuidSync(uuid: String): TemplateWithAccounts?
+    suspend fun getTemplateWithAccountsByUuid(uuid: String): TemplateWithAccounts?
 
     /**
-     * Get all templates with their accounts synchronously.
+     * Get all templates with their accounts.
      *
      * @return List of all templates with accounts
      */
-    suspend fun getAllTemplatesWithAccountsSync(): List<TemplateWithAccounts>
+    suspend fun getAllTemplatesWithAccounts(): List<TemplateWithAccounts>
 
     // ========================================
     // Mutation Operations

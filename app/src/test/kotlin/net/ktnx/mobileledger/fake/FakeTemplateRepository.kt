@@ -41,35 +41,35 @@ class FakeTemplateRepository : TemplateRepository {
     // Domain Model Query Operations
     // ========================================
 
-    override fun getAllTemplatesAsDomain(): Flow<List<Template>> =
+    override fun observeAllTemplatesAsDomain(): Flow<List<Template>> =
         templatesFlow.map { list -> list.map { it.toDomain() } }
 
-    override fun getTemplateAsDomain(id: Long): Flow<Template?> =
+    override fun observeTemplateAsDomain(id: Long): Flow<Template?> =
         templatesFlow.map { list -> list.find { it.header.id == id }?.toDomain() }
 
-    override suspend fun getTemplateAsDomainSync(id: Long): Template? = templates[id]?.toDomain()
+    override suspend fun getTemplateAsDomain(id: Long): Template? = templates[id]?.toDomain()
 
-    override suspend fun getAllTemplatesAsDomainSync(): List<Template> = templates.values.map { it.toDomain() }
+    override suspend fun getAllTemplatesAsDomain(): List<Template> = templates.values.map { it.toDomain() }
 
     // ========================================
     // Database Entity Query Operations
     // ========================================
 
-    override fun getAllTemplates(): Flow<List<TemplateHeader>> =
+    override fun observeAllTemplates(): Flow<List<TemplateHeader>> =
         MutableStateFlow(templates.values.map { it.header }.sortedBy { it.name })
 
-    override fun getTemplateById(id: Long): Flow<TemplateHeader?> = MutableStateFlow(templates[id]?.header)
+    override fun observeTemplateById(id: Long): Flow<TemplateHeader?> = MutableStateFlow(templates[id]?.header)
 
-    override suspend fun getTemplateByIdSync(id: Long): TemplateHeader? = templates[id]?.header
+    override suspend fun getTemplateById(id: Long): TemplateHeader? = templates[id]?.header
 
-    override fun getTemplateWithAccounts(id: Long): Flow<TemplateWithAccounts?> = MutableStateFlow(templates[id])
+    override fun observeTemplateWithAccounts(id: Long): Flow<TemplateWithAccounts?> = MutableStateFlow(templates[id])
 
-    override suspend fun getTemplateWithAccountsSync(id: Long): TemplateWithAccounts? = templates[id]
+    override suspend fun getTemplateWithAccounts(id: Long): TemplateWithAccounts? = templates[id]
 
-    override suspend fun getTemplateWithAccountsByUuidSync(uuid: String): TemplateWithAccounts? =
+    override suspend fun getTemplateWithAccountsByUuid(uuid: String): TemplateWithAccounts? =
         templates.values.find { it.header.uuid == uuid }
 
-    override suspend fun getAllTemplatesWithAccountsSync(): List<TemplateWithAccounts> = templates.values.toList()
+    override suspend fun getAllTemplatesWithAccounts(): List<TemplateWithAccounts> = templates.values.toList()
 
     override suspend fun insertTemplate(template: TemplateHeader): Long {
         val id = if (template.id == 0L) nextId++ else template.id

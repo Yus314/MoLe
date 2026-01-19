@@ -74,7 +74,7 @@ class TemplateApplicatorViewModel @Inject constructor(
     private fun showTemplateSelector() {
         viewModelScope.launch {
             _uiState.update { it.copy(isSearching = true) }
-            val templates = templateRepository.getAllTemplatesAsDomainSync()
+            val templates = templateRepository.getAllTemplatesAsDomain()
                 .map { it.toTemplateItem() }
             _uiState.update {
                 it.copy(
@@ -92,7 +92,7 @@ class TemplateApplicatorViewModel @Inject constructor(
 
     private fun applyTemplate(templateId: Long) {
         viewModelScope.launch {
-            val template = templateRepository.getTemplateAsDomainSync(templateId)
+            val template = templateRepository.getTemplateAsDomain(templateId)
             if (template != null) {
                 val effect = buildApplyTemplateEffect(template)
                 _effects.send(effect)
@@ -135,7 +135,7 @@ class TemplateApplicatorViewModel @Inject constructor(
     }
 
     private suspend fun findMatchingTemplate(text: String): MatchedTemplate? {
-        val templates = templateRepository.getAllTemplatesAsDomainSync()
+        val templates = templateRepository.getAllTemplatesAsDomain()
         for (template in templates) {
             val regex = template.pattern
             if (regex.isBlank()) continue
@@ -252,9 +252,9 @@ class TemplateApplicatorViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isSearching = true) }
             val templates = if (query.isBlank()) {
-                templateRepository.getAllTemplatesAsDomainSync()
+                templateRepository.getAllTemplatesAsDomain()
             } else {
-                templateRepository.getAllTemplatesAsDomainSync().filter {
+                templateRepository.getAllTemplatesAsDomain().filter {
                     it.name.contains(query, ignoreCase = true) ||
                         it.transactionDescription?.contains(query, ignoreCase = true) == true
                 }

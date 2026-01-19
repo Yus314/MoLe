@@ -266,7 +266,7 @@ class RawConfigReader(inputStream: InputStream) {
 
         for (t in templatesList) {
             coroutineContext.ensureActive()
-            if (templateRepository.getTemplateWithAccountsByUuidSync(t.header.uuid) == null) {
+            if (templateRepository.getTemplateWithAccountsByUuid(t.header.uuid) == null) {
                 templateRepository.insertTemplateWithAccounts(t)
             }
         }

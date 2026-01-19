@@ -81,7 +81,7 @@ class RawConfigWriter(
 
     @Throws(IOException::class)
     private suspend fun writeConfigTemplates() {
-        val templates = templateRepository.getAllTemplatesWithAccountsSync()
+        val templates = templateRepository.getAllTemplatesWithAccounts()
 
         if (templates.isEmpty()) return
 

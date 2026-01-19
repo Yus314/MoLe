@@ -98,7 +98,7 @@ class TemplateRepositoryTest {
 
     @Test
     fun `getAllTemplates returns empty list when no templates`() = runTest {
-        val templates = repository.getAllTemplates().first()
+        val templates = repository.observeAllTemplates().first()
         assertTrue(templates.isEmpty())
     }
 
@@ -108,7 +108,7 @@ class TemplateRepositoryTest {
         repository.insertTemplate(createTestTemplate(name = "Apple", isFallback = false))
         repository.insertTemplate(createTestTemplate(name = "Fallback", isFallback = true))
 
-        val templates = repository.getAllTemplates().first()
+        val templates = repository.observeAllTemplates().first()
 
         assertEquals(3, templates.size)
         // Non-fallback templates sorted by name first
@@ -124,7 +124,7 @@ class TemplateRepositoryTest {
 
     @Test
     fun `getTemplateById returns null for non-existent id`() = runTest {
-        val result = repository.getTemplateById(999L).first()
+        val result = repository.observeTemplateById(999L).first()
         assertNull(result)
     }
 
@@ -133,7 +133,7 @@ class TemplateRepositoryTest {
         val template = createTestTemplate(name = "Test")
         val id = repository.insertTemplate(template)
 
-        val result = repository.getTemplateByIdSync(id)
+        val result = repository.getTemplateById(id)
 
         assertNotNull(result)
         assertEquals("Test", result?.name)
@@ -145,7 +145,7 @@ class TemplateRepositoryTest {
 
     @Test
     fun `getTemplateWithAccounts returns null for non-existent id`() = runTest {
-        val result = repository.getTemplateWithAccounts(999L).first()
+        val result = repository.observeTemplateWithAccounts(999L).first()
         assertNull(result)
     }
 
@@ -157,7 +157,7 @@ class TemplateRepositoryTest {
         )
         repository.insertTemplateWithAccounts(templateWithAccounts)
 
-        val result = repository.getTemplateWithAccountsSync(templateWithAccounts.header.id)
+        val result = repository.getTemplateWithAccounts(templateWithAccounts.header.id)
 
         assertNotNull(result)
         assertEquals("Payment", result?.header?.name)
@@ -170,7 +170,7 @@ class TemplateRepositoryTest {
 
     @Test
     fun `getTemplateWithAccountsByUuidSync returns null for non-existent uuid`() = runTest {
-        val result = repository.getTemplateWithAccountsByUuidSync("non-existent-uuid")
+        val result = repository.getTemplateWithAccountsByUuid("non-existent-uuid")
         assertNull(result)
     }
 
@@ -180,7 +180,7 @@ class TemplateRepositoryTest {
         val template = createTestTemplate(name = "UUID Test", uuid = uuid)
         repository.insertTemplate(template)
 
-        val result = repository.getTemplateWithAccountsByUuidSync(uuid)
+        val result = repository.getTemplateWithAccountsByUuid(uuid)
 
         assertNotNull(result)
         assertEquals("UUID Test", result?.header?.name)
@@ -199,7 +199,7 @@ class TemplateRepositoryTest {
             createTestTemplateWithAccounts(name = "T2", accountNames = listOf("C:D", "E:F"))
         )
 
-        val result = repository.getAllTemplatesWithAccountsSync()
+        val result = repository.getAllTemplatesWithAccounts()
 
         assertEquals(2, result.size)
     }
@@ -215,7 +215,7 @@ class TemplateRepositoryTest {
         val id = repository.insertTemplate(template)
 
         assertTrue(id > 0)
-        val stored = repository.getTemplateByIdSync(id)
+        val stored = repository.getTemplateById(id)
         assertNotNull(stored)
         assertEquals("New Template", stored?.name)
     }
@@ -233,7 +233,7 @@ class TemplateRepositoryTest {
 
         repository.insertTemplateWithAccounts(templateWithAccounts)
 
-        val stored = repository.getTemplateWithAccountsSync(templateWithAccounts.header.id)
+        val stored = repository.getTemplateWithAccounts(templateWithAccounts.header.id)
         assertNotNull(stored)
         assertEquals("Full Template", stored?.header?.name)
         assertEquals(3, stored?.accounts?.size)
@@ -251,7 +251,7 @@ class TemplateRepositoryTest {
         val updated = createTestTemplate(id = id, name = "Updated")
         repository.updateTemplate(updated)
 
-        val result = repository.getTemplateByIdSync(id)
+        val result = repository.getTemplateById(id)
         assertEquals("Updated", result?.name)
     }
 
@@ -266,7 +266,7 @@ class TemplateRepositoryTest {
         val updated = templateWithAccounts.header.apply { name = "Updated" }
         repository.updateTemplate(updated)
 
-        val result = repository.getTemplateWithAccountsSync(updated.id)
+        val result = repository.getTemplateWithAccounts(updated.id)
         assertEquals("Updated", result?.header?.name)
         assertEquals(2, result?.accounts?.size)
     }
@@ -282,7 +282,7 @@ class TemplateRepositoryTest {
 
         repository.deleteTemplate(template.apply { this.id = id })
 
-        val remaining = repository.getAllTemplates().first()
+        val remaining = repository.observeAllTemplates().first()
         assertTrue(remaining.isEmpty())
     }
 
@@ -295,7 +295,7 @@ class TemplateRepositoryTest {
 
         repository.deleteTemplate(t1.apply { this.id = id1 })
 
-        val remaining = repository.getAllTemplates().first()
+        val remaining = repository.observeAllTemplates().first()
         assertEquals(1, remaining.size)
         assertEquals("Template 2", remaining[0].name)
     }
@@ -354,7 +354,7 @@ class TemplateRepositoryTest {
 
         repository.deleteAllTemplates()
 
-        val templates = repository.getAllTemplates().first()
+        val templates = repository.observeAllTemplates().first()
         assertTrue(templates.isEmpty())
     }
 }
@@ -389,30 +389,29 @@ class FakeTemplateRepository : TemplateRepository {
         }
 
     // Domain Model Query Operations
-    override fun getAllTemplatesAsDomain(): Flow<List<DomainTemplate>> =
+    override fun observeAllTemplatesAsDomain(): Flow<List<DomainTemplate>> =
         templatesFlow.map { list -> list.map { it.toDomain() } }
 
-    override fun getTemplateAsDomain(id: Long): Flow<DomainTemplate?> =
+    override fun observeTemplateAsDomain(id: Long): Flow<DomainTemplate?> =
         templatesFlow.map { list -> list.find { it.header.id == id }?.toDomain() }
 
-    override suspend fun getTemplateAsDomainSync(id: Long): DomainTemplate? =
+    override suspend fun getTemplateAsDomain(id: Long): DomainTemplate? =
         getTemplateWithAccountsInternal(id)?.toDomain()
 
-    override suspend fun getAllTemplatesAsDomainSync(): List<DomainTemplate> =
+    override suspend fun getAllTemplatesAsDomain(): List<DomainTemplate> =
         getAllTemplatesWithAccountsInternalSync().map { it.toDomain() }
 
     // Database Entity Query Operations
-    override fun getAllTemplates(): Flow<List<TemplateHeader>> = MutableStateFlow(getSortedTemplates())
+    override fun observeAllTemplates(): Flow<List<TemplateHeader>> = MutableStateFlow(getSortedTemplates())
 
-    override fun getTemplateById(id: Long): Flow<TemplateHeader?> = MutableStateFlow(templates[id])
+    override fun observeTemplateById(id: Long): Flow<TemplateHeader?> = MutableStateFlow(templates[id])
 
-    override suspend fun getTemplateByIdSync(id: Long): TemplateHeader? = templates[id]
+    override suspend fun getTemplateById(id: Long): TemplateHeader? = templates[id]
 
-    override fun getTemplateWithAccounts(id: Long): Flow<TemplateWithAccounts?> =
+    override fun observeTemplateWithAccounts(id: Long): Flow<TemplateWithAccounts?> =
         MutableStateFlow(getTemplateWithAccountsInternal(id))
 
-    override suspend fun getTemplateWithAccountsSync(id: Long): TemplateWithAccounts? =
-        getTemplateWithAccountsInternal(id)
+    override suspend fun getTemplateWithAccounts(id: Long): TemplateWithAccounts? = getTemplateWithAccountsInternal(id)
 
     private fun getTemplateWithAccountsInternal(id: Long): TemplateWithAccounts? {
         val header = templates[id] ?: return null
@@ -423,7 +422,7 @@ class FakeTemplateRepository : TemplateRepository {
         return result
     }
 
-    override suspend fun getTemplateWithAccountsByUuidSync(uuid: String): TemplateWithAccounts? {
+    override suspend fun getTemplateWithAccountsByUuid(uuid: String): TemplateWithAccounts? {
         val header = templates.values.find { it.uuid == uuid } ?: return null
         val accounts = templateAccounts[header.id] ?: emptyList()
         val result = TemplateWithAccounts()
@@ -432,7 +431,7 @@ class FakeTemplateRepository : TemplateRepository {
         return result
     }
 
-    override suspend fun getAllTemplatesWithAccountsSync(): List<TemplateWithAccounts> =
+    override suspend fun getAllTemplatesWithAccounts(): List<TemplateWithAccounts> =
         getAllTemplatesWithAccountsInternalSync()
 
     override suspend fun insertTemplate(template: TemplateHeader): Long {

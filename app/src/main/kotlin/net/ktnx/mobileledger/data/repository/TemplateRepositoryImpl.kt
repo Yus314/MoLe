@@ -52,19 +52,19 @@ class TemplateRepositoryImpl @Inject constructor(
     // Domain Model Query Operations
     // ========================================
 
-    override fun getAllTemplatesAsDomain(): Flow<List<Template>> =
+    override fun observeAllTemplatesAsDomain(): Flow<List<Template>> =
         templateHeaderDAO.getTemplatesWithAccounts().map { list ->
             list.map { it.toDomain() }
         }
 
-    override fun getTemplateAsDomain(id: Long): Flow<Template?> =
+    override fun observeTemplateAsDomain(id: Long): Flow<Template?> =
         templateHeaderDAO.getTemplateWithAccounts(id).map { it?.toDomain() }
 
-    override suspend fun getTemplateAsDomainSync(id: Long): Template? = withContext(Dispatchers.IO) {
+    override suspend fun getTemplateAsDomain(id: Long): Template? = withContext(Dispatchers.IO) {
         templateHeaderDAO.getTemplateWithAccountsSync(id)?.toDomain()
     }
 
-    override suspend fun getAllTemplatesAsDomainSync(): List<Template> = withContext(Dispatchers.IO) {
+    override suspend fun getAllTemplatesAsDomain(): List<Template> = withContext(Dispatchers.IO) {
         templateHeaderDAO.getAllTemplatesWithAccountsSync().map { it.toDomain() }
     }
 
@@ -72,27 +72,27 @@ class TemplateRepositoryImpl @Inject constructor(
     // Database Entity Query Operations (for internal use)
     // ========================================
 
-    override fun getAllTemplates(): Flow<List<TemplateHeader>> = templateHeaderDAO.getTemplates()
+    override fun observeAllTemplates(): Flow<List<TemplateHeader>> = templateHeaderDAO.getTemplates()
 
-    override fun getTemplateById(id: Long): Flow<TemplateHeader?> = templateHeaderDAO.getTemplate(id)
+    override fun observeTemplateById(id: Long): Flow<TemplateHeader?> = templateHeaderDAO.getTemplate(id)
 
-    override suspend fun getTemplateByIdSync(id: Long): TemplateHeader? = withContext(Dispatchers.IO) {
+    override suspend fun getTemplateById(id: Long): TemplateHeader? = withContext(Dispatchers.IO) {
         templateHeaderDAO.getTemplateSync(id)
     }
 
-    override fun getTemplateWithAccounts(id: Long): Flow<TemplateWithAccounts?> =
+    override fun observeTemplateWithAccounts(id: Long): Flow<TemplateWithAccounts?> =
         templateHeaderDAO.getTemplateWithAccounts(id)
 
-    override suspend fun getTemplateWithAccountsSync(id: Long): TemplateWithAccounts? = withContext(Dispatchers.IO) {
+    override suspend fun getTemplateWithAccounts(id: Long): TemplateWithAccounts? = withContext(Dispatchers.IO) {
         templateHeaderDAO.getTemplateWithAccountsSync(id)
     }
 
-    override suspend fun getTemplateWithAccountsByUuidSync(uuid: String): TemplateWithAccounts? =
+    override suspend fun getTemplateWithAccountsByUuid(uuid: String): TemplateWithAccounts? =
         withContext(Dispatchers.IO) {
             templateHeaderDAO.getTemplateWithAccountsByUuidSync(uuid)
         }
 
-    override suspend fun getAllTemplatesWithAccountsSync(): List<TemplateWithAccounts> = withContext(Dispatchers.IO) {
+    override suspend fun getAllTemplatesWithAccounts(): List<TemplateWithAccounts> = withContext(Dispatchers.IO) {
         templateHeaderDAO.getAllTemplatesWithAccountsSync()
     }
 
