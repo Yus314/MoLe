@@ -825,6 +825,23 @@ class FakeTransactionRepositoryForTransactionList : net.ktnx.mobileledger.data.r
         txs.forEach { tx -> transactions.removeAll { it.transaction.id == tx.id } }
     }
 
+    override suspend fun deleteTransactionById(transactionId: Long): Int {
+        val existed = transactions.any { it.transaction.id == transactionId }
+        transactions.removeAll { it.transaction.id == transactionId }
+        return if (existed) 1 else 0
+    }
+
+    override suspend fun deleteTransactionsByIds(transactionIds: List<Long>): Int {
+        var count = 0
+        transactionIds.forEach { id ->
+            if (transactions.any { it.transaction.id == id }) {
+                count++
+            }
+            transactions.removeAll { it.transaction.id == id }
+        }
+        return count
+    }
+
     override suspend fun storeTransactions(txs: List<TransactionWithAccounts>, profileId: Long) {
         txs.forEach { twa ->
             twa.transaction.profileId = profileId

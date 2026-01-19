@@ -120,6 +120,7 @@ class TransactionRepositoryImpl @Inject constructor(
     // Mutation Operations (DB Entities - Legacy)
     // ========================================
 
+    @Deprecated("Use insertTransaction(Transaction, Long) with domain model instead")
     override suspend fun insertTransaction(transaction: TransactionWithAccounts) {
         withContext(Dispatchers.IO) {
             appendTransactionInternal(transaction)
@@ -175,6 +176,7 @@ class TransactionRepositoryImpl @Inject constructor(
         }
     }
 
+    @Deprecated("Use storeTransaction(Transaction, Long) with domain model instead")
     override suspend fun storeTransaction(transaction: TransactionWithAccounts) {
         withContext(Dispatchers.IO) {
             storeTransactionInternal(transaction)
@@ -215,22 +217,33 @@ class TransactionRepositoryImpl @Inject constructor(
         }
     }
 
+    @Deprecated("Use deleteTransactionById(transactionId) instead")
     override suspend fun deleteTransaction(transaction: DbTransaction) {
         withContext(Dispatchers.IO) {
             transactionDAO.deleteSync(transaction)
         }
     }
 
+    @Deprecated("Use deleteTransactionsByIds(transactionIds) instead")
     override suspend fun deleteTransactions(transactions: List<DbTransaction>) {
         withContext(Dispatchers.IO) {
             transactionDAO.deleteSync(transactions)
         }
     }
 
+    override suspend fun deleteTransactionById(transactionId: Long): Int = withContext(Dispatchers.IO) {
+        transactionDAO.deleteByIdSync(transactionId)
+    }
+
+    override suspend fun deleteTransactionsByIds(transactionIds: List<Long>): Int = withContext(Dispatchers.IO) {
+        transactionDAO.deleteByIdsSync(transactionIds)
+    }
+
     // ========================================
     // Sync Operations
     // ========================================
 
+    @Deprecated("Use storeTransactionsAsDomain() instead")
     override suspend fun storeTransactions(transactions: List<TransactionWithAccounts>, profileId: Long) {
         withContext(Dispatchers.IO) {
             val generation = transactionDAO.getGenerationSync(profileId) + 1

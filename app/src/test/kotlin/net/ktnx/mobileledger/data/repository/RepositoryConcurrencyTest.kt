@@ -424,6 +424,23 @@ class ConcurrentFakeTransactionRepository : TransactionRepository {
         transactions.forEach { this.transactions.remove(it.id) }
     }
 
+    override suspend fun deleteTransactionById(transactionId: Long): Int = synchronized(lock) {
+        val existed = transactions.containsKey(transactionId)
+        transactions.remove(transactionId)
+        if (existed) 1 else 0
+    }
+
+    override suspend fun deleteTransactionsByIds(transactionIds: List<Long>): Int = synchronized(lock) {
+        var count = 0
+        transactionIds.forEach { id ->
+            if (transactions.containsKey(id)) {
+                count++
+            }
+            transactions.remove(id)
+        }
+        count
+    }
+
     override suspend fun storeTransactions(transactions: List<TransactionWithAccounts>, profileId: Long): Unit =
         synchronized(lock) {
             transactions.forEach { twa ->

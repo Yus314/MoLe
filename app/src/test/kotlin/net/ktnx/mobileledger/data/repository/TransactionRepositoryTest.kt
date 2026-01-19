@@ -504,6 +504,25 @@ class FakeTransactionRepository : TransactionRepository {
         emitChanges()
     }
 
+    override suspend fun deleteTransactionById(transactionId: Long): Int {
+        val existed = transactions.containsKey(transactionId)
+        transactions.remove(transactionId)
+        emitChanges()
+        return if (existed) 1 else 0
+    }
+
+    override suspend fun deleteTransactionsByIds(transactionIds: List<Long>): Int {
+        var count = 0
+        transactionIds.forEach { id ->
+            if (transactions.containsKey(id)) {
+                count++
+            }
+            transactions.remove(id)
+        }
+        emitChanges()
+        return count
+    }
+
     override suspend fun storeTransactions(transactions: List<TransactionWithAccounts>, profileId: Long) {
         transactions.forEach { twa ->
             twa.transaction.profileId = profileId

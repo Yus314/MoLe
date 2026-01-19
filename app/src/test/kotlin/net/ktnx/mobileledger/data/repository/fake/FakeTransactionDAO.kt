@@ -265,6 +265,27 @@ class FakeTransactionDAO : TransactionDAO() {
         return toRemove.size
     }
 
+    override fun deleteByIdSync(transactionId: Long): Int {
+        val existed = transactions.containsKey(transactionId)
+        transactions.remove(transactionId)
+        transactionsWithAccounts.remove(transactionId)
+        if (existed) notifyChange()
+        return if (existed) 1 else 0
+    }
+
+    override fun deleteByIdsSync(transactionIds: List<Long>): Int {
+        var count = 0
+        transactionIds.forEach { id ->
+            if (transactions.containsKey(id)) {
+                count++
+                transactions.remove(id)
+                transactionsWithAccounts.remove(id)
+            }
+        }
+        if (count > 0) notifyChange()
+        return count
+    }
+
     override fun getByLedgerId(profileId: Long, ledgerId: Long): Transaction? = transactions.values.find {
         it.profileId == profileId && it.ledgerId == ledgerId
     }

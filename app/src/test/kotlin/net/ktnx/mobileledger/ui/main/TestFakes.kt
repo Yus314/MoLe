@@ -245,6 +245,27 @@ class FakeTransactionRepositoryForViewModel : TransactionRepository {
         }
     }
 
+    override suspend fun deleteTransactionById(transactionId: Long): Int {
+        val existed = domainTransactions.containsKey(transactionId)
+        dbTransactions.remove(transactionId)
+        domainTransactions.remove(transactionId)
+        profileMap.remove(transactionId)
+        return if (existed) 1 else 0
+    }
+
+    override suspend fun deleteTransactionsByIds(transactionIds: List<Long>): Int {
+        var count = 0
+        transactionIds.forEach { id ->
+            if (domainTransactions.containsKey(id)) {
+                count++
+            }
+            dbTransactions.remove(id)
+            domainTransactions.remove(id)
+            profileMap.remove(id)
+        }
+        return count
+    }
+
     override suspend fun storeTransactions(transactions: List<TransactionWithAccounts>, profileId: Long) {
         transactions.forEach { twa ->
             twa.transaction.profileId = profileId

@@ -149,6 +149,12 @@ abstract class TransactionDAO : BaseDAO<Transaction>() {
     @Query("DELETE FROM transactions WHERE profile_id = :profileId")
     abstract fun deleteAllSync(profileId: Long): Int
 
+    @Query("DELETE FROM transactions WHERE id = :transactionId")
+    abstract fun deleteByIdSync(transactionId: Long): Int
+
+    @Query("DELETE FROM transactions WHERE id IN (:transactionIds)")
+    abstract fun deleteByIdsSync(transactionIds: List<Long>): Int
+
     @Query("SELECT * FROM transactions where profile_id = :profileId AND ledger_id = :ledgerId")
     abstract fun getByLedgerId(profileId: Long, ledgerId: Long): Transaction?
 
