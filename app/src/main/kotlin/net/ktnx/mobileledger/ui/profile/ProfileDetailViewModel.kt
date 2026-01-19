@@ -94,7 +94,7 @@ class ProfileDetailViewModel @Inject constructor(
                 val themeHue = if (initialThemeHue >= 0) {
                     initialThemeHue
                 } else {
-                    val existingProfiles = profileRepository.getAllProfiles().first()
+                    val existingProfiles = profileRepository.observeAllProfiles().first()
                     authDataProvider.getNewProfileThemeHue(existingProfiles)
                 }
 
@@ -113,7 +113,7 @@ class ProfileDetailViewModel @Inject constructor(
 
     private suspend fun loadProfile(profileId: Long) {
         withContext(ioDispatcher) {
-            val profile = profileRepository.getProfileByIdSync(profileId)
+            val profile = profileRepository.getProfileById(profileId)
             if (profile != null) {
                 orderNo = profile.orderNo
                 val detectedVersion = if (profile.isVersionPre_1_19) {
@@ -370,7 +370,7 @@ class ProfileDetailViewModel @Inject constructor(
 
                 // Load existing profile to get uuid if updating
                 val existingProfile = if (state.profileId > 0) {
-                    profileRepository.getProfileByIdSync(state.profileId)
+                    profileRepository.getProfileById(state.profileId)
                 } else {
                     null
                 }
@@ -559,7 +559,7 @@ class ProfileDetailViewModel @Inject constructor(
             try {
                 val profileId = _uiState.value.profileId
                 if (profileId > 0) {
-                    val profile = profileRepository.getProfileByIdSync(profileId)
+                    val profile = profileRepository.getProfileById(profileId)
                     if (profile != null) {
                         profileRepository.deleteProfile(profile)
                         // Repository handles order updates internally

@@ -277,7 +277,7 @@ class RawConfigReader(inputStream: InputStream) {
 
         for (p in profilesList) {
             coroutineContext.ensureActive()
-            if (profileRepository.getProfileByUuidSync(p.uuid) == null) {
+            if (profileRepository.getProfileByUuid(p.uuid) == null) {
                 // Convert db.Profile to domain.Profile for repository
                 profileRepository.insertProfile(p.toDomain())
             }
@@ -305,7 +305,7 @@ class RawConfigReader(inputStream: InputStream) {
         }
 
         val currentProfileUuid = currentProfile ?: return
-        val p = profileRepository.getProfileByUuidSync(currentProfileUuid)
+        val p = profileRepository.getProfileByUuid(currentProfileUuid)
 
         if (p != null) {
             logcat { "Restoring current profile ${p.name}" }

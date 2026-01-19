@@ -98,7 +98,7 @@ class MainActivityCompose : ProfileThemedActivity() {
                 launch {
                     // Use full Profile objects from repository instead of
                     // recreating incomplete ones from ProfileListItem
-                    profileRepository.getAllProfiles().collect { profiles ->
+                    profileRepository.observeAllProfiles().collect { profiles ->
                         onProfileListChanged(profiles)
                     }
                 }

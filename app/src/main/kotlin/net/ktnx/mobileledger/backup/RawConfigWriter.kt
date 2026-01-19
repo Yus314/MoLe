@@ -145,7 +145,7 @@ class RawConfigWriter(
 
     @Throws(IOException::class)
     private suspend fun writeProfiles() {
-        val profiles = profileRepository.getAllProfilesSync()
+        val profiles = profileRepository.getAllProfiles()
 
         if (profiles.isEmpty()) return
 

@@ -62,24 +62,23 @@ class ProfileRepositoryImpl @Inject constructor(private val profileDAO: ProfileD
     // Query Operations
     // ========================================
 
-    override fun getAllProfiles(): Flow<List<Profile>> =
+    override fun observeAllProfiles(): Flow<List<Profile>> =
         profileDAO.getAllOrdered().map { list -> list.map { it.toDomain() } }
 
-    override suspend fun getAllProfilesSync(): List<Profile> = withContext(Dispatchers.IO) {
+    override suspend fun getAllProfiles(): List<Profile> = withContext(Dispatchers.IO) {
         profileDAO.getAllOrderedSync().map { it.toDomain() }
     }
 
-    override fun getProfileById(profileId: Long): Flow<Profile?> =
+    override fun observeProfileById(profileId: Long): Flow<Profile?> =
         profileDAO.getById(profileId).map { it?.toDomain() }
 
-    override suspend fun getProfileByIdSync(profileId: Long): Profile? = withContext(Dispatchers.IO) {
+    override suspend fun getProfileById(profileId: Long): Profile? = withContext(Dispatchers.IO) {
         profileDAO.getByIdSync(profileId)?.toDomain()
     }
 
-    override fun getProfileByUuid(uuid: String): Flow<Profile?> =
-        profileDAO.getByUuid(uuid).map { it?.toDomain() }
+    override fun observeProfileByUuid(uuid: String): Flow<Profile?> = profileDAO.getByUuid(uuid).map { it?.toDomain() }
 
-    override suspend fun getProfileByUuidSync(uuid: String): Profile? = withContext(Dispatchers.IO) {
+    override suspend fun getProfileByUuid(uuid: String): Profile? = withContext(Dispatchers.IO) {
         profileDAO.getByUuidSync(uuid)?.toDomain()
     }
 

@@ -85,50 +85,50 @@ interface ProfileRepository {
     // ========================================
 
     /**
-     * Get all profiles ordered by their display order.
+     * Observe all profiles ordered by their display order.
      *
      * @return Flow that emits the complete profile list whenever it changes
      */
-    fun getAllProfiles(): Flow<List<Profile>>
+    fun observeAllProfiles(): Flow<List<Profile>>
 
     /**
-     * Get all profiles ordered by their display order synchronously.
+     * Get all profiles ordered by their display order.
      *
      * @return The complete profile list
      */
-    suspend fun getAllProfilesSync(): List<Profile>
+    suspend fun getAllProfiles(): List<Profile>
+
+    /**
+     * Observe a profile by its ID.
+     *
+     * @param profileId The profile ID
+     * @return Flow that emits the profile when it changes, or null if not found
+     */
+    fun observeProfileById(profileId: Long): Flow<Profile?>
 
     /**
      * Get a profile by its ID.
      *
      * @param profileId The profile ID
-     * @return Flow that emits the profile when it changes, or null if not found
-     */
-    fun getProfileById(profileId: Long): Flow<Profile?>
-
-    /**
-     * Get a profile by its ID synchronously.
-     *
-     * @param profileId The profile ID
      * @return The profile or null if not found
      */
-    suspend fun getProfileByIdSync(profileId: Long): Profile?
+    suspend fun getProfileById(profileId: Long): Profile?
+
+    /**
+     * Observe a profile by its UUID.
+     *
+     * @param uuid The profile UUID
+     * @return Flow that emits the profile when it changes, or null if not found
+     */
+    fun observeProfileByUuid(uuid: String): Flow<Profile?>
 
     /**
      * Get a profile by its UUID.
      *
      * @param uuid The profile UUID
-     * @return Flow that emits the profile when it changes, or null if not found
-     */
-    fun getProfileByUuid(uuid: String): Flow<Profile?>
-
-    /**
-     * Get a profile by its UUID synchronously.
-     *
-     * @param uuid The profile UUID
      * @return The profile or null if not found
      */
-    suspend fun getProfileByUuidSync(uuid: String): Profile?
+    suspend fun getProfileByUuid(uuid: String): Profile?
 
     /**
      * Get any available profile (useful for fallback/initialization).

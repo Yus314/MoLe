@@ -114,7 +114,7 @@ class ProfileSwitchingEdgeCaseTest {
 
     @Test
     fun `getAllProfiles returns empty list when no profiles exist`() = runTest {
-        val profiles = profileRepository.getAllProfiles().first()
+        val profiles = profileRepository.observeAllProfiles().first()
         assertTrue(profiles.isEmpty())
     }
 
@@ -282,7 +282,7 @@ class ProfileSwitchingEdgeCaseTest {
 
         assertNull(profileRepository.currentProfile.value)
         assertEquals(0, profileRepository.getProfileCount())
-        assertTrue(profileRepository.getAllProfiles().first().isEmpty())
+        assertTrue(profileRepository.observeAllProfiles().first().isEmpty())
     }
 
     @Test
@@ -309,19 +309,19 @@ class EdgeCaseFakeProfileRepository : ProfileRepository {
         _currentProfile.value = profile
     }
 
-    override fun getAllProfiles(): Flow<List<Profile>> =
+    override fun observeAllProfiles(): Flow<List<Profile>> =
         MutableStateFlow(profiles.values.sortedBy { it.orderNo }.toList())
 
-    override suspend fun getAllProfilesSync(): List<Profile> = profiles.values.sortedBy { it.orderNo }.toList()
+    override suspend fun getAllProfiles(): List<Profile> = profiles.values.sortedBy { it.orderNo }.toList()
 
-    override fun getProfileById(profileId: Long): Flow<Profile?> = MutableStateFlow(profiles[profileId])
+    override fun observeProfileById(profileId: Long): Flow<Profile?> = MutableStateFlow(profiles[profileId])
 
-    override suspend fun getProfileByIdSync(profileId: Long): Profile? = profiles[profileId]
+    override suspend fun getProfileById(profileId: Long): Profile? = profiles[profileId]
 
-    override fun getProfileByUuid(uuid: String): Flow<Profile?> =
+    override fun observeProfileByUuid(uuid: String): Flow<Profile?> =
         MutableStateFlow(profiles.values.find { it.uuid == uuid })
 
-    override suspend fun getProfileByUuidSync(uuid: String): Profile? = profiles.values.find { it.uuid == uuid }
+    override suspend fun getProfileByUuid(uuid: String): Profile? = profiles.values.find { it.uuid == uuid }
 
     override suspend fun getAnyProfile(): Profile? = profiles.values.firstOrNull()
 

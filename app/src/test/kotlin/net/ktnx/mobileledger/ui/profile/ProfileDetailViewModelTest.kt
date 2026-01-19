@@ -435,7 +435,7 @@ class ProfileDetailViewModelTest {
         advanceUntilIdle()
 
         assertEquals(1, profileRepository.getProfileCount())
-        val saved = profileRepository.getAllProfilesSync().first()
+        val saved = profileRepository.getAllProfiles().first()
         assertEquals("New Profile", saved.name)
         assertEquals("https://valid.com", saved.url)
     }
@@ -455,7 +455,7 @@ class ProfileDetailViewModelTest {
         advanceUntilIdle()
 
         assertEquals(1, profileRepository.getProfileCount())
-        val saved = profileRepository.getProfileByIdSync(id)
+        val saved = profileRepository.getProfileById(id)
         assertEquals("Updated", saved?.name)
         assertEquals("https://updated.com", saved?.url)
     }
@@ -746,21 +746,21 @@ class FakeProfileRepositoryForProfileDetail : ProfileRepository {
         _currentProfile.value = profile
     }
 
-    override fun getAllProfiles(): Flow<List<Profile>> = MutableStateFlow(
+    override fun observeAllProfiles(): Flow<List<Profile>> = MutableStateFlow(
         profiles.values.sortedBy { it.orderNo }
     )
 
-    override suspend fun getAllProfilesSync(): List<Profile> = profiles.values.sortedBy { it.orderNo }
+    override suspend fun getAllProfiles(): List<Profile> = profiles.values.sortedBy { it.orderNo }
 
-    override fun getProfileById(profileId: Long): Flow<Profile?> = MutableStateFlow(profiles[profileId])
+    override fun observeProfileById(profileId: Long): Flow<Profile?> = MutableStateFlow(profiles[profileId])
 
-    override suspend fun getProfileByIdSync(profileId: Long): Profile? = profiles[profileId]
+    override suspend fun getProfileById(profileId: Long): Profile? = profiles[profileId]
 
-    override fun getProfileByUuid(uuid: String): Flow<Profile?> = MutableStateFlow(
+    override fun observeProfileByUuid(uuid: String): Flow<Profile?> = MutableStateFlow(
         profiles.values.find { it.uuid == uuid }
     )
 
-    override suspend fun getProfileByUuidSync(uuid: String): Profile? = profiles.values.find { it.uuid == uuid }
+    override suspend fun getProfileByUuid(uuid: String): Profile? = profiles.values.find { it.uuid == uuid }
 
     override suspend fun getAnyProfile(): Profile? = profiles.values.firstOrNull()
 

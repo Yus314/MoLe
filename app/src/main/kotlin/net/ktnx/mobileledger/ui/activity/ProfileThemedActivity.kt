@@ -135,7 +135,7 @@ open class ProfileThemedActivity : CrashReportingActivity() {
         val profile = withContext(Dispatchers.IO) {
             logcat { "Loading profile $profileId" }
 
-            var loadedProfile = profileRepository.getProfileByIdSync(profileId)
+            var loadedProfile = profileRepository.getProfileById(profileId)
 
             if (loadedProfile == null) {
                 logcat { "Profile $profileId not found. Trying any other" }

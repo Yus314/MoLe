@@ -104,7 +104,7 @@ class ProfileRepositoryTest {
 
     @Test
     fun `getAllProfiles returns empty list when no profiles`() = runTest {
-        val profiles = repository.getAllProfiles().first()
+        val profiles = repository.observeAllProfiles().first()
         assertTrue(profiles.isEmpty())
     }
 
@@ -115,7 +115,7 @@ class ProfileRepositoryTest {
         repository.insertProfile(profile1)
         repository.insertProfile(profile2)
 
-        val profiles = repository.getAllProfiles().first()
+        val profiles = repository.observeAllProfiles().first()
         assertEquals(2, profiles.size)
         assertEquals("Profile B", profiles[0].name) // orderNo = 1
         assertEquals("Profile A", profiles[1].name) // orderNo = 2
@@ -126,17 +126,17 @@ class ProfileRepositoryTest {
     // ========================================
 
     @Test
-    fun `getProfileById returns null for non-existent id`() = runTest {
-        val result = repository.getProfileById(999L).first()
+    fun `observeProfileById returns null for non-existent id`() = runTest {
+        val result = repository.observeProfileById(999L).first()
         assertNull(result)
     }
 
     @Test
-    fun `getProfileByIdSync returns profile when exists`() = runTest {
+    fun `getProfileById returns profile when exists`() = runTest {
         val profile = createTestProfile(name = "Test")
         val id = repository.insertProfile(profile)
 
-        val result = repository.getProfileByIdSync(id)
+        val result = repository.getProfileById(id)
         assertNotNull(result)
         assertEquals("Test", result?.name)
     }
@@ -146,19 +146,19 @@ class ProfileRepositoryTest {
     // ========================================
 
     @Test
-    fun `getProfileByUuid returns null for non-existent uuid`() = runTest {
-        val result = repository.getProfileByUuid("non-existent-uuid").first()
+    fun `observeProfileByUuid returns null for non-existent uuid`() = runTest {
+        val result = repository.observeProfileByUuid("non-existent-uuid").first()
         assertNull(result)
     }
 
     @Test
-    fun `getProfileByUuidSync returns profile when exists`() = runTest {
+    fun `getProfileByUuid returns profile when exists`() = runTest {
         // Insert profile first, then get the UUID from the inserted profile
         val profile = createTestProfile(name = "UUID Test")
         repository.insertProfile(profile)
         val uuid = profile.uuid
 
-        val result = repository.getProfileByUuidSync(uuid)
+        val result = repository.getProfileByUuid(uuid)
         assertNotNull(result)
         assertEquals("UUID Test", result?.name)
     }
@@ -213,7 +213,7 @@ class ProfileRepositoryTest {
         val id = repository.insertProfile(profile)
 
         assertTrue(id > 0)
-        val stored = repository.getProfileByIdSync(id)
+        val stored = repository.getProfileById(id)
         assertNotNull(stored)
         assertEquals("New Profile", stored?.name)
     }
@@ -230,7 +230,7 @@ class ProfileRepositoryTest {
         val updated = createTestProfile(id = id, name = "Updated")
         repository.updateProfile(updated)
 
-        val result = repository.getProfileByIdSync(id)
+        val result = repository.getProfileById(id)
         assertEquals("Updated", result?.name)
     }
 
@@ -259,7 +259,7 @@ class ProfileRepositoryTest {
 
         repository.deleteProfile(profileWithId)
 
-        val remaining = repository.getAllProfiles().first()
+        val remaining = repository.observeAllProfiles().first()
         assertTrue(remaining.isEmpty())
     }
 
@@ -313,7 +313,7 @@ class ProfileRepositoryTest {
             )
         )
 
-        val profiles = repository.getAllProfiles().first()
+        val profiles = repository.observeAllProfiles().first()
         assertEquals("P3", profiles[0].name)
         assertEquals("P1", profiles[1].name)
         assertEquals("P2", profiles[2].name)
@@ -330,7 +330,7 @@ class ProfileRepositoryTest {
 
         repository.deleteAllProfiles()
 
-        val profiles = repository.getAllProfiles().first()
+        val profiles = repository.observeAllProfiles().first()
         assertTrue(profiles.isEmpty())
     }
 
@@ -370,21 +370,21 @@ class FakeProfileRepository : ProfileRepository {
         profilesFlow.value = profiles.values.sortedBy { it.orderNo }
     }
 
-    override fun getAllProfiles(): Flow<List<Profile>> = MutableStateFlow(profiles.values.sortedBy { it.orderNo })
+    override fun observeAllProfiles(): Flow<List<Profile>> = MutableStateFlow(profiles.values.sortedBy { it.orderNo })
 
-    override suspend fun getAllProfilesSync(): List<Profile> = profiles.values.sortedBy { it.orderNo }
+    override suspend fun getAllProfiles(): List<Profile> = profiles.values.sortedBy { it.orderNo }
 
-    override fun getProfileById(profileId: Long): Flow<Profile?> = MutableStateFlow(profiles[profileId])
+    override fun observeProfileById(profileId: Long): Flow<Profile?> = MutableStateFlow(profiles[profileId])
 
-    override suspend fun getProfileByIdSync(profileId: Long): Profile? = profiles[profileId]
+    override suspend fun getProfileById(profileId: Long): Profile? = profiles[profileId]
 
-    override fun getProfileByUuid(uuid: String): Flow<Profile?> = MutableStateFlow(
+    override fun observeProfileByUuid(uuid: String): Flow<Profile?> = MutableStateFlow(
         profiles.values.find {
             it.uuid == uuid
         }
     )
 
-    override suspend fun getProfileByUuidSync(uuid: String): Profile? = profiles.values.find { it.uuid == uuid }
+    override suspend fun getProfileByUuid(uuid: String): Profile? = profiles.values.find { it.uuid == uuid }
 
     override suspend fun getAnyProfile(): Profile? = profiles.values.firstOrNull()
 

@@ -116,7 +116,7 @@ class RepositoryConcurrencyTest {
         assertEquals(insertCount, insertedIds.size)
 
         // All profiles should be stored
-        val allProfiles = profileRepository.getAllProfiles().first()
+        val allProfiles = profileRepository.observeAllProfiles().first()
         assertEquals(insertCount, allProfiles.size)
 
         // All IDs should be unique
@@ -265,27 +265,27 @@ class ConcurrentFakeProfileRepository : ProfileRepository {
         _currentProfile.value = profile
     }
 
-    override fun getAllProfiles(): Flow<List<Profile>> = synchronized(lock) {
+    override fun observeAllProfiles(): Flow<List<Profile>> = synchronized(lock) {
         MutableStateFlow(profiles.values.sortedBy { it.orderNo }.toList())
     }
 
-    override suspend fun getAllProfilesSync(): List<Profile> = synchronized(lock) {
+    override suspend fun getAllProfiles(): List<Profile> = synchronized(lock) {
         profiles.values.sortedBy { it.orderNo }.toList()
     }
 
-    override fun getProfileById(profileId: Long): Flow<Profile?> = synchronized(lock) {
+    override fun observeProfileById(profileId: Long): Flow<Profile?> = synchronized(lock) {
         MutableStateFlow(profiles[profileId])
     }
 
-    override suspend fun getProfileByIdSync(profileId: Long): Profile? = synchronized(lock) {
+    override suspend fun getProfileById(profileId: Long): Profile? = synchronized(lock) {
         profiles[profileId]
     }
 
-    override fun getProfileByUuid(uuid: String): Flow<Profile?> = synchronized(lock) {
+    override fun observeProfileByUuid(uuid: String): Flow<Profile?> = synchronized(lock) {
         MutableStateFlow(profiles.values.find { it.uuid == uuid })
     }
 
-    override suspend fun getProfileByUuidSync(uuid: String): Profile? = synchronized(lock) {
+    override suspend fun getProfileByUuid(uuid: String): Profile? = synchronized(lock) {
         profiles.values.find { it.uuid == uuid }
     }
 
