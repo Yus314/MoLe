@@ -314,7 +314,8 @@ class FakeAccountRepositoryForViewModel : AccountRepository {
         )
     }
 
-    override fun getAllWithAmounts(profileId: Long, includeZeroBalances: Boolean): Flow<List<Account>> {
+    // Flow methods (observe prefix)
+    override fun observeAllWithAmounts(profileId: Long, includeZeroBalances: Boolean): Flow<List<Account>> {
         val accounts = domainAccounts[profileId] ?: emptyList()
         val filtered = if (includeZeroBalances) {
             accounts
@@ -324,7 +325,23 @@ class FakeAccountRepositoryForViewModel : AccountRepository {
         return MutableStateFlow(filtered)
     }
 
-    override suspend fun getAllWithAmountsSync(profileId: Long, includeZeroBalances: Boolean): List<Account> {
+    override fun observeAll(profileId: Long, includeZeroBalances: Boolean): Flow<List<DbAccount>> =
+        MutableStateFlow(emptyList())
+
+    override fun observeByName(profileId: Long, accountName: String): Flow<DbAccount?> = MutableStateFlow(null)
+
+    override fun observeByNameWithAmounts(profileId: Long, accountName: String): Flow<Account?> =
+        MutableStateFlow(domainAccounts[profileId]?.find { it.name == accountName })
+
+    override fun observeSearchAccountNames(profileId: Long, term: String): Flow<List<String>> = MutableStateFlow(
+        accountNames[profileId]?.filter { it.contains(term, ignoreCase = true) } ?: emptyList()
+    )
+
+    override fun observeSearchAccountNamesGlobal(term: String): Flow<List<String>> =
+        MutableStateFlow(accountNames.values.flatten().filter { it.contains(term, ignoreCase = true) })
+
+    // Suspend methods (no suffix)
+    override suspend fun getAllWithAmounts(profileId: Long, includeZeroBalances: Boolean): List<Account> {
         val accounts = domainAccounts[profileId] ?: emptyList()
         return if (includeZeroBalances) {
             accounts
@@ -333,35 +350,20 @@ class FakeAccountRepositoryForViewModel : AccountRepository {
         }
     }
 
-    override fun getAll(profileId: Long, includeZeroBalances: Boolean): Flow<List<DbAccount>> =
-        MutableStateFlow(emptyList())
+    override suspend fun getById(id: Long): DbAccount? = null
 
-    override suspend fun getByIdSync(id: Long): DbAccount? = null
+    override suspend fun getByName(profileId: Long, accountName: String): DbAccount? = null
 
-    override fun getByName(profileId: Long, accountName: String): Flow<DbAccount?> = MutableStateFlow(null)
-
-    override suspend fun getByNameSync(profileId: Long, accountName: String): DbAccount? = null
-
-    override fun getByNameWithAmounts(profileId: Long, accountName: String): Flow<Account?> =
-        MutableStateFlow(domainAccounts[profileId]?.find { it.name == accountName })
-
-    override suspend fun getByNameWithAmountsSync(profileId: Long, accountName: String): Account? =
+    override suspend fun getByNameWithAmounts(profileId: Long, accountName: String): Account? =
         domainAccounts[profileId]?.find { it.name == accountName }
 
-    override fun searchAccountNames(profileId: Long, term: String): Flow<List<String>> = MutableStateFlow(
-        accountNames[profileId]?.filter { it.contains(term, ignoreCase = true) } ?: emptyList()
-    )
-
-    override suspend fun searchAccountNamesSync(profileId: Long, term: String): List<String> =
+    override suspend fun searchAccountNames(profileId: Long, term: String): List<String> =
         accountNames[profileId]?.filter { it.contains(term, ignoreCase = true) } ?: emptyList()
 
-    override suspend fun searchAccountsWithAmountsSync(profileId: Long, term: String): List<Account> =
+    override suspend fun searchAccountsWithAmounts(profileId: Long, term: String): List<Account> =
         domainAccounts[profileId]?.filter { it.name.contains(term, ignoreCase = true) } ?: emptyList()
 
-    override fun searchAccountNamesGlobal(term: String): Flow<List<String>> =
-        MutableStateFlow(accountNames.values.flatten().filter { it.contains(term, ignoreCase = true) })
-
-    override suspend fun searchAccountNamesGlobalSync(term: String): List<String> =
+    override suspend fun searchAccountNamesGlobal(term: String): List<String> =
         accountNames.values.flatten().filter { it.contains(term, ignoreCase = true) }
 
     override suspend fun insertAccount(account: DbAccount): Long = 0L

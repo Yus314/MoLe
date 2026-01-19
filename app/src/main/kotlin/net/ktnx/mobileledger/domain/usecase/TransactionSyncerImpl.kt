@@ -554,7 +554,7 @@ class TransactionSyncerImpl @Inject constructor(
         val accountsWithState = accounts.map { account ->
             coroutineContext.ensureActive()
             // Preserve existing UI state if account exists
-            val existing = accountRepository.getByNameWithAmountsSync(profileId, account.name)
+            val existing = accountRepository.getByNameWithAmounts(profileId, account.name)
             account.withStateFrom(existing)
         }
         logcat { "Account list prepared. Storing" }

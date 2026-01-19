@@ -97,28 +97,28 @@ class AccountRepositoryTest {
     }
 
     // ========================================
-    // getAllWithAmounts tests
+    // observeAllWithAmounts tests (Flow)
     // ========================================
 
     @Test
-    fun `getAllWithAmounts returns empty list when no accounts`() = runTest {
-        val accounts = repository.getAllWithAmounts(testProfileId, true).first()
+    fun `observeAllWithAmounts returns empty list when no accounts`() = runTest {
+        val accounts = repository.observeAllWithAmounts(testProfileId, true).first()
         assertTrue(accounts.isEmpty())
     }
 
     @Test
-    fun `getAllWithAmounts filters by profile`() = runTest {
+    fun `observeAllWithAmounts filters by profile`() = runTest {
         repository.insertAccount(createTestAccount(profileId = 1L, name = "Assets:Cash"))
         repository.insertAccount(createTestAccount(profileId = 2L, name = "Assets:Bank"))
 
-        val accounts = repository.getAllWithAmounts(1L, true).first()
+        val accounts = repository.observeAllWithAmounts(1L, true).first()
 
         assertEquals(1, accounts.size)
         assertEquals("Assets:Cash", accounts[0].name)
     }
 
     @Test
-    fun `getAllWithAmounts filters zero balances when requested`() = runTest {
+    fun `observeAllWithAmounts filters zero balances when requested`() = runTest {
         // Account with balance
         val accountWithBalance = createTestAccountWithAmounts(
             name = "Assets:Cash",
@@ -129,8 +129,8 @@ class AccountRepositoryTest {
         // Account with zero balance
         repository.insertAccount(createTestAccount(name = "Assets:Empty"))
 
-        val withZero = repository.getAllWithAmounts(testProfileId, true).first()
-        val withoutZero = repository.getAllWithAmounts(testProfileId, false).first()
+        val withZero = repository.observeAllWithAmounts(testProfileId, true).first()
+        val withoutZero = repository.observeAllWithAmounts(testProfileId, false).first()
 
         assertEquals(2, withZero.size)
         assertEquals(1, withoutZero.size)
@@ -138,67 +138,57 @@ class AccountRepositoryTest {
     }
 
     // ========================================
-    // getAllWithAmountsSync tests
+    // getAllWithAmounts tests (suspend)
     // ========================================
 
     @Test
-    fun `getAllWithAmountsSync returns accounts`() = runTest {
+    fun `getAllWithAmounts returns accounts`() = runTest {
         repository.insertAccount(createTestAccount(name = "Assets:Cash"))
         repository.insertAccount(createTestAccount(name = "Expenses:Food"))
 
-        val accounts = repository.getAllWithAmountsSync(testProfileId, true)
+        val accounts = repository.getAllWithAmounts(testProfileId, true)
 
         assertEquals(2, accounts.size)
     }
 
     // ========================================
-    // getByIdSync tests
+    // getById tests (suspend)
     // ========================================
 
     @Test
-    fun `getByIdSync returns null for non-existent id`() = runTest {
-        val result = repository.getByIdSync(999L)
+    fun `getById returns null for non-existent id`() = runTest {
+        val result = repository.getById(999L)
         assertNull(result)
     }
 
     @Test
-    fun `getByIdSync returns account when exists`() = runTest {
+    fun `getById returns account when exists`() = runTest {
         val account = createTestAccount(name = "Assets:Cash")
         val id = repository.insertAccount(account)
 
-        val result = repository.getByIdSync(id)
+        val result = repository.getById(id)
 
         assertNotNull(result)
         assertEquals("Assets:Cash", result?.name)
     }
 
     // ========================================
-    // getByName tests
+    // observeByName tests (Flow)
     // ========================================
 
     @Test
-    fun `getByName returns null for non-existent name`() = runTest {
-        val result = repository.getByName(testProfileId, "NonExistent").first()
+    fun `observeByName returns null for non-existent name`() = runTest {
+        val result = repository.observeByName(testProfileId, "NonExistent").first()
         assertNull(result)
     }
 
     @Test
-    fun `getByNameSync returns account when exists`() = runTest {
-        repository.insertAccount(createTestAccount(name = "Assets:Cash"))
-
-        val result = repository.getByNameSync(testProfileId, "Assets:Cash")
-
-        assertNotNull(result)
-        assertEquals("Assets:Cash", result?.name)
-    }
-
-    @Test
-    fun `getByName scopes to profile`() = runTest {
+    fun `observeByName scopes to profile`() = runTest {
         repository.insertAccount(createTestAccount(profileId = 1L, name = "Assets:Cash"))
         repository.insertAccount(createTestAccount(profileId = 2L, name = "Assets:Cash"))
 
-        val result1 = repository.getByName(1L, "Assets:Cash").first()
-        val result2 = repository.getByName(2L, "Assets:Cash").first()
+        val result1 = repository.observeByName(1L, "Assets:Cash").first()
+        val result2 = repository.observeByName(2L, "Assets:Cash").first()
 
         assertNotNull(result1)
         assertNotNull(result2)
@@ -207,7 +197,21 @@ class AccountRepositoryTest {
     }
 
     // ========================================
-    // searchAccountNames tests
+    // getByName tests (suspend)
+    // ========================================
+
+    @Test
+    fun `getByName returns account when exists`() = runTest {
+        repository.insertAccount(createTestAccount(name = "Assets:Cash"))
+
+        val result = repository.getByName(testProfileId, "Assets:Cash")
+
+        assertNotNull(result)
+        assertEquals("Assets:Cash", result?.name)
+    }
+
+    // ========================================
+    // searchAccountNames tests (suspend)
     // ========================================
 
     @Test
@@ -216,7 +220,7 @@ class AccountRepositoryTest {
         repository.insertAccount(createTestAccount(name = "Assets:Bank:Checking"))
         repository.insertAccount(createTestAccount(name = "Expenses:Food"))
 
-        val results = repository.searchAccountNamesSync(testProfileId, "Assets")
+        val results = repository.searchAccountNames(testProfileId, "Assets")
 
         assertEquals(2, results.size)
         assertTrue(results.contains("Assets:Cash"))
@@ -227,7 +231,7 @@ class AccountRepositoryTest {
     fun `searchAccountNames is case insensitive`() = runTest {
         repository.insertAccount(createTestAccount(name = "Assets:Cash"))
 
-        val results = repository.searchAccountNamesSync(testProfileId, "ASSETS")
+        val results = repository.searchAccountNames(testProfileId, "ASSETS")
 
         assertEquals(1, results.size)
         assertEquals("Assets:Cash", results[0])
@@ -237,13 +241,13 @@ class AccountRepositoryTest {
     fun `searchAccountNames matches substring`() = runTest {
         repository.insertAccount(createTestAccount(name = "Assets:Bank:Checking"))
 
-        val results = repository.searchAccountNamesSync(testProfileId, "Bank")
+        val results = repository.searchAccountNames(testProfileId, "Bank")
 
         assertEquals(1, results.size)
     }
 
     // ========================================
-    // searchAccountNamesGlobal tests
+    // searchAccountNamesGlobal tests (suspend)
     // ========================================
 
     @Test
@@ -252,16 +256,16 @@ class AccountRepositoryTest {
         repository.insertAccount(createTestAccount(profileId = 2L, name = "Assets:Bank"))
         repository.insertAccount(createTestAccount(profileId = 3L, name = "Expenses:Food"))
 
-        val results = repository.searchAccountNamesGlobalSync("Assets")
+        val results = repository.searchAccountNamesGlobal("Assets")
 
         assertEquals(2, results.size)
     }
 
     @Test
-    fun `searchAccountNamesGlobalSync returns empty for no match`() = runTest {
+    fun `searchAccountNamesGlobal returns empty for no match`() = runTest {
         repository.insertAccount(createTestAccount(name = "Assets:Cash"))
 
-        val results = repository.searchAccountNamesGlobalSync("NonExistent")
+        val results = repository.searchAccountNamesGlobal("NonExistent")
 
         assertTrue(results.isEmpty())
     }
@@ -277,7 +281,7 @@ class AccountRepositoryTest {
         val id = repository.insertAccount(account)
 
         assertTrue(id > 0)
-        val stored = repository.getByIdSync(id)
+        val stored = repository.getById(id)
         assertNotNull(stored)
         assertEquals("Assets:Cash", stored?.name)
     }
@@ -294,7 +298,7 @@ class AccountRepositoryTest {
         val updated = createTestAccount(id = id, name = "Updated")
         repository.updateAccount(updated)
 
-        val result = repository.getByIdSync(id)
+        val result = repository.getById(id)
         assertEquals("Updated", result?.name)
     }
 
@@ -309,7 +313,7 @@ class AccountRepositoryTest {
 
         repository.deleteAccount(account.apply { this.id = id })
 
-        val remaining = repository.getAllWithAmounts(testProfileId, true).first()
+        val remaining = repository.observeAllWithAmounts(testProfileId, true).first()
         assertTrue(remaining.isEmpty())
     }
 
@@ -327,7 +331,7 @@ class AccountRepositoryTest {
         )
         repository.storeAccounts(newAccounts, testProfileId)
 
-        val accounts = repository.getAllWithAmounts(testProfileId, true).first()
+        val accounts = repository.observeAllWithAmounts(testProfileId, true).first()
         assertEquals(2, accounts.size)
         assertTrue(accounts.any { it.name == "NewAccount1" })
         assertTrue(accounts.any { it.name == "NewAccount2" })
@@ -342,8 +346,8 @@ class AccountRepositoryTest {
         )
         repository.storeAccounts(newAccounts, testProfileId)
 
-        val profile1Accounts = repository.getAllWithAmounts(testProfileId, true).first()
-        val profile2Accounts = repository.getAllWithAmounts(2L, true).first()
+        val profile1Accounts = repository.observeAllWithAmounts(testProfileId, true).first()
+        val profile2Accounts = repository.observeAllWithAmounts(2L, true).first()
 
         assertEquals(1, profile1Accounts.size)
         assertEquals(1, profile2Accounts.size)
@@ -425,63 +429,65 @@ class FakeAccountRepository : AccountRepository {
         }
     )
 
-    override fun getAllWithAmounts(profileId: Long, includeZeroBalances: Boolean): Flow<List<Account>> {
+    // Flow methods (observe prefix)
+    override fun observeAllWithAmounts(profileId: Long, includeZeroBalances: Boolean): Flow<List<Account>> {
         val result = getAccountsForProfile(profileId)
             .filter { includeZeroBalances || hasNonZeroBalance(it.id) }
             .map { toDomain(it) }
         return MutableStateFlow(result)
     }
 
-    override suspend fun getAllWithAmountsSync(profileId: Long, includeZeroBalances: Boolean): List<Account> =
-        getAccountsForProfile(profileId)
-            .filter { includeZeroBalances || hasNonZeroBalance(it.id) }
-            .map { toDomain(it) }
-
-    override fun getAll(profileId: Long, includeZeroBalances: Boolean): Flow<List<DbAccount>> = MutableStateFlow(
+    override fun observeAll(profileId: Long, includeZeroBalances: Boolean): Flow<List<DbAccount>> = MutableStateFlow(
         getAccountsForProfile(profileId)
             .filter { includeZeroBalances || hasNonZeroBalance(it.id) }
     )
 
-    override suspend fun getByIdSync(id: Long): DbAccount? = dbAccounts[id]
-
-    override fun getByName(profileId: Long, accountName: String): Flow<DbAccount?> = MutableStateFlow(
+    override fun observeByName(profileId: Long, accountName: String): Flow<DbAccount?> = MutableStateFlow(
         dbAccounts.values.find { it.profileId == profileId && it.name == accountName }
     )
 
-    override suspend fun getByNameSync(profileId: Long, accountName: String): DbAccount? =
-        dbAccounts.values.find { it.profileId == profileId && it.name == accountName }
-
-    override fun getByNameWithAmounts(profileId: Long, accountName: String): Flow<Account?> {
+    override fun observeByNameWithAmounts(profileId: Long, accountName: String): Flow<Account?> {
         val account = dbAccounts.values.find { it.profileId == profileId && it.name == accountName }
         return MutableStateFlow(account?.let { toDomain(it) })
     }
 
-    override suspend fun getByNameWithAmountsSync(profileId: Long, accountName: String): Account? {
+    override fun observeSearchAccountNames(profileId: Long, term: String): Flow<List<String>> =
+        MutableStateFlow(searchAccountNamesInternal(profileId, term))
+
+    override fun observeSearchAccountNamesGlobal(term: String): Flow<List<String>> = MutableStateFlow(
+        dbAccounts.values
+            .filter { it.name.contains(term, ignoreCase = true) }
+            .map { it.name }
+    )
+
+    // Suspend methods (no suffix)
+    override suspend fun getAllWithAmounts(profileId: Long, includeZeroBalances: Boolean): List<Account> =
+        getAccountsForProfile(profileId)
+            .filter { includeZeroBalances || hasNonZeroBalance(it.id) }
+            .map { toDomain(it) }
+
+    override suspend fun getById(id: Long): DbAccount? = dbAccounts[id]
+
+    override suspend fun getByName(profileId: Long, accountName: String): DbAccount? =
+        dbAccounts.values.find { it.profileId == profileId && it.name == accountName }
+
+    override suspend fun getByNameWithAmounts(profileId: Long, accountName: String): Account? {
         val account = dbAccounts.values.find { it.profileId == profileId && it.name == accountName }
         return account?.let { toDomain(it) }
     }
 
-    override fun searchAccountNames(profileId: Long, term: String): Flow<List<String>> =
-        MutableStateFlow(searchAccountNamesInternal(profileId, term))
-
-    override suspend fun searchAccountNamesSync(profileId: Long, term: String): List<String> =
+    override suspend fun searchAccountNames(profileId: Long, term: String): List<String> =
         searchAccountNamesInternal(profileId, term)
 
     private fun searchAccountNamesInternal(profileId: Long, term: String): List<String> = dbAccounts.values
         .filter { it.profileId == profileId && it.name.contains(term, ignoreCase = true) }
         .map { it.name }
 
-    override suspend fun searchAccountsWithAmountsSync(profileId: Long, term: String): List<Account> = dbAccounts.values
+    override suspend fun searchAccountsWithAmounts(profileId: Long, term: String): List<Account> = dbAccounts.values
         .filter { it.profileId == profileId && it.name.contains(term, ignoreCase = true) }
         .map { toDomain(it) }
 
-    override fun searchAccountNamesGlobal(term: String): Flow<List<String>> = MutableStateFlow(
-        dbAccounts.values
-            .filter { it.name.contains(term, ignoreCase = true) }
-            .map { it.name }
-    )
-
-    override suspend fun searchAccountNamesGlobalSync(term: String): List<String> = dbAccounts.values
+    override suspend fun searchAccountNamesGlobal(term: String): List<String> = dbAccounts.values
         .filter { it.name.contains(term, ignoreCase = true) }
         .map { it.name }
 

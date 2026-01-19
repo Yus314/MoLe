@@ -120,7 +120,7 @@ class AccountSummaryViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                val domainAccounts = accountRepository.getAllWithAmountsSync(profileId, showZeroBalances)
+                val domainAccounts = accountRepository.getAllWithAmounts(profileId, showZeroBalances)
 
                 // First pass: determine hasSubAccounts for each account
                 val hasSubAccountsMap = HashMap<String, Boolean>()

@@ -117,10 +117,7 @@ abstract class TransactionDAO : BaseDAO<Transaction>() {
             ".account_name LIKE '%'||:accountName||'%' AND ta.amount <> 0 AND tr.profile_id = " +
             ":profileId ORDER BY tr.year asc, tr.month asc, tr.day asc, tr.ledger_id asc"
     )
-    abstract fun getAllWithAccountsFiltered(
-        profileId: Long,
-        accountName: String?
-    ): Flow<List<TransactionWithAccounts>>
+    abstract fun getAllWithAccountsFiltered(profileId: Long, accountName: String?): Flow<List<TransactionWithAccounts>>
 
     @androidx.room.Transaction
     @Query(

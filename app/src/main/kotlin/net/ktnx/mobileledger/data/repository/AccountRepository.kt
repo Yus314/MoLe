@@ -47,7 +47,68 @@ import net.ktnx.mobileledger.domain.model.Account
 interface AccountRepository {
 
     // ========================================
-    // Query Operations
+    // Query Operations (Flow - observe prefix)
+    // ========================================
+
+    /**
+     * Observe all accounts for a profile with their amounts.
+     *
+     * @param profileId The profile ID
+     * @param includeZeroBalances Whether to include accounts with zero balance
+     * @return Flow that emits the account list whenever it changes
+     */
+    fun observeAllWithAmounts(profileId: Long, includeZeroBalances: Boolean): Flow<List<Account>>
+
+    /**
+     * Observe all accounts for a profile (without amounts).
+     *
+     * @param profileId The profile ID
+     * @param includeZeroBalances Whether to include accounts with zero balance
+     * @return Flow that emits the account list whenever it changes
+     */
+    fun observeAll(profileId: Long, includeZeroBalances: Boolean): Flow<List<DbAccount>>
+
+    /**
+     * Observe an account by name within a profile.
+     *
+     * @param profileId The profile ID
+     * @param accountName The account name
+     * @return Flow that emits the account when it changes
+     */
+    fun observeByName(profileId: Long, accountName: String): Flow<DbAccount?>
+
+    /**
+     * Observe an account by name with its amounts.
+     *
+     * @param profileId The profile ID
+     * @param accountName The account name
+     * @return Flow that emits the account with amounts when it changes
+     */
+    fun observeByNameWithAmounts(profileId: Long, accountName: String): Flow<Account?>
+
+    // ========================================
+    // Search Operations (Flow - observe prefix)
+    // ========================================
+
+    /**
+     * Observe account names matching a term within a profile.
+     *
+     * @param profileId The profile ID
+     * @param term The search term
+     * @return Flow that emits matching account names
+     */
+    fun observeSearchAccountNames(profileId: Long, term: String): Flow<List<String>>
+
+    /**
+     * Observe account names matching a term across all profiles.
+     *
+     * @param term The search term
+     * @return Flow that emits matching account names
+     */
+    fun observeSearchAccountNamesGlobal(term: String): Flow<List<String>>
+
+    // ========================================
+    // Query Operations (suspend - no suffix)
     // ========================================
 
     /**
@@ -55,27 +116,9 @@ interface AccountRepository {
      *
      * @param profileId The profile ID
      * @param includeZeroBalances Whether to include accounts with zero balance
-     * @return Flow that emits the account list whenever it changes
-     */
-    fun getAllWithAmounts(profileId: Long, includeZeroBalances: Boolean): Flow<List<Account>>
-
-    /**
-     * Get all accounts for a profile with their amounts synchronously.
-     *
-     * @param profileId The profile ID
-     * @param includeZeroBalances Whether to include accounts with zero balance
      * @return The account list
      */
-    suspend fun getAllWithAmountsSync(profileId: Long, includeZeroBalances: Boolean): List<Account>
-
-    /**
-     * Get all accounts for a profile (without amounts).
-     *
-     * @param profileId The profile ID
-     * @param includeZeroBalances Whether to include accounts with zero balance
-     * @return Flow that emits the account list whenever it changes
-     */
-    fun getAll(profileId: Long, includeZeroBalances: Boolean): Flow<List<DbAccount>>
+    suspend fun getAllWithAmounts(profileId: Long, includeZeroBalances: Boolean): List<Account>
 
     /**
      * Get an account by its ID.
@@ -83,46 +126,28 @@ interface AccountRepository {
      * @param id The account ID
      * @return The account or null if not found
      */
-    suspend fun getByIdSync(id: Long): DbAccount?
+    suspend fun getById(id: Long): DbAccount?
 
     /**
      * Get an account by name within a profile.
      *
      * @param profileId The profile ID
      * @param accountName The account name
-     * @return Flow that emits the account when it changes
-     */
-    fun getByName(profileId: Long, accountName: String): Flow<DbAccount?>
-
-    /**
-     * Get an account by name within a profile synchronously.
-     *
-     * @param profileId The profile ID
-     * @param accountName The account name
      * @return The account or null if not found
      */
-    suspend fun getByNameSync(profileId: Long, accountName: String): DbAccount?
+    suspend fun getByName(profileId: Long, accountName: String): DbAccount?
 
     /**
      * Get an account by name with its amounts.
      *
      * @param profileId The profile ID
      * @param accountName The account name
-     * @return Flow that emits the account with amounts when it changes
-     */
-    fun getByNameWithAmounts(profileId: Long, accountName: String): Flow<Account?>
-
-    /**
-     * Get an account by name with its amounts synchronously.
-     *
-     * @param profileId The profile ID
-     * @param accountName The account name
      * @return The account with amounts or null if not found
      */
-    suspend fun getByNameWithAmountsSync(profileId: Long, accountName: String): Account?
+    suspend fun getByNameWithAmounts(profileId: Long, accountName: String): Account?
 
     // ========================================
-    // Search Operations
+    // Search Operations (suspend - no suffix)
     // ========================================
 
     /**
@@ -130,18 +155,9 @@ interface AccountRepository {
      *
      * @param profileId The profile ID
      * @param term The search term
-     * @return Flow that emits matching account names
-     */
-    fun searchAccountNames(profileId: Long, term: String): Flow<List<String>>
-
-    /**
-     * Search for account names matching a term within a profile synchronously.
-     *
-     * @param profileId The profile ID
-     * @param term The search term
      * @return List of matching account names
      */
-    suspend fun searchAccountNamesSync(profileId: Long, term: String): List<String>
+    suspend fun searchAccountNames(profileId: Long, term: String): List<String>
 
     /**
      * Search for accounts with amounts matching a term within a profile.
@@ -150,23 +166,15 @@ interface AccountRepository {
      * @param term The search term
      * @return List of matching accounts with amounts
      */
-    suspend fun searchAccountsWithAmountsSync(profileId: Long, term: String): List<Account>
+    suspend fun searchAccountsWithAmounts(profileId: Long, term: String): List<Account>
 
     /**
      * Search for account names matching a term across all profiles.
      *
      * @param term The search term
-     * @return Flow that emits matching account names
-     */
-    fun searchAccountNamesGlobal(term: String): Flow<List<String>>
-
-    /**
-     * Search for account names matching a term across all profiles synchronously.
-     *
-     * @param term The search term
      * @return List of matching account names
      */
-    suspend fun searchAccountNamesGlobalSync(term: String): List<String>
+    suspend fun searchAccountNamesGlobal(term: String): List<String>
 
     // ========================================
     // Mutation Operations

@@ -159,7 +159,7 @@ class AccountRowsViewModel @Inject constructor(
 
             val termUpper = term.uppercase()
             logcat { "querying DB: profileId=$profileId, term='$termUpper'" }
-            val suggestions = accountRepository.searchAccountNamesSync(profileId, termUpper)
+            val suggestions = accountRepository.searchAccountNames(profileId, termUpper)
 
             if (isActive) {
                 logcat { "got ${suggestions.size} suggestions for row $rowId: ${suggestions.take(3)}" }

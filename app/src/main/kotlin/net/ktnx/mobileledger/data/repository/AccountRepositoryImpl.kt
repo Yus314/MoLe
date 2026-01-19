@@ -48,66 +48,73 @@ class AccountRepositoryImpl @Inject constructor(
 ) : AccountRepository {
 
     // ========================================
-    // Query Operations
+    // Query Operations (Flow - observe prefix)
     // ========================================
 
-    override fun getAllWithAmounts(profileId: Long, includeZeroBalances: Boolean): Flow<List<Account>> =
+    override fun observeAllWithAmounts(profileId: Long, includeZeroBalances: Boolean): Flow<List<Account>> =
         accountDAO.getAllWithAmounts(profileId, includeZeroBalances)
             .map { entities -> entities.map { it.toDomain() } }
 
-    override suspend fun getAllWithAmountsSync(profileId: Long, includeZeroBalances: Boolean): List<Account> =
+    override fun observeAll(profileId: Long, includeZeroBalances: Boolean): Flow<List<DbAccount>> =
+        accountDAO.getAll(profileId, includeZeroBalances)
+
+    override fun observeByName(profileId: Long, accountName: String): Flow<DbAccount?> =
+        accountDAO.getByName(profileId, accountName)
+
+    override fun observeByNameWithAmounts(profileId: Long, accountName: String): Flow<Account?> =
+        accountDAO.getByNameWithAmounts(profileId, accountName)
+            .map { it?.toDomain() }
+
+    // ========================================
+    // Search Operations (Flow - observe prefix)
+    // ========================================
+
+    override fun observeSearchAccountNames(profileId: Long, term: String): Flow<List<String>> =
+        accountDAO.lookupNamesInProfileByName(profileId, term.uppercase())
+            .map { containers -> AccountDAO.unbox(containers) }
+
+    override fun observeSearchAccountNamesGlobal(term: String): Flow<List<String>> =
+        accountDAO.lookupNamesByName(term.uppercase())
+            .map { containers -> AccountDAO.unbox(containers) }
+
+    // ========================================
+    // Query Operations (suspend - no suffix)
+    // ========================================
+
+    override suspend fun getAllWithAmounts(profileId: Long, includeZeroBalances: Boolean): List<Account> =
         withContext(Dispatchers.IO) {
             accountDAO.getAllWithAmountsSync(profileId, includeZeroBalances)
                 .map { it.toDomain() }
         }
 
-    override fun getAll(profileId: Long, includeZeroBalances: Boolean): Flow<List<DbAccount>> =
-        accountDAO.getAll(profileId, includeZeroBalances)
-
-    override suspend fun getByIdSync(id: Long): DbAccount? = withContext(Dispatchers.IO) {
+    override suspend fun getById(id: Long): DbAccount? = withContext(Dispatchers.IO) {
         accountDAO.getByIdSync(id)
     }
 
-    override fun getByName(profileId: Long, accountName: String): Flow<DbAccount?> =
-        accountDAO.getByName(profileId, accountName)
-
-    override suspend fun getByNameSync(profileId: Long, accountName: String): DbAccount? = withContext(Dispatchers.IO) {
+    override suspend fun getByName(profileId: Long, accountName: String): DbAccount? = withContext(Dispatchers.IO) {
         accountDAO.getByNameSync(profileId, accountName)
     }
 
-    override fun getByNameWithAmounts(profileId: Long, accountName: String): Flow<Account?> =
-        accountDAO.getByNameWithAmounts(profileId, accountName)
-            .map { it?.toDomain() }
-
-    override suspend fun getByNameWithAmountsSync(profileId: Long, accountName: String): Account? =
+    override suspend fun getByNameWithAmounts(profileId: Long, accountName: String): Account? =
         withContext(Dispatchers.IO) {
             accountDAO.getByNameWithAmountsSync(profileId, accountName)?.toDomain()
         }
 
     // ========================================
-    // Search Operations
+    // Search Operations (suspend - no suffix)
     // ========================================
 
-    override fun searchAccountNames(profileId: Long, term: String): Flow<List<String>> =
-        accountDAO.lookupNamesInProfileByName(profileId, term.uppercase())
-            .map { containers -> AccountDAO.unbox(containers) }
+    override suspend fun searchAccountNames(profileId: Long, term: String): List<String> = withContext(Dispatchers.IO) {
+        AccountDAO.unbox(accountDAO.lookupNamesInProfileByNameSync(profileId, term.uppercase()))
+    }
 
-    override suspend fun searchAccountNamesSync(profileId: Long, term: String): List<String> =
-        withContext(Dispatchers.IO) {
-            AccountDAO.unbox(accountDAO.lookupNamesInProfileByNameSync(profileId, term.uppercase()))
-        }
-
-    override suspend fun searchAccountsWithAmountsSync(profileId: Long, term: String): List<Account> =
+    override suspend fun searchAccountsWithAmounts(profileId: Long, term: String): List<Account> =
         withContext(Dispatchers.IO) {
             accountDAO.lookupWithAmountsInProfileByNameSync(profileId, term.uppercase())
                 .map { it.toDomain() }
         }
 
-    override fun searchAccountNamesGlobal(term: String): Flow<List<String>> =
-        accountDAO.lookupNamesByName(term.uppercase())
-            .map { containers -> AccountDAO.unbox(containers) }
-
-    override suspend fun searchAccountNamesGlobalSync(term: String): List<String> = withContext(Dispatchers.IO) {
+    override suspend fun searchAccountNamesGlobal(term: String): List<String> = withContext(Dispatchers.IO) {
         AccountDAO.unbox(accountDAO.lookupNamesByNameSync(term.uppercase()))
     }
 
