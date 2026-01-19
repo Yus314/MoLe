@@ -39,35 +39,35 @@ class FakeCurrencyRepository : CurrencyRepository {
     // Domain Model Query Operations
     // ========================================
 
-    override fun getAllCurrenciesAsDomain(): Flow<List<DomainCurrency>> =
+    override fun observeAllCurrenciesAsDomain(): Flow<List<DomainCurrency>> =
         currenciesFlow.map { list -> list.map { it.toDomain() } }
 
-    override suspend fun getAllCurrenciesAsDomainSync(): List<DomainCurrency> = currencies.values.map { it.toDomain() }
+    override suspend fun getAllCurrenciesAsDomain(): List<DomainCurrency> = currencies.values.map { it.toDomain() }
 
-    override fun getCurrencyAsDomain(id: Long): Flow<DomainCurrency?> =
+    override fun observeCurrencyAsDomain(id: Long): Flow<DomainCurrency?> =
         currenciesFlow.map { list -> list.find { it.id == id }?.toDomain() }
 
-    override suspend fun getCurrencyAsDomainSync(id: Long): DomainCurrency? = currencies[id]?.toDomain()
+    override suspend fun getCurrencyAsDomain(id: Long): DomainCurrency? = currencies[id]?.toDomain()
 
-    override suspend fun getCurrencyAsDomainByNameSync(name: String): DomainCurrency? =
+    override suspend fun getCurrencyAsDomainByName(name: String): DomainCurrency? =
         currencies.values.find { it.name == name }?.toDomain()
 
     // ========================================
     // Database Entity Query Operations
     // ========================================
 
-    override fun getAllCurrencies(): Flow<List<Currency>> = currenciesFlow
+    override fun observeAllCurrencies(): Flow<List<Currency>> = currenciesFlow
 
-    override suspend fun getAllCurrenciesSync(): List<Currency> = currencies.values.toList()
+    override suspend fun getAllCurrencies(): List<Currency> = currencies.values.toList()
 
-    override fun getCurrencyById(id: Long): Flow<Currency?> = MutableStateFlow(currencies[id])
+    override fun observeCurrencyById(id: Long): Flow<Currency?> = MutableStateFlow(currencies[id])
 
-    override suspend fun getCurrencyByIdSync(id: Long): Currency? = currencies[id]
+    override suspend fun getCurrencyById(id: Long): Currency? = currencies[id]
 
-    override fun getCurrencyByName(name: String): Flow<Currency?> =
+    override fun observeCurrencyByName(name: String): Flow<Currency?> =
         MutableStateFlow(currencies.values.find { it.name == name })
 
-    override suspend fun getCurrencyByNameSync(name: String): Currency? = currencies.values.find { it.name == name }
+    override suspend fun getCurrencyByName(name: String): Currency? = currencies.values.find { it.name == name }
 
     override suspend fun insertCurrency(currency: Currency): Long {
         val id = if (currency.id == 0L) nextId++ else currency.id

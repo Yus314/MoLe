@@ -129,7 +129,7 @@ class RawConfigWriter(
 
     @Throws(IOException::class)
     private suspend fun writeCommodities() {
-        val list = currencyRepository.getAllCurrenciesSync()
+        val list = currencyRepository.getAllCurrencies()
         if (list.isEmpty()) return
 
         w.name(BackupKeys.COMMODITIES).beginArray()

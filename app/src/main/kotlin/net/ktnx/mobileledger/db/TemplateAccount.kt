@@ -109,10 +109,10 @@ class TemplateAccount : TemplateBase {
     }
 
     /**
-     * @deprecated Use CurrencyRepository.getCurrencyByIdSync() instead.
+     * @deprecated Use CurrencyRepository.getCurrencyById() instead.
      * This method violates the Repository pattern by accessing the database directly.
      */
-    @Deprecated("Use CurrencyRepository.getCurrencyByIdSync() instead", ReplaceWith(""))
+    @Deprecated("Use CurrencyRepository.getCurrencyById() instead", ReplaceWith(""))
     fun getCurrencyObject(): Currency? {
         val curr = currency
         if (curr == null || curr <= 0) return null

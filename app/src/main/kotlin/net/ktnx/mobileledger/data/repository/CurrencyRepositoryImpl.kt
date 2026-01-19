@@ -46,21 +46,21 @@ class CurrencyRepositoryImpl @Inject constructor(private val currencyDAO: Curren
     // Domain Model Query Operations
     // ========================================
 
-    override fun getAllCurrenciesAsDomain(): Flow<List<DomainCurrency>> =
+    override fun observeAllCurrenciesAsDomain(): Flow<List<DomainCurrency>> =
         currencyDAO.getAll().map { list -> list.map { it.toDomain() } }
 
-    override suspend fun getAllCurrenciesAsDomainSync(): List<DomainCurrency> = withContext(Dispatchers.IO) {
+    override suspend fun getAllCurrenciesAsDomain(): List<DomainCurrency> = withContext(Dispatchers.IO) {
         currencyDAO.getAllSync().map { it.toDomain() }
     }
 
-    override fun getCurrencyAsDomain(id: Long): Flow<DomainCurrency?> =
+    override fun observeCurrencyAsDomain(id: Long): Flow<DomainCurrency?> =
         currencyDAO.getById(id).map { it?.toDomain() }
 
-    override suspend fun getCurrencyAsDomainSync(id: Long): DomainCurrency? = withContext(Dispatchers.IO) {
+    override suspend fun getCurrencyAsDomain(id: Long): DomainCurrency? = withContext(Dispatchers.IO) {
         currencyDAO.getByIdSync(id)?.toDomain()
     }
 
-    override suspend fun getCurrencyAsDomainByNameSync(name: String): DomainCurrency? = withContext(Dispatchers.IO) {
+    override suspend fun getCurrencyAsDomainByName(name: String): DomainCurrency? = withContext(Dispatchers.IO) {
         currencyDAO.getByNameSync(name)?.toDomain()
     }
 
@@ -68,21 +68,21 @@ class CurrencyRepositoryImpl @Inject constructor(private val currencyDAO: Curren
     // Database Entity Query Operations (for internal use)
     // ========================================
 
-    override fun getAllCurrencies(): Flow<List<Currency>> = currencyDAO.getAll()
+    override fun observeAllCurrencies(): Flow<List<Currency>> = currencyDAO.getAll()
 
-    override suspend fun getAllCurrenciesSync(): List<Currency> = withContext(Dispatchers.IO) {
+    override suspend fun getAllCurrencies(): List<Currency> = withContext(Dispatchers.IO) {
         currencyDAO.getAllSync()
     }
 
-    override fun getCurrencyById(id: Long): Flow<Currency?> = currencyDAO.getById(id)
+    override fun observeCurrencyById(id: Long): Flow<Currency?> = currencyDAO.getById(id)
 
-    override suspend fun getCurrencyByIdSync(id: Long): Currency? = withContext(Dispatchers.IO) {
+    override suspend fun getCurrencyById(id: Long): Currency? = withContext(Dispatchers.IO) {
         currencyDAO.getByIdSync(id)
     }
 
-    override fun getCurrencyByName(name: String): Flow<Currency?> = currencyDAO.getByName(name)
+    override fun observeCurrencyByName(name: String): Flow<Currency?> = currencyDAO.getByName(name)
 
-    override suspend fun getCurrencyByNameSync(name: String): Currency? = withContext(Dispatchers.IO) {
+    override suspend fun getCurrencyByName(name: String): Currency? = withContext(Dispatchers.IO) {
         currencyDAO.getByNameSync(name)
     }
 

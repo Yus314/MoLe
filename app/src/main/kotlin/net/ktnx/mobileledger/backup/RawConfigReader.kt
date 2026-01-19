@@ -289,7 +289,7 @@ class RawConfigReader(inputStream: InputStream) {
 
         for (c in commoditiesList) {
             coroutineContext.ensureActive()
-            if (currencyRepository.getCurrencyByNameSync(c.name) == null) {
+            if (currencyRepository.getCurrencyByName(c.name) == null) {
                 currencyRepository.insertCurrency(c)
             }
         }

@@ -243,7 +243,7 @@ class TemplateApplicatorViewModel @Inject constructor(
         val defaultCurrency = profileRepository.currentProfile.value?.defaultCommodityOrEmpty ?: ""
         val currencyIds = lines.mapNotNull { it.currencyId }.distinct()
         val currencyMap = currencyIds.associateWith { id ->
-            currencyRepository.getCurrencyByIdSync(id)?.name
+            currencyRepository.getCurrencyById(id)?.name
         }
         return CurrencyContext(defaultCurrency, currencyMap)
     }

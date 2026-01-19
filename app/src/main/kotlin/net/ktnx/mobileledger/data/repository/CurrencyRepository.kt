@@ -47,92 +47,92 @@ interface CurrencyRepository {
     // ========================================
 
     /**
-     * Get all currencies as domain models.
+     * Observe all currencies as domain models.
      *
      * @return Flow that emits the currency domain model list whenever it changes
      */
-    fun getAllCurrenciesAsDomain(): Flow<List<DomainCurrency>>
+    fun observeAllCurrenciesAsDomain(): Flow<List<DomainCurrency>>
 
     /**
-     * Get all currencies as domain models synchronously.
+     * Get all currencies as domain models.
      *
      * @return List of all currency domain models
      */
-    suspend fun getAllCurrenciesAsDomainSync(): List<DomainCurrency>
+    suspend fun getAllCurrenciesAsDomain(): List<DomainCurrency>
+
+    /**
+     * Observe a currency as domain model by its ID.
+     *
+     * @param id The currency ID
+     * @return Flow that emits the currency domain model when it changes
+     */
+    fun observeCurrencyAsDomain(id: Long): Flow<DomainCurrency?>
 
     /**
      * Get a currency as domain model by its ID.
      *
      * @param id The currency ID
-     * @return Flow that emits the currency domain model when it changes
-     */
-    fun getCurrencyAsDomain(id: Long): Flow<DomainCurrency?>
-
-    /**
-     * Get a currency as domain model by its ID synchronously.
-     *
-     * @param id The currency ID
      * @return The currency domain model or null if not found
      */
-    suspend fun getCurrencyAsDomainSync(id: Long): DomainCurrency?
+    suspend fun getCurrencyAsDomain(id: Long): DomainCurrency?
 
     /**
-     * Get a currency as domain model by its name synchronously.
+     * Get a currency as domain model by its name.
      *
      * @param name The currency name
      * @return The currency domain model or null if not found
      */
-    suspend fun getCurrencyAsDomainByNameSync(name: String): DomainCurrency?
+    suspend fun getCurrencyAsDomainByName(name: String): DomainCurrency?
 
     // ========================================
     // Database Entity Query Operations (for internal use)
     // ========================================
 
     /**
-     * Get all currencies.
+     * Observe all currencies.
      *
      * @return Flow that emits the currency list whenever it changes
      */
-    fun getAllCurrencies(): Flow<List<DbCurrency>>
+    fun observeAllCurrencies(): Flow<List<DbCurrency>>
 
     /**
-     * Get all currencies synchronously.
+     * Get all currencies.
      *
      * @return List of all currencies
      */
-    suspend fun getAllCurrenciesSync(): List<DbCurrency>
+    suspend fun getAllCurrencies(): List<DbCurrency>
+
+    /**
+     * Observe a currency by its ID.
+     *
+     * @param id The currency ID
+     * @return Flow that emits the currency when it changes
+     */
+    fun observeCurrencyById(id: Long): Flow<DbCurrency?>
 
     /**
      * Get a currency by its ID.
      *
      * @param id The currency ID
-     * @return Flow that emits the currency when it changes
-     */
-    fun getCurrencyById(id: Long): Flow<DbCurrency?>
-
-    /**
-     * Get a currency by its ID synchronously.
-     *
-     * @param id The currency ID
      * @return The currency or null if not found
      */
-    suspend fun getCurrencyByIdSync(id: Long): DbCurrency?
+    suspend fun getCurrencyById(id: Long): DbCurrency?
+
+    /**
+     * Observe a currency by its name.
+     *
+     * @param name The currency name
+     * @return Flow that emits the currency when it changes
+     */
+    fun observeCurrencyByName(name: String): Flow<DbCurrency?>
 
     /**
      * Get a currency by its name.
      *
      * @param name The currency name
-     * @return Flow that emits the currency when it changes
-     */
-    fun getCurrencyByName(name: String): Flow<DbCurrency?>
-
-    /**
-     * Get a currency by its name synchronously.
-     *
-     * @param name The currency name
      * @return The currency or null if not found
      */
-    suspend fun getCurrencyByNameSync(name: String): DbCurrency?
+    suspend fun getCurrencyByName(name: String): DbCurrency?
 
     // ========================================
     // Mutation Operations
