@@ -124,8 +124,7 @@ class TemplateListViewModelCompose @Inject constructor(
         val template = deletedTemplate ?: return
         viewModelScope.launch {
             try {
-                val entity = net.ktnx.mobileledger.data.repository.mapper.TemplateMapper.run { template.toEntity() }
-                templateRepository.insertTemplateWithAccounts(entity)
+                templateRepository.saveTemplate(template)
                 deletedTemplate = null
             } catch (e: Exception) {
                 logcat { "Error restoring template: ${e.asLog()}" }
@@ -137,6 +136,7 @@ class TemplateListViewModelCompose @Inject constructor(
     private fun duplicateTemplate(templateId: Long) {
         viewModelScope.launch {
             try {
+                @Suppress("DEPRECATION")
                 templateRepository.duplicateTemplate(templateId)
             } catch (e: Exception) {
                 logcat { "Error duplicating template: ${e.message}" }
