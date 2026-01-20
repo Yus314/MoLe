@@ -18,55 +18,24 @@
 package net.ktnx.mobileledger.ui.main
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import java.text.DateFormatSymbols
-import java.util.Calendar
-import java.util.Locale
-import kotlinx.collections.immutable.ImmutableList
-import net.ktnx.mobileledger.domain.model.AmountStyle
 import net.ktnx.mobileledger.ui.components.WeakOverscrollContainer
-import net.ktnx.mobileledger.utils.SimpleDate
 
 /**
  * Transaction List Tab displaying the list of transactions grouped by date.
@@ -141,7 +110,7 @@ fun TransactionListTab(
                             }
 
                             is TransactionListDisplayItem.DateDelimiter -> {
-                                DateDelimiterRow(date = item.date, isMonthShown = item.isMonthShown)
+                                TransactionDateDelimiter(date = item.date, isMonthShown = item.isMonthShown)
                             }
 
                             is TransactionListDisplayItem.Transaction -> {
@@ -149,70 +118,6 @@ fun TransactionListTab(
                             }
                         }
                     }
-                }
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun AccountFilterBar(
-    accountFilter: String,
-    suggestions: ImmutableList<String>,
-    onAccountFilterChanged: (String?) -> Unit,
-    onSuggestionSelected: (String) -> Unit,
-    onClearFilter: () -> Unit
-) {
-    var expanded by remember { mutableStateOf(false) }
-    var isFocused by remember { mutableStateOf(false) }
-
-    LaunchedEffect(suggestions, isFocused) {
-        expanded = isFocused && suggestions.isNotEmpty()
-    }
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        ExposedDropdownMenuBox(
-            expanded = expanded,
-            onExpandedChange = { },
-            modifier = Modifier.weight(1f)
-        ) {
-            OutlinedTextField(
-                value = accountFilter,
-                onValueChange = { onAccountFilterChanged(it.ifEmpty { null }) },
-                modifier = Modifier
-                    .menuAnchor()
-                    .onFocusChanged { focusState -> isFocused = focusState.isFocused }
-                    .fillMaxWidth(),
-                placeholder = { Text("Filter by account") },
-                singleLine = true,
-                trailingIcon = {
-                    IconButton(onClick = onClearFilter) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "Clear filter"
-                        )
-                    }
-                }
-            )
-
-            ExposedDropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false }
-            ) {
-                suggestions.forEach { suggestion ->
-                    DropdownMenuItem(
-                        text = { Text(suggestion) },
-                        onClick = {
-                            onSuggestionSelected(suggestion)
-                            expanded = false
-                        }
-                    )
                 }
             }
         }
@@ -231,169 +136,6 @@ private fun TransactionListHeader(text: String) {
             text = text,
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
-}
-
-@Composable
-private fun DateDelimiterRow(date: SimpleDate, isMonthShown: Boolean) {
-    val monthName = remember(date.month) {
-        DateFormatSymbols.getInstance(Locale.getDefault()).months[date.month - 1]
-    }
-
-    val dayOfWeek = remember(date) {
-        val calendar = Calendar.getInstance().apply {
-            set(date.year, date.month - 1, date.day)
-        }
-        DateFormatSymbols.getInstance(Locale.getDefault())
-            .weekdays[calendar.get(Calendar.DAY_OF_WEEK)]
-    }
-
-    val dateText = remember(date, isMonthShown, monthName, dayOfWeek) {
-        if (isMonthShown) {
-            String.format(Locale.US, "%s %d", monthName, date.year)
-        } else {
-            dayOfWeek
-        }
-    }
-
-    val fullDateText = remember(date, monthName) {
-        String.format(Locale.US, "%d %s", date.day, monthName)
-    }
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f))
-            .padding(horizontal = 16.dp, vertical = 4.dp)
-    ) {
-        if (isMonthShown) {
-            Text(
-                text = dateText,
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
-            )
-        }
-        Text(
-            text = fullDateText,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
-}
-
-@Composable
-private fun TransactionCard(transaction: TransactionListDisplayItem.Transaction) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 4.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp)
-        ) {
-            // Description
-            Text(
-                text = transaction.description,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Medium,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
-
-            // Comment (if any)
-            transaction.comment?.let { comment ->
-                if (comment.isNotEmpty()) {
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = comment,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Account rows - memoize bold account comparison
-            val boldAccountFlags = remember(transaction.boldAccountName, transaction.accounts) {
-                transaction.accounts.map { it.accountName == transaction.boldAccountName }
-            }
-            transaction.accounts.forEachIndexed { index, account ->
-                TransactionAccountRow(
-                    account = account,
-                    isBold = boldAccountFlags[index]
-                )
-            }
-
-            // Running total (if filtering by account)
-            transaction.runningTotal?.let { total ->
-                if (total.isNotEmpty()) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = total,
-                        style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.align(Alignment.End)
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun TransactionAccountRow(account: TransactionAccountDisplayItem, isBold: Boolean) {
-    // Memoize color calculation based on amount (green for positive, red for negative)
-    val amountColor = remember(account.amount) {
-        when {
-            account.amount > 0 -> Color(0xFF4CAF50)
-            account.amount < 0 -> Color(0xFFF44336)
-            else -> null
-        }
-    } ?: MaterialTheme.colorScheme.onSurface
-
-    // Memoize amount formatting - only format when visible
-    val formattedAmount = remember(account.amount, account.currency, account.amountStyle) {
-        AmountStyle.formatAccountAmount(account.amount, account.currency.ifEmpty { null }, account.amountStyle)
-    }
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 2.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // Account name
-        Text(
-            text = account.accountName,
-            style = MaterialTheme.typography.bodySmall,
-            fontWeight = if (isBold) FontWeight.Bold else FontWeight.Normal,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f)
-        )
-
-        Spacer(modifier = Modifier.width(8.dp))
-
-        // Amount with currency (formatted on demand)
-        Text(
-            text = formattedAmount,
-            style = MaterialTheme.typography.bodySmall,
-            fontWeight = FontWeight.Medium,
-            color = amountColor,
-            textAlign = TextAlign.End
         )
     }
 }
