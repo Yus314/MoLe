@@ -17,6 +17,7 @@
 
 package net.ktnx.mobileledger.ui.transaction
 
+import net.ktnx.mobileledger.domain.model.BalanceConstants
 import net.ktnx.mobileledger.domain.model.FutureDates
 import net.ktnx.mobileledger.utils.SimpleDate
 
@@ -87,7 +88,7 @@ data class NewTransactionUiState(
                 if (accountsWithAmount.isEmpty()) continue
 
                 val balance = accountsWithAmount.sumOf { it.amount?.toDouble() ?: 0.0 }
-                val isBalanced = kotlin.math.abs(balance) < 0.005
+                val isBalanced = kotlin.math.abs(balance) < BalanceConstants.BALANCE_EPSILON
 
                 if (!isBalanced && accountsWithNameAndNoAmount.size != 1) {
                     return false

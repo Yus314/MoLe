@@ -19,6 +19,7 @@ package net.ktnx.mobileledger.utils
 
 import android.view.View
 import android.widget.TextView
+import net.ktnx.mobileledger.domain.model.BalanceConstants
 
 /**
  * Extension functions for common patterns used throughout the codebase.
@@ -119,10 +120,11 @@ val TextView.textString: String
 // Float Extensions
 
 /**
- * Returns true if this float is effectively zero (within 0.005 tolerance).
+ * Returns true if this float is effectively zero (within BALANCE_EPSILON tolerance).
  * Equivalent to Misc.isZero()
  */
-fun Float.isEffectivelyZero(): Boolean = this < 0.005f && this > -0.005f
+fun Float.isEffectivelyZero(): Boolean =
+    this < BalanceConstants.BALANCE_EPSILON && this > -BalanceConstants.BALANCE_EPSILON
 
 /**
  * Returns true if this float equals another within tolerance.

@@ -21,12 +21,13 @@ import android.app.Activity
 import android.content.res.Configuration
 import android.text.Editable
 import android.view.WindowManager
+import net.ktnx.mobileledger.domain.model.BalanceConstants
 
 object Misc {
     const val ZERO_WIDTH_SPACE: Char = '\u200B'
 
     @JvmStatic
-    fun isZero(f: Float): Boolean = (f < 0.005f) && (f > -0.005f)
+    fun isZero(f: Float): Boolean = (f < BalanceConstants.BALANCE_EPSILON) && (f > -BalanceConstants.BALANCE_EPSILON)
 
     @JvmStatic
     fun equalFloats(a: Float, b: Float): Boolean = isZero(a - b)

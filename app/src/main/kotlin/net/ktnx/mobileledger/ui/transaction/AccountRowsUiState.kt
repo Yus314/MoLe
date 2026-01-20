@@ -17,6 +17,8 @@
 
 package net.ktnx.mobileledger.ui.transaction
 
+import net.ktnx.mobileledger.domain.model.BalanceConstants
+
 /**
  * UI State for account rows management.
  * Handles account row CRUD, amount calculation, currency selection, and focus management.
@@ -70,7 +72,7 @@ data class AccountRowsUiState(
                 if (accountsWithAmount.isEmpty()) continue
 
                 val balance = accountsWithAmount.sumOf { it.amount?.toDouble() ?: 0.0 }
-                val isBalancedCurrency = kotlin.math.abs(balance) < 0.005
+                val isBalancedCurrency = kotlin.math.abs(balance) < BalanceConstants.BALANCE_EPSILON
 
                 if (!isBalancedCurrency && accountsWithNameAndNoAmount.size != 1) {
                     return false
