@@ -97,26 +97,33 @@ class TemplateRepositoryImpl @Inject constructor(
     // Database Entity Query Operations (for internal use)
     // ========================================
 
+    @Deprecated("Use observeAllTemplatesAsDomain() instead")
     override fun observeAllTemplates(): Flow<List<TemplateHeader>> = templateHeaderDAO.getTemplates()
 
+    @Deprecated("Use observeTemplateAsDomain() instead")
     override fun observeTemplateById(id: Long): Flow<TemplateHeader?> = templateHeaderDAO.getTemplate(id)
 
+    @Deprecated("Use getTemplateAsDomain() instead")
     override suspend fun getTemplateById(id: Long): TemplateHeader? = withContext(Dispatchers.IO) {
         templateHeaderDAO.getTemplateSync(id)
     }
 
+    @Deprecated("Use observeTemplateAsDomain() instead")
     override fun observeTemplateWithAccounts(id: Long): Flow<TemplateWithAccounts?> =
         templateHeaderDAO.getTemplateWithAccounts(id)
 
+    @Deprecated("Use getTemplateAsDomain() instead")
     override suspend fun getTemplateWithAccounts(id: Long): TemplateWithAccounts? = withContext(Dispatchers.IO) {
         templateHeaderDAO.getTemplateWithAccountsSync(id)
     }
 
+    @Deprecated("Internal use for backup/restore only")
     override suspend fun getTemplateWithAccountsByUuid(uuid: String): TemplateWithAccounts? =
         withContext(Dispatchers.IO) {
             templateHeaderDAO.getTemplateWithAccountsByUuidSync(uuid)
         }
 
+    @Deprecated("Use getAllTemplatesAsDomain() instead. Internal use for backup only.")
     override suspend fun getAllTemplatesWithAccounts(): List<TemplateWithAccounts> = withContext(Dispatchers.IO) {
         templateHeaderDAO.getAllTemplatesWithAccountsSync()
     }
@@ -125,10 +132,12 @@ class TemplateRepositoryImpl @Inject constructor(
     // Mutation Operations
     // ========================================
 
+    @Deprecated("Use saveTemplate() instead")
     override suspend fun insertTemplate(template: TemplateHeader): Long = withContext(Dispatchers.IO) {
         templateHeaderDAO.insertSync(template)
     }
 
+    @Deprecated("Use saveTemplate() instead. Internal use for backup/restore only.")
     override suspend fun insertTemplateWithAccounts(templateWithAccounts: TemplateWithAccounts) {
         withContext(Dispatchers.IO) {
             // Insert header first
@@ -141,12 +150,14 @@ class TemplateRepositoryImpl @Inject constructor(
         }
     }
 
+    @Deprecated("Use saveTemplate() instead")
     override suspend fun updateTemplate(template: TemplateHeader) {
         withContext(Dispatchers.IO) {
             templateHeaderDAO.updateSync(template)
         }
     }
 
+    @Deprecated("Use deleteTemplateById() instead")
     override suspend fun deleteTemplate(template: TemplateHeader) {
         withContext(Dispatchers.IO) {
             templateHeaderDAO.deleteSync(template)
@@ -163,6 +174,7 @@ class TemplateRepositoryImpl @Inject constructor(
         }
     }
 
+    @Deprecated("Returns DB entity. Consider using domain model alternative in future.")
     override suspend fun duplicateTemplate(id: Long): TemplateWithAccounts? {
         return withContext(Dispatchers.IO) {
             val src = templateHeaderDAO.getTemplateWithAccountsSync(id) ?: return@withContext null
@@ -182,6 +194,7 @@ class TemplateRepositoryImpl @Inject constructor(
         }
     }
 
+    @Deprecated("Use saveTemplate() instead")
     override suspend fun saveTemplateWithAccounts(header: TemplateHeader, accounts: List<TemplateAccount>): Long =
         withContext(Dispatchers.IO) {
             val isNew = header.id == 0L

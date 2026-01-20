@@ -81,6 +81,7 @@ interface TemplateRepository {
 
     // ========================================
     // Database Entity Query Operations (for internal use)
+    // Note: These methods are deprecated. Use domain model methods instead.
     // ========================================
 
     /**
@@ -88,6 +89,10 @@ interface TemplateRepository {
      *
      * @return Flow that emits the template list whenever it changes
      */
+    @Deprecated(
+        message = "Use observeAllTemplatesAsDomain() instead",
+        replaceWith = ReplaceWith("observeAllTemplatesAsDomain()")
+    )
     fun observeAllTemplates(): Flow<List<TemplateHeader>>
 
     /**
@@ -96,6 +101,10 @@ interface TemplateRepository {
      * @param id The template ID
      * @return Flow that emits the template when it changes
      */
+    @Deprecated(
+        message = "Use observeTemplateAsDomain() instead",
+        replaceWith = ReplaceWith("observeTemplateAsDomain(id)")
+    )
     fun observeTemplateById(id: Long): Flow<TemplateHeader?>
 
     /**
@@ -104,6 +113,10 @@ interface TemplateRepository {
      * @param id The template ID
      * @return The template or null if not found
      */
+    @Deprecated(
+        message = "Use getTemplateAsDomain() instead",
+        replaceWith = ReplaceWith("getTemplateAsDomain(id)")
+    )
     suspend fun getTemplateById(id: Long): TemplateHeader?
 
     /**
@@ -112,6 +125,10 @@ interface TemplateRepository {
      * @param id The template ID
      * @return Flow that emits the template with accounts when it changes
      */
+    @Deprecated(
+        message = "Use observeTemplateAsDomain() instead",
+        replaceWith = ReplaceWith("observeTemplateAsDomain(id)")
+    )
     fun observeTemplateWithAccounts(id: Long): Flow<TemplateWithAccounts?>
 
     /**
@@ -120,6 +137,10 @@ interface TemplateRepository {
      * @param id The template ID
      * @return The template with accounts or null if not found
      */
+    @Deprecated(
+        message = "Use getTemplateAsDomain() instead",
+        replaceWith = ReplaceWith("getTemplateAsDomain(id)")
+    )
     suspend fun getTemplateWithAccounts(id: Long): TemplateWithAccounts?
 
     /**
@@ -128,6 +149,7 @@ interface TemplateRepository {
      * @param uuid The template UUID
      * @return The template with accounts or null if not found
      */
+    @Deprecated(message = "Internal use for backup/restore only")
     suspend fun getTemplateWithAccountsByUuid(uuid: String): TemplateWithAccounts?
 
     /**
@@ -135,6 +157,10 @@ interface TemplateRepository {
      *
      * @return List of all templates with accounts
      */
+    @Deprecated(
+        message = "Use getAllTemplatesAsDomain() instead. Internal use for backup only.",
+        replaceWith = ReplaceWith("getAllTemplatesAsDomain()")
+    )
     suspend fun getAllTemplatesWithAccounts(): List<TemplateWithAccounts>
 
     // ========================================
@@ -147,6 +173,10 @@ interface TemplateRepository {
      * @param template The template to insert
      * @return The ID of the inserted template
      */
+    @Deprecated(
+        message = "Use saveTemplate() instead",
+        replaceWith = ReplaceWith("saveTemplate(template.toDomain())")
+    )
     suspend fun insertTemplate(template: TemplateHeader): Long
 
     /**
@@ -154,6 +184,10 @@ interface TemplateRepository {
      *
      * @param templateWithAccounts The template with accounts to insert
      */
+    @Deprecated(
+        message = "Use saveTemplate() instead. Internal use for backup/restore only.",
+        replaceWith = ReplaceWith("saveTemplate(templateWithAccounts.toDomain())")
+    )
     suspend fun insertTemplateWithAccounts(templateWithAccounts: TemplateWithAccounts)
 
     /**
@@ -161,6 +195,10 @@ interface TemplateRepository {
      *
      * @param template The template to update
      */
+    @Deprecated(
+        message = "Use saveTemplate() instead",
+        replaceWith = ReplaceWith("saveTemplate(template.toDomain())")
+    )
     suspend fun updateTemplate(template: TemplateHeader)
 
     /**
@@ -168,6 +206,10 @@ interface TemplateRepository {
      *
      * @param template The template to delete
      */
+    @Deprecated(
+        message = "Use deleteTemplateById() instead",
+        replaceWith = ReplaceWith("deleteTemplateById(template.id)")
+    )
     suspend fun deleteTemplate(template: TemplateHeader)
 
     /**
@@ -184,6 +226,7 @@ interface TemplateRepository {
      * @param id The ID of the template to duplicate
      * @return The duplicated template with accounts, or null if source not found
      */
+    @Deprecated(message = "Returns DB entity. Consider using domain model alternative in future.")
     suspend fun duplicateTemplate(id: Long): TemplateWithAccounts?
 
     /**
@@ -199,6 +242,10 @@ interface TemplateRepository {
      * @param accounts The list of accounts to save
      * @return The saved template ID
      */
+    @Deprecated(
+        message = "Use saveTemplate() instead",
+        replaceWith = ReplaceWith("saveTemplate(template)")
+    )
     suspend fun saveTemplateWithAccounts(header: TemplateHeader, accounts: List<TemplateAccount>): Long
 
     /**
