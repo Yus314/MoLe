@@ -22,11 +22,11 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import net.ktnx.mobileledger.domain.model.Profile
+import net.ktnx.mobileledger.fake.FakeAppStateService
+import net.ktnx.mobileledger.fake.FakeProfileRepository
 import net.ktnx.mobileledger.fake.FakeTransactionBalanceCalculator
+import net.ktnx.mobileledger.fake.FakeTransactionRepository
 import net.ktnx.mobileledger.fake.FakeTransactionSender
-import net.ktnx.mobileledger.ui.main.FakeAppStateServiceForViewModel
-import net.ktnx.mobileledger.ui.main.FakeProfileRepositoryForViewModel
-import net.ktnx.mobileledger.ui.main.FakeTransactionRepositoryForViewModel
 import net.ktnx.mobileledger.util.MainDispatcherRule
 import net.ktnx.mobileledger.util.createTestDomainProfile
 import net.ktnx.mobileledger.utils.SimpleDate
@@ -53,9 +53,9 @@ class TransactionFormViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private lateinit var profileRepository: FakeProfileRepositoryForViewModel
-    private lateinit var transactionRepository: FakeTransactionRepositoryForViewModel
-    private lateinit var appStateService: FakeAppStateServiceForViewModel
+    private lateinit var profileRepository: FakeProfileRepository
+    private lateinit var transactionRepository: FakeTransactionRepository
+    private lateinit var appStateService: FakeAppStateService
     private lateinit var transactionSender: FakeTransactionSender
     private lateinit var balanceCalculator: FakeTransactionBalanceCalculator
 
@@ -63,9 +63,9 @@ class TransactionFormViewModelTest {
 
     @Before
     fun setup() {
-        profileRepository = FakeProfileRepositoryForViewModel()
-        transactionRepository = FakeTransactionRepositoryForViewModel()
-        appStateService = FakeAppStateServiceForViewModel()
+        profileRepository = FakeProfileRepository()
+        transactionRepository = FakeTransactionRepository()
+        appStateService = FakeAppStateService()
         transactionSender = FakeTransactionSender()
         balanceCalculator = FakeTransactionBalanceCalculator()
     }

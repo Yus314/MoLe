@@ -35,6 +35,7 @@ import net.ktnx.mobileledger.domain.model.Account
 import net.ktnx.mobileledger.domain.model.AccountAmount as DomainAccountAmount
 import net.ktnx.mobileledger.domain.model.Profile
 import net.ktnx.mobileledger.domain.usecase.AccountHierarchyResolverImpl
+import net.ktnx.mobileledger.fake.FakeProfileRepository
 import net.ktnx.mobileledger.util.createTestDomainProfile
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -63,7 +64,7 @@ import org.junit.Test
 class AccountSummaryViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher()
-    private lateinit var profileRepository: FakeProfileRepositoryForViewModel
+    private lateinit var profileRepository: FakeProfileRepository
     private lateinit var accountRepository: FakeAccountRepositoryForAccountSummary
     private lateinit var preferencesRepository: FakePreferencesRepository
     private lateinit var viewModel: AccountSummaryViewModel
@@ -71,7 +72,7 @@ class AccountSummaryViewModelTest {
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
-        profileRepository = FakeProfileRepositoryForViewModel()
+        profileRepository = FakeProfileRepository()
         accountRepository = FakeAccountRepositoryForAccountSummary()
         preferencesRepository = FakePreferencesRepository()
     }

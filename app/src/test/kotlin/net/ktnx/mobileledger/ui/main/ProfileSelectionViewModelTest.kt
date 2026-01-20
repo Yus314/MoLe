@@ -25,6 +25,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import net.ktnx.mobileledger.domain.model.Profile
+import net.ktnx.mobileledger.fake.FakeProfileRepository
 import net.ktnx.mobileledger.util.createTestDomainProfile
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -48,13 +49,13 @@ import org.junit.Test
 class ProfileSelectionViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher()
-    private lateinit var profileRepository: FakeProfileRepositoryForViewModel
+    private lateinit var profileRepository: FakeProfileRepository
     private lateinit var viewModel: ProfileSelectionViewModel
 
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
-        profileRepository = FakeProfileRepositoryForViewModel()
+        profileRepository = FakeProfileRepository()
     }
 
     @After

@@ -37,6 +37,7 @@ import net.ktnx.mobileledger.domain.model.Transaction as DomainTransaction
 import net.ktnx.mobileledger.domain.model.TransactionLine
 import net.ktnx.mobileledger.domain.usecase.TransactionListConverterImpl
 import net.ktnx.mobileledger.fake.FakeCurrencyFormatter
+import net.ktnx.mobileledger.fake.FakeProfileRepository
 import net.ktnx.mobileledger.util.createTestDomainProfile
 import net.ktnx.mobileledger.utils.SimpleDate
 import org.junit.After
@@ -67,7 +68,7 @@ import org.junit.Test
 class TransactionListViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher()
-    private lateinit var profileRepository: FakeProfileRepositoryForViewModel
+    private lateinit var profileRepository: FakeProfileRepository
     private lateinit var transactionRepository: FakeTransactionRepositoryForTransactionList
     private lateinit var accountRepository: FakeAccountRepositoryForTransactionList
     private lateinit var currencyFormatter: FakeCurrencyFormatter
@@ -76,7 +77,7 @@ class TransactionListViewModelTest {
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
-        profileRepository = FakeProfileRepositoryForViewModel()
+        profileRepository = FakeProfileRepository()
         transactionRepository = FakeTransactionRepositoryForTransactionList()
         accountRepository = FakeAccountRepositoryForTransactionList()
         currencyFormatter = FakeCurrencyFormatter()

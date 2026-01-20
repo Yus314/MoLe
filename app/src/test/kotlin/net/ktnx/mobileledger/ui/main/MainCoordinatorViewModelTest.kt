@@ -27,6 +27,9 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import net.ktnx.mobileledger.domain.model.Profile
 import net.ktnx.mobileledger.domain.model.SyncState
+import net.ktnx.mobileledger.fake.FakeAppStateService
+import net.ktnx.mobileledger.fake.FakeBackgroundTaskManager
+import net.ktnx.mobileledger.fake.FakeProfileRepository
 import net.ktnx.mobileledger.fake.FakeTransactionSyncer
 import net.ktnx.mobileledger.util.createTestDomainProfile
 import org.junit.After
@@ -50,19 +53,19 @@ import org.junit.Test
 class MainCoordinatorViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher()
-    private lateinit var profileRepository: FakeProfileRepositoryForViewModel
+    private lateinit var profileRepository: FakeProfileRepository
     private lateinit var transactionSyncer: FakeTransactionSyncer
-    private lateinit var backgroundTaskManager: FakeBackgroundTaskManagerForViewModel
-    private lateinit var appStateService: FakeAppStateServiceForViewModel
+    private lateinit var backgroundTaskManager: FakeBackgroundTaskManager
+    private lateinit var appStateService: FakeAppStateService
     private lateinit var viewModel: MainCoordinatorViewModel
 
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
-        profileRepository = FakeProfileRepositoryForViewModel()
+        profileRepository = FakeProfileRepository()
         transactionSyncer = FakeTransactionSyncer()
-        backgroundTaskManager = FakeBackgroundTaskManagerForViewModel()
-        appStateService = FakeAppStateServiceForViewModel()
+        backgroundTaskManager = FakeBackgroundTaskManager()
+        appStateService = FakeAppStateService()
     }
 
     @After

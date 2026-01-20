@@ -27,9 +27,9 @@ import net.ktnx.mobileledger.domain.model.Profile
 import net.ktnx.mobileledger.domain.usecase.TemplateMatcher
 import net.ktnx.mobileledger.domain.usecase.TemplateMatcherImpl
 import net.ktnx.mobileledger.fake.FakeCurrencyFormatter
+import net.ktnx.mobileledger.fake.FakeProfileRepository
 import net.ktnx.mobileledger.fake.FakeRowIdGenerator
 import net.ktnx.mobileledger.fake.FakeTemplateRepository
-import net.ktnx.mobileledger.ui.main.FakeProfileRepositoryForViewModel
 import net.ktnx.mobileledger.util.MainDispatcherRule
 import net.ktnx.mobileledger.util.createTestDomainProfile
 import org.junit.Assert.assertEquals
@@ -53,7 +53,7 @@ class TemplateApplicatorViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private lateinit var profileRepository: FakeProfileRepositoryForViewModel
+    private lateinit var profileRepository: FakeProfileRepository
     private lateinit var templateRepository: FakeTemplateRepository
     private lateinit var templateMatcher: TemplateMatcher
     private lateinit var currencyFormatter: FakeCurrencyFormatter
@@ -63,7 +63,7 @@ class TemplateApplicatorViewModelTest {
 
     @Before
     fun setup() {
-        profileRepository = FakeProfileRepositoryForViewModel()
+        profileRepository = FakeProfileRepository()
         templateRepository = FakeTemplateRepository()
         templateMatcher = TemplateMatcherImpl()
         currencyFormatter = FakeCurrencyFormatter()
