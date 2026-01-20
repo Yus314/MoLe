@@ -19,7 +19,7 @@ package net.ktnx.mobileledger.data.repository
 
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
@@ -30,6 +30,7 @@ import net.ktnx.mobileledger.data.repository.mapper.TemplateMapper.toEntity
 import net.ktnx.mobileledger.db.TemplateAccount
 import net.ktnx.mobileledger.db.TemplateHeader
 import net.ktnx.mobileledger.db.TemplateWithAccounts
+import net.ktnx.mobileledger.di.IoDispatcher
 import net.ktnx.mobileledger.domain.model.Template
 import net.ktnx.mobileledger.domain.usecase.AppExceptionMapper
 
@@ -38,7 +39,7 @@ import net.ktnx.mobileledger.domain.usecase.AppExceptionMapper
  *
  * This implementation:
  * - Converts LiveData to Flow for reactive data access
- * - Uses Dispatchers.IO for database operations
+ * - Uses ioDispatcher for database operations
  * - Delegates all operations to the underlying DAOs
  * - Returns Result<T> for all suspend operations with error handling
  *
@@ -49,7 +50,8 @@ class TemplateRepositoryImpl @Inject constructor(
     private val templateHeaderDAO: TemplateHeaderDAO,
     private val templateAccountDAO: TemplateAccountDAO,
     private val currencyRepository: CurrencyRepository,
-    private val appExceptionMapper: AppExceptionMapper
+    private val appExceptionMapper: AppExceptionMapper,
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : TemplateRepository {
 
     /**
@@ -83,7 +85,7 @@ class TemplateRepositoryImpl @Inject constructor(
         }
 
     override suspend fun getTemplateAsDomain(id: Long): Result<Template?> = safeCall(appExceptionMapper) {
-        withContext(Dispatchers.IO) {
+        withContext(ioDispatcher) {
             val entity = templateHeaderDAO.getTemplateWithAccountsSync(id)
                 ?: return@withContext null
             val currencyIds = entity.accounts.mapNotNull { it.currency }.toSet()
@@ -93,7 +95,7 @@ class TemplateRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getAllTemplatesAsDomain(): Result<List<Template>> = safeCall(appExceptionMapper) {
-        withContext(Dispatchers.IO) {
+        withContext(ioDispatcher) {
             val entities = templateHeaderDAO.getAllTemplatesWithAccountsSync()
             val allCurrencyIds = entities.flatMap { it.accounts.mapNotNull { acc -> acc.currency } }.toSet()
             val currencyMap = buildCurrencyMap(allCurrencyIds)
@@ -108,7 +110,7 @@ class TemplateRepositoryImpl @Inject constructor(
     @Deprecated("Internal use for backup/restore only")
     override suspend fun getTemplateWithAccountsByUuid(uuid: String): Result<TemplateWithAccounts?> =
         safeCall(appExceptionMapper) {
-            withContext(Dispatchers.IO) {
+            withContext(ioDispatcher) {
                 templateHeaderDAO.getTemplateWithAccountsByUuidSync(uuid)
             }
         }
@@ -116,7 +118,7 @@ class TemplateRepositoryImpl @Inject constructor(
     @Deprecated("Use getAllTemplatesAsDomain() instead. Internal use for backup only.")
     override suspend fun getAllTemplatesWithAccounts(): Result<List<TemplateWithAccounts>> =
         safeCall(appExceptionMapper) {
-            withContext(Dispatchers.IO) {
+            withContext(ioDispatcher) {
                 templateHeaderDAO.getAllTemplatesWithAccountsSync()
             }
         }
@@ -128,7 +130,7 @@ class TemplateRepositoryImpl @Inject constructor(
     @Deprecated("Use saveTemplate() instead. Internal use for backup/restore only.")
     override suspend fun insertTemplateWithAccounts(templateWithAccounts: TemplateWithAccounts): Result<Unit> =
         safeCall(appExceptionMapper) {
-            withContext(Dispatchers.IO) {
+            withContext(ioDispatcher) {
                 // Insert header first
                 val templateId = templateHeaderDAO.insertSync(templateWithAccounts.header)
                 // Then insert each account with the new template ID
@@ -140,7 +142,7 @@ class TemplateRepositoryImpl @Inject constructor(
         }
 
     override suspend fun deleteTemplateById(id: Long): Result<Boolean> = safeCall(appExceptionMapper) {
-        withContext(Dispatchers.IO) {
+        withContext(ioDispatcher) {
             val template = templateHeaderDAO.getTemplateSync(id)
             if (template != null) {
                 templateHeaderDAO.deleteSync(template)
@@ -153,7 +155,7 @@ class TemplateRepositoryImpl @Inject constructor(
 
     @Deprecated("Returns DB entity. Consider using domain model alternative in future.")
     override suspend fun duplicateTemplate(id: Long): Result<TemplateWithAccounts?> = safeCall(appExceptionMapper) {
-        withContext(Dispatchers.IO) {
+        withContext(ioDispatcher) {
             val src = templateHeaderDAO.getTemplateWithAccountsSync(id)
                 ?: return@withContext null
             val dup = src.createDuplicate()
@@ -167,7 +169,7 @@ class TemplateRepositoryImpl @Inject constructor(
     }
 
     override suspend fun deleteAllTemplates(): Result<Unit> = safeCall(appExceptionMapper) {
-        withContext(Dispatchers.IO) {
+        withContext(ioDispatcher) {
             templateHeaderDAO.deleteAllSync()
         }
     }
@@ -175,7 +177,7 @@ class TemplateRepositoryImpl @Inject constructor(
     private suspend fun saveTemplateWithAccountsInternal(
         header: TemplateHeader,
         accounts: List<TemplateAccount>
-    ): Long = withContext(Dispatchers.IO) {
+    ): Long = withContext(ioDispatcher) {
         val isNew = header.id == 0L
         val savedId = if (isNew) {
             templateHeaderDAO.insertSync(header)

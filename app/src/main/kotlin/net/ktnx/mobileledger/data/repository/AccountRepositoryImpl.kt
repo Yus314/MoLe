@@ -19,7 +19,7 @@ package net.ktnx.mobileledger.data.repository
 
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
@@ -27,6 +27,7 @@ import net.ktnx.mobileledger.dao.AccountDAO
 import net.ktnx.mobileledger.dao.AccountValueDAO
 import net.ktnx.mobileledger.data.repository.mapper.AccountMapper.toDomain
 import net.ktnx.mobileledger.data.repository.mapper.AccountMapper.toEntity
+import net.ktnx.mobileledger.di.IoDispatcher
 import net.ktnx.mobileledger.domain.model.Account
 import net.ktnx.mobileledger.domain.usecase.AppExceptionMapper
 
@@ -35,7 +36,7 @@ import net.ktnx.mobileledger.domain.usecase.AppExceptionMapper
  *
  * This implementation:
  * - Converts LiveData to Flow for reactive data access
- * - Uses Dispatchers.IO for database operations
+ * - Uses ioDispatcher for database operations
  * - Delegates all operations to the underlying DAO
  * - Returns Result<T> for all suspend operations with error handling
  *
@@ -45,7 +46,8 @@ import net.ktnx.mobileledger.domain.usecase.AppExceptionMapper
 class AccountRepositoryImpl @Inject constructor(
     private val accountDAO: AccountDAO,
     private val accountValueDAO: AccountValueDAO,
-    private val appExceptionMapper: AppExceptionMapper
+    private val appExceptionMapper: AppExceptionMapper,
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : AccountRepository {
 
     // ========================================
@@ -78,7 +80,7 @@ class AccountRepositoryImpl @Inject constructor(
 
     override suspend fun getAllWithAmounts(profileId: Long, includeZeroBalances: Boolean): Result<List<Account>> =
         safeCall(appExceptionMapper) {
-            withContext(Dispatchers.IO) {
+            withContext(ioDispatcher) {
                 accountDAO.getAllWithAmountsSync(profileId, includeZeroBalances)
                     .map { it.toDomain() }
             }
@@ -86,7 +88,7 @@ class AccountRepositoryImpl @Inject constructor(
 
     override suspend fun getByNameWithAmounts(profileId: Long, accountName: String): Result<Account?> =
         safeCall(appExceptionMapper) {
-            withContext(Dispatchers.IO) {
+            withContext(ioDispatcher) {
                 accountDAO.getByNameWithAmountsSync(profileId, accountName)?.toDomain()
             }
         }
@@ -97,21 +99,21 @@ class AccountRepositoryImpl @Inject constructor(
 
     override suspend fun searchAccountNames(profileId: Long, term: String): Result<List<String>> =
         safeCall(appExceptionMapper) {
-            withContext(Dispatchers.IO) {
+            withContext(ioDispatcher) {
                 AccountDAO.unbox(accountDAO.lookupNamesInProfileByNameSync(profileId, term.uppercase()))
             }
         }
 
     override suspend fun searchAccountsWithAmounts(profileId: Long, term: String): Result<List<Account>> =
         safeCall(appExceptionMapper) {
-            withContext(Dispatchers.IO) {
+            withContext(ioDispatcher) {
                 accountDAO.lookupWithAmountsInProfileByNameSync(profileId, term.uppercase())
                     .map { it.toDomain() }
             }
         }
 
     override suspend fun searchAccountNamesGlobal(term: String): Result<List<String>> = safeCall(appExceptionMapper) {
-        withContext(Dispatchers.IO) {
+        withContext(ioDispatcher) {
             AccountDAO.unbox(accountDAO.lookupNamesByNameSync(term.uppercase()))
         }
     }
@@ -122,7 +124,7 @@ class AccountRepositoryImpl @Inject constructor(
 
     override suspend fun storeAccountsAsDomain(accounts: List<Account>, profileId: Long): Result<Unit> =
         safeCall(appExceptionMapper) {
-            withContext(Dispatchers.IO) {
+            withContext(ioDispatcher) {
                 val generation = accountDAO.getGenerationSync(profileId) + 1
 
                 for (domainAccount in accounts) {
@@ -151,13 +153,13 @@ class AccountRepositoryImpl @Inject constructor(
         }
 
     override suspend fun getCountForProfile(profileId: Long): Result<Int> = safeCall(appExceptionMapper) {
-        withContext(Dispatchers.IO) {
+        withContext(ioDispatcher) {
             accountDAO.getCountForProfileSync(profileId)
         }
     }
 
     override suspend fun deleteAllAccounts(): Result<Unit> = safeCall(appExceptionMapper) {
-        withContext(Dispatchers.IO) {
+        withContext(ioDispatcher) {
             accountDAO.deleteAllSync()
         }
     }

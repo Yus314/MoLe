@@ -22,6 +22,7 @@ import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineDispatcher
 import net.ktnx.mobileledger.data.repository.CurrencyRepository
 import net.ktnx.mobileledger.data.repository.PreferencesRepository
 import net.ktnx.mobileledger.data.repository.ProfileRepository
@@ -50,6 +51,9 @@ interface BackupEntryPoint {
     fun currencyRepository(): CurrencyRepository
     fun preferencesRepository(): PreferencesRepository
     fun db(): DB
+
+    @IoDispatcher
+    fun ioDispatcher(): CoroutineDispatcher
 
     companion object {
         /**

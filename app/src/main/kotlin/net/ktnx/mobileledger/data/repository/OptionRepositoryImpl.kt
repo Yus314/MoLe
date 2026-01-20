@@ -19,7 +19,7 @@ package net.ktnx.mobileledger.data.repository
 
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
@@ -27,6 +27,7 @@ import net.ktnx.mobileledger.dao.OptionDAO
 import net.ktnx.mobileledger.data.repository.mapper.OptionMapper.toDomain
 import net.ktnx.mobileledger.data.repository.mapper.OptionMapper.toEntity
 import net.ktnx.mobileledger.db.Option
+import net.ktnx.mobileledger.di.IoDispatcher
 import net.ktnx.mobileledger.domain.model.AppOption
 
 /**
@@ -34,7 +35,7 @@ import net.ktnx.mobileledger.domain.model.AppOption
  *
  * This implementation:
  * - Converts LiveData to Flow for reactive data access
- * - Uses Dispatchers.IO for database operations
+ * - Uses ioDispatcher for database operations
  * - Delegates all operations to the underlying DAO
  * - Converts between domain model (AppOption) and database entity (Option)
  *
@@ -42,7 +43,8 @@ import net.ktnx.mobileledger.domain.model.AppOption
  */
 @Singleton
 class OptionRepositoryImpl @Inject constructor(
-    private val optionDAO: OptionDAO
+    private val optionDAO: OptionDAO,
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : OptionRepository {
 
     // ========================================
@@ -52,11 +54,11 @@ class OptionRepositoryImpl @Inject constructor(
     override fun observeOption(profileId: Long, name: String): Flow<AppOption?> =
         optionDAO.load(profileId, name).map { it?.toDomain() }
 
-    override suspend fun getOption(profileId: Long, name: String): AppOption? = withContext(Dispatchers.IO) {
+    override suspend fun getOption(profileId: Long, name: String): AppOption? = withContext(ioDispatcher) {
         optionDAO.loadSync(profileId, name)?.toDomain()
     }
 
-    override suspend fun getAllOptionsForProfile(profileId: Long): List<AppOption> = withContext(Dispatchers.IO) {
+    override suspend fun getAllOptionsForProfile(profileId: Long): List<AppOption> = withContext(ioDispatcher) {
         optionDAO.allForProfileSync(profileId).map { it.toDomain() }
     }
 
@@ -64,25 +66,25 @@ class OptionRepositoryImpl @Inject constructor(
     // Mutation Operations
     // ========================================
 
-    override suspend fun insertOption(option: AppOption): Long = withContext(Dispatchers.IO) {
+    override suspend fun insertOption(option: AppOption): Long = withContext(ioDispatcher) {
         optionDAO.insertSync(option.toEntity())
     }
 
     override suspend fun deleteOption(option: AppOption) {
-        withContext(Dispatchers.IO) {
+        withContext(ioDispatcher) {
             optionDAO.deleteSync(option.toEntity())
         }
     }
 
     override suspend fun deleteOptionsForProfile(profileId: Long) {
-        withContext(Dispatchers.IO) {
+        withContext(ioDispatcher) {
             val options = optionDAO.allForProfileSync(profileId)
             optionDAO.deleteSync(options)
         }
     }
 
     override suspend fun deleteAllOptions() {
-        withContext(Dispatchers.IO) {
+        withContext(ioDispatcher) {
             optionDAO.deleteAllSync()
         }
     }
@@ -92,12 +94,12 @@ class OptionRepositoryImpl @Inject constructor(
     // ========================================
 
     override suspend fun setLastSyncTimestamp(profileId: Long, timestamp: Long) {
-        withContext(Dispatchers.IO) {
+        withContext(ioDispatcher) {
             optionDAO.insertSync(Option(profileId, Option.OPT_LAST_SCRAPE, timestamp.toString()))
         }
     }
 
-    override suspend fun getLastSyncTimestamp(profileId: Long): Long? = withContext(Dispatchers.IO) {
+    override suspend fun getLastSyncTimestamp(profileId: Long): Long? = withContext(ioDispatcher) {
         optionDAO.loadSync(profileId, AppOption.OPT_LAST_SCRAPE)?.value?.toLongOrNull()
     }
 }

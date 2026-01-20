@@ -23,7 +23,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import java.util.Locale
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import logcat.logcat
@@ -47,6 +47,10 @@ open class ProfileThemedActivity : CrashReportingActivity() {
 
     protected val preferencesRepository: PreferencesRepository by lazy {
         BackupEntryPoint.get(this).preferencesRepository()
+    }
+
+    protected val ioDispatcher: CoroutineDispatcher by lazy {
+        BackupEntryPoint.get(this).ioDispatcher()
     }
 
     protected fun setupProfileColors(newHue: Int) {
@@ -132,7 +136,7 @@ open class ProfileThemedActivity : CrashReportingActivity() {
      * since this is a base class that cannot use @AndroidEntryPoint directly.
      */
     private suspend fun initProfileAsync(profileId: Long) {
-        val profile = withContext(Dispatchers.IO) {
+        val profile = withContext(ioDispatcher) {
             logcat { "Loading profile $profileId" }
 
             var loadedProfile = profileRepository.getProfileById(profileId).getOrNull()
