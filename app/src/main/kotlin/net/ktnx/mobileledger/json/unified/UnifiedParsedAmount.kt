@@ -17,12 +17,17 @@
 
 package net.ktnx.mobileledger.json.unified
 
+import com.fasterxml.jackson.annotation.JsonAlias
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 
 /**
- * 統合 ParsedAmount - 全 API バージョンで同一構造
+ * 統合 ParsedAmount - 全 API バージョンの差分を吸収
  *
- * 取引明細行の金額を表す。
+ * バージョン間の差分:
+ * - v1_14-v1_40: aprice フィールド
+ * - v1_50: acost フィールド（同じ意味）
+ *
+ * @JsonAlias で両方のフィールド名に対応する。
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 class UnifiedParsedAmount {
@@ -38,6 +43,12 @@ class UnifiedParsedAmount {
     /** 金額スタイル */
     var astyle: UnifiedParsedStyle? = null
 
-    /** 価格情報 */
-    var aprice: UnifiedParsedPrice = UnifiedParsedPrice()
+    /**
+     * 価格情報
+     *
+     * v1_14-v1_40: aprice
+     * v1_50: acost
+     */
+    @JsonAlias("acost")
+    var aprice: UnifiedParsedPrice? = null
 }

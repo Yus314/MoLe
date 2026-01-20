@@ -17,8 +17,9 @@
 
 package net.ktnx.mobileledger.json.v1_50
 
-class ParsedSourcePos {
-    var sourceName: String = ""
-    var sourceLine: Int = 1
-    var sourceColumn: Int = 1
-}
+import net.ktnx.mobileledger.json.unified.UnifiedParsedSourcePos
+
+/**
+ * v1_50 用 ParsedSourcePos - 統合クラスへのエイリアス
+ */
+typealias ParsedSourcePos = UnifiedParsedSourcePos

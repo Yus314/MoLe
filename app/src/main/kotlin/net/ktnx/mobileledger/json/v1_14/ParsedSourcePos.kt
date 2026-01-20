@@ -17,7 +17,9 @@
 
 package net.ktnx.mobileledger.json.v1_14
 
-class ParsedSourcePos {
-    var tag: String = "JournalSourcePos"
-    var contents: MutableList<Any> = mutableListOf("", arrayOf(1, 1))
-}
+import net.ktnx.mobileledger.json.unified.UnifiedParsedSourcePos
+
+/**
+ * v1_14 用 ParsedSourcePos - 統合クラスへのエイリアス
+ */
+typealias ParsedSourcePos = UnifiedParsedSourcePos
