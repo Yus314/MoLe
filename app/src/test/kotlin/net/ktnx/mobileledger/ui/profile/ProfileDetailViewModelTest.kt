@@ -34,6 +34,8 @@ import net.ktnx.mobileledger.TemporaryAuthData
 import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.domain.model.FutureDates
 import net.ktnx.mobileledger.domain.model.Profile
+import net.ktnx.mobileledger.domain.usecase.ProfilePersistence
+import net.ktnx.mobileledger.domain.usecase.ProfilePersistenceImpl
 import net.ktnx.mobileledger.domain.usecase.ProfileValidator
 import net.ktnx.mobileledger.domain.usecase.ProfileValidatorImpl
 import net.ktnx.mobileledger.domain.usecase.VersionDetector
@@ -72,6 +74,7 @@ class ProfileDetailViewModelTest {
     private lateinit var authDataProvider: FakeAuthDataProvider
     private lateinit var versionDetector: FakeVersionDetector
     private lateinit var profileValidator: ProfileValidator
+    private lateinit var profilePersistence: ProfilePersistence
     private lateinit var savedStateHandle: SavedStateHandle
     private lateinit var viewModel: ProfileDetailViewModel
 
@@ -82,6 +85,7 @@ class ProfileDetailViewModelTest {
         authDataProvider = FakeAuthDataProvider()
         versionDetector = FakeVersionDetector()
         profileValidator = ProfileValidatorImpl()
+        profilePersistence = ProfilePersistenceImpl(profileRepository, authDataProvider)
         savedStateHandle = SavedStateHandle()
     }
 
@@ -95,6 +99,7 @@ class ProfileDetailViewModelTest {
         authDataProvider = authDataProvider,
         versionDetector = versionDetector,
         profileValidator = profileValidator,
+        profilePersistence = profilePersistence,
         ioDispatcher = testDispatcher,
         savedStateHandle = savedStateHandle
     )

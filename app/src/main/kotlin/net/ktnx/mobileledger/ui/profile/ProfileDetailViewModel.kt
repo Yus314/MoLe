@@ -44,6 +44,7 @@ import net.ktnx.mobileledger.domain.model.FutureDates
 import net.ktnx.mobileledger.domain.model.Profile
 import net.ktnx.mobileledger.domain.model.ProfileAuthentication
 import net.ktnx.mobileledger.domain.model.ServerVersion
+import net.ktnx.mobileledger.domain.usecase.ProfilePersistence
 import net.ktnx.mobileledger.domain.usecase.ProfileValidator
 import net.ktnx.mobileledger.domain.usecase.VersionDetector
 import net.ktnx.mobileledger.json.API
@@ -55,6 +56,7 @@ class ProfileDetailViewModel @Inject constructor(
     private val authDataProvider: AuthDataProvider,
     private val versionDetector: VersionDetector,
     private val profileValidator: ProfileValidator,
+    private val profilePersistence: ProfilePersistence,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     @Suppress("unused") private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -335,59 +337,55 @@ class ProfileDetailViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isSaving = true) }
 
-            try {
-                val state = _uiState.value
+            val state = _uiState.value
+            val profile = buildProfile(state)
 
-                val authentication = if (state.useAuthentication) {
-                    ProfileAuthentication(user = state.authUser, password = state.authPassword)
-                } else {
-                    null
+            profilePersistence.save(profile).fold(
+                onSuccess = {
+                    _uiState.update { it.copy(isSaving = false, hasUnsavedChanges = false) }
+                    _effects.send(ProfileDetailEffect.ProfileSaved)
+                    _effects.send(ProfileDetailEffect.NavigateBack)
+                },
+                onFailure = { e ->
+                    logcat { "Error saving profile: ${e.message}" }
+                    _uiState.update { it.copy(isSaving = false) }
+                    _effects.send(ProfileDetailEffect.ShowError("プロファイルの保存に失敗しました"))
                 }
-
-                // Load existing profile to get uuid if updating
-                val existingProfile = if (state.profileId > 0) {
-                    profileRepository.getProfileById(state.profileId)
-                } else {
-                    null
-                }
-
-                val profile = Profile(
-                    id = if (state.profileId > 0) state.profileId else null,
-                    name = state.name,
-                    uuid = existingProfile?.uuid ?: java.util.UUID.randomUUID().toString(),
-                    url = state.url,
-                    authentication = authentication,
-                    orderNo = this@ProfileDetailViewModel.orderNo,
-                    permitPosting = state.permitPosting,
-                    theme = state.themeHue,
-                    preferredAccountsFilter = state.preferredAccountsFilter.ifEmpty { null },
-                    futureDates = state.futureDates,
-                    apiVersion = state.apiVersion.toInt(),
-                    showCommodityByDefault = state.showCommodityByDefault,
-                    defaultCommodity = state.defaultCommodity,
-                    showCommentsByDefault = state.showCommentsByDefault,
-                    serverVersion = state.detectedVersion
-                )
-
-                if (profile.id != null && profile.id > 0) {
-                    profileRepository.updateProfile(profile)
-                    logcat { "Profile updated in DB" }
-                } else {
-                    profileRepository.insertProfile(profile)
-                    logcat { "Profile inserted in DB" }
-                }
-
-                authDataProvider.notifyBackupDataChanged()
-
-                _uiState.update { it.copy(isSaving = false, hasUnsavedChanges = false) }
-                _effects.send(ProfileDetailEffect.ProfileSaved)
-                _effects.send(ProfileDetailEffect.NavigateBack)
-            } catch (e: Exception) {
-                logcat { "Error saving profile: ${e.message}" }
-                _uiState.update { it.copy(isSaving = false) }
-                _effects.send(ProfileDetailEffect.ShowError("プロファイルの保存に失敗しました"))
-            }
+            )
         }
+    }
+
+    private suspend fun buildProfile(state: ProfileDetailUiState): Profile {
+        val authentication = if (state.useAuthentication) {
+            ProfileAuthentication(user = state.authUser, password = state.authPassword)
+        } else {
+            null
+        }
+
+        // Load existing profile to get uuid if updating
+        val existingProfile = if (state.profileId > 0) {
+            profileRepository.getProfileById(state.profileId)
+        } else {
+            null
+        }
+
+        return Profile(
+            id = if (state.profileId > 0) state.profileId else null,
+            name = state.name,
+            uuid = existingProfile?.uuid ?: java.util.UUID.randomUUID().toString(),
+            url = state.url,
+            authentication = authentication,
+            orderNo = this@ProfileDetailViewModel.orderNo,
+            permitPosting = state.permitPosting,
+            theme = state.themeHue,
+            preferredAccountsFilter = state.preferredAccountsFilter.ifEmpty { null },
+            futureDates = state.futureDates,
+            apiVersion = state.apiVersion.toInt(),
+            showCommodityByDefault = state.showCommodityByDefault,
+            defaultCommodity = state.defaultCommodity,
+            showCommentsByDefault = state.showCommentsByDefault,
+            serverVersion = state.detectedVersion
+        )
     }
 
     private fun testConnection() {
@@ -498,24 +496,22 @@ class ProfileDetailViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(showDeleteConfirmDialog = false, isLoading = true) }
 
-            try {
-                val profileId = _uiState.value.profileId
-                if (profileId > 0) {
-                    val profile = profileRepository.getProfileById(profileId)
-                    if (profile != null) {
-                        profileRepository.deleteProfile(profile)
-                        // Repository handles order updates internally
-                        logcat { "Profile deleted from DB" }
+            val profileId = _uiState.value.profileId
+            if (profileId > 0) {
+                profilePersistence.delete(profileId).fold(
+                    onSuccess = {
+                        _uiState.update { it.copy(isLoading = false) }
+                        _effects.send(ProfileDetailEffect.ProfileDeleted)
+                        _effects.send(ProfileDetailEffect.NavigateBack)
+                    },
+                    onFailure = { e ->
+                        logcat { "Error deleting profile: ${e.message}" }
+                        _uiState.update { it.copy(isLoading = false) }
+                        _effects.send(ProfileDetailEffect.ShowError("プロファイルの削除に失敗しました"))
                     }
-                }
-
+                )
+            } else {
                 _uiState.update { it.copy(isLoading = false) }
-                _effects.send(ProfileDetailEffect.ProfileDeleted)
-                _effects.send(ProfileDetailEffect.NavigateBack)
-            } catch (e: Exception) {
-                logcat { "Error deleting profile: ${e.message}" }
-                _uiState.update { it.copy(isLoading = false) }
-                _effects.send(ProfileDetailEffect.ShowError("プロファイルの削除に失敗しました"))
             }
         }
     }

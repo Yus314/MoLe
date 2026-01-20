@@ -28,10 +28,14 @@ import net.ktnx.mobileledger.domain.usecase.ConfigBackup
 import net.ktnx.mobileledger.domain.usecase.ConfigBackupImpl
 import net.ktnx.mobileledger.domain.usecase.DatabaseInitializer
 import net.ktnx.mobileledger.domain.usecase.DatabaseInitializerImpl
+import net.ktnx.mobileledger.domain.usecase.ProfilePersistence
+import net.ktnx.mobileledger.domain.usecase.ProfilePersistenceImpl
 import net.ktnx.mobileledger.domain.usecase.ProfileValidator
 import net.ktnx.mobileledger.domain.usecase.ProfileValidatorImpl
 import net.ktnx.mobileledger.domain.usecase.TemplateMatcher
 import net.ktnx.mobileledger.domain.usecase.TemplateMatcherImpl
+import net.ktnx.mobileledger.domain.usecase.TemplatePatternValidator
+import net.ktnx.mobileledger.domain.usecase.TemplatePatternValidatorImpl
 import net.ktnx.mobileledger.domain.usecase.TransactionBalanceCalculator
 import net.ktnx.mobileledger.domain.usecase.TransactionBalanceCalculatorImpl
 import net.ktnx.mobileledger.domain.usecase.TransactionDateNavigator
@@ -84,7 +88,15 @@ abstract class UseCaseModule {
 
     @Binds
     @Singleton
+    abstract fun bindProfilePersistence(impl: ProfilePersistenceImpl): ProfilePersistence
+
+    @Binds
+    @Singleton
     abstract fun bindTemplateMatcher(impl: TemplateMatcherImpl): TemplateMatcher
+
+    @Binds
+    @Singleton
+    abstract fun bindTemplatePatternValidator(impl: TemplatePatternValidatorImpl): TemplatePatternValidator
 
     @Binds
     @Singleton
