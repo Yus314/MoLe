@@ -66,6 +66,10 @@ interface AccountRepository {
      * @param includeZeroBalances Whether to include accounts with zero balance
      * @return Flow that emits the account list whenever it changes
      */
+    @Deprecated(
+        message = "Use observeAllWithAmounts() instead",
+        replaceWith = ReplaceWith("observeAllWithAmounts(profileId, includeZeroBalances)")
+    )
     fun observeAll(profileId: Long, includeZeroBalances: Boolean): Flow<List<DbAccount>>
 
     /**
@@ -75,6 +79,10 @@ interface AccountRepository {
      * @param accountName The account name
      * @return Flow that emits the account when it changes
      */
+    @Deprecated(
+        message = "Use observeByNameWithAmounts() instead",
+        replaceWith = ReplaceWith("observeByNameWithAmounts(profileId, accountName)")
+    )
     fun observeByName(profileId: Long, accountName: String): Flow<DbAccount?>
 
     /**
@@ -126,6 +134,10 @@ interface AccountRepository {
      * @param id The account ID
      * @return The account or null if not found
      */
+    @Deprecated(
+        message = "Use getByNameWithAmounts() with profile ID and name instead",
+        replaceWith = ReplaceWith("getByNameWithAmounts(profileId, accountName)")
+    )
     suspend fun getById(id: Long): DbAccount?
 
     /**
@@ -135,6 +147,10 @@ interface AccountRepository {
      * @param accountName The account name
      * @return The account or null if not found
      */
+    @Deprecated(
+        message = "Use getByNameWithAmounts() instead",
+        replaceWith = ReplaceWith("getByNameWithAmounts(profileId, accountName)")
+    )
     suspend fun getByName(profileId: Long, accountName: String): DbAccount?
 
     /**
@@ -186,6 +202,10 @@ interface AccountRepository {
      * @param account The account to insert
      * @return The ID of the inserted account
      */
+    @Deprecated(
+        message = "Use storeAccountsAsDomain() for batch operations instead",
+        replaceWith = ReplaceWith("storeAccountsAsDomain(listOf(account.toDomain()), profileId)")
+    )
     suspend fun insertAccount(account: DbAccount): Long
 
     /**
@@ -193,6 +213,10 @@ interface AccountRepository {
      *
      * @param accountWithAmounts The account with amounts to insert
      */
+    @Deprecated(
+        message = "Use storeAccountsAsDomain() for batch operations instead",
+        replaceWith = ReplaceWith("storeAccountsAsDomain(listOf(accountWithAmounts.toDomain()), profileId)")
+    )
     suspend fun insertAccountWithAmounts(accountWithAmounts: AccountWithAmounts)
 
     /**
@@ -200,6 +224,10 @@ interface AccountRepository {
      *
      * @param account The account to update
      */
+    @Deprecated(
+        message = "Use storeAccountsAsDomain() for batch operations instead",
+        replaceWith = ReplaceWith("storeAccountsAsDomain(listOf(account.toDomain()), profileId)")
+    )
     suspend fun updateAccount(account: DbAccount)
 
     /**
@@ -207,6 +235,7 @@ interface AccountRepository {
      *
      * @param account The account to delete
      */
+    @Deprecated(message = "Internal use only. Accounts are managed via storeAccountsAsDomain()")
     suspend fun deleteAccount(account: DbAccount)
 
     // ========================================
@@ -221,6 +250,10 @@ interface AccountRepository {
      * @param accounts The accounts to store
      * @param profileId The profile ID
      */
+    @Deprecated(
+        message = "Use storeAccountsAsDomain() instead",
+        replaceWith = ReplaceWith("storeAccountsAsDomain(accounts.map { it.toDomain() }, profileId)")
+    )
     suspend fun storeAccounts(accounts: List<AccountWithAmounts>, profileId: Long)
 
     /**

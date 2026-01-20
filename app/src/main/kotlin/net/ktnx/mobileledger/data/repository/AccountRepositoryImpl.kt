@@ -55,9 +55,11 @@ class AccountRepositoryImpl @Inject constructor(
         accountDAO.getAllWithAmounts(profileId, includeZeroBalances)
             .map { entities -> entities.map { it.toDomain() } }
 
+    @Deprecated("Use observeAllWithAmounts() instead")
     override fun observeAll(profileId: Long, includeZeroBalances: Boolean): Flow<List<DbAccount>> =
         accountDAO.getAll(profileId, includeZeroBalances)
 
+    @Deprecated("Use observeByNameWithAmounts() instead")
     override fun observeByName(profileId: Long, accountName: String): Flow<DbAccount?> =
         accountDAO.getByName(profileId, accountName)
 
@@ -87,10 +89,12 @@ class AccountRepositoryImpl @Inject constructor(
                 .map { it.toDomain() }
         }
 
+    @Deprecated("Use getByNameWithAmounts() with profile ID and name instead")
     override suspend fun getById(id: Long): DbAccount? = withContext(Dispatchers.IO) {
         accountDAO.getByIdSync(id)
     }
 
+    @Deprecated("Use getByNameWithAmounts() instead")
     override suspend fun getByName(profileId: Long, accountName: String): DbAccount? = withContext(Dispatchers.IO) {
         accountDAO.getByNameSync(profileId, accountName)
     }
@@ -122,10 +126,12 @@ class AccountRepositoryImpl @Inject constructor(
     // Mutation Operations
     // ========================================
 
+    @Deprecated("Use storeAccountsAsDomain() for batch operations instead")
     override suspend fun insertAccount(account: DbAccount): Long = withContext(Dispatchers.IO) {
         accountDAO.insertSync(account)
     }
 
+    @Deprecated("Use storeAccountsAsDomain() for batch operations instead")
     override suspend fun insertAccountWithAmounts(accountWithAmounts: AccountWithAmounts) {
         withContext(Dispatchers.IO) {
             val account = accountWithAmounts.account
@@ -138,12 +144,14 @@ class AccountRepositoryImpl @Inject constructor(
         }
     }
 
+    @Deprecated("Use storeAccountsAsDomain() for batch operations instead")
     override suspend fun updateAccount(account: DbAccount) {
         withContext(Dispatchers.IO) {
             accountDAO.updateSync(account)
         }
     }
 
+    @Deprecated("Internal use only. Accounts are managed via storeAccountsAsDomain()")
     override suspend fun deleteAccount(account: DbAccount) {
         withContext(Dispatchers.IO) {
             accountDAO.deleteSync(account)
@@ -154,6 +162,7 @@ class AccountRepositoryImpl @Inject constructor(
     // Sync Operations
     // ========================================
 
+    @Deprecated("Use storeAccountsAsDomain() instead")
     override suspend fun storeAccounts(accounts: List<AccountWithAmounts>, profileId: Long) {
         withContext(Dispatchers.IO) {
             val generation = accountDAO.getGenerationSync(profileId) + 1
