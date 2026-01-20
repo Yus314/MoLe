@@ -64,24 +64,33 @@ class CurrencyRepositoryImpl @Inject constructor(private val currencyDAO: Curren
         currencyDAO.getByNameSync(name)?.toDomain()
     }
 
+    override fun observeCurrencyAsDomainByName(name: String): Flow<DomainCurrency?> =
+        currencyDAO.getByName(name).map { it?.toDomain() }
+
     // ========================================
     // Database Entity Query Operations (for internal use)
     // ========================================
 
+    @Deprecated("Use observeAllCurrenciesAsDomain() instead")
     override fun observeAllCurrencies(): Flow<List<Currency>> = currencyDAO.getAll()
 
+    @Deprecated("Use getAllCurrenciesAsDomain() instead")
     override suspend fun getAllCurrencies(): List<Currency> = withContext(Dispatchers.IO) {
         currencyDAO.getAllSync()
     }
 
+    @Deprecated("Use observeCurrencyAsDomain(id) instead")
     override fun observeCurrencyById(id: Long): Flow<Currency?> = currencyDAO.getById(id)
 
+    @Deprecated("Use getCurrencyAsDomain(id) instead")
     override suspend fun getCurrencyById(id: Long): Currency? = withContext(Dispatchers.IO) {
         currencyDAO.getByIdSync(id)
     }
 
+    @Deprecated("Use observeCurrencyAsDomainByName(name) instead")
     override fun observeCurrencyByName(name: String): Flow<Currency?> = currencyDAO.getByName(name)
 
+    @Deprecated("Use getCurrencyAsDomainByName(name) instead")
     override suspend fun getCurrencyByName(name: String): Currency? = withContext(Dispatchers.IO) {
         currencyDAO.getByNameSync(name)
     }
@@ -90,16 +99,19 @@ class CurrencyRepositoryImpl @Inject constructor(private val currencyDAO: Curren
     // Mutation Operations
     // ========================================
 
+    @Deprecated("Use saveCurrency(DomainCurrency) instead")
     override suspend fun insertCurrency(currency: Currency): Long = withContext(Dispatchers.IO) {
         currencyDAO.insertSync(currency)
     }
 
+    @Deprecated("Use saveCurrency(DomainCurrency) instead")
     override suspend fun updateCurrency(currency: Currency) {
         withContext(Dispatchers.IO) {
             currencyDAO.updateSync(currency)
         }
     }
 
+    @Deprecated("Use deleteCurrencyByName(name) instead")
     override suspend fun deleteCurrency(currency: Currency) {
         withContext(Dispatchers.IO) {
             currencyDAO.deleteSync(currency)

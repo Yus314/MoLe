@@ -84,8 +84,17 @@ interface CurrencyRepository {
      */
     suspend fun getCurrencyAsDomainByName(name: String): DomainCurrency?
 
+    /**
+     * Observe a currency as domain model by its name.
+     *
+     * @param name The currency name
+     * @return Flow that emits the currency domain model when it changes
+     */
+    fun observeCurrencyAsDomainByName(name: String): Flow<DomainCurrency?>
+
     // ========================================
     // Database Entity Query Operations (for internal use)
+    // Note: These methods are deprecated. Use domain model methods instead.
     // ========================================
 
     /**
@@ -93,6 +102,10 @@ interface CurrencyRepository {
      *
      * @return Flow that emits the currency list whenever it changes
      */
+    @Deprecated(
+        message = "Use observeAllCurrenciesAsDomain() instead",
+        replaceWith = ReplaceWith("observeAllCurrenciesAsDomain()")
+    )
     fun observeAllCurrencies(): Flow<List<DbCurrency>>
 
     /**
@@ -100,6 +113,10 @@ interface CurrencyRepository {
      *
      * @return List of all currencies
      */
+    @Deprecated(
+        message = "Use getAllCurrenciesAsDomain() instead",
+        replaceWith = ReplaceWith("getAllCurrenciesAsDomain()")
+    )
     suspend fun getAllCurrencies(): List<DbCurrency>
 
     /**
@@ -108,6 +125,10 @@ interface CurrencyRepository {
      * @param id The currency ID
      * @return Flow that emits the currency when it changes
      */
+    @Deprecated(
+        message = "Use observeCurrencyAsDomain(id) instead",
+        replaceWith = ReplaceWith("observeCurrencyAsDomain(id)")
+    )
     fun observeCurrencyById(id: Long): Flow<DbCurrency?>
 
     /**
@@ -116,6 +137,10 @@ interface CurrencyRepository {
      * @param id The currency ID
      * @return The currency or null if not found
      */
+    @Deprecated(
+        message = "Use getCurrencyAsDomain(id) instead",
+        replaceWith = ReplaceWith("getCurrencyAsDomain(id)")
+    )
     suspend fun getCurrencyById(id: Long): DbCurrency?
 
     /**
@@ -124,6 +149,10 @@ interface CurrencyRepository {
      * @param name The currency name
      * @return Flow that emits the currency when it changes
      */
+    @Deprecated(
+        message = "Use observeCurrencyAsDomainByName(name) instead",
+        replaceWith = ReplaceWith("observeCurrencyAsDomainByName(name)")
+    )
     fun observeCurrencyByName(name: String): Flow<DbCurrency?>
 
     /**
@@ -132,6 +161,10 @@ interface CurrencyRepository {
      * @param name The currency name
      * @return The currency or null if not found
      */
+    @Deprecated(
+        message = "Use getCurrencyAsDomainByName(name) instead",
+        replaceWith = ReplaceWith("getCurrencyAsDomainByName(name)")
+    )
     suspend fun getCurrencyByName(name: String): DbCurrency?
 
     // ========================================
@@ -144,6 +177,10 @@ interface CurrencyRepository {
      * @param currency The currency to insert
      * @return The ID of the inserted currency
      */
+    @Deprecated(
+        message = "Use saveCurrency(DomainCurrency) instead",
+        replaceWith = ReplaceWith("saveCurrency(currency.toDomain())")
+    )
     suspend fun insertCurrency(currency: DbCurrency): Long
 
     /**
@@ -151,6 +188,10 @@ interface CurrencyRepository {
      *
      * @param currency The currency to update
      */
+    @Deprecated(
+        message = "Use saveCurrency(DomainCurrency) instead",
+        replaceWith = ReplaceWith("saveCurrency(currency.toDomain())")
+    )
     suspend fun updateCurrency(currency: DbCurrency)
 
     /**
@@ -158,6 +199,10 @@ interface CurrencyRepository {
      *
      * @param currency The currency to delete
      */
+    @Deprecated(
+        message = "Use deleteCurrencyByName(name) instead",
+        replaceWith = ReplaceWith("deleteCurrencyByName(currency.name)")
+    )
     suspend fun deleteCurrency(currency: DbCurrency)
 
     /**

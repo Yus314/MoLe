@@ -81,7 +81,7 @@ class AccountRowsViewModel @Inject constructor(
 
     private fun loadCurrencies() {
         viewModelScope.launch {
-            val currencies = currencyRepository.getAllCurrencies().map { it.name }
+            val currencies = currencyRepository.getAllCurrenciesAsDomain().map { it.name }
             _uiState.update { it.copy(availableCurrencies = currencies) }
         }
     }

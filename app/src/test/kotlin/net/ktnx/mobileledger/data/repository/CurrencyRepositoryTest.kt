@@ -267,6 +267,9 @@ class FakeCurrencyRepository : CurrencyRepository {
     override suspend fun getCurrencyAsDomainByName(name: String): DomainCurrency? =
         currencies.values.find { it.name == name }?.toDomain()
 
+    override fun observeCurrencyAsDomainByName(name: String): Flow<DomainCurrency?> =
+        currenciesFlow.map { list -> list.find { it.name == name }?.toDomain() }
+
     // Database Entity Query Operations
     override fun observeAllCurrencies(): Flow<List<Currency>> = MutableStateFlow(currencies.values.toList())
 

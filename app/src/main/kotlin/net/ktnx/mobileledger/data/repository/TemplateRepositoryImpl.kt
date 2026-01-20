@@ -55,7 +55,7 @@ class TemplateRepositoryImpl @Inject constructor(
     private suspend fun buildCurrencyMap(currencyIds: Set<Long>): Map<Long, String> {
         if (currencyIds.isEmpty()) return emptyMap()
         return currencyIds.mapNotNull { id ->
-            currencyRepository.getCurrencyById(id)?.let { id to it.name }
+            currencyRepository.getCurrencyAsDomain(id)?.let { id to it.name }
         }.toMap()
     }
 
