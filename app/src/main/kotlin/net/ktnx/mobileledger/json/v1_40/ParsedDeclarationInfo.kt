@@ -17,13 +17,9 @@
 
 package net.ktnx.mobileledger.json.v1_40
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import net.ktnx.mobileledger.json.unified.UnifiedParsedDeclarationInfo
 
 /**
- * Account declaration information (hledger-web v1.32+)
- * Indicates where in the journal file the account was declared
+ * v1_40 用 ParsedDeclarationInfo - 統合クラスへのエイリアス
  */
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class ParsedDeclarationInfo(var file: String? = null, var line: Int = 0) {
-    override fun toString(): String = "${file ?: "unknown"}:$line"
-}
+typealias ParsedDeclarationInfo = UnifiedParsedDeclarationInfo

@@ -141,9 +141,13 @@ class UnifiedParsedLedgerAccount {
 
 /**
  * v1_32+ 専用: 勘定宣言情報
+ *
+ * ジャーナルファイル内での勘定科目宣言位置を示す。
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-class UnifiedParsedDeclarationInfo {
-    var adideclarationorder: Int = 0
-    var adialiases: List<String>? = null
+data class UnifiedParsedDeclarationInfo(
+    var file: String? = null,
+    var line: Int = 0
+) {
+    override fun toString(): String = "${file ?: "unknown"}:$line"
 }

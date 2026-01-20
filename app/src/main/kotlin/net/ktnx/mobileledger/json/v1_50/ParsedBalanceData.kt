@@ -17,22 +17,9 @@
 
 package net.ktnx.mobileledger.json.v1_50
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import net.ktnx.mobileledger.json.unified.UnifiedParsedBalanceData
 
 /**
- * Represents balance data structure in hledger-web 1.50+.
- * Used for both pdperiods entries and pdpre field.
- *
- * JSON structure:
- * {
- *   "bdincludingsubs": [...],
- *   "bdexcludingsubs": [...],
- *   "bdnumpostings": 1
- * }
+ * v1_50 用 ParsedBalanceData - 統合クラスへのエイリアス
  */
-@JsonIgnoreProperties(ignoreUnknown = true)
-class ParsedBalanceData {
-    var bdincludingsubs: List<ParsedBalance>? = null
-    var bdexcludingsubs: List<ParsedBalance>? = null
-    var bdnumpostings: Int = 0
-}
+typealias ParsedBalanceData = UnifiedParsedBalanceData
