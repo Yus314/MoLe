@@ -22,8 +22,14 @@ import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
+import net.ktnx.mobileledger.domain.usecase.sync.AccountListFetcher
+import net.ktnx.mobileledger.domain.usecase.sync.AccountListFetcherImpl
+import net.ktnx.mobileledger.domain.usecase.sync.LegacyHtmlParser
+import net.ktnx.mobileledger.domain.usecase.sync.LegacyHtmlParserImpl
 import net.ktnx.mobileledger.domain.usecase.sync.SyncPersistence
 import net.ktnx.mobileledger.domain.usecase.sync.SyncPersistenceImpl
+import net.ktnx.mobileledger.domain.usecase.sync.TransactionListFetcher
+import net.ktnx.mobileledger.domain.usecase.sync.TransactionListFetcherImpl
 
 /**
  * Hilt module for sync-related dependencies.
@@ -37,4 +43,16 @@ abstract class SyncModule {
     @Binds
     @Singleton
     abstract fun bindSyncPersistence(impl: SyncPersistenceImpl): SyncPersistence
+
+    @Binds
+    @Singleton
+    abstract fun bindAccountListFetcher(impl: AccountListFetcherImpl): AccountListFetcher
+
+    @Binds
+    @Singleton
+    abstract fun bindTransactionListFetcher(impl: TransactionListFetcherImpl): TransactionListFetcher
+
+    @Binds
+    @Singleton
+    abstract fun bindLegacyHtmlParser(impl: LegacyHtmlParserImpl): LegacyHtmlParser
 }
