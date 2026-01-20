@@ -31,8 +31,10 @@ import net.ktnx.mobileledger.data.repository.CurrencyRepository
 import net.ktnx.mobileledger.data.repository.PreferencesRepository
 import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.data.repository.TemplateRepository
+import net.ktnx.mobileledger.data.repository.mapper.CurrencyMapper.toDomain
 import net.ktnx.mobileledger.data.repository.mapper.ProfileMapper.toDomain
 import net.ktnx.mobileledger.data.repository.mapper.ProfileMapper.toEntity
+import net.ktnx.mobileledger.data.repository.mapper.TemplateMapper.toDomain
 import net.ktnx.mobileledger.db.Currency
 import net.ktnx.mobileledger.db.Profile
 import net.ktnx.mobileledger.db.TemplateAccount
@@ -267,7 +269,7 @@ class RawConfigReader(inputStream: InputStream) {
         for (t in templatesList) {
             coroutineContext.ensureActive()
             if (templateRepository.getTemplateWithAccountsByUuid(t.header.uuid) == null) {
-                templateRepository.insertTemplateWithAccounts(t)
+                templateRepository.saveTemplate(t.toDomain())
             }
         }
     }
@@ -289,8 +291,8 @@ class RawConfigReader(inputStream: InputStream) {
 
         for (c in commoditiesList) {
             coroutineContext.ensureActive()
-            if (currencyRepository.getCurrencyByName(c.name) == null) {
-                currencyRepository.insertCurrency(c)
+            if (currencyRepository.getCurrencyAsDomainByName(c.name) == null) {
+                currencyRepository.saveCurrency(c.toDomain())
             }
         }
     }
