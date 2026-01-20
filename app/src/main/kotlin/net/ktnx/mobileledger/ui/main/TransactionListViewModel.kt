@@ -41,6 +41,7 @@ import net.ktnx.mobileledger.data.repository.AccountRepository
 import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.data.repository.TransactionRepository
 import net.ktnx.mobileledger.domain.model.Transaction
+import net.ktnx.mobileledger.domain.usecase.TransactionListConverter
 import net.ktnx.mobileledger.service.CurrencyFormatter
 import net.ktnx.mobileledger.utils.SimpleDate
 
@@ -57,7 +58,8 @@ class TransactionListViewModel @Inject constructor(
     private val profileRepository: ProfileRepository,
     private val transactionRepository: TransactionRepository,
     private val accountRepository: AccountRepository,
-    private val currencyFormatter: CurrencyFormatter
+    private val currencyFormatter: CurrencyFormatter,
+    private val transactionListConverter: TransactionListConverter
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(TransactionListUiState())
@@ -177,7 +179,7 @@ class TransactionListViewModel @Inject constructor(
     }
 
     /**
-     * Convert domain model transactions to display items without using TransactionAccumulator.
+     * Convert domain model transactions to display items using TransactionListConverter.
      */
     private fun convertToDisplayItems(
         transactions: List<Transaction>,
@@ -186,46 +188,44 @@ class TransactionListViewModel @Inject constructor(
         val items = mutableListOf<TransactionListDisplayItem>()
         items.add(TransactionListDisplayItem.Header)
 
-        // Sort by date (newest first)
-        val sortedTx = transactions.sortedByDescending { it.date }
+        // Delegate to UseCase for sorting and grouping
+        val conversionResult = transactionListConverter.convert(transactions)
 
-        var lastDate: SimpleDate? = null
-        for (tx in sortedTx) {
-            val date = tx.date
-
-            // Add date delimiter if date changed
-            if (lastDate != null && date != lastDate) {
-                val isMonthShown = date.month != lastDate.month || date.year != lastDate.year
-                items.add(TransactionListDisplayItem.DateDelimiter(lastDate, isMonthShown))
-            }
-
-            // Add transaction
-            items.add(
-                TransactionListDisplayItem.Transaction(
-                    id = tx.ledgerId,
-                    date = date,
-                    description = tx.description,
-                    comment = tx.comment,
-                    accounts = tx.lines.map { line ->
-                        TransactionAccountDisplayItem(
-                            accountName = line.accountName,
-                            amount = line.amount ?: 0f,
-                            currency = line.currency,
-                            comment = line.comment,
-                            amountStyle = null
+        // Convert domain DisplayItems to UI DisplayItems
+        for (item in conversionResult.items) {
+            when (item) {
+                is TransactionListConverter.DisplayItem.TransactionItem -> {
+                    val tx = item.transaction
+                    items.add(
+                        TransactionListDisplayItem.Transaction(
+                            id = tx.ledgerId,
+                            date = tx.date,
+                            description = tx.description,
+                            comment = tx.comment,
+                            accounts = tx.lines.map { line ->
+                                TransactionAccountDisplayItem(
+                                    accountName = line.accountName,
+                                    amount = line.amount ?: 0f,
+                                    currency = line.currency,
+                                    comment = line.comment,
+                                    amountStyle = null
+                                )
+                            }.toImmutableList(),
+                            boldAccountName = accountFilter,
+                            runningTotal = null
                         )
-                    }.toImmutableList(),
-                    boldAccountName = accountFilter,
-                    runningTotal = null
-                )
-            )
+                    )
+                }
 
-            lastDate = date
-        }
-
-        // Add final date delimiter
-        lastDate?.let { last ->
-            items.add(TransactionListDisplayItem.DateDelimiter(last, isMonthShown = true))
+                is TransactionListConverter.DisplayItem.DateDelimiter -> {
+                    items.add(
+                        TransactionListDisplayItem.DateDelimiter(
+                            date = item.date,
+                            isMonthShown = item.isMonthBoundary
+                        )
+                    )
+                }
+            }
         }
 
         return items

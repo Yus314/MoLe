@@ -21,9 +21,6 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import java.net.MalformedURLException
-import java.net.URL
-import java.util.Locale
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -47,6 +44,7 @@ import net.ktnx.mobileledger.domain.model.FutureDates
 import net.ktnx.mobileledger.domain.model.Profile
 import net.ktnx.mobileledger.domain.model.ProfileAuthentication
 import net.ktnx.mobileledger.domain.model.ServerVersion
+import net.ktnx.mobileledger.domain.usecase.ProfileValidator
 import net.ktnx.mobileledger.domain.usecase.VersionDetector
 import net.ktnx.mobileledger.json.API
 import net.ktnx.mobileledger.service.AuthDataProvider
@@ -56,6 +54,7 @@ class ProfileDetailViewModel @Inject constructor(
     private val profileRepository: ProfileRepository,
     private val authDataProvider: AuthDataProvider,
     private val versionDetector: VersionDetector,
+    private val profileValidator: ProfileValidator,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     @Suppress("unused") private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -298,43 +297,36 @@ class ProfileDetailViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Validate the profile form using [ProfileValidator].
+     *
+     * Delegates validation logic to the UseCase and maps results to UI state.
+     */
     private fun validateForm(): Boolean {
         val state = _uiState.value
-        val errors = mutableMapOf<ProfileField, String>()
 
-        if (state.name.isBlank()) {
-            errors[ProfileField.NAME] = "プロファイル名は必須です"
-        }
+        val data = ProfileValidator.ProfileData(
+            name = state.name,
+            url = state.url,
+            useAuthentication = state.useAuthentication,
+            authUser = state.authUser,
+            authPassword = state.authPassword
+        )
 
-        if (state.url.isBlank()) {
-            errors[ProfileField.URL] = "URLは必須です"
-        } else {
-            try {
-                val parsedUrl = URL(state.url)
-                val host = parsedUrl.host
-                if (host.isNullOrEmpty()) {
-                    errors[ProfileField.URL] = "無効なURLです"
-                }
-                val protocol = parsedUrl.protocol.uppercase()
-                if (protocol != "HTTP" && protocol != "HTTPS") {
-                    errors[ProfileField.URL] = "無効なURLです"
-                }
-            } catch (e: MalformedURLException) {
-                errors[ProfileField.URL] = "無効なURLです"
-            }
-        }
+        val result = profileValidator.validate(data)
 
-        if (state.useAuthentication) {
-            if (state.authUser.isBlank()) {
-                errors[ProfileField.AUTH_USER] = "ユーザー名は必須です"
-            }
-            if (state.authPassword.isBlank()) {
-                errors[ProfileField.AUTH_PASSWORD] = "パスワードは必須です"
+        // Map UseCase fields to UI fields
+        val errors = result.errors.mapKeys { (field, _) ->
+            when (field) {
+                ProfileValidator.Field.NAME -> ProfileField.NAME
+                ProfileValidator.Field.URL -> ProfileField.URL
+                ProfileValidator.Field.AUTH_USER -> ProfileField.AUTH_USER
+                ProfileValidator.Field.AUTH_PASSWORD -> ProfileField.AUTH_PASSWORD
             }
         }
 
         _uiState.update { it.copy(validationErrors = errors) }
-        return errors.isEmpty()
+        return result.isValid
     }
 
     private fun saveProfile() {

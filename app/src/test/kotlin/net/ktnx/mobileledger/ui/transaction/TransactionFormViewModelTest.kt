@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import net.ktnx.mobileledger.domain.model.Profile
+import net.ktnx.mobileledger.fake.FakeTransactionBalanceCalculator
 import net.ktnx.mobileledger.fake.FakeTransactionSender
 import net.ktnx.mobileledger.ui.main.FakeAppStateServiceForViewModel
 import net.ktnx.mobileledger.ui.main.FakeProfileRepositoryForViewModel
@@ -56,6 +57,7 @@ class TransactionFormViewModelTest {
     private lateinit var transactionRepository: FakeTransactionRepositoryForViewModel
     private lateinit var appStateService: FakeAppStateServiceForViewModel
     private lateinit var transactionSender: FakeTransactionSender
+    private lateinit var balanceCalculator: FakeTransactionBalanceCalculator
 
     private lateinit var viewModel: TransactionFormViewModel
 
@@ -65,6 +67,7 @@ class TransactionFormViewModelTest {
         transactionRepository = FakeTransactionRepositoryForViewModel()
         appStateService = FakeAppStateServiceForViewModel()
         transactionSender = FakeTransactionSender()
+        balanceCalculator = FakeTransactionBalanceCalculator()
     }
 
     private fun createTestProfile(
@@ -87,7 +90,8 @@ class TransactionFormViewModelTest {
             profileRepository = profileRepository,
             transactionRepository = transactionRepository,
             appStateService = appStateService,
-            transactionSender = transactionSender
+            transactionSender = transactionSender,
+            balanceCalculator = balanceCalculator
         )
     }
 

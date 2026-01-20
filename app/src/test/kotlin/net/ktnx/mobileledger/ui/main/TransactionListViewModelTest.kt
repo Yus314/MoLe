@@ -35,6 +35,7 @@ import net.ktnx.mobileledger.db.TransactionWithAccounts
 import net.ktnx.mobileledger.domain.model.Profile
 import net.ktnx.mobileledger.domain.model.Transaction as DomainTransaction
 import net.ktnx.mobileledger.domain.model.TransactionLine
+import net.ktnx.mobileledger.domain.usecase.TransactionListConverterImpl
 import net.ktnx.mobileledger.fake.FakeCurrencyFormatter
 import net.ktnx.mobileledger.util.createTestDomainProfile
 import net.ktnx.mobileledger.utils.SimpleDate
@@ -142,7 +143,8 @@ class TransactionListViewModelTest {
         profileRepository,
         transactionRepository,
         accountRepository,
-        currencyFormatter
+        currencyFormatter,
+        TransactionListConverterImpl()
     )
 
     // ========================================

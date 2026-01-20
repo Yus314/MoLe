@@ -34,6 +34,7 @@ import net.ktnx.mobileledger.db.AccountWithAmounts
 import net.ktnx.mobileledger.domain.model.Account
 import net.ktnx.mobileledger.domain.model.AccountAmount as DomainAccountAmount
 import net.ktnx.mobileledger.domain.model.Profile
+import net.ktnx.mobileledger.domain.usecase.AccountHierarchyResolverImpl
 import net.ktnx.mobileledger.util.createTestDomainProfile
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -138,7 +139,8 @@ class AccountSummaryViewModelTest {
     private fun createViewModel() = AccountSummaryViewModel(
         profileRepository,
         accountRepository,
-        preferencesRepository
+        preferencesRepository,
+        AccountHierarchyResolverImpl()
     )
 
     // ========================================

@@ -22,10 +22,22 @@ import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
+import net.ktnx.mobileledger.domain.usecase.AccountHierarchyResolver
+import net.ktnx.mobileledger.domain.usecase.AccountHierarchyResolverImpl
 import net.ktnx.mobileledger.domain.usecase.ConfigBackup
 import net.ktnx.mobileledger.domain.usecase.ConfigBackupImpl
 import net.ktnx.mobileledger.domain.usecase.DatabaseInitializer
 import net.ktnx.mobileledger.domain.usecase.DatabaseInitializerImpl
+import net.ktnx.mobileledger.domain.usecase.ProfileValidator
+import net.ktnx.mobileledger.domain.usecase.ProfileValidatorImpl
+import net.ktnx.mobileledger.domain.usecase.TemplateMatcher
+import net.ktnx.mobileledger.domain.usecase.TemplateMatcherImpl
+import net.ktnx.mobileledger.domain.usecase.TransactionBalanceCalculator
+import net.ktnx.mobileledger.domain.usecase.TransactionBalanceCalculatorImpl
+import net.ktnx.mobileledger.domain.usecase.TransactionDateNavigator
+import net.ktnx.mobileledger.domain.usecase.TransactionDateNavigatorImpl
+import net.ktnx.mobileledger.domain.usecase.TransactionListConverter
+import net.ktnx.mobileledger.domain.usecase.TransactionListConverterImpl
 import net.ktnx.mobileledger.domain.usecase.TransactionSender
 import net.ktnx.mobileledger.domain.usecase.TransactionSenderImpl
 import net.ktnx.mobileledger.domain.usecase.TransactionSyncer
@@ -61,4 +73,28 @@ abstract class UseCaseModule {
     @Binds
     @Singleton
     abstract fun bindVersionDetector(impl: VersionDetectorImpl): VersionDetector
+
+    @Binds
+    @Singleton
+    abstract fun bindTransactionBalanceCalculator(impl: TransactionBalanceCalculatorImpl): TransactionBalanceCalculator
+
+    @Binds
+    @Singleton
+    abstract fun bindProfileValidator(impl: ProfileValidatorImpl): ProfileValidator
+
+    @Binds
+    @Singleton
+    abstract fun bindTemplateMatcher(impl: TemplateMatcherImpl): TemplateMatcher
+
+    @Binds
+    @Singleton
+    abstract fun bindTransactionListConverter(impl: TransactionListConverterImpl): TransactionListConverter
+
+    @Binds
+    @Singleton
+    abstract fun bindAccountHierarchyResolver(impl: AccountHierarchyResolverImpl): AccountHierarchyResolver
+
+    @Binds
+    @Singleton
+    abstract fun bindTransactionDateNavigator(impl: TransactionDateNavigatorImpl): TransactionDateNavigator
 }

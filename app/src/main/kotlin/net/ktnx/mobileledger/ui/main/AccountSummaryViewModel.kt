@@ -33,6 +33,7 @@ import logcat.logcat
 import net.ktnx.mobileledger.data.repository.AccountRepository
 import net.ktnx.mobileledger.data.repository.PreferencesRepository
 import net.ktnx.mobileledger.data.repository.ProfileRepository
+import net.ktnx.mobileledger.domain.usecase.AccountHierarchyResolver
 
 /**
  * ViewModel for the Account Summary tab.
@@ -49,7 +50,8 @@ import net.ktnx.mobileledger.data.repository.ProfileRepository
 class AccountSummaryViewModel @Inject constructor(
     private val profileRepository: ProfileRepository,
     private val accountRepository: AccountRepository,
-    private val preferencesRepository: PreferencesRepository
+    private val preferencesRepository: PreferencesRepository,
+    private val accountHierarchyResolver: AccountHierarchyResolver
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AccountSummaryUiState())
@@ -122,21 +124,20 @@ class AccountSummaryViewModel @Inject constructor(
             try {
                 val domainAccounts = accountRepository.getAllWithAmounts(profileId, showZeroBalances)
 
-                // First pass: determine hasSubAccounts for each account
-                val hasSubAccountsMap = HashMap<String, Boolean>()
-                for (account in domainAccounts) {
-                    val parentName = account.parentName
-                    if (parentName != null) {
-                        hasSubAccountsMap[parentName] = true
-                    }
-                }
+                // Delegate hierarchy resolution to UseCase
+                val resolvedAccounts = accountHierarchyResolver.resolve(domainAccounts)
+                val filteredAccounts = accountHierarchyResolver.filterZeroBalance(
+                    resolvedAccounts,
+                    showZeroBalances
+                )
 
-                // Second pass: build the display list
+                // Build the display list
                 val adapterList = mutableListOf<AccountSummaryListItem>()
                 val headerText = _uiState.value.headerText.ifEmpty { "----" }
                 adapterList.add(AccountSummaryListItem.Header(headerText))
 
-                for (account in domainAccounts) {
+                for (resolved in filteredAccounts) {
+                    val account = resolved.account
                     adapterList.add(
                         AccountSummaryListItem.Account(
                             id = account.id ?: 0L,
@@ -151,23 +152,16 @@ class AccountSummaryViewModel @Inject constructor(
                                 )
                             },
                             parentName = account.parentName,
-                            hasSubAccounts = hasSubAccountsMap[account.name] == true,
+                            hasSubAccounts = resolved.hasSubAccounts,
                             isExpanded = account.isExpanded,
                             amountsExpanded = false
                         )
                     )
                 }
 
-                // Filter zero balance accounts if needed
-                val filteredList = if (!showZeroBalances) {
-                    AccountSummaryListItem.removeZeroAccounts(adapterList)
-                } else {
-                    adapterList
-                }
-
                 _uiState.update {
                     it.copy(
-                        accounts = filteredList,
+                        accounts = adapterList,
                         isLoading = false,
                         headerText = headerText,
                         error = null

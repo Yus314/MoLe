@@ -35,6 +35,7 @@ import logcat.logcat
 import net.ktnx.mobileledger.data.repository.AccountRepository
 import net.ktnx.mobileledger.data.repository.CurrencyRepository
 import net.ktnx.mobileledger.data.repository.ProfileRepository
+import net.ktnx.mobileledger.domain.usecase.TransactionBalanceCalculator
 import net.ktnx.mobileledger.service.CurrencyFormatter
 import net.ktnx.mobileledger.service.RowIdGenerator
 
@@ -44,7 +45,8 @@ class AccountRowsViewModel @Inject constructor(
     private val accountRepository: AccountRepository,
     private val currencyRepository: CurrencyRepository,
     private val currencyFormatter: CurrencyFormatter,
-    private val rowIdGenerator: RowIdGenerator
+    private val rowIdGenerator: RowIdGenerator,
+    private val balanceCalculator: TransactionBalanceCalculator
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AccountRowsUiState())
@@ -203,26 +205,36 @@ class AccountRowsViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Recalculate amount hints for all account rows.
+     *
+     * Delegates calculation to [TransactionBalanceCalculator].
+     */
     private fun recalculateAmountHints() {
         _uiState.update { state ->
-            val currencyGroups = state.accounts.groupBy { it.currency }
-            val newAccounts = state.accounts.map { row ->
-                val currencyAccounts = currencyGroups[row.currency] ?: emptyList()
-                val accountsWithAmount = currencyAccounts.filter { it.isAmountSet && it.isAmountValid }
+            // Convert UI rows to UseCase input
+            val entries = state.accounts.map { row ->
+                TransactionBalanceCalculator.AccountEntry(
+                    accountName = row.accountName,
+                    amount = row.amount,
+                    currency = row.currency,
+                    comment = row.comment.ifBlank { null },
+                    isAmountSet = row.isAmountSet,
+                    isAmountValid = row.isAmountValid
+                )
+            }
 
-                val hint = if (!row.isAmountSet) {
-                    val balance = accountsWithAmount.sumOf { it.amount?.toDouble() ?: 0.0 }
-                    if (kotlin.math.abs(balance) < 0.005) {
-                        "0"
-                    } else {
-                        currencyFormatter.formatNumber(-balance.toFloat())
-                    }
-                } else {
-                    null
-                }
+            // Delegate hint calculation to UseCase
+            val hints = balanceCalculator.calculateAmountHints(entries) { amount ->
+                currencyFormatter.formatNumber(amount)
+            }
 
+            // Apply hints to account rows
+            val newAccounts = state.accounts.mapIndexed { idx, row ->
+                val hint = hints.find { it.entryIndex == idx }?.hint
                 row.copy(amountHint = hint)
             }
+
             state.copy(accounts = newAccounts)
         }
     }

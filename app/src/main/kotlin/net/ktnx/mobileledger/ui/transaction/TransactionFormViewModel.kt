@@ -33,7 +33,7 @@ import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.data.repository.TransactionRepository
 import net.ktnx.mobileledger.domain.model.FutureDates
 import net.ktnx.mobileledger.domain.model.Transaction
-import net.ktnx.mobileledger.domain.model.TransactionLine
+import net.ktnx.mobileledger.domain.usecase.TransactionBalanceCalculator
 import net.ktnx.mobileledger.domain.usecase.TransactionSender
 import net.ktnx.mobileledger.service.AppStateService
 import net.ktnx.mobileledger.utils.SimpleDate
@@ -43,7 +43,8 @@ class TransactionFormViewModel @Inject constructor(
     private val profileRepository: ProfileRepository,
     private val transactionRepository: TransactionRepository,
     private val appStateService: AppStateService,
-    private val transactionSender: TransactionSender
+    private val transactionSender: TransactionSender,
+    private val balanceCalculator: TransactionBalanceCalculator
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(TransactionFormUiState())
@@ -211,52 +212,25 @@ class TransactionFormViewModel @Inject constructor(
     /**
      * Construct a domain model Transaction from the form state and account rows.
      *
-     * This method handles:
-     * - Balance calculation for accounts with empty amounts
-     * - Currency grouping for auto-balance
-     * - Conversion from UI rows to TransactionLine domain objects
+     * Delegates balance calculation and auto-balance to [TransactionBalanceCalculator].
      */
     private fun constructTransaction(accountRows: List<TransactionAccountRow>): Transaction {
         val state = _uiState.value
 
-        // Build transaction lines, tracking balances for auto-balance calculation
-        val currencyBalances = mutableMapOf<String, Float>()
-        val linesWithEmptyAmount = mutableMapOf<String, MutableList<Int>>() // currency -> indices
-        val lines = mutableListOf<TransactionLine>()
-
-        for (row in accountRows) {
-            if (row.accountName.isBlank()) continue
-
-            val lineIndex = lines.size
-            val amount: Float?
-
-            if (row.isAmountSet && row.isAmountValid) {
-                amount = row.amount ?: 0f
-                currencyBalances[row.currency] = (currencyBalances[row.currency] ?: 0f) + amount
-            } else {
-                amount = null
-                linesWithEmptyAmount.getOrPut(row.currency) { mutableListOf() }.add(lineIndex)
-            }
-
-            lines.add(
-                TransactionLine(
-                    id = null,
-                    accountName = row.accountName.trim(),
-                    amount = amount,
-                    currency = row.currency,
-                    comment = row.comment.ifBlank { null }
-                )
+        // Convert UI rows to UseCase input
+        val entries = accountRows.map { row ->
+            TransactionBalanceCalculator.AccountEntry(
+                accountName = row.accountName,
+                amount = row.amount,
+                currency = row.currency,
+                comment = row.comment.ifBlank { null },
+                isAmountSet = row.isAmountSet,
+                isAmountValid = row.isAmountValid
             )
         }
 
-        // Auto-balance: set amount for accounts with empty amount (one per currency)
-        for ((currency, indices) in linesWithEmptyAmount) {
-            if (indices.size == 1) {
-                val balance = currencyBalances[currency] ?: 0f
-                val idx = indices[0]
-                lines[idx] = lines[idx].copy(amount = -balance)
-            }
-        }
+        // Delegate balance calculation to UseCase
+        val balanceResult = balanceCalculator.calculateBalance(entries)
 
         return Transaction(
             id = null,
@@ -264,7 +238,7 @@ class TransactionFormViewModel @Inject constructor(
             date = state.date,
             description = state.description,
             comment = state.transactionComment.ifBlank { null },
-            lines = lines
+            lines = balanceResult.lines
         )
     }
 
