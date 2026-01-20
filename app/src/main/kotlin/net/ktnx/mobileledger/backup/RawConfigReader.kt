@@ -25,7 +25,6 @@ import java.io.InputStream
 import java.io.InputStreamReader
 import kotlin.coroutines.coroutineContext
 import kotlinx.coroutines.ensureActive
-import logcat.LogPriority
 import logcat.logcat
 import net.ktnx.mobileledger.data.repository.CurrencyRepository
 import net.ktnx.mobileledger.data.repository.PreferencesRepository
@@ -33,16 +32,22 @@ import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.data.repository.TemplateRepository
 import net.ktnx.mobileledger.data.repository.mapper.CurrencyMapper.toDomain
 import net.ktnx.mobileledger.data.repository.mapper.ProfileMapper.toDomain
-import net.ktnx.mobileledger.data.repository.mapper.ProfileMapper.toEntity
 import net.ktnx.mobileledger.data.repository.mapper.TemplateMapper.toDomain
 import net.ktnx.mobileledger.db.Currency
 import net.ktnx.mobileledger.db.Profile
-import net.ktnx.mobileledger.db.TemplateAccount
-import net.ktnx.mobileledger.db.TemplateHeader
 import net.ktnx.mobileledger.db.TemplateWithAccounts
 
+/**
+ * Reads and restores backup configuration from JSON input.
+ *
+ * Coordinates the parsing of currencies, profiles, and templates using
+ * dedicated parser classes, then restores them to their respective repositories.
+ */
 class RawConfigReader(inputStream: InputStream) {
-    private val r: JsonReader = JsonReader(BufferedReader(InputStreamReader(inputStream)))
+    private val reader: JsonReader = JsonReader(BufferedReader(InputStreamReader(inputStream)))
+    private val currencyParser = CurrencyBackupParser()
+    private val profileParser = ProfileBackupParser()
+    private val templateParser = TemplateBackupParser()
 
     var commodities: List<Currency>? = null
         private set
@@ -60,191 +65,22 @@ class RawConfigReader(inputStream: InputStream) {
         templates = null
         currentProfile = null
 
-        r.beginObject()
-        while (r.hasNext()) {
-            val item = r.nextName()
-            if (r.peek() == JsonToken.NULL) {
-                r.nextNull()
+        reader.beginObject()
+        while (reader.hasNext()) {
+            val item = reader.nextName()
+            if (reader.peek() == JsonToken.NULL) {
+                reader.nextNull()
                 continue
             }
             when (item) {
-                BackupKeys.COMMODITIES -> commodities = readCommodities()
-                BackupKeys.PROFILES -> profiles = readProfiles()
-                BackupKeys.TEMPLATES -> templates = readTemplates()
-                BackupKeys.CURRENT_PROFILE -> currentProfile = r.nextString()
+                BackupKeys.COMMODITIES -> commodities = currencyParser.parse(reader)
+                BackupKeys.PROFILES -> profiles = profileParser.parse(reader)
+                BackupKeys.TEMPLATES -> templates = templateParser.parse(reader)
+                BackupKeys.CURRENT_PROFILE -> currentProfile = reader.nextString()
                 else -> throw RuntimeException("unexpected top-level item $item")
             }
         }
-        r.endObject()
-    }
-
-    @Throws(IOException::class)
-    private fun readTemplateAccount(): TemplateAccount {
-        r.beginObject()
-        val result = TemplateAccount(0L, 0L, 0L)
-        while (r.peek() != JsonToken.END_OBJECT) {
-            val item = r.nextName()
-            if (r.peek() == JsonToken.NULL) {
-                r.nextNull()
-                continue
-            }
-            when (item) {
-                BackupKeys.NAME -> result.accountName = r.nextString()
-                BackupKeys.NAME_GROUP -> result.accountNameMatchGroup = r.nextInt()
-                BackupKeys.COMMENT -> result.accountComment = r.nextString()
-                BackupKeys.COMMENT_GROUP -> result.accountCommentMatchGroup = r.nextInt()
-                BackupKeys.AMOUNT -> result.amount = r.nextDouble().toFloat()
-                BackupKeys.AMOUNT_GROUP -> result.amountMatchGroup = r.nextInt()
-                BackupKeys.NEGATE_AMOUNT -> result.negateAmount = r.nextBoolean()
-                BackupKeys.CURRENCY -> result.currency = r.nextLong()
-                BackupKeys.CURRENCY_GROUP -> result.currencyMatchGroup = r.nextInt()
-                else -> throw IllegalStateException("Unexpected template account item: $item")
-            }
-        }
-        r.endObject()
-        return result
-    }
-
-    @Throws(IOException::class)
-    private fun readTemplate(r: JsonReader): TemplateWithAccounts {
-        r.beginObject()
-        val t = TemplateHeader(0L, "", "")
-        val accounts = ArrayList<TemplateAccount>()
-
-        while (r.peek() != JsonToken.END_OBJECT) {
-            val item = r.nextName()
-            if (r.peek() == JsonToken.NULL) {
-                r.nextNull()
-                continue
-            }
-            when (item) {
-                BackupKeys.UUID -> t.uuid = r.nextString()
-
-                BackupKeys.NAME -> t.name = r.nextString()
-
-                BackupKeys.REGEX -> t.regularExpression = r.nextString()
-
-                BackupKeys.TEST_TEXT -> t.testText = r.nextString()
-
-                BackupKeys.DATE_YEAR -> t.dateYear = r.nextInt()
-
-                BackupKeys.DATE_YEAR_GROUP -> t.dateYearMatchGroup = r.nextInt()
-
-                BackupKeys.DATE_MONTH -> t.dateMonth = r.nextInt()
-
-                BackupKeys.DATE_MONTH_GROUP -> t.dateMonthMatchGroup = r.nextInt()
-
-                BackupKeys.DATE_DAY -> t.dateDay = r.nextInt()
-
-                BackupKeys.DATE_DAY_GROUP -> t.dateDayMatchGroup = r.nextInt()
-
-                BackupKeys.TRANSACTION -> t.transactionDescription = r.nextString()
-
-                BackupKeys.TRANSACTION_GROUP -> t.transactionDescriptionMatchGroup = r.nextInt()
-
-                BackupKeys.COMMENT -> t.transactionComment = r.nextString()
-
-                BackupKeys.COMMENT_GROUP -> t.transactionCommentMatchGroup = r.nextInt()
-
-                BackupKeys.IS_FALLBACK -> t.isFallback = r.nextBoolean()
-
-                BackupKeys.ACCOUNTS -> {
-                    r.beginArray()
-                    while (r.peek() == JsonToken.BEGIN_OBJECT) {
-                        accounts.add(readTemplateAccount())
-                    }
-                    r.endArray()
-                }
-
-                else -> throw RuntimeException("Unknown template header item: $item")
-            }
-        }
-        r.endObject()
-
-        return TemplateWithAccounts().apply {
-            header = t
-            this.accounts = accounts
-        }
-    }
-
-    @Throws(IOException::class)
-    private fun readTemplates(): List<TemplateWithAccounts> {
-        val list = ArrayList<TemplateWithAccounts>()
-        r.beginArray()
-        while (r.peek() == JsonToken.BEGIN_OBJECT) {
-            list.add(readTemplate(r))
-        }
-        r.endArray()
-        return list
-    }
-
-    @Throws(IOException::class)
-    private fun readCommodities(): List<Currency> {
-        val list = ArrayList<Currency>()
-        r.beginArray()
-        while (r.peek() == JsonToken.BEGIN_OBJECT) {
-            val c = Currency()
-            r.beginObject()
-            while (r.peek() != JsonToken.END_OBJECT) {
-                val item = r.nextName()
-                if (r.peek() == JsonToken.NULL) {
-                    r.nextNull()
-                    continue
-                }
-                when (item) {
-                    BackupKeys.NAME -> c.name = r.nextString()
-                    BackupKeys.POSITION -> c.position = r.nextString()
-                    BackupKeys.HAS_GAP -> c.hasGap = r.nextBoolean()
-                    else -> throw RuntimeException("Unknown commodity key: $item")
-                }
-            }
-            r.endObject()
-
-            if (c.name.isEmpty()) {
-                throw RuntimeException("Missing commodity name")
-            }
-            list.add(c)
-        }
-        r.endArray()
-        return list
-    }
-
-    @Throws(IOException::class)
-    private fun readProfiles(): List<Profile> {
-        val list = ArrayList<Profile>()
-        r.beginArray()
-        while (r.peek() == JsonToken.BEGIN_OBJECT) {
-            val p = Profile()
-            r.beginObject()
-            while (r.peek() != JsonToken.END_OBJECT) {
-                val item = r.nextName()
-                if (r.peek() == JsonToken.NULL) {
-                    r.nextNull()
-                    continue
-                }
-                when (item) {
-                    BackupKeys.UUID -> p.uuid = r.nextString()
-                    BackupKeys.NAME -> p.name = r.nextString()
-                    BackupKeys.URL -> p.url = r.nextString()
-                    BackupKeys.USE_AUTH -> p.useAuthentication = r.nextBoolean()
-                    BackupKeys.AUTH_USER -> p.authUser = r.nextString()
-                    BackupKeys.AUTH_PASS -> p.authPassword = r.nextString()
-                    BackupKeys.API_VER -> p.apiVersion = r.nextInt()
-                    BackupKeys.CAN_POST -> p.permitPosting = r.nextBoolean()
-                    BackupKeys.DEFAULT_COMMODITY -> p.setDefaultCommodity(r.nextString())
-                    BackupKeys.SHOW_COMMODITY -> p.showCommodityByDefault = r.nextBoolean()
-                    BackupKeys.SHOW_COMMENTS -> p.showCommentsByDefault = r.nextBoolean()
-                    BackupKeys.FUTURE_DATES -> p.futureDates = r.nextInt()
-                    BackupKeys.PREF_ACCOUNT -> p.preferredAccountsFilter = r.nextString()
-                    BackupKeys.COLOUR -> p.theme = r.nextInt()
-                    else -> throw IllegalStateException("Unexpected profile item: $item")
-                }
-            }
-            r.endObject()
-            list.add(p)
-        }
-        r.endArray()
-        return list
+        reader.endObject()
     }
 
     suspend fun restoreAll(
@@ -280,7 +116,6 @@ class RawConfigReader(inputStream: InputStream) {
         for (p in profilesList) {
             coroutineContext.ensureActive()
             if (profileRepository.getProfileByUuid(p.uuid) == null) {
-                // Convert db.Profile to domain.Profile for repository
                 profileRepository.insertProfile(p.toDomain())
             }
         }
