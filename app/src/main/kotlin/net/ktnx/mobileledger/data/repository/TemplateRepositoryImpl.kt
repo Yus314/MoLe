@@ -132,11 +132,6 @@ class TemplateRepositoryImpl @Inject constructor(
     // Mutation Operations
     // ========================================
 
-    @Deprecated("Use saveTemplate() instead")
-    override suspend fun insertTemplate(template: TemplateHeader): Long = withContext(Dispatchers.IO) {
-        templateHeaderDAO.insertSync(template)
-    }
-
     @Deprecated("Use saveTemplate() instead. Internal use for backup/restore only.")
     override suspend fun insertTemplateWithAccounts(templateWithAccounts: TemplateWithAccounts) {
         withContext(Dispatchers.IO) {
@@ -147,20 +142,6 @@ class TemplateRepositoryImpl @Inject constructor(
                 acc.templateId = templateId
                 templateAccountDAO.insertSync(acc)
             }
-        }
-    }
-
-    @Deprecated("Use saveTemplate() instead")
-    override suspend fun updateTemplate(template: TemplateHeader) {
-        withContext(Dispatchers.IO) {
-            templateHeaderDAO.updateSync(template)
-        }
-    }
-
-    @Deprecated("Use deleteTemplateById() instead")
-    override suspend fun deleteTemplate(template: TemplateHeader) {
-        withContext(Dispatchers.IO) {
-            templateHeaderDAO.deleteSync(template)
         }
     }
 
@@ -194,8 +175,7 @@ class TemplateRepositoryImpl @Inject constructor(
         }
     }
 
-    @Deprecated("Use saveTemplate() instead")
-    override suspend fun saveTemplateWithAccounts(header: TemplateHeader, accounts: List<TemplateAccount>): Long =
+    private suspend fun saveTemplateWithAccounts(header: TemplateHeader, accounts: List<TemplateAccount>): Long =
         withContext(Dispatchers.IO) {
             val isNew = header.id == 0L
             val savedId = if (isNew) {

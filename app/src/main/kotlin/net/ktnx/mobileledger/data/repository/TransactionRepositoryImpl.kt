@@ -31,7 +31,6 @@ import net.ktnx.mobileledger.dao.TransactionDAO
 import net.ktnx.mobileledger.data.repository.mapper.TransactionMapper
 import net.ktnx.mobileledger.db.Account
 import net.ktnx.mobileledger.db.AccountValue
-import net.ktnx.mobileledger.db.Transaction as DbTransaction
 import net.ktnx.mobileledger.db.TransactionWithAccounts
 import net.ktnx.mobileledger.domain.model.Transaction
 import net.ktnx.mobileledger.utils.AccountNameUtils
@@ -116,17 +115,6 @@ class TransactionRepositoryImpl @Inject constructor(
         }
     }
 
-    // ========================================
-    // Mutation Operations (DB Entities - Legacy)
-    // ========================================
-
-    @Deprecated("Use insertTransaction(Transaction, Long) with domain model instead")
-    override suspend fun insertTransaction(transaction: TransactionWithAccounts) {
-        withContext(Dispatchers.IO) {
-            appendTransactionInternal(transaction)
-        }
-    }
-
     /**
      * Internal method to append a new transaction.
      * Creates accounts and updates account values as needed.
@@ -176,13 +164,6 @@ class TransactionRepositoryImpl @Inject constructor(
         }
     }
 
-    @Deprecated("Use storeTransaction(Transaction, Long) with domain model instead")
-    override suspend fun storeTransaction(transaction: TransactionWithAccounts) {
-        withContext(Dispatchers.IO) {
-            storeTransactionInternal(transaction)
-        }
-    }
-
     /**
      * Internal method to store a transaction with its accounts.
      * Handles both insert and update cases based on ledger ID.
@@ -217,20 +198,6 @@ class TransactionRepositoryImpl @Inject constructor(
         }
     }
 
-    @Deprecated("Use deleteTransactionById(transactionId) instead")
-    override suspend fun deleteTransaction(transaction: DbTransaction) {
-        withContext(Dispatchers.IO) {
-            transactionDAO.deleteSync(transaction)
-        }
-    }
-
-    @Deprecated("Use deleteTransactionsByIds(transactionIds) instead")
-    override suspend fun deleteTransactions(transactions: List<DbTransaction>) {
-        withContext(Dispatchers.IO) {
-            transactionDAO.deleteSync(transactions)
-        }
-    }
-
     override suspend fun deleteTransactionById(transactionId: Long): Int = withContext(Dispatchers.IO) {
         transactionDAO.deleteByIdSync(transactionId)
     }
@@ -242,26 +209,6 @@ class TransactionRepositoryImpl @Inject constructor(
     // ========================================
     // Sync Operations
     // ========================================
-
-    @Deprecated("Use storeTransactionsAsDomain() instead")
-    override suspend fun storeTransactions(transactions: List<TransactionWithAccounts>, profileId: Long) {
-        withContext(Dispatchers.IO) {
-            val generation = transactionDAO.getGenerationSync(profileId) + 1
-
-            for (tr in transactions) {
-                tr.transaction.generation = generation
-                tr.transaction.profileId = profileId
-                storeTransactionInternal(tr)
-            }
-
-            logcat { "Purging old transactions" }
-            var removed = transactionDAO.purgeOldTransactionsSync(profileId, generation)
-            logcat { "Purged $removed transactions" }
-
-            removed = transactionDAO.purgeOldTransactionAccountsSync(profileId, generation)
-            logcat { "Purged $removed transaction accounts" }
-        }
-    }
 
     override suspend fun storeTransactionsAsDomain(transactions: List<Transaction>, profileId: Long) {
         withContext(Dispatchers.IO) {

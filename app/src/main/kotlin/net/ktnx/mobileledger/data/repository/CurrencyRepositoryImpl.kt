@@ -82,11 +82,6 @@ class CurrencyRepositoryImpl @Inject constructor(private val currencyDAO: Curren
     @Deprecated("Use observeCurrencyAsDomain(id) instead")
     override fun observeCurrencyById(id: Long): Flow<Currency?> = currencyDAO.getById(id)
 
-    @Deprecated("Use getCurrencyAsDomain(id) instead")
-    override suspend fun getCurrencyById(id: Long): Currency? = withContext(Dispatchers.IO) {
-        currencyDAO.getByIdSync(id)
-    }
-
     @Deprecated("Use observeCurrencyAsDomainByName(name) instead")
     override fun observeCurrencyByName(name: String): Flow<Currency?> = currencyDAO.getByName(name)
 

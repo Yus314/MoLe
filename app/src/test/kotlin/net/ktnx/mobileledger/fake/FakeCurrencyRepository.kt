@@ -65,8 +65,6 @@ class FakeCurrencyRepository : CurrencyRepository {
 
     override fun observeCurrencyById(id: Long): Flow<Currency?> = MutableStateFlow(currencies[id])
 
-    override suspend fun getCurrencyById(id: Long): Currency? = currencies[id]
-
     override fun observeCurrencyByName(name: String): Flow<Currency?> =
         MutableStateFlow(currencies.values.find { it.name == name })
 

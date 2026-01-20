@@ -112,11 +112,11 @@ class CurrencyRepositoryTest {
     }
 
     @Test
-    fun `getCurrencyById returns currency when exists`() = runTest {
+    fun `observeCurrencyById returns currency when exists`() = runTest {
         val currency = createTestCurrency(name = "USD")
         val id = repository.insertCurrency(currency)
 
-        val result = repository.getCurrencyById(id)
+        val result = repository.observeCurrencyById(id).first()
 
         assertNotNull(result)
         assertEquals("USD", result?.name)
@@ -153,7 +153,7 @@ class CurrencyRepositoryTest {
         val id = repository.insertCurrency(currency)
 
         assertTrue(id > 0)
-        val stored = repository.getCurrencyById(id)
+        val stored = repository.observeCurrencyById(id).first()
         assertNotNull(stored)
         assertEquals("USD", stored?.name)
     }
@@ -167,7 +167,7 @@ class CurrencyRepositoryTest {
         )
 
         val id = repository.insertCurrency(currency)
-        val stored = repository.getCurrencyById(id)
+        val stored = repository.observeCurrencyById(id).first()
 
         assertNotNull(stored)
         assertEquals("EUR", stored?.name)
@@ -187,7 +187,7 @@ class CurrencyRepositoryTest {
         val updated = createTestCurrency(id = id, name = "USD", position = "before")
         repository.updateCurrency(updated)
 
-        val result = repository.getCurrencyById(id)
+        val result = repository.observeCurrencyById(id).first()
         assertEquals("before", result?.position)
     }
 
@@ -276,8 +276,6 @@ class FakeCurrencyRepository : CurrencyRepository {
     override suspend fun getAllCurrencies(): List<Currency> = currencies.values.toList()
 
     override fun observeCurrencyById(id: Long): Flow<Currency?> = MutableStateFlow(currencies[id])
-
-    override suspend fun getCurrencyById(id: Long): Currency? = currencies[id]
 
     override fun observeCurrencyByName(name: String): Flow<Currency?> =
         MutableStateFlow(currencies.values.find { it.name == name })

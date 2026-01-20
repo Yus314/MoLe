@@ -18,7 +18,6 @@
 package net.ktnx.mobileledger.data.repository
 
 import kotlinx.coroutines.flow.Flow
-import net.ktnx.mobileledger.db.TemplateAccount
 import net.ktnx.mobileledger.db.TemplateHeader
 import net.ktnx.mobileledger.db.TemplateWithAccounts
 import net.ktnx.mobileledger.domain.model.Template
@@ -168,18 +167,6 @@ interface TemplateRepository {
     // ========================================
 
     /**
-     * Insert a new template.
-     *
-     * @param template The template to insert
-     * @return The ID of the inserted template
-     */
-    @Deprecated(
-        message = "Use saveTemplate() instead",
-        replaceWith = ReplaceWith("saveTemplate(template.toDomain())")
-    )
-    suspend fun insertTemplate(template: TemplateHeader): Long
-
-    /**
      * Insert a template with its accounts.
      *
      * @param templateWithAccounts The template with accounts to insert
@@ -189,28 +176,6 @@ interface TemplateRepository {
         replaceWith = ReplaceWith("saveTemplate(templateWithAccounts.toDomain())")
     )
     suspend fun insertTemplateWithAccounts(templateWithAccounts: TemplateWithAccounts)
-
-    /**
-     * Update an existing template.
-     *
-     * @param template The template to update
-     */
-    @Deprecated(
-        message = "Use saveTemplate() instead",
-        replaceWith = ReplaceWith("saveTemplate(template.toDomain())")
-    )
-    suspend fun updateTemplate(template: TemplateHeader)
-
-    /**
-     * Delete a template.
-     *
-     * @param template The template to delete
-     */
-    @Deprecated(
-        message = "Use deleteTemplateById() instead",
-        replaceWith = ReplaceWith("deleteTemplateById(template.id)")
-    )
-    suspend fun deleteTemplate(template: TemplateHeader)
 
     /**
      * Delete a template by its ID.
@@ -233,20 +198,6 @@ interface TemplateRepository {
      * Delete all templates.
      */
     suspend fun deleteAllTemplates()
-
-    /**
-     * Save a template with its accounts.
-     * Handles insert/update of header and all accounts atomically.
-     *
-     * @param header The template header to save
-     * @param accounts The list of accounts to save
-     * @return The saved template ID
-     */
-    @Deprecated(
-        message = "Use saveTemplate() instead",
-        replaceWith = ReplaceWith("saveTemplate(template)")
-    )
-    suspend fun saveTemplateWithAccounts(header: TemplateHeader, accounts: List<TemplateAccount>): Long
 
     /**
      * Save a template domain model with its lines.

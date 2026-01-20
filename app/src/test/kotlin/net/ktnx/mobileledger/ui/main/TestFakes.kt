@@ -28,7 +28,6 @@ import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.data.repository.TransactionRepository
 import net.ktnx.mobileledger.db.Account as DbAccount
 import net.ktnx.mobileledger.db.AccountWithAmounts
-import net.ktnx.mobileledger.db.Transaction as DbTransaction
 import net.ktnx.mobileledger.db.TransactionWithAccounts
 import net.ktnx.mobileledger.domain.model.Account
 import net.ktnx.mobileledger.domain.model.AccountAmount
@@ -196,55 +195,6 @@ class FakeTransactionRepositoryForViewModel : TransactionRepository {
         insertTransaction(transaction, profileId)
     }
 
-    // DB entity mutation methods (legacy)
-    override suspend fun insertTransaction(transaction: TransactionWithAccounts) {
-        if (transaction.transaction.id == 0L) {
-            transaction.transaction.id = nextId++
-        }
-        dbTransactions[transaction.transaction.id] = transaction
-        // Also add to domain transactions for query operations
-        val domainTx = Transaction(
-            id = transaction.transaction.id,
-            ledgerId = transaction.transaction.ledgerId,
-            date = SimpleDate(
-                transaction.transaction.year,
-                transaction.transaction.month,
-                transaction.transaction.day
-            ),
-            description = transaction.transaction.description,
-            comment = transaction.transaction.comment,
-            lines = transaction.accounts.map { acc ->
-                TransactionLine(
-                    id = acc.id,
-                    accountName = acc.accountName,
-                    amount = acc.amount,
-                    currency = acc.currency,
-                    comment = acc.comment
-                )
-            }
-        )
-        domainTransactions[domainTx.id!!] = domainTx
-        profileMap[domainTx.id!!] = transaction.transaction.profileId
-    }
-
-    override suspend fun storeTransaction(transaction: TransactionWithAccounts) {
-        insertTransaction(transaction)
-    }
-
-    override suspend fun deleteTransaction(transaction: DbTransaction) {
-        dbTransactions.remove(transaction.id)
-        domainTransactions.remove(transaction.id)
-        profileMap.remove(transaction.id)
-    }
-
-    override suspend fun deleteTransactions(transactions: List<DbTransaction>) {
-        transactions.forEach {
-            dbTransactions.remove(it.id)
-            domainTransactions.remove(it.id)
-            profileMap.remove(it.id)
-        }
-    }
-
     override suspend fun deleteTransactionById(transactionId: Long): Int {
         val existed = domainTransactions.containsKey(transactionId)
         dbTransactions.remove(transactionId)
@@ -264,13 +214,6 @@ class FakeTransactionRepositoryForViewModel : TransactionRepository {
             profileMap.remove(id)
         }
         return count
-    }
-
-    override suspend fun storeTransactions(transactions: List<TransactionWithAccounts>, profileId: Long) {
-        transactions.forEach { twa ->
-            twa.transaction.profileId = profileId
-            insertTransaction(twa)
-        }
     }
 
     override suspend fun storeTransactionsAsDomain(transactions: List<Transaction>, profileId: Long) {
@@ -348,9 +291,6 @@ class FakeAccountRepositoryForViewModel : AccountRepository {
         return MutableStateFlow(filtered)
     }
 
-    override fun observeAll(profileId: Long, includeZeroBalances: Boolean): Flow<List<DbAccount>> =
-        MutableStateFlow(emptyList())
-
     override fun observeByName(profileId: Long, accountName: String): Flow<DbAccount?> = MutableStateFlow(null)
 
     override fun observeByNameWithAmounts(profileId: Long, accountName: String): Flow<Account?> =
@@ -394,8 +334,6 @@ class FakeAccountRepositoryForViewModel : AccountRepository {
     override suspend fun insertAccountWithAmounts(accountWithAmounts: AccountWithAmounts) {}
 
     override suspend fun updateAccount(account: DbAccount) {}
-
-    override suspend fun deleteAccount(account: DbAccount) {}
 
     override suspend fun storeAccounts(accounts: List<AccountWithAmounts>, profileId: Long) {}
 

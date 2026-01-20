@@ -23,7 +23,6 @@ import kotlinx.coroutines.flow.map
 import net.ktnx.mobileledger.data.repository.TemplateRepository
 import net.ktnx.mobileledger.data.repository.mapper.TemplateMapper.toDomain
 import net.ktnx.mobileledger.data.repository.mapper.TemplateMapper.toEntity
-import net.ktnx.mobileledger.db.TemplateAccount
 import net.ktnx.mobileledger.db.TemplateHeader
 import net.ktnx.mobileledger.db.TemplateWithAccounts
 import net.ktnx.mobileledger.domain.model.Template
@@ -71,35 +70,10 @@ class FakeTemplateRepository : TemplateRepository {
 
     override suspend fun getAllTemplatesWithAccounts(): List<TemplateWithAccounts> = templates.values.toList()
 
-    override suspend fun insertTemplate(template: TemplateHeader): Long {
-        val id = if (template.id == 0L) nextId++ else template.id
-        template.id = id
-        templates[id] = TemplateWithAccounts().apply {
-            header = template
-            accounts = emptyList()
-        }
-        emitFlow()
-        return id
-    }
-
     override suspend fun insertTemplateWithAccounts(templateWithAccounts: TemplateWithAccounts) {
         val id = if (templateWithAccounts.header.id == 0L) nextId++ else templateWithAccounts.header.id
         templateWithAccounts.header.id = id
         templates[id] = templateWithAccounts
-        emitFlow()
-    }
-
-    override suspend fun updateTemplate(template: TemplateHeader) {
-        templates[template.id]?.let { existing ->
-            val updated = TemplateWithAccounts.from(existing)
-            updated.header = template
-            templates[template.id] = updated
-        }
-        emitFlow()
-    }
-
-    override suspend fun deleteTemplate(template: TemplateHeader) {
-        templates.remove(template.id)
         emitFlow()
     }
 
@@ -127,7 +101,10 @@ class FakeTemplateRepository : TemplateRepository {
         emitFlow()
     }
 
-    override suspend fun saveTemplateWithAccounts(header: TemplateHeader, accounts: List<TemplateAccount>): Long {
+    override suspend fun saveTemplate(template: Template): Long {
+        val entity = template.toEntity()
+        val header = entity.header
+        val accounts = entity.accounts
         val id = if (header.id == 0L) nextId++ else header.id
         header.id = id
         accounts.forEach { it.templateId = id }
@@ -137,11 +114,6 @@ class FakeTemplateRepository : TemplateRepository {
         }
         emitFlow()
         return id
-    }
-
-    override suspend fun saveTemplate(template: Template): Long {
-        val entity = template.toEntity()
-        return saveTemplateWithAccounts(entity.header, entity.accounts)
     }
 
     private fun emitFlow() {

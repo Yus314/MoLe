@@ -492,9 +492,6 @@ class FakeAccountRepositoryForAccountSummary : AccountRepository {
     override fun observeAllWithAmounts(profileId: Long, includeZeroBalances: Boolean) =
         MutableStateFlow(domainAccounts[profileId] ?: emptyList())
 
-    override fun observeAll(profileId: Long, includeZeroBalances: Boolean) =
-        MutableStateFlow<List<DbAccount>>(emptyList())
-
     override fun observeByName(profileId: Long, accountName: String) = MutableStateFlow<DbAccount?>(null)
 
     override fun observeByNameWithAmounts(profileId: Long, accountName: String) =
@@ -544,8 +541,6 @@ class FakeAccountRepositoryForAccountSummary : AccountRepository {
     override suspend fun insertAccountWithAmounts(accountWithAmounts: AccountWithAmounts) {}
 
     override suspend fun updateAccount(account: DbAccount) {}
-
-    override suspend fun deleteAccount(account: DbAccount) {}
 
     override suspend fun storeAccounts(accounts: List<AccountWithAmounts>, profileId: Long) {}
 

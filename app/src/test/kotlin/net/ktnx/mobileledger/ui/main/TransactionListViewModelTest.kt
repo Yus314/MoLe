@@ -808,23 +808,6 @@ class FakeTransactionRepositoryForTransactionList : net.ktnx.mobileledger.data.r
         insertTransaction(transaction, profileId)
     }
 
-    // DB entity mutation methods (legacy)
-    override suspend fun insertTransaction(transaction: TransactionWithAccounts) {
-        transactions.add(transaction)
-    }
-
-    override suspend fun storeTransaction(transaction: TransactionWithAccounts) {
-        insertTransaction(transaction)
-    }
-
-    override suspend fun deleteTransaction(transaction: DbTransaction) {
-        transactions.removeAll { it.transaction.id == transaction.id }
-    }
-
-    override suspend fun deleteTransactions(txs: List<DbTransaction>) {
-        txs.forEach { tx -> transactions.removeAll { it.transaction.id == tx.id } }
-    }
-
     override suspend fun deleteTransactionById(transactionId: Long): Int {
         val existed = transactions.any { it.transaction.id == transactionId }
         transactions.removeAll { it.transaction.id == transactionId }
@@ -840,13 +823,6 @@ class FakeTransactionRepositoryForTransactionList : net.ktnx.mobileledger.data.r
             transactions.removeAll { it.transaction.id == id }
         }
         return count
-    }
-
-    override suspend fun storeTransactions(txs: List<TransactionWithAccounts>, profileId: Long) {
-        txs.forEach { twa ->
-            twa.transaction.profileId = profileId
-            transactions.add(twa)
-        }
     }
 
     override suspend fun deleteAllForProfile(profileId: Long): Int {
@@ -905,9 +881,6 @@ class FakeAccountRepositoryForTransactionList : net.ktnx.mobileledger.data.repos
     override fun observeAllWithAmounts(profileId: Long, includeZeroBalances: Boolean) =
         MutableStateFlow<List<net.ktnx.mobileledger.domain.model.Account>>(emptyList())
 
-    override fun observeAll(profileId: Long, includeZeroBalances: Boolean) =
-        MutableStateFlow<List<net.ktnx.mobileledger.db.Account>>(emptyList())
-
     override fun observeByName(profileId: Long, accountName: String) =
         MutableStateFlow<net.ktnx.mobileledger.db.Account?>(null)
 
@@ -947,8 +920,6 @@ class FakeAccountRepositoryForTransactionList : net.ktnx.mobileledger.data.repos
     override suspend fun insertAccountWithAmounts(accountWithAmounts: net.ktnx.mobileledger.db.AccountWithAmounts) {}
 
     override suspend fun updateAccount(account: net.ktnx.mobileledger.db.Account) {}
-
-    override suspend fun deleteAccount(account: net.ktnx.mobileledger.db.Account) {}
 
     override suspend fun storeAccounts(accounts: List<net.ktnx.mobileledger.db.AccountWithAmounts>, profileId: Long) {}
 

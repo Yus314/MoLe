@@ -30,12 +30,11 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import net.ktnx.mobileledger.dao.TransactionDAO
-import net.ktnx.mobileledger.data.repository.mapper.TransactionMapper
-import net.ktnx.mobileledger.db.Transaction as DbTransaction
-import net.ktnx.mobileledger.db.TransactionWithAccounts
 import net.ktnx.mobileledger.domain.model.Profile
 import net.ktnx.mobileledger.domain.model.Transaction
+import net.ktnx.mobileledger.domain.model.TransactionLine
 import net.ktnx.mobileledger.util.createTestDomainProfile
+import net.ktnx.mobileledger.utils.SimpleDate
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -80,22 +79,18 @@ class ProfileSwitchingEdgeCaseTest {
     private fun createTestProfile(id: Long? = null, name: String = "Test Profile", orderNo: Int = 1): Profile =
         createTestDomainProfile(id = id, name = name, orderNo = orderNo)
 
-    private fun createTestTransaction(
-        profileId: Long,
-        description: String = "Test Transaction"
-    ): TransactionWithAccounts {
-        val transaction = DbTransaction().apply {
-            this.profileId = profileId
-            this.description = description
-            this.year = 2026
-            this.month = 1
-            this.day = 10
-        }
-        val twa = TransactionWithAccounts()
-        twa.transaction = transaction
-        twa.accounts = emptyList()
-        return twa
-    }
+    private fun createTestTransaction(profileId: Long, description: String = "Test Transaction"): Transaction =
+        Transaction(
+            id = null,
+            ledgerId = 1L,
+            date = SimpleDate(2026, 1, 10),
+            description = description,
+            comment = null,
+            lines = listOf(
+                TransactionLine(null, "Assets:Cash", -100f, "", null),
+                TransactionLine(null, "Expenses:Food", 100f, "", null)
+            )
+        )
 
     // ========================================
     // Empty profile list edge cases
@@ -233,9 +228,9 @@ class ProfileSwitchingEdgeCaseTest {
         val id2 = profileRepository.insertProfile(profile2)
 
         // Add transactions to each profile
-        transactionRepository.insertTransaction(createTestTransaction(id1, "TX1 for P1"))
-        transactionRepository.insertTransaction(createTestTransaction(id1, "TX2 for P1"))
-        transactionRepository.insertTransaction(createTestTransaction(id2, "TX1 for P2"))
+        transactionRepository.insertTransaction(createTestTransaction(id1, "TX1 for P1"), id1)
+        transactionRepository.insertTransaction(createTestTransaction(id1, "TX2 for P1"), id1)
+        transactionRepository.insertTransaction(createTestTransaction(id2, "TX1 for P2"), id2)
 
         // Verify isolation - check count and descriptions
         val p1Transactions = transactionRepository.observeAllTransactions(id1).first()
@@ -253,8 +248,8 @@ class ProfileSwitchingEdgeCaseTest {
         val profile1Id = profileRepository.insertProfile(createTestProfile(name = "Profile 1"))
         val profile2Id = profileRepository.insertProfile(createTestProfile(name = "Profile 2"))
 
-        transactionRepository.insertTransaction(createTestTransaction(profile1Id, "TX for P1"))
-        transactionRepository.insertTransaction(createTestTransaction(profile2Id, "TX for P2"))
+        transactionRepository.insertTransaction(createTestTransaction(profile1Id, "TX for P1"), profile1Id)
+        transactionRepository.insertTransaction(createTestTransaction(profile2Id, "TX for P2"), profile2Id)
 
         transactionRepository.deleteAllForProfile(profile1Id)
 
@@ -367,28 +362,43 @@ class EdgeCaseFakeProfileRepository : ProfileRepository {
 
 /**
  * Fake TransactionRepository for edge case testing.
+ * Stores domain model Transactions with associated profileId.
  */
 class EdgeCaseFakeTransactionRepository : TransactionRepository {
-    private val transactions = mutableMapOf<Long, TransactionWithAccounts>()
+    private data class StoredTransaction(val transaction: Transaction, val profileId: Long)
+
+    private val transactions = mutableMapOf<Long, StoredTransaction>()
     private var nextId = 1L
 
     // Flow methods (observe prefix)
-    override fun observeAllTransactions(profileId: Long): Flow<List<Transaction>> =
-        MutableStateFlow(transactions.values.filter { it.transaction.profileId == profileId }.toList())
-            .map { TransactionMapper.toDomainList(it) }
+    override fun observeAllTransactions(profileId: Long): Flow<List<Transaction>> = MutableStateFlow(
+        transactions.values
+            .filter { it.profileId == profileId }
+            .map { it.transaction }
+            .toList()
+    )
 
     override fun observeTransactionsFiltered(profileId: Long, accountName: String?): Flow<List<Transaction>> =
         MutableStateFlow(
-            transactions.values.filter { it.transaction.profileId == profileId }.toList()
-        ).map { TransactionMapper.toDomainList(it) }
+            transactions.values
+                .filter { stored ->
+                    stored.profileId == profileId &&
+                        (
+                            accountName == null || stored.transaction.lines.any {
+                                it.accountName.contains(accountName, true)
+                            }
+                            )
+                }
+                .map { it.transaction }
+                .toList()
+        )
 
     override fun observeTransactionById(transactionId: Long): Flow<Transaction?> =
-        MutableStateFlow(transactions[transactionId])
-            .map { it?.let { TransactionMapper.toDomain(it) } }
+        MutableStateFlow(transactions[transactionId]?.transaction)
 
     // Suspend methods (no suffix)
     override suspend fun getTransactionById(transactionId: Long): Transaction? =
-        transactions[transactionId]?.let { TransactionMapper.toDomain(it) }
+        transactions[transactionId]?.transaction
 
     override suspend fun searchByDescription(term: String): List<TransactionDAO.DescriptionContainer> = emptyList()
 
@@ -400,31 +410,13 @@ class EdgeCaseFakeTransactionRepository : TransactionRepository {
     // Domain model mutation methods
     override suspend fun insertTransaction(transaction: Transaction, profileId: Long): Transaction {
         val id = transaction.id ?: nextId++
-        return transaction.copy(id = id)
+        val txWithId = transaction.copy(id = id)
+        transactions[id] = StoredTransaction(txWithId, profileId)
+        return txWithId
     }
 
     override suspend fun storeTransaction(transaction: Transaction, profileId: Long) {
         insertTransaction(transaction, profileId)
-    }
-
-    // DB entity mutation methods (legacy)
-    override suspend fun insertTransaction(transaction: TransactionWithAccounts) {
-        if (transaction.transaction.id == 0L) {
-            transaction.transaction.id = nextId++
-        }
-        transactions[transaction.transaction.id] = transaction
-    }
-
-    override suspend fun storeTransaction(transaction: TransactionWithAccounts) {
-        insertTransaction(transaction)
-    }
-
-    override suspend fun deleteTransaction(transaction: DbTransaction) {
-        transactions.remove(transaction.id)
-    }
-
-    override suspend fun deleteTransactions(transactions: List<DbTransaction>) {
-        transactions.forEach { this.transactions.remove(it.id) }
     }
 
     override suspend fun deleteTransactionById(transactionId: Long): Int {
@@ -444,24 +436,19 @@ class EdgeCaseFakeTransactionRepository : TransactionRepository {
         return count
     }
 
-    override suspend fun storeTransactions(transactions: List<TransactionWithAccounts>, profileId: Long) {
-        transactions.forEach { insertTransaction(it) }
-    }
-
     override suspend fun storeTransactionsAsDomain(transactions: List<Transaction>, profileId: Long) {
         transactions.forEach { tx ->
-            val entity = TransactionMapper.toEntity(tx, profileId)
-            insertTransaction(entity)
+            insertTransaction(tx, profileId)
         }
     }
 
     override suspend fun deleteAllForProfile(profileId: Long): Int {
-        val toRemove = transactions.values.filter { it.transaction.profileId == profileId }
+        val toRemove = transactions.values.filter { it.profileId == profileId }
         toRemove.forEach { transactions.remove(it.transaction.id) }
         return toRemove.size
     }
 
     override suspend fun getMaxLedgerId(profileId: Long): Long? = transactions.values
-        .filter { it.transaction.profileId == profileId }
+        .filter { it.profileId == profileId }
         .maxOfOrNull { it.transaction.ledgerId }
 }

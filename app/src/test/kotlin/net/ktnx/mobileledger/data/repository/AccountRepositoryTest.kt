@@ -306,17 +306,6 @@ class AccountRepositoryTest {
     // deleteAccount tests
     // ========================================
 
-    @Test
-    fun `deleteAccount removes account`() = runTest {
-        val account = createTestAccount(name = "ToDelete")
-        val id = repository.insertAccount(account)
-
-        repository.deleteAccount(account.apply { this.id = id })
-
-        val remaining = repository.observeAllWithAmounts(testProfileId, true).first()
-        assertTrue(remaining.isEmpty())
-    }
-
     // ========================================
     // storeAccounts tests
     // ========================================
@@ -437,11 +426,6 @@ class FakeAccountRepository : AccountRepository {
         return MutableStateFlow(result)
     }
 
-    override fun observeAll(profileId: Long, includeZeroBalances: Boolean): Flow<List<DbAccount>> = MutableStateFlow(
-        getAccountsForProfile(profileId)
-            .filter { includeZeroBalances || hasNonZeroBalance(it.id) }
-    )
-
     override fun observeByName(profileId: Long, accountName: String): Flow<DbAccount?> = MutableStateFlow(
         dbAccounts.values.find { it.profileId == profileId && it.name == accountName }
     )
@@ -510,12 +494,6 @@ class FakeAccountRepository : AccountRepository {
             dbAccounts[account.id] = account
             emitChanges()
         }
-    }
-
-    override suspend fun deleteAccount(account: DbAccount) {
-        dbAccounts.remove(account.id)
-        accountAmounts.remove(account.id)
-        emitChanges()
     }
 
     override suspend fun storeAccounts(accounts: List<AccountWithAmounts>, profileId: Long) {

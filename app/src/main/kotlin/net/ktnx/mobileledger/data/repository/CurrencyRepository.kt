@@ -132,18 +132,6 @@ interface CurrencyRepository {
     fun observeCurrencyById(id: Long): Flow<DbCurrency?>
 
     /**
-     * Get a currency by its ID.
-     *
-     * @param id The currency ID
-     * @return The currency or null if not found
-     */
-    @Deprecated(
-        message = "Use getCurrencyAsDomain(id) instead",
-        replaceWith = ReplaceWith("getCurrencyAsDomain(id)")
-    )
-    suspend fun getCurrencyById(id: Long): DbCurrency?
-
-    /**
      * Observe a currency by its name.
      *
      * @param name The currency name

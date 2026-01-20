@@ -21,14 +21,14 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.runTest
 import net.ktnx.mobileledger.dao.TransactionDAO
-import net.ktnx.mobileledger.data.repository.mapper.TransactionMapper
 import net.ktnx.mobileledger.db.Transaction as DbTransaction
 import net.ktnx.mobileledger.db.TransactionAccount
 import net.ktnx.mobileledger.db.TransactionWithAccounts
 import net.ktnx.mobileledger.domain.model.Transaction
+import net.ktnx.mobileledger.domain.model.TransactionLine
+import net.ktnx.mobileledger.utils.SimpleDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -101,6 +101,26 @@ class TransactionRepositoryTest {
             orderNo = 0
         }
 
+    private fun createDomainTestTransaction(
+        id: Long? = null,
+        description: String = "Test Transaction",
+        year: Int = 2026,
+        month: Int = 1,
+        day: Int = 10,
+        ledgerId: Long = 1L,
+        lines: List<TransactionLine> = listOf(
+            TransactionLine(null, "Assets:Cash", -100f, "", null),
+            TransactionLine(null, "Expenses:Food", 100f, "", null)
+        )
+    ): Transaction = Transaction(
+        id = id,
+        ledgerId = ledgerId,
+        date = SimpleDate(year, month, day),
+        description = description,
+        comment = null,
+        lines = lines
+    )
+
     // ========================================
     // observeAllTransactions tests (Flow)
     // ========================================
@@ -113,8 +133,7 @@ class TransactionRepositoryTest {
 
     @Test
     fun `observeAllTransactions returns transactions for profile`() = runTest {
-        val testTx = createTestTransaction(description = "Groceries")
-        repository.insertTransaction(testTx)
+        repository.insertTransaction(createDomainTestTransaction(description = "Groceries"), testProfileId)
 
         val transactions = repository.observeAllTransactions(testProfileId).first()
         assertEquals(1, transactions.size)
@@ -123,10 +142,8 @@ class TransactionRepositoryTest {
 
     @Test
     fun `observeAllTransactions filters by profile`() = runTest {
-        val tx1 = createTestTransaction(profileId = 1L, description = "Profile 1")
-        val tx2 = createTestTransaction(profileId = 2L, description = "Profile 2", ledgerId = 2L)
-        repository.insertTransaction(tx1)
-        repository.insertTransaction(tx2)
+        repository.insertTransaction(createDomainTestTransaction(description = "Profile 1"), 1L)
+        repository.insertTransaction(createDomainTestTransaction(description = "Profile 2", ledgerId = 2L), 2L)
 
         val transactions = repository.observeAllTransactions(1L).first()
         assertEquals(1, transactions.size)
@@ -139,8 +156,7 @@ class TransactionRepositoryTest {
 
     @Test
     fun `observeTransactionsFiltered with null accountName returns all transactions`() = runTest {
-        val tx = createTestTransaction()
-        repository.insertTransaction(tx)
+        repository.insertTransaction(createDomainTestTransaction(), testProfileId)
 
         val transactions = repository.observeTransactionsFiltered(testProfileId, null).first()
         assertEquals(1, transactions.size)
@@ -148,23 +164,27 @@ class TransactionRepositoryTest {
 
     @Test
     fun `observeTransactionsFiltered with accountName filters correctly`() = runTest {
-        val tx1 = createTestTransaction(
-            description = "Cash payment",
-            accounts = listOf(
-                createTestAccount("Assets:Cash", -100f),
-                createTestAccount("Expenses:Food", 100f)
-            )
+        repository.insertTransaction(
+            createDomainTestTransaction(
+                description = "Cash payment",
+                lines = listOf(
+                    TransactionLine(null, "Assets:Cash", -100f, "", null),
+                    TransactionLine(null, "Expenses:Food", 100f, "", null)
+                )
+            ),
+            testProfileId
         )
-        val tx2 = createTestTransaction(
-            description = "Bank transfer",
-            ledgerId = 2L,
-            accounts = listOf(
-                createTestAccount("Assets:Bank", -200f),
-                createTestAccount("Expenses:Utilities", 200f)
-            )
+        repository.insertTransaction(
+            createDomainTestTransaction(
+                description = "Bank transfer",
+                ledgerId = 2L,
+                lines = listOf(
+                    TransactionLine(null, "Assets:Bank", -200f, "", null),
+                    TransactionLine(null, "Expenses:Utilities", 200f, "", null)
+                )
+            ),
+            testProfileId
         )
-        repository.insertTransaction(tx1)
-        repository.insertTransaction(tx2)
 
         val transactions = repository.observeTransactionsFiltered(testProfileId, "Cash").first()
         assertEquals(1, transactions.size)
@@ -187,10 +207,9 @@ class TransactionRepositoryTest {
 
     @Test
     fun `getTransactionById returns transaction when exists`() = runTest {
-        val testTx = createTestTransaction(description = "Test")
-        repository.insertTransaction(testTx)
+        val insertedTx = repository.insertTransaction(createDomainTestTransaction(description = "Test"), testProfileId)
 
-        val result = repository.getTransactionById(testTx.transaction.id)
+        val result = repository.getTransactionById(insertedTx.id!!)
         assertNotNull(result)
         assertEquals("Test", result?.description)
     }
@@ -201,9 +220,15 @@ class TransactionRepositoryTest {
 
     @Test
     fun `searchByDescription returns matching descriptions`() = runTest {
-        repository.insertTransaction(createTestTransaction(description = "Grocery shopping"))
-        repository.insertTransaction(createTestTransaction(description = "Gas station", ledgerId = 2L))
-        repository.insertTransaction(createTestTransaction(description = "Groceries", ledgerId = 3L))
+        repository.insertTransaction(createDomainTestTransaction(description = "Grocery shopping"), testProfileId)
+        repository.insertTransaction(
+            createDomainTestTransaction(description = "Gas station", ledgerId = 2L),
+            testProfileId
+        )
+        repository.insertTransaction(
+            createDomainTestTransaction(description = "Groceries", ledgerId = 3L),
+            testProfileId
+        )
 
         val results = repository.searchByDescription("groc")
         assertEquals(2, results.size)
@@ -213,7 +238,7 @@ class TransactionRepositoryTest {
 
     @Test
     fun `searchByDescription returns empty list when no matches`() = runTest {
-        repository.insertTransaction(createTestTransaction(description = "Test"))
+        repository.insertTransaction(createDomainTestTransaction(description = "Test"), testProfileId)
 
         val results = repository.searchByDescription("xyz")
         assertTrue(results.isEmpty())
@@ -226,21 +251,23 @@ class TransactionRepositoryTest {
     @Test
     fun `getFirstByDescription returns most recent matching transaction`() = runTest {
         repository.insertTransaction(
-            createTestTransaction(
+            createDomainTestTransaction(
                 description = "Groceries",
                 year = 2025,
                 month = 12,
                 day = 1
-            )
+            ),
+            testProfileId
         )
         repository.insertTransaction(
-            createTestTransaction(
+            createDomainTestTransaction(
                 description = "Groceries",
                 year = 2026,
                 month = 1,
                 day = 15,
                 ledgerId = 2L
-            )
+            ),
+            testProfileId
         )
 
         val result = repository.getFirstByDescription("Groceries")
@@ -252,7 +279,7 @@ class TransactionRepositoryTest {
 
     @Test
     fun `getFirstByDescription returns null when no match`() = runTest {
-        repository.insertTransaction(createTestTransaction(description = "Test"))
+        repository.insertTransaction(createDomainTestTransaction(description = "Test"), testProfileId)
 
         val result = repository.getFirstByDescription("Nonexistent")
         assertNull(result)
@@ -265,23 +292,25 @@ class TransactionRepositoryTest {
     @Test
     fun `getFirstByDescriptionHavingAccount filters by account`() = runTest {
         repository.insertTransaction(
-            createTestTransaction(
+            createDomainTestTransaction(
                 description = "Payment",
-                accounts = listOf(
-                    createTestAccount("Assets:Cash", -100f),
-                    createTestAccount("Expenses:Food", 100f)
+                lines = listOf(
+                    TransactionLine(null, "Assets:Cash", -100f, "", null),
+                    TransactionLine(null, "Expenses:Food", 100f, "", null)
                 )
-            )
+            ),
+            testProfileId
         )
         repository.insertTransaction(
-            createTestTransaction(
+            createDomainTestTransaction(
                 description = "Payment",
                 ledgerId = 2L,
-                accounts = listOf(
-                    createTestAccount("Assets:Bank", -100f),
-                    createTestAccount("Expenses:Utilities", 100f)
+                lines = listOf(
+                    TransactionLine(null, "Assets:Bank", -100f, "", null),
+                    TransactionLine(null, "Expenses:Utilities", 100f, "", null)
                 )
-            )
+            ),
+            testProfileId
         )
 
         val result = repository.getFirstByDescriptionHavingAccount("Payment", "Cash")
@@ -290,50 +319,52 @@ class TransactionRepositoryTest {
     }
 
     // ========================================
-    // deleteTransaction tests
+    // deleteTransactionById tests
     // ========================================
 
     @Test
-    fun `deleteTransaction removes transaction`() = runTest {
-        val tx = createTestTransaction()
-        repository.insertTransaction(tx)
+    fun `deleteTransactionById removes transaction`() = runTest {
+        val tx = repository.insertTransaction(createDomainTestTransaction(), testProfileId)
 
-        repository.deleteTransaction(tx.transaction)
+        val deleted = repository.deleteTransactionById(tx.id!!)
 
+        assertEquals(1, deleted)
         val remaining = repository.observeAllTransactions(testProfileId).first()
         assertTrue(remaining.isEmpty())
     }
 
     // ========================================
-    // deleteTransactions tests
+    // deleteTransactionsByIds tests
     // ========================================
 
     @Test
-    fun `deleteTransactions removes multiple transactions`() = runTest {
-        val tx1 = createTestTransaction(description = "Tx1")
-        val tx2 = createTestTransaction(description = "Tx2", ledgerId = 2L)
-        repository.insertTransaction(tx1)
-        repository.insertTransaction(tx2)
-
-        repository.deleteTransactions(listOf(tx1.transaction, tx2.transaction))
-
-        val remaining = repository.observeAllTransactions(testProfileId).first()
-        assertTrue(remaining.isEmpty())
-    }
-
-    // ========================================
-    // storeTransactions tests
-    // ========================================
-
-    @Test
-    fun `storeTransactions stores batch of transactions`() = runTest {
-        val transactions = listOf(
-            createTestTransaction(description = "Tx1", ledgerId = 1L),
-            createTestTransaction(description = "Tx2", ledgerId = 2L),
-            createTestTransaction(description = "Tx3", ledgerId = 3L)
+    fun `deleteTransactionsByIds removes multiple transactions`() = runTest {
+        val tx1 = repository.insertTransaction(createDomainTestTransaction(description = "Tx1"), testProfileId)
+        val tx2 = repository.insertTransaction(
+            createDomainTestTransaction(description = "Tx2", ledgerId = 2L),
+            testProfileId
         )
 
-        repository.storeTransactions(transactions, testProfileId)
+        val deleted = repository.deleteTransactionsByIds(listOf(tx1.id!!, tx2.id!!))
+
+        assertEquals(2, deleted)
+        val remaining = repository.observeAllTransactions(testProfileId).first()
+        assertTrue(remaining.isEmpty())
+    }
+
+    // ========================================
+    // storeTransactionsAsDomain tests
+    // ========================================
+
+    @Test
+    fun `storeTransactionsAsDomain stores batch of transactions`() = runTest {
+        val transactions = listOf(
+            createDomainTestTransaction(description = "Tx1", ledgerId = 1L),
+            createDomainTestTransaction(description = "Tx2", ledgerId = 2L),
+            createDomainTestTransaction(description = "Tx3", ledgerId = 3L)
+        )
+
+        repository.storeTransactionsAsDomain(transactions, testProfileId)
 
         val stored = repository.observeAllTransactions(testProfileId).first()
         assertEquals(3, stored.size)
@@ -345,8 +376,8 @@ class TransactionRepositoryTest {
 
     @Test
     fun `deleteAllForProfile removes all transactions for profile`() = runTest {
-        repository.insertTransaction(createTestTransaction(profileId = 1L, description = "P1"))
-        repository.insertTransaction(createTestTransaction(profileId = 2L, description = "P2", ledgerId = 2L))
+        repository.insertTransaction(createDomainTestTransaction(description = "P1"), 1L)
+        repository.insertTransaction(createDomainTestTransaction(description = "P2", ledgerId = 2L), 2L)
 
         val deleted = repository.deleteAllForProfile(1L)
 
@@ -368,9 +399,9 @@ class TransactionRepositoryTest {
 
     @Test
     fun `getMaxLedgerId returns maximum ledger id`() = runTest {
-        repository.insertTransaction(createTestTransaction(ledgerId = 5L))
-        repository.insertTransaction(createTestTransaction(ledgerId = 10L))
-        repository.insertTransaction(createTestTransaction(ledgerId = 3L))
+        repository.insertTransaction(createDomainTestTransaction(ledgerId = 5L), testProfileId)
+        repository.insertTransaction(createDomainTestTransaction(ledgerId = 10L), testProfileId)
+        repository.insertTransaction(createDomainTestTransaction(ledgerId = 3L), testProfileId)
 
         val result = repository.getMaxLedgerId(testProfileId)
         assertEquals(10L, result)
@@ -382,72 +413,72 @@ class TransactionRepositoryTest {
  *
  * This implementation provides an in-memory store that allows testing
  * without a real database or Room infrastructure.
- * Uses TransactionMapper to convert db entities to domain models.
+ * Stores domain model Transactions with associated profileId for proper isolation.
  */
 class FakeTransactionRepository : TransactionRepository {
 
-    private val transactions = mutableMapOf<Long, TransactionWithAccounts>()
-    private var nextId = 1L
-    private val transactionsFlow = MutableStateFlow<List<TransactionWithAccounts>>(emptyList())
+    private data class StoredTransaction(val transaction: Transaction, val profileId: Long)
 
-    private fun emitChanges() {
-        transactionsFlow.value = transactions.values.toList()
-    }
+    private val storedTransactions = mutableMapOf<Long, StoredTransaction>()
+    private var nextId = 1L
 
     // Flow methods (observe prefix)
     override fun observeAllTransactions(profileId: Long): Flow<List<Transaction>> = MutableStateFlow(
-        transactions.values
-            .filter { it.transaction.profileId == profileId }
+        storedTransactions.values
+            .filter { it.profileId == profileId }
+            .map { it.transaction }
             .sortedWith(
                 compareBy(
-                    { it.transaction.year },
-                    { it.transaction.month },
-                    { it.transaction.day },
-                    { it.transaction.ledgerId }
+                    { it.date.year },
+                    { it.date.month },
+                    { it.date.day },
+                    { it.ledgerId }
                 )
             )
-    ).map { TransactionMapper.toDomainList(it) }
+    )
 
     override fun observeTransactionsFiltered(profileId: Long, accountName: String?): Flow<List<Transaction>> =
         MutableStateFlow(
-            transactions.values
-                .filter { twa ->
-                    twa.transaction.profileId == profileId &&
+            storedTransactions.values
+                .filter { stored ->
+                    stored.profileId == profileId &&
                         (
-                            accountName == null || twa.accounts.any {
+                            accountName == null || stored.transaction.lines.any {
                                 it.accountName.contains(accountName, ignoreCase = true) && it.amount != 0f
                             }
                             )
                 }
+                .map { it.transaction }
                 .sortedWith(
                     compareBy(
-                        { it.transaction.year },
-                        { it.transaction.month },
-                        { it.transaction.day },
-                        { it.transaction.ledgerId }
+                        { it.date.year },
+                        { it.date.month },
+                        { it.date.day },
+                        { it.ledgerId }
                     )
                 )
-        ).map { TransactionMapper.toDomainList(it) }
+        )
 
     override fun observeTransactionById(transactionId: Long): Flow<Transaction?> =
-        MutableStateFlow(transactions[transactionId]).map { it?.let { TransactionMapper.toDomain(it) } }
+        MutableStateFlow(storedTransactions[transactionId]?.transaction)
 
     // Suspend methods (no suffix)
     override suspend fun getTransactionById(transactionId: Long): Transaction? =
-        transactions[transactionId]?.let { TransactionMapper.toDomain(it) }
+        storedTransactions[transactionId]?.transaction
 
     override suspend fun searchByDescription(term: String): List<TransactionDAO.DescriptionContainer> {
         val termUpper = term.uppercase()
-        return transactions.values
-            .filter { it.transaction.descriptionUpper.contains(termUpper) }
+        return storedTransactions.values
+            .filter { it.transaction.description.uppercase().contains(termUpper) }
             .distinctBy { it.transaction.description }
-            .map { twa ->
+            .map { stored ->
+                val descUpper = stored.transaction.description.uppercase()
                 TransactionDAO.DescriptionContainer().apply {
-                    description = twa.transaction.description
+                    description = stored.transaction.description
                     ordering = when {
-                        twa.transaction.descriptionUpper.startsWith(termUpper) -> 1
-                        twa.transaction.descriptionUpper.contains(":$termUpper") -> 2
-                        twa.transaction.descriptionUpper.contains(" $termUpper") -> 3
+                        descUpper.startsWith(termUpper) -> 1
+                        descUpper.contains(":$termUpper") -> 2
+                        descUpper.contains(" $termUpper") -> 3
                         else -> 9
                     }
                 }
@@ -455,96 +486,64 @@ class FakeTransactionRepository : TransactionRepository {
             .sortedWith(compareBy({ it.ordering }, { it.description?.uppercase() }))
     }
 
-    override suspend fun getFirstByDescription(description: String): Transaction? = transactions.values
+    override suspend fun getFirstByDescription(description: String): Transaction? = storedTransactions.values
         .filter { it.transaction.description == description }
         .maxByOrNull {
-            it.transaction.year * 10000 + it.transaction.month * 100 + it.transaction.day
-        }?.let { TransactionMapper.toDomain(it) }
+            it.transaction.date.year * 10000 + it.transaction.date.month * 100 + it.transaction.date.day
+        }?.transaction
 
     override suspend fun getFirstByDescriptionHavingAccount(description: String, accountTerm: String): Transaction? =
-        transactions.values
-            .filter { twa ->
-                twa.transaction.description == description &&
-                    twa.accounts.any { it.accountName.contains(accountTerm, ignoreCase = true) }
+        storedTransactions.values
+            .filter { stored ->
+                stored.transaction.description == description &&
+                    stored.transaction.lines.any { it.accountName.contains(accountTerm, ignoreCase = true) }
             }
             .maxByOrNull {
-                it.transaction.year * 10000 + it.transaction.month * 100 + it.transaction.day
-            }?.let { TransactionMapper.toDomain(it) }
+                it.transaction.date.year * 10000 + it.transaction.date.month * 100 + it.transaction.date.day
+            }?.transaction
 
     // Domain model mutation methods
     override suspend fun insertTransaction(transaction: Transaction, profileId: Long): Transaction {
         val id = transaction.id ?: nextId++
-        return transaction.copy(id = id)
+        val txWithId = transaction.copy(id = id)
+        storedTransactions[id] = StoredTransaction(txWithId, profileId)
+        return txWithId
     }
 
     override suspend fun storeTransaction(transaction: Transaction, profileId: Long) {
         insertTransaction(transaction, profileId)
     }
 
-    // DB entity mutation methods (legacy)
-    override suspend fun insertTransaction(transaction: TransactionWithAccounts) {
-        if (transaction.transaction.id == 0L) {
-            transaction.transaction.id = nextId++
-        }
-        transactions[transaction.transaction.id] = transaction
-        emitChanges()
-    }
-
-    override suspend fun storeTransaction(transaction: TransactionWithAccounts) {
-        insertTransaction(transaction)
-    }
-
-    override suspend fun deleteTransaction(transaction: DbTransaction) {
-        transactions.remove(transaction.id)
-        emitChanges()
-    }
-
-    override suspend fun deleteTransactions(transactions: List<DbTransaction>) {
-        transactions.forEach { this.transactions.remove(it.id) }
-        emitChanges()
-    }
-
     override suspend fun deleteTransactionById(transactionId: Long): Int {
-        val existed = transactions.containsKey(transactionId)
-        transactions.remove(transactionId)
-        emitChanges()
+        val existed = storedTransactions.containsKey(transactionId)
+        storedTransactions.remove(transactionId)
         return if (existed) 1 else 0
     }
 
     override suspend fun deleteTransactionsByIds(transactionIds: List<Long>): Int {
         var count = 0
         transactionIds.forEach { id ->
-            if (transactions.containsKey(id)) {
+            if (storedTransactions.containsKey(id)) {
                 count++
             }
-            transactions.remove(id)
+            storedTransactions.remove(id)
         }
-        emitChanges()
         return count
-    }
-
-    override suspend fun storeTransactions(transactions: List<TransactionWithAccounts>, profileId: Long) {
-        transactions.forEach { twa ->
-            twa.transaction.profileId = profileId
-            insertTransaction(twa)
-        }
     }
 
     override suspend fun storeTransactionsAsDomain(transactions: List<Transaction>, profileId: Long) {
         transactions.forEach { tx ->
-            val entity = TransactionMapper.toEntity(tx, profileId)
-            insertTransaction(entity)
+            insertTransaction(tx, profileId)
         }
     }
 
     override suspend fun deleteAllForProfile(profileId: Long): Int {
-        val toRemove = transactions.values.filter { it.transaction.profileId == profileId }
-        toRemove.forEach { transactions.remove(it.transaction.id) }
-        emitChanges()
+        val toRemove = storedTransactions.values.filter { it.profileId == profileId }
+        toRemove.forEach { storedTransactions.remove(it.transaction.id) }
         return toRemove.size
     }
 
-    override suspend fun getMaxLedgerId(profileId: Long): Long? = transactions.values
-        .filter { it.transaction.profileId == profileId }
+    override suspend fun getMaxLedgerId(profileId: Long): Long? = storedTransactions.values
+        .filter { it.profileId == profileId }
         .maxOfOrNull { it.transaction.ledgerId }
 }

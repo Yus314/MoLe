@@ -55,10 +55,6 @@ class AccountRepositoryImpl @Inject constructor(
         accountDAO.getAllWithAmounts(profileId, includeZeroBalances)
             .map { entities -> entities.map { it.toDomain() } }
 
-    @Deprecated("Use observeAllWithAmounts() instead")
-    override fun observeAll(profileId: Long, includeZeroBalances: Boolean): Flow<List<DbAccount>> =
-        accountDAO.getAll(profileId, includeZeroBalances)
-
     @Deprecated("Use observeByNameWithAmounts() instead")
     override fun observeByName(profileId: Long, accountName: String): Flow<DbAccount?> =
         accountDAO.getByName(profileId, accountName)
@@ -148,13 +144,6 @@ class AccountRepositoryImpl @Inject constructor(
     override suspend fun updateAccount(account: DbAccount) {
         withContext(Dispatchers.IO) {
             accountDAO.updateSync(account)
-        }
-    }
-
-    @Deprecated("Internal use only. Accounts are managed via storeAccountsAsDomain()")
-    override suspend fun deleteAccount(account: DbAccount) {
-        withContext(Dispatchers.IO) {
-            accountDAO.deleteSync(account)
         }
     }
 

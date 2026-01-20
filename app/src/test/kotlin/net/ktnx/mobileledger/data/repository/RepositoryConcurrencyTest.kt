@@ -33,12 +33,11 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import net.ktnx.mobileledger.dao.TransactionDAO
-import net.ktnx.mobileledger.data.repository.mapper.TransactionMapper
-import net.ktnx.mobileledger.db.Transaction as DbTransaction
-import net.ktnx.mobileledger.db.TransactionWithAccounts
 import net.ktnx.mobileledger.domain.model.Profile
 import net.ktnx.mobileledger.domain.model.Transaction
+import net.ktnx.mobileledger.domain.model.TransactionLine
 import net.ktnx.mobileledger.util.createTestDomainProfile
+import net.ktnx.mobileledger.utils.SimpleDate
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -81,21 +80,23 @@ class RepositoryConcurrencyTest {
     private fun createTestProfile(id: Long? = null, name: String = "Test Profile"): Profile =
         createTestDomainProfile(id = id, name = name)
 
-    private fun createTestTransaction(
-        profileId: Long = 1L,
-        description: String = "Test Transaction"
-    ): TransactionWithAccounts {
-        val transaction = DbTransaction().apply {
-            this.profileId = profileId
-            this.description = description
-            this.year = 2026
-            this.month = 1
-            this.day = 10
-        }
-        val twa = TransactionWithAccounts()
-        twa.transaction = transaction
-        twa.accounts = emptyList()
-        return twa
+    private fun createTestTransaction(profileId: Long = 1L, description: String = "Test Transaction"): Transaction =
+        Transaction(
+            id = null,
+            ledgerId = 1L,
+            date = SimpleDate(2026, 1, 10),
+            description = description,
+            comment = null,
+            lines = listOf(
+                TransactionLine(null, "Assets:Cash", -100f, "", null),
+                TransactionLine(null, "Expenses:Food", 100f, "", null)
+            )
+        )
+
+    private fun getProfileIdFromDescription(description: String): Long {
+        // Extract profileId from descriptions like "P1_TX1" -> 1L
+        val match = Regex("P(\\d+)_").find(description)
+        return match?.groupValues?.get(1)?.toLongOrNull() ?: 1L
     }
 
     // ========================================
@@ -192,7 +193,7 @@ class RepositoryConcurrencyTest {
                     profileId = profileId,
                     description = "Transaction $index"
                 )
-                transactionRepository.insertTransaction(tx)
+                transactionRepository.insertTransaction(tx, profileId)
             }
         }.awaitAll()
 
@@ -213,7 +214,7 @@ class RepositoryConcurrencyTest {
                         profileId = profileId.toLong(),
                         description = "P${profileId}_TX$txIndex"
                     )
-                    transactionRepository.insertTransaction(tx)
+                    transactionRepository.insertTransaction(tx, profileId.toLong())
                 }
             }
         }.awaitAll()
@@ -236,7 +237,8 @@ class RepositoryConcurrencyTest {
         // Insert many transactions
         repeat(10) { i ->
             transactionRepository.insertTransaction(
-                createTestTransaction(profileId = profileId, description = "TX $i")
+                createTestTransaction(profileId = profileId, description = "TX $i"),
+                profileId
             )
         }
 
@@ -337,36 +339,49 @@ class ConcurrentFakeProfileRepository : ProfileRepository {
 
 /**
  * Thread-safe fake TransactionRepository for concurrency testing.
+ * Stores domain model Transactions with associated profileId.
  */
 class ConcurrentFakeTransactionRepository : TransactionRepository {
-    private val transactions = mutableMapOf<Long, TransactionWithAccounts>()
+    private data class StoredTransaction(val transaction: Transaction, val profileId: Long)
+
+    private val transactions = mutableMapOf<Long, StoredTransaction>()
     private val idCounter = AtomicInteger(1)
     private val lock = Any()
 
     // Flow methods (observe prefix)
     override fun observeAllTransactions(profileId: Long): Flow<List<Transaction>> = synchronized(lock) {
-        MutableStateFlow(transactions.values.filter { it.transaction.profileId == profileId }.toList())
-            .map { TransactionMapper.toDomainList(it) }
+        MutableStateFlow(
+            transactions.values
+                .filter { it.profileId == profileId }
+                .map { it.transaction }
+                .toList()
+        )
     }
 
     override fun observeTransactionsFiltered(profileId: Long, accountName: String?): Flow<List<Transaction>> =
         synchronized(lock) {
             MutableStateFlow(
-                transactions.values.filter { twa ->
-                    twa.transaction.profileId == profileId &&
-                        (accountName == null || twa.accounts.any { it.accountName.contains(accountName, true) })
-                }.toList()
-            ).map { TransactionMapper.toDomainList(it) }
+                transactions.values
+                    .filter { stored ->
+                        stored.profileId == profileId &&
+                            (
+                                accountName == null || stored.transaction.lines.any {
+                                    it.accountName.contains(accountName, true)
+                                }
+                                )
+                    }
+                    .map { it.transaction }
+                    .toList()
+            )
         }
 
     override fun observeTransactionById(transactionId: Long): Flow<Transaction?> = synchronized(lock) {
-        MutableStateFlow(transactions[transactionId])
-            .map { it?.let { TransactionMapper.toDomain(it) } }
+        MutableStateFlow(transactions[transactionId]?.transaction)
     }
 
     // Suspend methods (no suffix)
     override suspend fun getTransactionById(transactionId: Long): Transaction? = synchronized(lock) {
-        transactions[transactionId]?.let { TransactionMapper.toDomain(it) }
+        transactions[transactionId]?.transaction
     }
 
     override suspend fun searchByDescription(term: String): List<TransactionDAO.DescriptionContainer> =
@@ -382,46 +397,30 @@ class ConcurrentFakeTransactionRepository : TransactionRepository {
         }
 
     override suspend fun getFirstByDescription(description: String): Transaction? = synchronized(lock) {
-        transactions.values.find { it.transaction.description == description }
-            ?.let { TransactionMapper.toDomain(it) }
+        transactions.values.find { it.transaction.description == description }?.transaction
     }
 
     override suspend fun getFirstByDescriptionHavingAccount(description: String, accountTerm: String): Transaction? =
         synchronized(lock) {
-            transactions.values.find { twa ->
-                twa.transaction.description == description &&
-                    twa.accounts.any { it.accountName.contains(accountTerm, true) }
-            }?.let { TransactionMapper.toDomain(it) }
+            transactions.values.find { stored ->
+                stored.transaction.description == description &&
+                    stored.transaction.lines.any { it.accountName.contains(accountTerm, true) }
+            }?.transaction
         }
 
     // Domain model mutation methods
     override suspend fun insertTransaction(transaction: Transaction, profileId: Long): Transaction {
-        val id = synchronized(lock) { transaction.id ?: idCounter.getAndIncrement().toLong() }
+        val id = synchronized(lock) {
+            val newId = transaction.id ?: idCounter.getAndIncrement().toLong()
+            val txWithId = transaction.copy(id = newId)
+            transactions[newId] = StoredTransaction(txWithId, profileId)
+            newId
+        }
         return transaction.copy(id = id)
     }
 
     override suspend fun storeTransaction(transaction: Transaction, profileId: Long) {
         insertTransaction(transaction, profileId)
-    }
-
-    // DB entity mutation methods (legacy)
-    override suspend fun insertTransaction(transaction: TransactionWithAccounts): Unit = synchronized(lock) {
-        if (transaction.transaction.id == 0L) {
-            transaction.transaction.id = idCounter.getAndIncrement().toLong()
-        }
-        transactions[transaction.transaction.id] = transaction
-    }
-
-    override suspend fun storeTransaction(transaction: TransactionWithAccounts) {
-        insertTransaction(transaction)
-    }
-
-    override suspend fun deleteTransaction(transaction: DbTransaction): Unit = synchronized(lock) {
-        transactions.remove(transaction.id)
-    }
-
-    override suspend fun deleteTransactions(transactions: List<DbTransaction>): Unit = synchronized(lock) {
-        transactions.forEach { this.transactions.remove(it.id) }
     }
 
     override suspend fun deleteTransactionById(transactionId: Long): Int = synchronized(lock) {
@@ -441,37 +440,21 @@ class ConcurrentFakeTransactionRepository : TransactionRepository {
         count
     }
 
-    override suspend fun storeTransactions(transactions: List<TransactionWithAccounts>, profileId: Long): Unit =
-        synchronized(lock) {
-            transactions.forEach { twa ->
-                twa.transaction.profileId = profileId
-                if (twa.transaction.id == 0L) {
-                    twa.transaction.id = idCounter.getAndIncrement().toLong()
-                }
-                this.transactions[twa.transaction.id] = twa
-            }
+    override suspend fun storeTransactionsAsDomain(txList: List<Transaction>, profileId: Long) {
+        txList.forEach { tx ->
+            insertTransaction(tx, profileId)
         }
-
-    override suspend fun storeTransactionsAsDomain(transactions: List<Transaction>, profileId: Long): Unit =
-        synchronized(lock) {
-            transactions.forEach { tx ->
-                val entity = TransactionMapper.toEntity(tx, profileId)
-                if (entity.transaction.id == 0L) {
-                    entity.transaction.id = idCounter.getAndIncrement().toLong()
-                }
-                this.transactions[entity.transaction.id] = entity
-            }
-        }
+    }
 
     override suspend fun deleteAllForProfile(profileId: Long): Int = synchronized(lock) {
-        val toRemove = transactions.values.filter { it.transaction.profileId == profileId }
+        val toRemove = transactions.values.filter { it.profileId == profileId }
         toRemove.forEach { transactions.remove(it.transaction.id) }
         toRemove.size
     }
 
     override suspend fun getMaxLedgerId(profileId: Long): Long? = synchronized(lock) {
         transactions.values
-            .filter { it.transaction.profileId == profileId }
+            .filter { it.profileId == profileId }
             .maxOfOrNull { it.transaction.ledgerId }
     }
 }

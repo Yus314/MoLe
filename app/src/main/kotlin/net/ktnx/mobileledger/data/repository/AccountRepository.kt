@@ -60,19 +60,6 @@ interface AccountRepository {
     fun observeAllWithAmounts(profileId: Long, includeZeroBalances: Boolean): Flow<List<Account>>
 
     /**
-     * Observe all accounts for a profile (without amounts).
-     *
-     * @param profileId The profile ID
-     * @param includeZeroBalances Whether to include accounts with zero balance
-     * @return Flow that emits the account list whenever it changes
-     */
-    @Deprecated(
-        message = "Use observeAllWithAmounts() instead",
-        replaceWith = ReplaceWith("observeAllWithAmounts(profileId, includeZeroBalances)")
-    )
-    fun observeAll(profileId: Long, includeZeroBalances: Boolean): Flow<List<DbAccount>>
-
-    /**
      * Observe an account by name within a profile.
      *
      * @param profileId The profile ID
@@ -229,14 +216,6 @@ interface AccountRepository {
         replaceWith = ReplaceWith("storeAccountsAsDomain(listOf(account.toDomain()), profileId)")
     )
     suspend fun updateAccount(account: DbAccount)
-
-    /**
-     * Delete an account.
-     *
-     * @param account The account to delete
-     */
-    @Deprecated(message = "Internal use only. Accounts are managed via storeAccountsAsDomain()")
-    suspend fun deleteAccount(account: DbAccount)
 
     // ========================================
     // Sync Operations

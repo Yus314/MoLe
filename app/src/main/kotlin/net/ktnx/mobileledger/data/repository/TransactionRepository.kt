@@ -19,8 +19,6 @@ package net.ktnx.mobileledger.data.repository
 
 import kotlinx.coroutines.flow.Flow
 import net.ktnx.mobileledger.dao.TransactionDAO
-import net.ktnx.mobileledger.db.Transaction as DbTransaction
-import net.ktnx.mobileledger.db.TransactionWithAccounts
 import net.ktnx.mobileledger.domain.model.Transaction
 
 /**
@@ -151,71 +149,8 @@ interface TransactionRepository {
     suspend fun deleteTransactionsByIds(transactionIds: List<Long>): Int
 
     // ========================================
-    // Mutation Operations (DB Entities - Legacy)
-    // Note: These are kept for backward compatibility during migration.
-    // ========================================
-
-    /**
-     * Insert a new transaction with its accounts.
-     *
-     * @param transaction The db entity transaction to insert.
-     */
-    @Deprecated(
-        message = "Use insertTransaction(Transaction, Long) with domain model instead",
-        replaceWith = ReplaceWith("insertTransaction(transaction.toDomain(), profileId)")
-    )
-    suspend fun insertTransaction(transaction: TransactionWithAccounts)
-
-    /**
-     * Store (insert or update) a transaction.
-     * Uses the transaction's dataHash to detect duplicates.
-     *
-     * @param transaction The db entity transaction to store.
-     */
-    @Deprecated(
-        message = "Use storeTransaction(Transaction, Long) with domain model instead",
-        replaceWith = ReplaceWith("storeTransaction(transaction.toDomain(), profileId)")
-    )
-    suspend fun storeTransaction(transaction: TransactionWithAccounts)
-
-    /**
-     * Delete a transaction.
-     *
-     * @param transaction The db entity transaction to delete.
-     */
-    @Deprecated(
-        message = "Use deleteTransactionById(transactionId) instead",
-        replaceWith = ReplaceWith("deleteTransactionById(transaction.id)")
-    )
-    suspend fun deleteTransaction(transaction: DbTransaction)
-
-    /**
-     * Delete multiple transactions.
-     *
-     * @param transactions The db entity transactions to delete.
-     */
-    @Deprecated(
-        message = "Use deleteTransactionsByIds(transactionIds) instead",
-        replaceWith = ReplaceWith("deleteTransactionsByIds(transactions.map { it.id })")
-    )
-    suspend fun deleteTransactions(transactions: List<DbTransaction>)
-
-    // ========================================
     // Sync Operations
     // ========================================
-
-    /**
-     * Store multiple transactions from sync.
-     * This will purge old transactions not in the current generation.
-     *
-     * @param transactions The transactions to store.
-     * @param profileId The profile ID for the transactions.
-     */
-    @Deprecated(
-        message = "Use storeTransactionsAsDomain() instead",
-        replaceWith = ReplaceWith("storeTransactionsAsDomain(transactions.map { it.toDomain() }, profileId)")
-    )
-    suspend fun storeTransactions(transactions: List<TransactionWithAccounts>, profileId: Long)
 
     /**
      * Store multiple transactions from sync using domain models.
