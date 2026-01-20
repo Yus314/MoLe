@@ -17,17 +17,10 @@
 
 package net.ktnx.mobileledger.ui.templates
 
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.util.concurrent.atomic.AtomicLong
-import java.util.regex.Pattern
-import java.util.regex.PatternSyntaxException
 import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -40,6 +33,7 @@ import logcat.logcat
 import net.ktnx.mobileledger.data.repository.TemplateRepository
 import net.ktnx.mobileledger.domain.model.Template
 import net.ktnx.mobileledger.domain.model.TemplateLine
+import net.ktnx.mobileledger.domain.usecase.TemplatePatternValidator
 import net.ktnx.mobileledger.utils.Misc
 
 /**
@@ -48,7 +42,8 @@ import net.ktnx.mobileledger.utils.Misc
  */
 @HiltViewModel
 class TemplateDetailViewModelCompose @Inject constructor(
-    private val templateRepository: TemplateRepository
+    private val templateRepository: TemplateRepository,
+    private val patternValidator: TemplatePatternValidator
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(TemplateDetailUiState())
@@ -419,80 +414,13 @@ class TemplateDetailViewModelCompose @Inject constructor(
     }
 
     private fun validatePattern(pattern: String, testText: String) {
-        if (pattern.isEmpty()) {
-            _uiState.update {
-                it.copy(
-                    patternError = "パターンが空です",
-                    testMatchResult = null,
-                    patternGroupCount = 0
-                )
-            }
-            return
-        }
-
-        try {
-            val compiledPattern = Pattern.compile(pattern)
-            val groupCount = compiledPattern.matcher("").groupCount()
-
-            val matchResult = if (testText.isNotEmpty()) {
-                val matcher = compiledPattern.matcher(testText)
-                if (matcher.find()) {
-                    buildAnnotatedString {
-                        // Before match
-                        if (matcher.start() > 0) {
-                            pushStyle(SpanStyle(color = Color.Gray))
-                            append(testText.substring(0, matcher.start()))
-                            pop()
-                        }
-
-                        // Matched portion
-                        pushStyle(SpanStyle(textDecoration = TextDecoration.Underline))
-                        append(testText.substring(matcher.start(), matcher.end()))
-                        pop()
-
-                        // Highlight captured groups
-                        for (g in 1..matcher.groupCount()) {
-                            val start = matcher.start(g)
-                            val end = matcher.end(g)
-                            if (start >= 0 && end > start) {
-                                // Note: In Compose AnnotatedString, we can't easily overlay styles
-                                // This is a simplified version
-                            }
-                        }
-
-                        // After match
-                        if (matcher.end() < testText.length) {
-                            pushStyle(SpanStyle(color = Color.Gray))
-                            append(testText.substring(matcher.end()))
-                            pop()
-                        }
-                    }
-                } else {
-                    buildAnnotatedString {
-                        pushStyle(SpanStyle(color = Color.Gray))
-                        append(testText)
-                        pop()
-                    }
-                }
-            } else {
-                null
-            }
-
-            _uiState.update {
-                it.copy(
-                    patternError = null,
-                    testMatchResult = matchResult,
-                    patternGroupCount = groupCount
-                )
-            }
-        } catch (e: PatternSyntaxException) {
-            _uiState.update {
-                it.copy(
-                    patternError = e.description,
-                    testMatchResult = null,
-                    patternGroupCount = 0
-                )
-            }
+        val result = patternValidator.validate(pattern, testText)
+        _uiState.update {
+            it.copy(
+                patternError = result.error,
+                testMatchResult = result.matchResult,
+                patternGroupCount = result.groupCount
+            )
         }
     }
 
