@@ -34,10 +34,10 @@ class ProfilePersistenceImpl @Inject constructor(
 
     override suspend fun save(profile: Profile): Result<Unit> = runCatching {
         if (profile.id != null && profile.id > 0) {
-            profileRepository.updateProfile(profile)
+            profileRepository.updateProfile(profile).getOrThrow()
             logcat { "Profile updated in DB" }
         } else {
-            profileRepository.insertProfile(profile)
+            profileRepository.insertProfile(profile).getOrThrow()
             logcat { "Profile inserted in DB" }
         }
 
@@ -45,9 +45,9 @@ class ProfilePersistenceImpl @Inject constructor(
     }
 
     override suspend fun delete(profileId: Long): Result<Unit> = runCatching {
-        val profile = profileRepository.getProfileById(profileId)
+        val profile = profileRepository.getProfileById(profileId).getOrNull()
         if (profile != null) {
-            profileRepository.deleteProfile(profile)
+            profileRepository.deleteProfile(profile).getOrThrow()
             logcat { "Profile deleted from DB" }
         }
     }

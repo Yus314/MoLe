@@ -134,9 +134,9 @@ class ProfileRepositoryTest {
     @Test
     fun `getProfileById returns profile when exists`() = runTest {
         val profile = createTestProfile(name = "Test")
-        val id = repository.insertProfile(profile)
+        val id = repository.insertProfile(profile).getOrThrow()
 
-        val result = repository.getProfileById(id)
+        val result = repository.getProfileById(id).getOrNull()
         assertNotNull(result)
         assertEquals("Test", result?.name)
     }
@@ -155,10 +155,10 @@ class ProfileRepositoryTest {
     fun `getProfileByUuid returns profile when exists`() = runTest {
         // Insert profile first, then get the UUID from the inserted profile
         val profile = createTestProfile(name = "UUID Test")
-        repository.insertProfile(profile)
+        repository.insertProfile(profile).getOrThrow()
         val uuid = profile.uuid
 
-        val result = repository.getProfileByUuid(uuid)
+        val result = repository.getProfileByUuid(uuid).getOrNull()
         assertNotNull(result)
         assertEquals("UUID Test", result?.name)
     }
@@ -169,16 +169,16 @@ class ProfileRepositoryTest {
 
     @Test
     fun `getAnyProfile returns null when no profiles`() = runTest {
-        val result = repository.getAnyProfile()
+        val result = repository.getAnyProfile().getOrNull()
         assertNull(result)
     }
 
     @Test
     fun `getAnyProfile returns a profile when exists`() = runTest {
         val profile = createTestProfile(name = "Some Profile")
-        repository.insertProfile(profile)
+        repository.insertProfile(profile).getOrThrow()
 
-        val result = repository.getAnyProfile()
+        val result = repository.getAnyProfile().getOrNull()
         assertNotNull(result)
     }
 
@@ -188,17 +188,17 @@ class ProfileRepositoryTest {
 
     @Test
     fun `getProfileCount returns zero when no profiles`() = runTest {
-        val count = repository.getProfileCount()
+        val count = repository.getProfileCount().getOrThrow()
         assertEquals(0, count)
     }
 
     @Test
     fun `getProfileCount returns correct count`() = runTest {
-        repository.insertProfile(createTestProfile(name = "P1"))
-        repository.insertProfile(createTestProfile(name = "P2"))
-        repository.insertProfile(createTestProfile(name = "P3"))
+        repository.insertProfile(createTestProfile(name = "P1")).getOrThrow()
+        repository.insertProfile(createTestProfile(name = "P2")).getOrThrow()
+        repository.insertProfile(createTestProfile(name = "P3")).getOrThrow()
 
-        val count = repository.getProfileCount()
+        val count = repository.getProfileCount().getOrThrow()
         assertEquals(3, count)
     }
 
@@ -210,10 +210,10 @@ class ProfileRepositoryTest {
     fun `insertProfile assigns id and returns it`() = runTest {
         val profile = createTestProfile(name = "New Profile")
 
-        val id = repository.insertProfile(profile)
+        val id = repository.insertProfile(profile).getOrThrow()
 
         assertTrue(id > 0)
-        val stored = repository.getProfileById(id)
+        val stored = repository.getProfileById(id).getOrNull()
         assertNotNull(stored)
         assertEquals("New Profile", stored?.name)
     }
@@ -225,23 +225,23 @@ class ProfileRepositoryTest {
     @Test
     fun `updateProfile modifies existing profile`() = runTest {
         val profile = createTestProfile(name = "Original")
-        val id = repository.insertProfile(profile)
+        val id = repository.insertProfile(profile).getOrThrow()
 
         val updated = createTestProfile(id = id, name = "Updated")
-        repository.updateProfile(updated)
+        repository.updateProfile(updated).getOrThrow()
 
-        val result = repository.getProfileById(id)
+        val result = repository.getProfileById(id).getOrNull()
         assertEquals("Updated", result?.name)
     }
 
     @Test
     fun `updateProfile updates currentProfile if it is the same`() = runTest {
         val profile = createTestProfile(id = 1L, name = "Original")
-        repository.insertProfile(profile)
+        repository.insertProfile(profile).getOrThrow()
         repository.setCurrentProfile(profile)
 
         val updated = createTestProfile(id = 1L, name = "Updated Name")
-        repository.updateProfile(updated)
+        repository.updateProfile(updated).getOrThrow()
 
         val current = repository.currentProfile.value
         assertEquals("Updated Name", current?.name)
@@ -254,10 +254,10 @@ class ProfileRepositoryTest {
     @Test
     fun `deleteProfile removes profile`() = runTest {
         val profile = createTestProfile(name = "ToDelete")
-        val id = repository.insertProfile(profile)
+        val id = repository.insertProfile(profile).getOrThrow()
         val profileWithId = profile.copy(id = id)
 
-        repository.deleteProfile(profileWithId)
+        repository.deleteProfile(profileWithId).getOrThrow()
 
         val remaining = repository.observeAllProfiles().first()
         assertTrue(remaining.isEmpty())
@@ -266,10 +266,10 @@ class ProfileRepositoryTest {
     @Test
     fun `deleteProfile clears currentProfile if deleted`() = runTest {
         val profile = createTestProfile(id = 1L, name = "Current")
-        repository.insertProfile(profile)
+        repository.insertProfile(profile).getOrThrow()
         repository.setCurrentProfile(profile)
 
-        repository.deleteProfile(profile)
+        repository.deleteProfile(profile).getOrThrow()
 
         val current = repository.currentProfile.value
         assertNull(current)
@@ -279,12 +279,12 @@ class ProfileRepositoryTest {
     fun `deleteProfile selects fallback if another profile exists`() = runTest {
         val profile1 = createTestProfile(name = "Profile 1")
         val profile2 = createTestProfile(name = "Profile 2")
-        val id1 = repository.insertProfile(profile1)
-        repository.insertProfile(profile2)
+        val id1 = repository.insertProfile(profile1).getOrThrow()
+        repository.insertProfile(profile2).getOrThrow()
         val p1WithId = profile1.copy(id = id1)
         repository.setCurrentProfile(p1WithId)
 
-        repository.deleteProfile(p1WithId)
+        repository.deleteProfile(p1WithId).getOrThrow()
 
         val current = repository.currentProfile.value
         assertNotNull(current)
@@ -300,9 +300,9 @@ class ProfileRepositoryTest {
         val p1 = createTestProfile(name = "P1", orderNo = 1)
         val p2 = createTestProfile(name = "P2", orderNo = 2)
         val p3 = createTestProfile(name = "P3", orderNo = 3)
-        val id1 = repository.insertProfile(p1)
-        val id2 = repository.insertProfile(p2)
-        val id3 = repository.insertProfile(p3)
+        val id1 = repository.insertProfile(p1).getOrThrow()
+        val id2 = repository.insertProfile(p2).getOrThrow()
+        val id3 = repository.insertProfile(p3).getOrThrow()
 
         // Reorder: P3, P1, P2
         repository.updateProfileOrder(
@@ -311,7 +311,7 @@ class ProfileRepositoryTest {
                 createTestProfile(id = id1, name = "P1", orderNo = 2),
                 createTestProfile(id = id2, name = "P2", orderNo = 3)
             )
-        )
+        ).getOrThrow()
 
         val profiles = repository.observeAllProfiles().first()
         assertEquals("P3", profiles[0].name)
@@ -325,10 +325,10 @@ class ProfileRepositoryTest {
 
     @Test
     fun `deleteAllProfiles removes all profiles`() = runTest {
-        repository.insertProfile(createTestProfile(name = "P1"))
-        repository.insertProfile(createTestProfile(name = "P2"))
+        repository.insertProfile(createTestProfile(name = "P1")).getOrThrow()
+        repository.insertProfile(createTestProfile(name = "P2")).getOrThrow()
 
-        repository.deleteAllProfiles()
+        repository.deleteAllProfiles().getOrThrow()
 
         val profiles = repository.observeAllProfiles().first()
         assertTrue(profiles.isEmpty())
@@ -337,10 +337,10 @@ class ProfileRepositoryTest {
     @Test
     fun `deleteAllProfiles clears currentProfile`() = runTest {
         val profile = createTestProfile(name = "Current")
-        repository.insertProfile(profile)
+        repository.insertProfile(profile).getOrThrow()
         repository.setCurrentProfile(profile)
 
-        repository.deleteAllProfiles()
+        repository.deleteAllProfiles().getOrThrow()
 
         val current = repository.currentProfile.value
         assertNull(current)
@@ -372,11 +372,15 @@ class FakeProfileRepository : ProfileRepository {
 
     override fun observeAllProfiles(): Flow<List<Profile>> = MutableStateFlow(profiles.values.sortedBy { it.orderNo })
 
-    override suspend fun getAllProfiles(): List<Profile> = profiles.values.sortedBy { it.orderNo }
+    override suspend fun getAllProfiles(): Result<List<Profile>> = Result.success(
+        profiles.values.sortedBy {
+            it.orderNo
+        }
+    )
 
     override fun observeProfileById(profileId: Long): Flow<Profile?> = MutableStateFlow(profiles[profileId])
 
-    override suspend fun getProfileById(profileId: Long): Profile? = profiles[profileId]
+    override suspend fun getProfileById(profileId: Long): Result<Profile?> = Result.success(profiles[profileId])
 
     override fun observeProfileByUuid(uuid: String): Flow<Profile?> = MutableStateFlow(
         profiles.values.find {
@@ -384,22 +388,27 @@ class FakeProfileRepository : ProfileRepository {
         }
     )
 
-    override suspend fun getProfileByUuid(uuid: String): Profile? = profiles.values.find { it.uuid == uuid }
+    override suspend fun getProfileByUuid(uuid: String): Result<Profile?> = Result.success(
+        profiles.values.find {
+            it.uuid ==
+                uuid
+        }
+    )
 
-    override suspend fun getAnyProfile(): Profile? = profiles.values.firstOrNull()
+    override suspend fun getAnyProfile(): Result<Profile?> = Result.success(profiles.values.firstOrNull())
 
-    override suspend fun getProfileCount(): Int = profiles.size
+    override suspend fun getProfileCount(): Result<Int> = Result.success(profiles.size)
 
-    override suspend fun insertProfile(profile: Profile): Long {
+    override suspend fun insertProfile(profile: Profile): Result<Long> {
         val id = if (profile.id == null || profile.id == 0L) nextId++ else profile.id
         val profileWithId = profile.copy(id = id)
         profiles[id] = profileWithId
         emitChanges()
-        return id
+        return Result.success(id)
     }
 
-    override suspend fun updateProfile(profile: Profile) {
-        val id = profile.id ?: return
+    override suspend fun updateProfile(profile: Profile): Result<Unit> {
+        val id = profile.id ?: return Result.success(Unit)
         if (profiles.containsKey(id)) {
             profiles[id] = profile
             emitChanges()
@@ -410,10 +419,11 @@ class FakeProfileRepository : ProfileRepository {
                 _currentProfile.value = profile
             }
         }
+        return Result.success(Unit)
     }
 
-    override suspend fun deleteProfile(profile: Profile) {
-        val id = profile.id ?: return
+    override suspend fun deleteProfile(profile: Profile): Result<Unit> {
+        val id = profile.id ?: return Result.success(Unit)
         profiles.remove(id)
         emitChanges()
         // If deleted profile was current, select another or clear
@@ -422,9 +432,10 @@ class FakeProfileRepository : ProfileRepository {
                 _currentProfile.value = profiles.values.firstOrNull()
             }
         }
+        return Result.success(Unit)
     }
 
-    override suspend fun updateProfileOrder(profiles: List<Profile>) {
+    override suspend fun updateProfileOrder(profiles: List<Profile>): Result<Unit> {
         profiles.forEach { profile ->
             val id = profile.id ?: return@forEach
             this.profiles[id]?.let { existing ->
@@ -432,11 +443,13 @@ class FakeProfileRepository : ProfileRepository {
             }
         }
         emitChanges()
+        return Result.success(Unit)
     }
 
-    override suspend fun deleteAllProfiles() {
+    override suspend fun deleteAllProfiles(): Result<Unit> {
         profiles.clear()
         emitChanges()
         _currentProfile.value = null
+        return Result.success(Unit)
     }
 }

@@ -28,6 +28,7 @@ import net.ktnx.mobileledger.dao.AccountValueDAO
 import net.ktnx.mobileledger.data.repository.mapper.AccountMapper.toDomain
 import net.ktnx.mobileledger.data.repository.mapper.AccountMapper.toEntity
 import net.ktnx.mobileledger.domain.model.Account
+import net.ktnx.mobileledger.domain.usecase.AppExceptionMapper
 
 /**
  * Implementation of [AccountRepository] that wraps the existing [AccountDAO].
@@ -36,13 +37,15 @@ import net.ktnx.mobileledger.domain.model.Account
  * - Converts LiveData to Flow for reactive data access
  * - Uses Dispatchers.IO for database operations
  * - Delegates all operations to the underlying DAO
+ * - Returns Result<T> for all suspend operations with error handling
  *
  * Thread-safety: All operations are safe to call from any coroutine context.
  */
 @Singleton
 class AccountRepositoryImpl @Inject constructor(
     private val accountDAO: AccountDAO,
-    private val accountValueDAO: AccountValueDAO
+    private val accountValueDAO: AccountValueDAO,
+    private val appExceptionMapper: AppExceptionMapper
 ) : AccountRepository {
 
     // ========================================
@@ -73,73 +76,87 @@ class AccountRepositoryImpl @Inject constructor(
     // Query Operations (suspend - no suffix)
     // ========================================
 
-    override suspend fun getAllWithAmounts(profileId: Long, includeZeroBalances: Boolean): List<Account> =
-        withContext(Dispatchers.IO) {
-            accountDAO.getAllWithAmountsSync(profileId, includeZeroBalances)
-                .map { it.toDomain() }
+    override suspend fun getAllWithAmounts(profileId: Long, includeZeroBalances: Boolean): Result<List<Account>> =
+        safeCall(appExceptionMapper) {
+            withContext(Dispatchers.IO) {
+                accountDAO.getAllWithAmountsSync(profileId, includeZeroBalances)
+                    .map { it.toDomain() }
+            }
         }
 
-    override suspend fun getByNameWithAmounts(profileId: Long, accountName: String): Account? =
-        withContext(Dispatchers.IO) {
-            accountDAO.getByNameWithAmountsSync(profileId, accountName)?.toDomain()
+    override suspend fun getByNameWithAmounts(profileId: Long, accountName: String): Result<Account?> =
+        safeCall(appExceptionMapper) {
+            withContext(Dispatchers.IO) {
+                accountDAO.getByNameWithAmountsSync(profileId, accountName)?.toDomain()
+            }
         }
 
     // ========================================
     // Search Operations (suspend - no suffix)
     // ========================================
 
-    override suspend fun searchAccountNames(profileId: Long, term: String): List<String> = withContext(Dispatchers.IO) {
-        AccountDAO.unbox(accountDAO.lookupNamesInProfileByNameSync(profileId, term.uppercase()))
-    }
-
-    override suspend fun searchAccountsWithAmounts(profileId: Long, term: String): List<Account> =
-        withContext(Dispatchers.IO) {
-            accountDAO.lookupWithAmountsInProfileByNameSync(profileId, term.uppercase())
-                .map { it.toDomain() }
+    override suspend fun searchAccountNames(profileId: Long, term: String): Result<List<String>> =
+        safeCall(appExceptionMapper) {
+            withContext(Dispatchers.IO) {
+                AccountDAO.unbox(accountDAO.lookupNamesInProfileByNameSync(profileId, term.uppercase()))
+            }
         }
 
-    override suspend fun searchAccountNamesGlobal(term: String): List<String> = withContext(Dispatchers.IO) {
-        AccountDAO.unbox(accountDAO.lookupNamesByNameSync(term.uppercase()))
+    override suspend fun searchAccountsWithAmounts(profileId: Long, term: String): Result<List<Account>> =
+        safeCall(appExceptionMapper) {
+            withContext(Dispatchers.IO) {
+                accountDAO.lookupWithAmountsInProfileByNameSync(profileId, term.uppercase())
+                    .map { it.toDomain() }
+            }
+        }
+
+    override suspend fun searchAccountNamesGlobal(term: String): Result<List<String>> = safeCall(appExceptionMapper) {
+        withContext(Dispatchers.IO) {
+            AccountDAO.unbox(accountDAO.lookupNamesByNameSync(term.uppercase()))
+        }
     }
 
     // ========================================
     // Mutation Operations
     // ========================================
 
-    override suspend fun storeAccountsAsDomain(accounts: List<Account>, profileId: Long) {
-        withContext(Dispatchers.IO) {
-            val generation = accountDAO.getGenerationSync(profileId) + 1
+    override suspend fun storeAccountsAsDomain(accounts: List<Account>, profileId: Long): Result<Unit> =
+        safeCall(appExceptionMapper) {
+            withContext(Dispatchers.IO) {
+                val generation = accountDAO.getGenerationSync(profileId) + 1
 
-            for (domainAccount in accounts) {
-                val entity = domainAccount.toEntity(profileId)
-                entity.account.generation = generation
+                for (domainAccount in accounts) {
+                    val entity = domainAccount.toEntity(profileId)
+                    entity.account.generation = generation
 
-                // Check for existing account to preserve amountsExpanded (not in domain model)
-                val existing = accountDAO.getByNameSync(profileId, domainAccount.name)
-                if (existing != null) {
-                    entity.account.amountsExpanded = existing.amountsExpanded
+                    // Check for existing account to preserve amountsExpanded (not in domain model)
+                    val existing = accountDAO.getByNameSync(profileId, domainAccount.name)
+                    if (existing != null) {
+                        entity.account.amountsExpanded = existing.amountsExpanded
+                    }
+
+                    // Insert account
+                    entity.account.id = accountDAO.insertSync(entity.account)
+
+                    // Insert amounts
+                    for (value in entity.amounts.toList()) {
+                        value.accountId = entity.account.id
+                        value.generation = generation
+                        value.id = accountValueDAO.insertSync(value)
+                    }
                 }
-
-                // Insert account
-                entity.account.id = accountDAO.insertSync(entity.account)
-
-                // Insert amounts
-                for (value in entity.amounts.toList()) {
-                    value.accountId = entity.account.id
-                    value.generation = generation
-                    value.id = accountValueDAO.insertSync(value)
-                }
+                accountDAO.purgeOldAccountsSync(profileId, generation)
+                accountDAO.purgeOldAccountValuesSync(profileId, generation)
             }
-            accountDAO.purgeOldAccountsSync(profileId, generation)
-            accountDAO.purgeOldAccountValuesSync(profileId, generation)
+        }
+
+    override suspend fun getCountForProfile(profileId: Long): Result<Int> = safeCall(appExceptionMapper) {
+        withContext(Dispatchers.IO) {
+            accountDAO.getCountForProfileSync(profileId)
         }
     }
 
-    override suspend fun getCountForProfile(profileId: Long): Int = withContext(Dispatchers.IO) {
-        accountDAO.getCountForProfileSync(profileId)
-    }
-
-    override suspend fun deleteAllAccounts() {
+    override suspend fun deleteAllAccounts(): Result<Unit> = safeCall(appExceptionMapper) {
         withContext(Dispatchers.IO) {
             accountDAO.deleteAllSync()
         }

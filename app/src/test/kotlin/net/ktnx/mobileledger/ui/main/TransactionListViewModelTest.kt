@@ -156,7 +156,7 @@ class TransactionListViewModelTest {
     fun `init observes current profile`() = runTest {
         // Given
         val profile = createTestProfile(id = 1L)
-        profileRepository.insertProfile(profile)
+        profileRepository.insertProfile(profile).getOrThrow()
         profileRepository.setCurrentProfile(profile)
 
         // When
@@ -189,8 +189,8 @@ class TransactionListViewModelTest {
         // Given
         val profile1 = createTestProfile(id = 1L, name = "Profile 1")
         val profile2 = createTestProfile(id = 2L, name = "Profile 2")
-        profileRepository.insertProfile(profile1)
-        profileRepository.insertProfile(profile2)
+        profileRepository.insertProfile(profile1).getOrThrow()
+        profileRepository.insertProfile(profile2).getOrThrow()
         profileRepository.setCurrentProfile(profile1)
 
         transactionRepository.addTransaction(
@@ -231,7 +231,7 @@ class TransactionListViewModelTest {
     fun `loadTransactions success loads transactions`() = runTest {
         // Given
         val profile = createTestProfile(id = 1L)
-        profileRepository.insertProfile(profile)
+        profileRepository.insertProfile(profile).getOrThrow()
         profileRepository.setCurrentProfile(profile)
 
         transactionRepository.addTransaction(
@@ -282,7 +282,7 @@ class TransactionListViewModelTest {
     fun `loadTransactions shows loading state`() = runTest {
         // Given
         val profile = createTestProfile(id = 1L)
-        profileRepository.insertProfile(profile)
+        profileRepository.insertProfile(profile).getOrThrow()
         profileRepository.setCurrentProfile(profile)
         viewModel = createViewModel()
         advanceUntilIdle()
@@ -300,7 +300,7 @@ class TransactionListViewModelTest {
     fun `loadTransactions error shows error state`() = runTest {
         // Given
         val profile = createTestProfile(id = 1L)
-        profileRepository.insertProfile(profile)
+        profileRepository.insertProfile(profile).getOrThrow()
         profileRepository.setCurrentProfile(profile)
         transactionRepository.simulateError = true
 
@@ -324,7 +324,7 @@ class TransactionListViewModelTest {
     fun `setAccountFilter applies filter`() = runTest {
         // Given
         val profile = createTestProfile(id = 1L)
-        profileRepository.insertProfile(profile)
+        profileRepository.insertProfile(profile).getOrThrow()
         profileRepository.setCurrentProfile(profile)
         viewModel = createViewModel()
         advanceUntilIdle()
@@ -341,7 +341,7 @@ class TransactionListViewModelTest {
     fun `setAccountFilter reloads transactions with filter`() = runTest {
         // Given
         val profile = createTestProfile(id = 1L)
-        profileRepository.insertProfile(profile)
+        profileRepository.insertProfile(profile).getOrThrow()
         profileRepository.setCurrentProfile(profile)
 
         // Two transactions with COMPLETELY different account names
@@ -407,7 +407,7 @@ class TransactionListViewModelTest {
     fun `clearAccountFilter clears filter`() = runTest {
         // Given
         val profile = createTestProfile(id = 1L)
-        profileRepository.insertProfile(profile)
+        profileRepository.insertProfile(profile).getOrThrow()
         profileRepository.setCurrentProfile(profile)
         viewModel = createViewModel()
         advanceUntilIdle()
@@ -432,7 +432,7 @@ class TransactionListViewModelTest {
     fun `goToDate finds transaction at date`() = runTest {
         // Given
         val profile = createTestProfile(id = 1L)
-        profileRepository.insertProfile(profile)
+        profileRepository.insertProfile(profile).getOrThrow()
         profileRepository.setCurrentProfile(profile)
 
         transactionRepository.addTransaction(
@@ -479,7 +479,7 @@ class TransactionListViewModelTest {
     fun `goToDate not found does not change index`() = runTest {
         // Given
         val profile = createTestProfile(id = 1L)
-        profileRepository.insertProfile(profile)
+        profileRepository.insertProfile(profile).getOrThrow()
         profileRepository.setCurrentProfile(profile)
 
         transactionRepository.addTransaction(
@@ -517,7 +517,7 @@ class TransactionListViewModelTest {
     fun `searchAccountNames returns suggestions`() = runTest {
         // Given
         val profile = createTestProfile(id = 1L)
-        profileRepository.insertProfile(profile)
+        profileRepository.insertProfile(profile).getOrThrow()
         profileRepository.setCurrentProfile(profile)
 
         accountRepository.addAccount(1L, "Assets:Cash")
@@ -543,7 +543,7 @@ class TransactionListViewModelTest {
     fun `searchAccountNames is debounced`() = runTest {
         // Given
         val profile = createTestProfile(id = 1L)
-        profileRepository.insertProfile(profile)
+        profileRepository.insertProfile(profile).getOrThrow()
         profileRepository.setCurrentProfile(profile)
 
         accountRepository.addAccount(1L, "Assets:Cash")
@@ -646,7 +646,7 @@ class TransactionListViewModelTest {
     fun `loadTransactions updates date range`() = runTest {
         // Given
         val profile = createTestProfile(id = 1L)
-        profileRepository.insertProfile(profile)
+        profileRepository.insertProfile(profile).getOrThrow()
         profileRepository.setCurrentProfile(profile)
 
         transactionRepository.addTransaction(
@@ -776,48 +776,55 @@ class FakeTransactionRepositoryForTransactionList : net.ktnx.mobileledger.data.r
         MutableStateFlow(transactions.find { it.transaction.id == transactionId }?.toDomainModel())
 
     // Suspend methods (no suffix)
-    override suspend fun getTransactionById(transactionId: Long): DomainTransaction? = if (simulateError) {
-        throw RuntimeException("Simulated error")
+    override suspend fun getTransactionById(transactionId: Long): Result<DomainTransaction?> = if (simulateError) {
+        Result.failure(RuntimeException("Simulated error"))
     } else {
-        transactions.find { it.transaction.id == transactionId }?.toDomainModel()
+        Result.success(transactions.find { it.transaction.id == transactionId }?.toDomainModel())
     }
 
-    override suspend fun searchByDescription(term: String) = transactions
-        .filter { it.transaction.description.contains(term, ignoreCase = true) }
-        .distinctBy { it.transaction.description }
-        .map {
-            net.ktnx.mobileledger.dao.TransactionDAO.DescriptionContainer()
-                .apply { description = it.transaction.description }
-        }
+    override suspend fun searchByDescription(
+        term: String
+    ): Result<List<net.ktnx.mobileledger.dao.TransactionDAO.DescriptionContainer>> = Result.success(
+        transactions
+            .filter { it.transaction.description.contains(term, ignoreCase = true) }
+            .distinctBy { it.transaction.description }
+            .map {
+                net.ktnx.mobileledger.dao.TransactionDAO.DescriptionContainer()
+                    .apply { description = it.transaction.description }
+            }
+    )
 
-    override suspend fun getFirstByDescription(description: String): DomainTransaction? =
-        transactions.find { it.transaction.description == description }?.toDomainModel()
+    override suspend fun getFirstByDescription(description: String): Result<DomainTransaction?> =
+        Result.success(transactions.find { it.transaction.description == description }?.toDomainModel())
 
     override suspend fun getFirstByDescriptionHavingAccount(
         description: String,
         accountTerm: String
-    ): DomainTransaction? = transactions.find { twa ->
-        twa.transaction.description == description &&
-            twa.accounts.any { it.accountName.contains(accountTerm, ignoreCase = true) }
-    }?.toDomainModel()
+    ): Result<DomainTransaction?> = Result.success(
+        transactions.find { twa ->
+            twa.transaction.description == description &&
+                twa.accounts.any { it.accountName.contains(accountTerm, ignoreCase = true) }
+        }?.toDomainModel()
+    )
 
     // Domain model mutation methods
-    override suspend fun insertTransaction(transaction: DomainTransaction, profileId: Long): DomainTransaction {
+    override suspend fun insertTransaction(transaction: DomainTransaction, profileId: Long): Result<DomainTransaction> {
         val id = transaction.id ?: (transactions.maxOfOrNull { it.transaction.id } ?: 0L) + 1
-        return transaction.copy(id = id)
+        return Result.success(transaction.copy(id = id))
     }
 
-    override suspend fun storeTransaction(transaction: DomainTransaction, profileId: Long) {
+    override suspend fun storeTransaction(transaction: DomainTransaction, profileId: Long): Result<Unit> {
         insertTransaction(transaction, profileId)
+        return Result.success(Unit)
     }
 
-    override suspend fun deleteTransactionById(transactionId: Long): Int {
+    override suspend fun deleteTransactionById(transactionId: Long): Result<Int> {
         val existed = transactions.any { it.transaction.id == transactionId }
         transactions.removeAll { it.transaction.id == transactionId }
-        return if (existed) 1 else 0
+        return Result.success(if (existed) 1 else 0)
     }
 
-    override suspend fun deleteTransactionsByIds(transactionIds: List<Long>): Int {
+    override suspend fun deleteTransactionsByIds(transactionIds: List<Long>): Result<Int> {
         var count = 0
         transactionIds.forEach { id ->
             if (transactions.any { it.transaction.id == id }) {
@@ -825,19 +832,24 @@ class FakeTransactionRepositoryForTransactionList : net.ktnx.mobileledger.data.r
             }
             transactions.removeAll { it.transaction.id == id }
         }
-        return count
+        return Result.success(count)
     }
 
-    override suspend fun deleteAllForProfile(profileId: Long): Int {
+    override suspend fun deleteAllForProfile(profileId: Long): Result<Int> {
         val count = transactions.count { it.transaction.profileId == profileId }
         transactions.removeAll { it.transaction.profileId == profileId }
-        return count
+        return Result.success(count)
     }
 
-    override suspend fun getMaxLedgerId(profileId: Long) = transactions.filter { it.transaction.profileId == profileId }
-        .maxOfOrNull { it.transaction.ledgerId }
+    override suspend fun getMaxLedgerId(profileId: Long): Result<Long?> = Result.success(
+        transactions.filter { it.transaction.profileId == profileId }
+            .maxOfOrNull { it.transaction.ledgerId }
+    )
 
-    override suspend fun storeTransactionsAsDomain(transactions: List<DomainTransaction>, profileId: Long) {
+    override suspend fun storeTransactionsAsDomain(
+        transactions: List<DomainTransaction>,
+        profileId: Long
+    ): Result<Unit> {
         // Convert domain transactions to db entities for storage
         transactions.forEach { tx ->
             val dbTransaction = DbTransaction().apply {
@@ -866,6 +878,7 @@ class FakeTransactionRepositoryForTransactionList : net.ktnx.mobileledger.data.r
             twa.accounts = accounts
             this.transactions.add(twa)
         }
+        return Result.success(Unit)
     }
 }
 
@@ -894,35 +907,42 @@ class FakeAccountRepositoryForTransactionList : net.ktnx.mobileledger.data.repos
         MutableStateFlow(accountNames.values.flatten().filter { it.contains(term, ignoreCase = true) })
 
     // Suspend methods (no suffix)
-    override suspend fun getAllWithAmounts(profileId: Long, includeZeroBalances: Boolean) =
-        emptyList<net.ktnx.mobileledger.domain.model.Account>()
+    override suspend fun getAllWithAmounts(
+        profileId: Long,
+        includeZeroBalances: Boolean
+    ): Result<List<net.ktnx.mobileledger.domain.model.Account>> = Result.success(emptyList())
 
     override suspend fun getByNameWithAmounts(
         profileId: Long,
         accountName: String
-    ): net.ktnx.mobileledger.domain.model.Account? = null
+    ): Result<net.ktnx.mobileledger.domain.model.Account?> = Result.success(null)
 
-    override suspend fun searchAccountNames(profileId: Long, term: String) =
-        accountNames[profileId]?.filter { it.contains(term, ignoreCase = true) } ?: emptyList()
+    override suspend fun searchAccountNames(profileId: Long, term: String): Result<List<String>> =
+        Result.success(accountNames[profileId]?.filter { it.contains(term, ignoreCase = true) } ?: emptyList())
 
-    override suspend fun searchAccountsWithAmounts(profileId: Long, term: String) =
-        emptyList<net.ktnx.mobileledger.domain.model.Account>()
+    override suspend fun searchAccountsWithAmounts(
+        profileId: Long,
+        term: String
+    ): Result<List<net.ktnx.mobileledger.domain.model.Account>> = Result.success(emptyList())
 
-    override suspend fun searchAccountNamesGlobal(term: String) =
-        accountNames.values.flatten().filter { it.contains(term, ignoreCase = true) }
+    override suspend fun searchAccountNamesGlobal(term: String): Result<List<String>> =
+        Result.success(accountNames.values.flatten().filter { it.contains(term, ignoreCase = true) })
 
-    override suspend fun getCountForProfile(profileId: Long) = accountNames[profileId]?.size ?: 0
+    override suspend fun getCountForProfile(profileId: Long): Result<Int> =
+        Result.success(accountNames[profileId]?.size ?: 0)
 
-    override suspend fun deleteAllAccounts() {
+    override suspend fun deleteAllAccounts(): Result<Unit> {
         accountNames.clear()
+        return Result.success(Unit)
     }
 
     override suspend fun storeAccountsAsDomain(
         accounts: List<net.ktnx.mobileledger.domain.model.Account>,
         profileId: Long
-    ) {
+    ): Result<Unit> {
         accounts.forEach { account ->
             accountNames.getOrPut(profileId) { mutableListOf() }.add(account.name)
         }
+        return Result.success(Unit)
     }
 }

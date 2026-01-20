@@ -35,6 +35,11 @@ import net.ktnx.mobileledger.domain.model.Transaction
  * Thread-safety: All suspend functions are safe to call from any coroutine context.
  * Flow emissions are safe for concurrent collectors.
  *
+ * ## Error Handling
+ *
+ * All suspend functions return `Result<T>` to handle errors explicitly.
+ * Use `result.getOrNull()`, `result.getOrElse {}`, or `result.onSuccess/onFailure` to handle results.
+ *
  * ## Domain Model Migration (017-domain-model-layer)
  *
  * Query operations now return domain models (Transaction) instead of db entities.
@@ -80,35 +85,35 @@ interface TransactionRepository {
      * Get a transaction by its ID.
      *
      * @param transactionId The transaction ID.
-     * @return The domain model transaction, or null if not found.
+     * @return Result containing the domain model transaction, or null if not found.
      */
-    suspend fun getTransactionById(transactionId: Long): Transaction?
+    suspend fun getTransactionById(transactionId: Long): Result<Transaction?>
 
     /**
      * Search transaction descriptions matching a term.
      *
      * @param term The search term.
-     * @return List of matching description containers.
+     * @return Result containing list of matching description containers.
      */
-    suspend fun searchByDescription(term: String): List<TransactionDAO.DescriptionContainer>
+    suspend fun searchByDescription(term: String): Result<List<TransactionDAO.DescriptionContainer>>
 
     /**
      * Get the first transaction matching a description.
      * Useful for auto-filling from previous transactions.
      *
      * @param description The exact description to match.
-     * @return The first matching domain model transaction, or null if none found.
+     * @return Result containing the first matching domain model transaction, or null if none found.
      */
-    suspend fun getFirstByDescription(description: String): Transaction?
+    suspend fun getFirstByDescription(description: String): Result<Transaction?>
 
     /**
      * Get the first transaction matching a description and having a specific account.
      *
      * @param description The exact description to match.
      * @param accountTerm The account name to filter by.
-     * @return The first matching domain model transaction, or null if none found.
+     * @return Result containing the first matching domain model transaction, or null if none found.
      */
-    suspend fun getFirstByDescriptionHavingAccount(description: String, accountTerm: String): Transaction?
+    suspend fun getFirstByDescriptionHavingAccount(description: String, accountTerm: String): Result<Transaction?>
 
     // ========================================
     // Mutation Operations (Domain Models)
@@ -119,9 +124,9 @@ interface TransactionRepository {
      *
      * @param transaction The domain model transaction to insert.
      * @param profileId The profile ID for the transaction.
-     * @return The inserted transaction with generated ID.
+     * @return Result containing the inserted transaction with generated ID.
      */
-    suspend fun insertTransaction(transaction: Transaction, profileId: Long): Transaction
+    suspend fun insertTransaction(transaction: Transaction, profileId: Long): Result<Transaction>
 
     /**
      * Store (insert or update) a transaction using domain model.
@@ -129,24 +134,25 @@ interface TransactionRepository {
      *
      * @param transaction The domain model transaction to store.
      * @param profileId The profile ID for the transaction.
+     * @return Result indicating success or failure.
      */
-    suspend fun storeTransaction(transaction: Transaction, profileId: Long)
+    suspend fun storeTransaction(transaction: Transaction, profileId: Long): Result<Unit>
 
     /**
      * Delete a transaction by ID.
      *
      * @param transactionId The ID of the transaction to delete.
-     * @return The number of deleted rows (0 or 1).
+     * @return Result containing the number of deleted rows (0 or 1).
      */
-    suspend fun deleteTransactionById(transactionId: Long): Int
+    suspend fun deleteTransactionById(transactionId: Long): Result<Int>
 
     /**
      * Delete multiple transactions by IDs.
      *
      * @param transactionIds The IDs of the transactions to delete.
-     * @return The number of deleted rows.
+     * @return Result containing the number of deleted rows.
      */
-    suspend fun deleteTransactionsByIds(transactionIds: List<Long>): Int
+    suspend fun deleteTransactionsByIds(transactionIds: List<Long>): Result<Int>
 
     // ========================================
     // Sync Operations
@@ -158,23 +164,24 @@ interface TransactionRepository {
      *
      * @param transactions The domain model transactions to store.
      * @param profileId The profile ID for the transactions.
+     * @return Result indicating success or failure.
      */
-    suspend fun storeTransactionsAsDomain(transactions: List<Transaction>, profileId: Long)
+    suspend fun storeTransactionsAsDomain(transactions: List<Transaction>, profileId: Long): Result<Unit>
 
     /**
      * Delete all transactions for a profile.
      *
      * @param profileId The profile ID.
-     * @return The number of deleted transactions.
+     * @return Result containing the number of deleted transactions.
      */
-    suspend fun deleteAllForProfile(profileId: Long): Int
+    suspend fun deleteAllForProfile(profileId: Long): Result<Int>
 
     /**
      * Get the maximum ledger ID for a profile.
      * Used for sync operations.
      *
      * @param profileId The profile ID.
-     * @return The maximum ledger ID, or null if no transactions exist.
+     * @return Result containing the maximum ledger ID, or null if no transactions exist.
      */
-    suspend fun getMaxLedgerId(profileId: Long): Long?
+    suspend fun getMaxLedgerId(profileId: Long): Result<Long?>
 }

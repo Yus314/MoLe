@@ -27,6 +27,7 @@ import net.ktnx.mobileledger.dao.CurrencyDAO
 import net.ktnx.mobileledger.data.repository.mapper.CurrencyMapper.toDomain
 import net.ktnx.mobileledger.data.repository.mapper.CurrencyMapper.toEntity
 import net.ktnx.mobileledger.domain.model.Currency
+import net.ktnx.mobileledger.domain.usecase.AppExceptionMapper
 
 /**
  * Implementation of [CurrencyRepository] that wraps the existing [CurrencyDAO].
@@ -35,11 +36,15 @@ import net.ktnx.mobileledger.domain.model.Currency
  * - Converts LiveData to Flow for reactive data access
  * - Uses Dispatchers.IO for database operations
  * - Delegates all operations to the underlying DAO
+ * - Returns Result<T> for all suspend operations with error handling
  *
  * Thread-safety: All operations are safe to call from any coroutine context.
  */
 @Singleton
-class CurrencyRepositoryImpl @Inject constructor(private val currencyDAO: CurrencyDAO) : CurrencyRepository {
+class CurrencyRepositoryImpl @Inject constructor(
+    private val currencyDAO: CurrencyDAO,
+    private val appExceptionMapper: AppExceptionMapper
+) : CurrencyRepository {
 
     // ========================================
     // Query Operations
@@ -48,18 +53,24 @@ class CurrencyRepositoryImpl @Inject constructor(private val currencyDAO: Curren
     override fun observeAllCurrenciesAsDomain(): Flow<List<Currency>> =
         currencyDAO.getAll().map { list -> list.map { it.toDomain() } }
 
-    override suspend fun getAllCurrenciesAsDomain(): List<Currency> = withContext(Dispatchers.IO) {
-        currencyDAO.getAllSync().map { it.toDomain() }
+    override suspend fun getAllCurrenciesAsDomain(): Result<List<Currency>> = safeCall(appExceptionMapper) {
+        withContext(Dispatchers.IO) {
+            currencyDAO.getAllSync().map { it.toDomain() }
+        }
     }
 
     override fun observeCurrencyAsDomain(id: Long): Flow<Currency?> = currencyDAO.getById(id).map { it?.toDomain() }
 
-    override suspend fun getCurrencyAsDomain(id: Long): Currency? = withContext(Dispatchers.IO) {
-        currencyDAO.getByIdSync(id)?.toDomain()
+    override suspend fun getCurrencyAsDomain(id: Long): Result<Currency?> = safeCall(appExceptionMapper) {
+        withContext(Dispatchers.IO) {
+            currencyDAO.getByIdSync(id)?.toDomain()
+        }
     }
 
-    override suspend fun getCurrencyAsDomainByName(name: String): Currency? = withContext(Dispatchers.IO) {
-        currencyDAO.getByNameSync(name)?.toDomain()
+    override suspend fun getCurrencyAsDomainByName(name: String): Result<Currency?> = safeCall(appExceptionMapper) {
+        withContext(Dispatchers.IO) {
+            currencyDAO.getByNameSync(name)?.toDomain()
+        }
     }
 
     override fun observeCurrencyAsDomainByName(name: String): Flow<Currency?> =
@@ -69,29 +80,33 @@ class CurrencyRepositoryImpl @Inject constructor(private val currencyDAO: Curren
     // Mutation Operations
     // ========================================
 
-    override suspend fun deleteAllCurrencies() {
+    override suspend fun deleteAllCurrencies(): Result<Unit> = safeCall(appExceptionMapper) {
         withContext(Dispatchers.IO) {
             currencyDAO.deleteAllSync()
         }
     }
 
-    override suspend fun saveCurrency(currency: Currency): Long = withContext(Dispatchers.IO) {
-        val entity = currency.toEntity()
-        if (entity.id == 0L) {
-            currencyDAO.insertSync(entity)
-        } else {
-            currencyDAO.updateSync(entity)
-            entity.id
+    override suspend fun saveCurrency(currency: Currency): Result<Long> = safeCall(appExceptionMapper) {
+        withContext(Dispatchers.IO) {
+            val entity = currency.toEntity()
+            if (entity.id == 0L) {
+                currencyDAO.insertSync(entity)
+            } else {
+                currencyDAO.updateSync(entity)
+                entity.id
+            }
         }
     }
 
-    override suspend fun deleteCurrencyByName(name: String): Boolean = withContext(Dispatchers.IO) {
-        val currency = currencyDAO.getByNameSync(name)
-        if (currency != null) {
-            currencyDAO.deleteSync(currency)
-            true
-        } else {
-            false
+    override suspend fun deleteCurrencyByName(name: String): Result<Boolean> = safeCall(appExceptionMapper) {
+        withContext(Dispatchers.IO) {
+            val currency = currencyDAO.getByNameSync(name)
+            if (currency != null) {
+                currencyDAO.deleteSync(currency)
+                true
+            } else {
+                false
+            }
         }
     }
 }

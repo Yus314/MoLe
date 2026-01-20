@@ -65,44 +65,52 @@ class FakeTransactionRepository : TransactionRepository {
         MutableStateFlow(domainTransactions[transactionId])
 
     // Suspend methods (no suffix)
-    override suspend fun getTransactionById(transactionId: Long): Transaction? = domainTransactions[transactionId]
+    override suspend fun getTransactionById(transactionId: Long): Result<Transaction?> =
+        Result.success(domainTransactions[transactionId])
 
-    override suspend fun searchByDescription(term: String): List<TransactionDAO.DescriptionContainer> =
-        domainTransactions.values
-            .filter { it.description.contains(term, true) }
-            .distinctBy { it.description }
-            .map { TransactionDAO.DescriptionContainer().apply { description = it.description } }
+    override suspend fun searchByDescription(term: String): Result<List<TransactionDAO.DescriptionContainer>> =
+        Result.success(
+            domainTransactions.values
+                .filter { it.description.contains(term, true) }
+                .distinctBy { it.description }
+                .map { TransactionDAO.DescriptionContainer().apply { description = it.description } }
+        )
 
-    override suspend fun getFirstByDescription(description: String): Transaction? =
-        domainTransactions.values.find { it.description == description }
+    override suspend fun getFirstByDescription(description: String): Result<Transaction?> =
+        Result.success(domainTransactions.values.find { it.description == description })
 
-    override suspend fun getFirstByDescriptionHavingAccount(description: String, accountTerm: String): Transaction? =
+    override suspend fun getFirstByDescriptionHavingAccount(
+        description: String,
+        accountTerm: String
+    ): Result<Transaction?> = Result.success(
         domainTransactions.values.find { tx ->
             tx.description == description &&
                 tx.lines.any { it.accountName.contains(accountTerm, true) }
         }
+    )
 
     // Domain model mutation methods
-    override suspend fun insertTransaction(transaction: Transaction, profileId: Long): Transaction {
+    override suspend fun insertTransaction(transaction: Transaction, profileId: Long): Result<Transaction> {
         val id = transaction.id ?: nextId++
         val tx = transaction.copy(id = id)
         domainTransactions[id] = tx
         profileMap[id] = profileId
-        return tx
+        return Result.success(tx)
     }
 
-    override suspend fun storeTransaction(transaction: Transaction, profileId: Long) {
+    override suspend fun storeTransaction(transaction: Transaction, profileId: Long): Result<Unit> {
         insertTransaction(transaction, profileId)
+        return Result.success(Unit)
     }
 
-    override suspend fun deleteTransactionById(transactionId: Long): Int {
+    override suspend fun deleteTransactionById(transactionId: Long): Result<Int> {
         val existed = domainTransactions.containsKey(transactionId)
         domainTransactions.remove(transactionId)
         profileMap.remove(transactionId)
-        return if (existed) 1 else 0
+        return Result.success(if (existed) 1 else 0)
     }
 
-    override suspend fun deleteTransactionsByIds(transactionIds: List<Long>): Int {
+    override suspend fun deleteTransactionsByIds(transactionIds: List<Long>): Result<Int> {
         var count = 0
         transactionIds.forEach { id ->
             if (domainTransactions.containsKey(id)) {
@@ -111,28 +119,31 @@ class FakeTransactionRepository : TransactionRepository {
             domainTransactions.remove(id)
             profileMap.remove(id)
         }
-        return count
+        return Result.success(count)
     }
 
-    override suspend fun storeTransactionsAsDomain(transactions: List<Transaction>, profileId: Long) {
+    override suspend fun storeTransactionsAsDomain(transactions: List<Transaction>, profileId: Long): Result<Unit> {
         transactions.forEach { tx ->
             val id = tx.id ?: nextId++
             val txWithId = if (tx.id == null) tx.copy(id = id) else tx
             domainTransactions[id] = txWithId
             profileMap[id] = profileId
         }
+        return Result.success(Unit)
     }
 
-    override suspend fun deleteAllForProfile(profileId: Long): Int {
+    override suspend fun deleteAllForProfile(profileId: Long): Result<Int> {
         val toRemove = domainTransactions.values.filter { profileMap[it.id] == profileId }
         toRemove.forEach {
             domainTransactions.remove(it.id)
             profileMap.remove(it.id)
         }
-        return toRemove.size
+        return Result.success(toRemove.size)
     }
 
-    override suspend fun getMaxLedgerId(profileId: Long): Long? = domainTransactions.values
-        .filter { profileMap[it.id] == profileId }
-        .maxOfOrNull { it.ledgerId }
+    override suspend fun getMaxLedgerId(profileId: Long): Result<Long?> = Result.success(
+        domainTransactions.values
+            .filter { profileMap[it.id] == profileId }
+            .maxOfOrNull { it.ledgerId }
+    )
 }

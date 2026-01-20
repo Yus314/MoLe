@@ -141,7 +141,7 @@ class ProfileDetailViewModelTest {
     @Test
     fun `initialize with existing profile loads profile data`() = runTest {
         val profile = createTestProfile(name = "Existing Profile", url = "https://test.com")
-        val id = profileRepository.insertProfile(profile)
+        val id = profileRepository.insertProfile(profile).getOrThrow()
 
         viewModel = createViewModel()
         viewModel.initialize(profileId = id, initialThemeHue = -1)
@@ -449,8 +449,8 @@ class ProfileDetailViewModelTest {
         viewModel.onEvent(ProfileDetailEvent.Save)
         advanceUntilIdle()
 
-        assertEquals(1, profileRepository.getProfileCount())
-        val saved = profileRepository.getAllProfiles().first()
+        assertEquals(1, profileRepository.getProfileCount().getOrThrow())
+        val saved = profileRepository.getAllProfiles().getOrThrow().first()
         assertEquals("New Profile", saved.name)
         assertEquals("https://valid.com", saved.url)
     }
@@ -458,7 +458,7 @@ class ProfileDetailViewModelTest {
     @Test
     fun `save valid existing profile updates repository`() = runTest {
         val profile = createTestProfile(name = "Original", url = "https://original.com")
-        val id = profileRepository.insertProfile(profile)
+        val id = profileRepository.insertProfile(profile).getOrThrow()
 
         viewModel = createViewModel()
         viewModel.initialize(profileId = id, initialThemeHue = -1)
@@ -469,8 +469,8 @@ class ProfileDetailViewModelTest {
         viewModel.onEvent(ProfileDetailEvent.Save)
         advanceUntilIdle()
 
-        assertEquals(1, profileRepository.getProfileCount())
-        val saved = profileRepository.getProfileById(id)
+        assertEquals(1, profileRepository.getProfileCount().getOrThrow())
+        val saved = profileRepository.getProfileById(id).getOrNull()
         assertEquals("Updated", saved?.name)
         assertEquals("https://updated.com", saved?.url)
     }
@@ -498,7 +498,7 @@ class ProfileDetailViewModelTest {
     @Test
     fun `showDeleteConfirmDialog shows dialog`() = runTest {
         val profile = createTestProfile()
-        val id = profileRepository.insertProfile(profile)
+        val id = profileRepository.insertProfile(profile).getOrThrow()
 
         viewModel = createViewModel()
         viewModel.initialize(profileId = id, initialThemeHue = -1)
@@ -512,7 +512,7 @@ class ProfileDetailViewModelTest {
     @Test
     fun `dismissDeleteConfirmDialog hides dialog`() = runTest {
         val profile = createTestProfile()
-        val id = profileRepository.insertProfile(profile)
+        val id = profileRepository.insertProfile(profile).getOrThrow()
 
         viewModel = createViewModel()
         viewModel.initialize(profileId = id, initialThemeHue = -1)
@@ -527,8 +527,8 @@ class ProfileDetailViewModelTest {
     @Test
     fun `confirmDelete removes profile from repository`() = runTest {
         val profile = createTestProfile()
-        val id = profileRepository.insertProfile(profile)
-        assertEquals(1, profileRepository.getProfileCount())
+        val id = profileRepository.insertProfile(profile).getOrThrow()
+        assertEquals(1, profileRepository.getProfileCount().getOrThrow())
 
         viewModel = createViewModel()
         viewModel.initialize(profileId = id, initialThemeHue = -1)
@@ -537,7 +537,7 @@ class ProfileDetailViewModelTest {
         viewModel.onEvent(ProfileDetailEvent.ConfirmDelete)
         advanceUntilIdle()
 
-        assertEquals(0, profileRepository.getProfileCount())
+        assertEquals(0, profileRepository.getProfileCount().getOrThrow())
     }
 
     // ========================================
@@ -636,7 +636,7 @@ class ProfileDetailViewModelTest {
     @Test
     fun `isNewProfile returns false for existing profile`() = runTest {
         val profile = createTestProfile()
-        val id = profileRepository.insertProfile(profile)
+        val id = profileRepository.insertProfile(profile).getOrThrow()
 
         viewModel = createViewModel()
         viewModel.initialize(profileId = id, initialThemeHue = -1)
@@ -657,7 +657,7 @@ class ProfileDetailViewModelTest {
     @Test
     fun `canDelete returns true for existing profile`() = runTest {
         val profile = createTestProfile()
-        val id = profileRepository.insertProfile(profile)
+        val id = profileRepository.insertProfile(profile).getOrThrow()
 
         viewModel = createViewModel()
         viewModel.initialize(profileId = id, initialThemeHue = -1)
@@ -765,57 +765,70 @@ class FakeProfileRepositoryForProfileDetail : ProfileRepository {
         profiles.values.sortedBy { it.orderNo }
     )
 
-    override suspend fun getAllProfiles(): List<Profile> = profiles.values.sortedBy { it.orderNo }
+    override suspend fun getAllProfiles(): Result<List<Profile>> = Result.success(
+        profiles.values.sortedBy {
+            it.orderNo
+        }
+    )
 
     override fun observeProfileById(profileId: Long): Flow<Profile?> = MutableStateFlow(profiles[profileId])
 
-    override suspend fun getProfileById(profileId: Long): Profile? = profiles[profileId]
+    override suspend fun getProfileById(profileId: Long): Result<Profile?> = Result.success(profiles[profileId])
 
     override fun observeProfileByUuid(uuid: String): Flow<Profile?> = MutableStateFlow(
         profiles.values.find { it.uuid == uuid }
     )
 
-    override suspend fun getProfileByUuid(uuid: String): Profile? = profiles.values.find { it.uuid == uuid }
+    override suspend fun getProfileByUuid(uuid: String): Result<Profile?> = Result.success(
+        profiles.values.find {
+            it.uuid ==
+                uuid
+        }
+    )
 
-    override suspend fun getAnyProfile(): Profile? = profiles.values.firstOrNull()
+    override suspend fun getAnyProfile(): Result<Profile?> = Result.success(profiles.values.firstOrNull())
 
-    override suspend fun getProfileCount(): Int = profiles.size
+    override suspend fun getProfileCount(): Result<Int> = Result.success(profiles.size)
 
-    override suspend fun insertProfile(profile: Profile): Long {
+    override suspend fun insertProfile(profile: Profile): Result<Long> {
         val id = if (profile.id == null || profile.id == 0L) nextId++ else profile.id
         val profileWithId = profile.copy(id = id)
         profiles[id] = profileWithId
-        return id
+        return Result.success(id)
     }
 
-    override suspend fun updateProfile(profile: Profile) {
-        val id = profile.id ?: return
+    override suspend fun updateProfile(profile: Profile): Result<Unit> {
+        val id = profile.id ?: return Result.success(Unit)
         profiles[id] = profile
         if (_currentProfile.value?.id == id) {
             _currentProfile.value = profile
         }
+        return Result.success(Unit)
     }
 
-    override suspend fun deleteProfile(profile: Profile) {
-        val id = profile.id ?: return
+    override suspend fun deleteProfile(profile: Profile): Result<Unit> {
+        val id = profile.id ?: return Result.success(Unit)
         profiles.remove(id)
         if (_currentProfile.value?.id == id) {
             _currentProfile.value = profiles.values.firstOrNull()
         }
+        return Result.success(Unit)
     }
 
-    override suspend fun updateProfileOrder(profiles: List<Profile>) {
+    override suspend fun updateProfileOrder(profiles: List<Profile>): Result<Unit> {
         profiles.forEachIndexed { index, profile ->
             val id = profile.id ?: return@forEachIndexed
             this.profiles[id]?.let { existing ->
                 this.profiles[id] = existing.copy(orderNo = index)
             }
         }
+        return Result.success(Unit)
     }
 
-    override suspend fun deleteAllProfiles() {
+    override suspend fun deleteAllProfiles(): Result<Unit> {
         profiles.clear()
         _currentProfile.value = null
+        return Result.success(Unit)
     }
 }
 

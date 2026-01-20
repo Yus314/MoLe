@@ -29,6 +29,11 @@ import net.ktnx.mobileledger.domain.model.Template
  * - CRUD operations for templates
  * - Template duplication functionality
  *
+ * ## Error Handling
+ *
+ * All suspend functions return `Result<T>` to handle errors explicitly.
+ * Use `result.getOrNull()`, `result.getOrElse {}`, or `result.onSuccess/onFailure` to handle results.
+ *
  * ## Usage
  *
  * ```kotlin
@@ -66,16 +71,16 @@ interface TemplateRepository {
      * Get a template as domain model by its ID.
      *
      * @param id The template ID
-     * @return The template domain model or null if not found
+     * @return Result containing the template domain model or null if not found
      */
-    suspend fun getTemplateAsDomain(id: Long): Template?
+    suspend fun getTemplateAsDomain(id: Long): Result<Template?>
 
     /**
      * Get all templates as domain models.
      *
-     * @return List of all template domain models
+     * @return Result containing list of all template domain models
      */
-    suspend fun getAllTemplatesAsDomain(): List<Template>
+    suspend fun getAllTemplatesAsDomain(): Result<List<Template>>
 
     // ========================================
     // Database Entity Query Operations (for internal use)
@@ -86,21 +91,21 @@ interface TemplateRepository {
      * Get a template with its accounts by UUID.
      *
      * @param uuid The template UUID
-     * @return The template with accounts or null if not found
+     * @return Result containing the template with accounts or null if not found
      */
     @Deprecated(message = "Internal use for backup/restore only")
-    suspend fun getTemplateWithAccountsByUuid(uuid: String): TemplateWithAccounts?
+    suspend fun getTemplateWithAccountsByUuid(uuid: String): Result<TemplateWithAccounts?>
 
     /**
      * Get all templates with their accounts.
      *
-     * @return List of all templates with accounts
+     * @return Result containing list of all templates with accounts
      */
     @Deprecated(
         message = "Use getAllTemplatesAsDomain() instead. Internal use for backup only.",
         replaceWith = ReplaceWith("getAllTemplatesAsDomain()")
     )
-    suspend fun getAllTemplatesWithAccounts(): List<TemplateWithAccounts>
+    suspend fun getAllTemplatesWithAccounts(): Result<List<TemplateWithAccounts>>
 
     // ========================================
     // Mutation Operations
@@ -110,41 +115,44 @@ interface TemplateRepository {
      * Insert a template with its accounts.
      *
      * @param templateWithAccounts The template with accounts to insert
+     * @return Result indicating success or failure
      */
     @Deprecated(
         message = "Use saveTemplate() instead. Internal use for backup/restore only.",
         replaceWith = ReplaceWith("saveTemplate(templateWithAccounts.toDomain())")
     )
-    suspend fun insertTemplateWithAccounts(templateWithAccounts: TemplateWithAccounts)
+    suspend fun insertTemplateWithAccounts(templateWithAccounts: TemplateWithAccounts): Result<Unit>
 
     /**
      * Delete a template by its ID.
      *
      * @param id The template ID to delete
-     * @return true if deleted, false if not found
+     * @return Result containing true if deleted, false if not found
      */
-    suspend fun deleteTemplateById(id: Long): Boolean
+    suspend fun deleteTemplateById(id: Long): Result<Boolean>
 
     /**
      * Duplicate a template with all its accounts.
      *
      * @param id The ID of the template to duplicate
-     * @return The duplicated template with accounts, or null if source not found
+     * @return Result containing the duplicated template with accounts, or null if source not found
      */
     @Deprecated(message = "Returns DB entity. Consider using domain model alternative in future.")
-    suspend fun duplicateTemplate(id: Long): TemplateWithAccounts?
+    suspend fun duplicateTemplate(id: Long): Result<TemplateWithAccounts?>
 
     /**
      * Delete all templates.
+     *
+     * @return Result indicating success or failure
      */
-    suspend fun deleteAllTemplates()
+    suspend fun deleteAllTemplates(): Result<Unit>
 
     /**
      * Save a template domain model with its lines.
      * Handles insert/update of header and all accounts atomically.
      *
      * @param template The template domain model to save
-     * @return The saved template ID
+     * @return Result containing the saved template ID
      */
-    suspend fun saveTemplate(template: Template): Long
+    suspend fun saveTemplate(template: Template): Result<Long>
 }

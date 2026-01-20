@@ -74,9 +74,9 @@ class CurrencyRepositoryTest {
 
     @Test
     fun `observeAllCurrenciesAsDomain returns all currencies`() = runTest {
-        repository.saveCurrency(createTestCurrency(name = "USD"))
-        repository.saveCurrency(createTestCurrency(name = "EUR"))
-        repository.saveCurrency(createTestCurrency(name = "JPY"))
+        repository.saveCurrency(createTestCurrency(name = "USD")).getOrThrow()
+        repository.saveCurrency(createTestCurrency(name = "EUR")).getOrThrow()
+        repository.saveCurrency(createTestCurrency(name = "JPY")).getOrThrow()
 
         val currencies = repository.observeAllCurrenciesAsDomain().first()
 
@@ -89,10 +89,10 @@ class CurrencyRepositoryTest {
 
     @Test
     fun `getAllCurrenciesAsDomain returns all currencies`() = runTest {
-        repository.saveCurrency(createTestCurrency(name = "USD"))
-        repository.saveCurrency(createTestCurrency(name = "EUR"))
+        repository.saveCurrency(createTestCurrency(name = "USD")).getOrThrow()
+        repository.saveCurrency(createTestCurrency(name = "EUR")).getOrThrow()
 
-        val currencies = repository.getAllCurrenciesAsDomain()
+        val currencies = repository.getAllCurrenciesAsDomain().getOrThrow()
 
         assertEquals(2, currencies.size)
     }
@@ -110,7 +110,7 @@ class CurrencyRepositoryTest {
     @Test
     fun `observeCurrencyAsDomain returns currency when exists`() = runTest {
         val currency = createTestCurrency(name = "USD")
-        val id = repository.saveCurrency(currency)
+        val id = repository.saveCurrency(currency).getOrThrow()
 
         val result = repository.observeCurrencyAsDomain(id).first()
 
@@ -130,9 +130,9 @@ class CurrencyRepositoryTest {
 
     @Test
     fun `getCurrencyAsDomainByName returns currency when exists`() = runTest {
-        repository.saveCurrency(createTestCurrency(name = "USD"))
+        repository.saveCurrency(createTestCurrency(name = "USD")).getOrThrow()
 
-        val result = repository.getCurrencyAsDomainByName("USD")
+        val result = repository.getCurrencyAsDomainByName("USD").getOrNull()
 
         assertNotNull(result)
         assertEquals("USD", result?.name)
@@ -146,7 +146,7 @@ class CurrencyRepositoryTest {
     fun `saveCurrency assigns id and returns it`() = runTest {
         val currency = createTestCurrency(name = "USD")
 
-        val id = repository.saveCurrency(currency)
+        val id = repository.saveCurrency(currency).getOrThrow()
 
         assertTrue(id > 0)
         val stored = repository.observeCurrencyAsDomain(id).first()
@@ -162,7 +162,7 @@ class CurrencyRepositoryTest {
             hasGap = false
         )
 
-        val id = repository.saveCurrency(currency)
+        val id = repository.saveCurrency(currency).getOrThrow()
         val stored = repository.observeCurrencyAsDomain(id).first()
 
         assertNotNull(stored)
@@ -178,10 +178,10 @@ class CurrencyRepositoryTest {
     @Test
     fun `saveCurrency with id modifies existing currency`() = runTest {
         val currency = createTestCurrency(name = "USD", position = CurrencyPosition.AFTER)
-        val id = repository.saveCurrency(currency)
+        val id = repository.saveCurrency(currency).getOrThrow()
 
         val updated = createTestCurrency(id = id, name = "USD", position = CurrencyPosition.BEFORE)
-        repository.saveCurrency(updated)
+        repository.saveCurrency(updated).getOrThrow()
 
         val result = repository.observeCurrencyAsDomain(id).first()
         assertEquals(CurrencyPosition.BEFORE, result?.position)
@@ -194,9 +194,9 @@ class CurrencyRepositoryTest {
     @Test
     fun `deleteCurrencyByName removes currency`() = runTest {
         val currency = createTestCurrency(name = "USD")
-        repository.saveCurrency(currency)
+        repository.saveCurrency(currency).getOrThrow()
 
-        repository.deleteCurrencyByName("USD")
+        repository.deleteCurrencyByName("USD").getOrThrow()
 
         val remaining = repository.observeAllCurrenciesAsDomain().first()
         assertTrue(remaining.isEmpty())
@@ -204,10 +204,10 @@ class CurrencyRepositoryTest {
 
     @Test
     fun `deleteCurrencyByName only removes specified currency`() = runTest {
-        repository.saveCurrency(createTestCurrency(name = "USD"))
-        repository.saveCurrency(createTestCurrency(name = "EUR"))
+        repository.saveCurrency(createTestCurrency(name = "USD")).getOrThrow()
+        repository.saveCurrency(createTestCurrency(name = "EUR")).getOrThrow()
 
-        repository.deleteCurrencyByName("USD")
+        repository.deleteCurrencyByName("USD").getOrThrow()
 
         val remaining = repository.observeAllCurrenciesAsDomain().first()
         assertEquals(1, remaining.size)
@@ -220,11 +220,11 @@ class CurrencyRepositoryTest {
 
     @Test
     fun `deleteAllCurrencies removes all currencies`() = runTest {
-        repository.saveCurrency(createTestCurrency(name = "USD"))
-        repository.saveCurrency(createTestCurrency(name = "EUR"))
-        repository.saveCurrency(createTestCurrency(name = "JPY"))
+        repository.saveCurrency(createTestCurrency(name = "USD")).getOrThrow()
+        repository.saveCurrency(createTestCurrency(name = "EUR")).getOrThrow()
+        repository.saveCurrency(createTestCurrency(name = "JPY")).getOrThrow()
 
-        repository.deleteAllCurrencies()
+        repository.deleteAllCurrencies().getOrThrow()
 
         val currencies = repository.observeAllCurrenciesAsDomain().first()
         assertTrue(currencies.isEmpty())

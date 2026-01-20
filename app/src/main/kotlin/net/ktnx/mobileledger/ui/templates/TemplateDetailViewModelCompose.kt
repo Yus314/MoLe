@@ -68,56 +68,56 @@ class TemplateDetailViewModelCompose @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
 
-            try {
-                val template = templateRepository.getTemplateAsDomain(templateId)
+            templateRepository.getTemplateAsDomain(templateId)
+                .onSuccess { template ->
+                    if (template != null) {
+                        val accountRows = dataMapper.toAccountRows(template) {
+                            syntheticId.getAndDecrement()
+                        }
 
-                if (template != null) {
-                    val accountRows = dataMapper.toAccountRows(template) {
-                        syntheticId.getAndDecrement()
+                        _uiState.update {
+                            TemplateDetailUiState(
+                                templateId = template.id,
+                                name = template.name,
+                                pattern = template.pattern,
+                                testText = template.testText ?: "",
+                                transactionDescription = dataMapper.extractMatchableValue(
+                                    template.transactionDescription,
+                                    template.transactionDescriptionMatchGroup
+                                ),
+                                transactionComment = dataMapper.extractMatchableValue(
+                                    template.transactionComment,
+                                    template.transactionCommentMatchGroup
+                                ),
+                                dateYear = dataMapper.extractMatchableValueInt(
+                                    template.dateYear,
+                                    template.dateYearMatchGroup
+                                ),
+                                dateMonth = dataMapper.extractMatchableValueInt(
+                                    template.dateMonth,
+                                    template.dateMonthMatchGroup
+                                ),
+                                dateDay = dataMapper.extractMatchableValueInt(
+                                    template.dateDay,
+                                    template.dateDayMatchGroup
+                                ),
+                                accounts = accountRows,
+                                isFallback = template.isFallback,
+                                isLoading = false
+                            )
+                        }
+
+                        // Validate the pattern
+                        validatePattern(template.pattern, template.testText ?: "")
+                    } else {
+                        _uiState.update { it.copy(isLoading = false) }
                     }
-
-                    _uiState.update {
-                        TemplateDetailUiState(
-                            templateId = template.id,
-                            name = template.name,
-                            pattern = template.pattern,
-                            testText = template.testText ?: "",
-                            transactionDescription = dataMapper.extractMatchableValue(
-                                template.transactionDescription,
-                                template.transactionDescriptionMatchGroup
-                            ),
-                            transactionComment = dataMapper.extractMatchableValue(
-                                template.transactionComment,
-                                template.transactionCommentMatchGroup
-                            ),
-                            dateYear = dataMapper.extractMatchableValueInt(
-                                template.dateYear,
-                                template.dateYearMatchGroup
-                            ),
-                            dateMonth = dataMapper.extractMatchableValueInt(
-                                template.dateMonth,
-                                template.dateMonthMatchGroup
-                            ),
-                            dateDay = dataMapper.extractMatchableValueInt(
-                                template.dateDay,
-                                template.dateDayMatchGroup
-                            ),
-                            accounts = accountRows,
-                            isFallback = template.isFallback,
-                            isLoading = false
-                        )
-                    }
-
-                    // Validate the pattern
-                    validatePattern(template.pattern, template.testText ?: "")
-                } else {
-                    _uiState.update { it.copy(isLoading = false) }
                 }
-            } catch (e: Exception) {
-                logcat { "Error loading template: ${e.message}" }
-                _uiState.update { it.copy(isLoading = false) }
-                _effects.send(TemplateDetailEffect.ShowError("テンプレートの読み込みに失敗しました"))
-            }
+                .onFailure { e ->
+                    logcat { "Error loading template: ${e.message}" }
+                    _uiState.update { it.copy(isLoading = false) }
+                    _effects.send(TemplateDetailEffect.ShowError("テンプレートの読み込みに失敗しました"))
+                }
         }
     }
 
@@ -304,18 +304,18 @@ class TemplateDetailViewModelCompose @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isSaving = true) }
 
-            try {
-                val template = dataMapper.toTemplate(state)
-                templateRepository.saveTemplate(template)
-
-                _uiState.update { it.copy(isSaving = false, hasUnsavedChanges = false) }
-                _effects.send(TemplateDetailEffect.TemplateSaved)
-                _effects.send(TemplateDetailEffect.NavigateBack)
-            } catch (e: Exception) {
-                logcat { "Error saving template: ${e.message}" }
-                _uiState.update { it.copy(isSaving = false) }
-                _effects.send(TemplateDetailEffect.ShowError("テンプレートの保存に失敗しました"))
-            }
+            val template = dataMapper.toTemplate(state)
+            templateRepository.saveTemplate(template)
+                .onSuccess {
+                    _uiState.update { it.copy(isSaving = false, hasUnsavedChanges = false) }
+                    _effects.send(TemplateDetailEffect.TemplateSaved)
+                    _effects.send(TemplateDetailEffect.NavigateBack)
+                }
+                .onFailure { e ->
+                    logcat { "Error saving template: ${e.message}" }
+                    _uiState.update { it.copy(isSaving = false) }
+                    _effects.send(TemplateDetailEffect.ShowError("テンプレートの保存に失敗しました"))
+                }
         }
     }
 
@@ -352,19 +352,22 @@ class TemplateDetailViewModelCompose @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(showDeleteConfirmDialog = false, isLoading = true) }
 
-            try {
-                val templateId = _uiState.value.templateId
-                if (templateId != null && templateId > 0) {
-                    templateRepository.deleteTemplateById(templateId)
-                }
-
+            val templateId = _uiState.value.templateId
+            if (templateId != null && templateId > 0) {
+                templateRepository.deleteTemplateById(templateId)
+                    .onSuccess {
+                        _uiState.update { it.copy(isLoading = false) }
+                        _effects.send(TemplateDetailEffect.TemplateDeleted)
+                        _effects.send(TemplateDetailEffect.NavigateBack)
+                    }
+                    .onFailure { e ->
+                        logcat { "Error deleting template: ${e.message}" }
+                        _uiState.update { it.copy(isLoading = false) }
+                        _effects.send(TemplateDetailEffect.ShowError("テンプレートの削除に失敗しました"))
+                    }
+            } else {
                 _uiState.update { it.copy(isLoading = false) }
-                _effects.send(TemplateDetailEffect.TemplateDeleted)
                 _effects.send(TemplateDetailEffect.NavigateBack)
-            } catch (e: Exception) {
-                logcat { "Error deleting template: ${e.message}" }
-                _uiState.update { it.copy(isLoading = false) }
-                _effects.send(TemplateDetailEffect.ShowError("テンプレートの削除に失敗しました"))
             }
         }
     }

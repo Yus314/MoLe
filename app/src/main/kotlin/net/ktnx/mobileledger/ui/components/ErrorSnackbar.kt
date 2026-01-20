@@ -32,6 +32,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import net.ktnx.mobileledger.domain.model.AppError
 import net.ktnx.mobileledger.ui.theme.MoLeTheme
 
 @Composable
@@ -85,6 +86,22 @@ suspend fun SnackbarHostState.showError(
     message = message,
     actionLabel = actionLabel,
     duration = duration,
+    withDismissAction = true
+)
+
+/**
+ * AppError を表示するための拡張関数
+ *
+ * isRetryable フラグに基づいて「再試行」ボタンの表示を自動的に切り替える。
+ *
+ * @param error 表示するAppError
+ * @param retryLabel リトライボタンのラベル（デフォルト: "再試行"）
+ * @return SnackbarResult（ActionPerformed なら再試行が押された）
+ */
+suspend fun SnackbarHostState.showAppError(error: AppError, retryLabel: String = "再試行"): SnackbarResult = showSnackbar(
+    message = error.message,
+    actionLabel = if (error.isRetryable) retryLabel else null,
+    duration = SnackbarDuration.Long,
     withDismissAction = true
 )
 

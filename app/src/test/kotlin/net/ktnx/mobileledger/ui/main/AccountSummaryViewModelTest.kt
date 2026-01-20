@@ -165,7 +165,7 @@ class AccountSummaryViewModelTest {
     fun `init loads accounts for current profile`() = runTest {
         // Given
         val profile = createTestProfile(id = 1L)
-        profileRepository.insertProfile(profile)
+        profileRepository.insertProfile(profile).getOrThrow()
         profileRepository.setCurrentProfile(profile)
 
         accountRepository.addAccountWithAmounts(createTestAccount(1L, 1L, "Assets:Cash", null, 100f, "USD"))
@@ -205,8 +205,8 @@ class AccountSummaryViewModelTest {
         // Given
         val profile1 = createTestProfile(id = 1L, name = "Profile 1")
         val profile2 = createTestProfile(id = 2L, name = "Profile 2")
-        profileRepository.insertProfile(profile1)
-        profileRepository.insertProfile(profile2)
+        profileRepository.insertProfile(profile1).getOrThrow()
+        profileRepository.insertProfile(profile2).getOrThrow()
         profileRepository.setCurrentProfile(profile1)
 
         accountRepository.addAccountWithAmounts(createTestAccount(1L, 1L, "Assets:Cash", null, 100f, "USD"))
@@ -239,7 +239,7 @@ class AccountSummaryViewModelTest {
         // Given
         preferencesRepository.setShowZeroBalanceAccounts(true)
         val profile = createTestProfile(id = 1L)
-        profileRepository.insertProfile(profile)
+        profileRepository.insertProfile(profile).getOrThrow()
         profileRepository.setCurrentProfile(profile)
 
         viewModel = createViewModel()
@@ -260,7 +260,7 @@ class AccountSummaryViewModelTest {
         // Given
         preferencesRepository.setShowZeroBalanceAccounts(true)
         val profile = createTestProfile(id = 1L)
-        profileRepository.insertProfile(profile)
+        profileRepository.insertProfile(profile).getOrThrow()
         profileRepository.setCurrentProfile(profile)
 
         accountRepository.addAccountWithAmounts(createTestAccount(1L, 1L, "Assets:Cash", null, 100f, "USD"))
@@ -291,7 +291,7 @@ class AccountSummaryViewModelTest {
     fun `toggleAccountExpanded updates state`() = runTest {
         // Given
         val profile = createTestProfile(id = 1L)
-        profileRepository.insertProfile(profile)
+        profileRepository.insertProfile(profile).getOrThrow()
         profileRepository.setCurrentProfile(profile)
 
         accountRepository.addAccountWithAmounts(createTestAccount(1L, 1L, "Assets", null, 100f, "USD"))
@@ -320,7 +320,7 @@ class AccountSummaryViewModelTest {
     fun `toggleAccountExpanded with invalid id does nothing`() = runTest {
         // Given
         val profile = createTestProfile(id = 1L)
-        profileRepository.insertProfile(profile)
+        profileRepository.insertProfile(profile).getOrThrow()
         profileRepository.setCurrentProfile(profile)
 
         accountRepository.addAccountWithAmounts(createTestAccount(1L, 1L, "Assets:Cash", null, 100f, "USD"))
@@ -347,7 +347,7 @@ class AccountSummaryViewModelTest {
     fun `toggleAmountsExpanded updates state`() = runTest {
         // Given
         val profile = createTestProfile(id = 1L)
-        profileRepository.insertProfile(profile)
+        profileRepository.insertProfile(profile).getOrThrow()
         profileRepository.setCurrentProfile(profile)
 
         accountRepository.addAccountWithAmounts(createTestAccount(1L, 1L, "Assets:Cash", null, 100f, "USD"))
@@ -379,7 +379,7 @@ class AccountSummaryViewModelTest {
     fun `showAccountTransactions emits effect`() = runTest {
         // Given
         val profile = createTestProfile(id = 1L)
-        profileRepository.insertProfile(profile)
+        profileRepository.insertProfile(profile).getOrThrow()
         profileRepository.setCurrentProfile(profile)
         viewModel = createViewModel()
         advanceUntilIdle()
@@ -401,7 +401,7 @@ class AccountSummaryViewModelTest {
     fun `loadAccounts clears loading state on completion`() = runTest {
         // Given
         val profile = createTestProfile(id = 1L)
-        profileRepository.insertProfile(profile)
+        profileRepository.insertProfile(profile).getOrThrow()
         profileRepository.setCurrentProfile(profile)
 
         // When
@@ -420,7 +420,7 @@ class AccountSummaryViewModelTest {
     fun `loadAccounts error shows error state`() = runTest {
         // Given
         val profile = createTestProfile(id = 1L)
-        profileRepository.insertProfile(profile)
+        profileRepository.insertProfile(profile).getOrThrow()
         profileRepository.setCurrentProfile(profile)
         accountRepository.simulateError = true
 
@@ -441,7 +441,7 @@ class AccountSummaryViewModelTest {
     fun `updateHeaderText updates header in state`() = runTest {
         // Given
         val profile = createTestProfile(id = 1L)
-        profileRepository.insertProfile(profile)
+        profileRepository.insertProfile(profile).getOrThrow()
         profileRepository.setCurrentProfile(profile)
         viewModel = createViewModel()
         advanceUntilIdle()
@@ -505,42 +505,47 @@ class FakeAccountRepositoryForAccountSummary : AccountRepository {
         MutableStateFlow(accountNames.values.flatten().filter { it.contains(term, ignoreCase = true) })
 
     // Suspend methods (no suffix)
-    override suspend fun getAllWithAmounts(profileId: Long, includeZeroBalances: Boolean): List<Account> {
+    override suspend fun getAllWithAmounts(profileId: Long, includeZeroBalances: Boolean): Result<List<Account>> {
         if (simulateError) {
-            throw RuntimeException("Simulated error")
+            return Result.failure(RuntimeException("Simulated error"))
         }
         val accounts = domainAccounts[profileId] ?: emptyList()
-        return if (includeZeroBalances) {
-            accounts
-        } else {
-            accounts.filter { acc ->
-                acc.amounts.any { it.amount != 0f }
+        return Result.success(
+            if (includeZeroBalances) {
+                accounts
+            } else {
+                accounts.filter { acc ->
+                    acc.amounts.any { it.amount != 0f }
+                }
             }
-        }
+        )
     }
 
-    override suspend fun getByNameWithAmounts(profileId: Long, accountName: String): Account? =
-        domainAccounts[profileId]?.find { it.name == accountName }
+    override suspend fun getByNameWithAmounts(profileId: Long, accountName: String): Result<Account?> =
+        Result.success(domainAccounts[profileId]?.find { it.name == accountName })
 
-    override suspend fun searchAccountNames(profileId: Long, term: String): List<String> =
-        accountNames[profileId]?.filter { it.contains(term, ignoreCase = true) } ?: emptyList()
+    override suspend fun searchAccountNames(profileId: Long, term: String): Result<List<String>> =
+        Result.success(accountNames[profileId]?.filter { it.contains(term, ignoreCase = true) } ?: emptyList())
 
-    override suspend fun searchAccountsWithAmounts(profileId: Long, term: String): List<Account> =
-        domainAccounts[profileId]?.filter { it.name.contains(term, ignoreCase = true) } ?: emptyList()
+    override suspend fun searchAccountsWithAmounts(profileId: Long, term: String): Result<List<Account>> =
+        Result.success(domainAccounts[profileId]?.filter { it.name.contains(term, ignoreCase = true) } ?: emptyList())
 
-    override suspend fun searchAccountNamesGlobal(term: String): List<String> =
-        accountNames.values.flatten().filter { it.contains(term, ignoreCase = true) }
+    override suspend fun searchAccountNamesGlobal(term: String): Result<List<String>> =
+        Result.success(accountNames.values.flatten().filter { it.contains(term, ignoreCase = true) })
 
-    override suspend fun getCountForProfile(profileId: Long): Int = domainAccounts[profileId]?.size ?: 0
+    override suspend fun getCountForProfile(profileId: Long): Result<Int> =
+        Result.success(domainAccounts[profileId]?.size ?: 0)
 
-    override suspend fun deleteAllAccounts() {
+    override suspend fun deleteAllAccounts(): Result<Unit> {
         domainAccounts.clear()
         accountNames.clear()
+        return Result.success(Unit)
     }
 
-    override suspend fun storeAccountsAsDomain(accounts: List<Account>, profileId: Long) {
+    override suspend fun storeAccountsAsDomain(accounts: List<Account>, profileId: Long): Result<Unit> {
         domainAccounts[profileId] = accounts.toMutableList()
         accountNames[profileId] = accounts.map { it.name }.toMutableList()
+        return Result.success(Unit)
     }
 }
 

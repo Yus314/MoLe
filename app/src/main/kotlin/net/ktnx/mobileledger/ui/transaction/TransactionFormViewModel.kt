@@ -109,15 +109,16 @@ class TransactionFormViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            try {
-                val termUpper = term.uppercase()
-                val containers = transactionRepository.searchByDescription(termUpper)
-                val suggestions = containers.mapNotNull { it.description }
-                _uiState.update { it.copy(descriptionSuggestions = suggestions) }
-            } catch (e: Exception) {
-                logcat { "Failed to lookup suggestions: ${e.message}" }
-                _uiState.update { it.copy(descriptionSuggestions = emptyList()) }
-            }
+            val termUpper = term.uppercase()
+            transactionRepository.searchByDescription(termUpper)
+                .onSuccess { containers ->
+                    val suggestions = containers.mapNotNull { it.description }
+                    _uiState.update { it.copy(descriptionSuggestions = suggestions) }
+                }
+                .onFailure { e ->
+                    logcat { "Failed to lookup suggestions: ${e.message}" }
+                    _uiState.update { it.copy(descriptionSuggestions = emptyList()) }
+                }
         }
     }
 
@@ -179,21 +180,22 @@ class TransactionFormViewModel @Inject constructor(
     }
 
     private suspend fun handleTransactionSendSuccess(transaction: Transaction, profileId: Long) {
-        try {
-            transactionRepository.storeTransaction(transaction, profileId)
-            logcat { "Transaction saved to DB" }
-            appStateService.signalDataChanged()
-            _uiState.update { it.copy(isSubmitting = false, isBusy = false) }
-            _effects.send(TransactionFormEffect.TransactionSaved)
-        } catch (e: Exception) {
-            logcat { "Failed to save transaction: ${e.message}" }
-            _uiState.update { it.copy(isSubmitting = false, isBusy = false) }
-            _effects.send(
-                TransactionFormEffect.ShowError(
-                    "取引はサーバーに送信されましたが、ローカル保存に失敗しました: ${e.message}"
+        transactionRepository.storeTransaction(transaction, profileId)
+            .onSuccess {
+                logcat { "Transaction saved to DB" }
+                appStateService.signalDataChanged()
+                _uiState.update { it.copy(isSubmitting = false, isBusy = false) }
+                _effects.send(TransactionFormEffect.TransactionSaved)
+            }
+            .onFailure { e ->
+                logcat { "Failed to save transaction: ${e.message}" }
+                _uiState.update { it.copy(isSubmitting = false, isBusy = false) }
+                _effects.send(
+                    TransactionFormEffect.ShowError(
+                        "取引はサーバーに送信されましたが、ローカル保存に失敗しました: ${e.message}"
+                    )
                 )
-            )
-        }
+            }
     }
 
     private fun handleTransactionSendFailure(errorMessage: String) {
@@ -258,41 +260,43 @@ class TransactionFormViewModel @Inject constructor(
     private fun loadFromTransaction(transactionId: Long) {
         viewModelScope.launch {
             _uiState.update { it.copy(isBusy = true) }
-            try {
-                val transaction = transactionRepository.getTransactionById(transactionId)
-                if (transaction != null) {
-                    _uiState.update { state ->
-                        state.copy(
-                            description = transaction.description,
-                            transactionComment = transaction.comment ?: "",
-                            isBusy = false
-                        )
+            transactionRepository.getTransactionById(transactionId)
+                .onSuccess { transaction ->
+                    if (transaction != null) {
+                        _uiState.update { state ->
+                            state.copy(
+                                description = transaction.description,
+                                transactionComment = transaction.comment ?: "",
+                                isBusy = false
+                            )
+                        }
+                    } else {
+                        _uiState.update { it.copy(isBusy = false) }
+                        _effects.send(TransactionFormEffect.ShowError("取引が見つかりません"))
                     }
-                } else {
-                    _uiState.update { it.copy(isBusy = false) }
-                    _effects.send(TransactionFormEffect.ShowError("取引が見つかりません"))
                 }
-            } catch (e: Exception) {
-                _uiState.update { it.copy(isBusy = false) }
-                _effects.send(
-                    TransactionFormEffect.ShowError("取引の読み込みに失敗しました: ${e.message}")
-                )
-            }
+                .onFailure { e ->
+                    _uiState.update { it.copy(isBusy = false) }
+                    _effects.send(
+                        TransactionFormEffect.ShowError("取引の読み込みに失敗しました: ${e.message}")
+                    )
+                }
         }
     }
 
     private fun loadFromDescription(description: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isBusy = true, description = description) }
-            try {
-                val transactionWithAccounts = transactionRepository.getFirstByDescription(description)
-                _uiState.update { it.copy(isBusy = false) }
-                // Note: 見つからない場合はエラーではない（新規入力として扱う）
-            } catch (e: Exception) {
-                _uiState.update { it.copy(isBusy = false) }
-                logcat { "Failed to load from description: ${e.message}" }
-                // サジェスト機能の失敗は致命的ではないのでログのみ
-            }
+            transactionRepository.getFirstByDescription(description)
+                .onSuccess {
+                    _uiState.update { it.copy(isBusy = false) }
+                    // Note: 見つからない場合はエラーではない（新規入力として扱う）
+                }
+                .onFailure { e ->
+                    _uiState.update { it.copy(isBusy = false) }
+                    logcat { "Failed to load from description: ${e.message}" }
+                    // サジェスト機能の失敗は致命的ではないのでログのみ
+                }
         }
     }
 

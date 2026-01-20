@@ -31,6 +31,7 @@ import net.ktnx.mobileledger.db.TemplateAccount
 import net.ktnx.mobileledger.db.TemplateHeader
 import net.ktnx.mobileledger.db.TemplateWithAccounts
 import net.ktnx.mobileledger.domain.model.Template
+import net.ktnx.mobileledger.domain.usecase.AppExceptionMapper
 
 /**
  * Implementation of [TemplateRepository] that wraps the existing DAOs.
@@ -39,6 +40,7 @@ import net.ktnx.mobileledger.domain.model.Template
  * - Converts LiveData to Flow for reactive data access
  * - Uses Dispatchers.IO for database operations
  * - Delegates all operations to the underlying DAOs
+ * - Returns Result<T> for all suspend operations with error handling
  *
  * Thread-safety: All operations are safe to call from any coroutine context.
  */
@@ -46,7 +48,8 @@ import net.ktnx.mobileledger.domain.model.Template
 class TemplateRepositoryImpl @Inject constructor(
     private val templateHeaderDAO: TemplateHeaderDAO,
     private val templateAccountDAO: TemplateAccountDAO,
-    private val currencyRepository: CurrencyRepository
+    private val currencyRepository: CurrencyRepository,
+    private val appExceptionMapper: AppExceptionMapper
 ) : TemplateRepository {
 
     /**
@@ -55,7 +58,7 @@ class TemplateRepositoryImpl @Inject constructor(
     private suspend fun buildCurrencyMap(currencyIds: Set<Long>): Map<Long, String> {
         if (currencyIds.isEmpty()) return emptyMap()
         return currencyIds.mapNotNull { id ->
-            currencyRepository.getCurrencyAsDomain(id)?.let { id to it.name }
+            currencyRepository.getCurrencyAsDomain(id).getOrNull()?.let { id to it.name }
         }.toMap()
     }
 
@@ -79,18 +82,23 @@ class TemplateRepositoryImpl @Inject constructor(
             }
         }
 
-    override suspend fun getTemplateAsDomain(id: Long): Template? = withContext(Dispatchers.IO) {
-        val entity = templateHeaderDAO.getTemplateWithAccountsSync(id) ?: return@withContext null
-        val currencyIds = entity.accounts.mapNotNull { it.currency }.toSet()
-        val currencyMap = buildCurrencyMap(currencyIds)
-        entity.toDomain(currencyMap)
+    override suspend fun getTemplateAsDomain(id: Long): Result<Template?> = safeCall(appExceptionMapper) {
+        withContext(Dispatchers.IO) {
+            val entity = templateHeaderDAO.getTemplateWithAccountsSync(id)
+                ?: return@withContext null
+            val currencyIds = entity.accounts.mapNotNull { it.currency }.toSet()
+            val currencyMap = buildCurrencyMap(currencyIds)
+            entity.toDomain(currencyMap)
+        }
     }
 
-    override suspend fun getAllTemplatesAsDomain(): List<Template> = withContext(Dispatchers.IO) {
-        val entities = templateHeaderDAO.getAllTemplatesWithAccountsSync()
-        val allCurrencyIds = entities.flatMap { it.accounts.mapNotNull { acc -> acc.currency } }.toSet()
-        val currencyMap = buildCurrencyMap(allCurrencyIds)
-        entities.map { it.toDomain(currencyMap) }
+    override suspend fun getAllTemplatesAsDomain(): Result<List<Template>> = safeCall(appExceptionMapper) {
+        withContext(Dispatchers.IO) {
+            val entities = templateHeaderDAO.getAllTemplatesWithAccountsSync()
+            val allCurrencyIds = entities.flatMap { it.accounts.mapNotNull { acc -> acc.currency } }.toSet()
+            val currencyMap = buildCurrencyMap(allCurrencyIds)
+            entities.map { it.toDomain(currencyMap) }
+        }
     }
 
     // ========================================
@@ -98,47 +106,56 @@ class TemplateRepositoryImpl @Inject constructor(
     // ========================================
 
     @Deprecated("Internal use for backup/restore only")
-    override suspend fun getTemplateWithAccountsByUuid(uuid: String): TemplateWithAccounts? =
-        withContext(Dispatchers.IO) {
-            templateHeaderDAO.getTemplateWithAccountsByUuidSync(uuid)
+    override suspend fun getTemplateWithAccountsByUuid(uuid: String): Result<TemplateWithAccounts?> =
+        safeCall(appExceptionMapper) {
+            withContext(Dispatchers.IO) {
+                templateHeaderDAO.getTemplateWithAccountsByUuidSync(uuid)
+            }
         }
 
     @Deprecated("Use getAllTemplatesAsDomain() instead. Internal use for backup only.")
-    override suspend fun getAllTemplatesWithAccounts(): List<TemplateWithAccounts> = withContext(Dispatchers.IO) {
-        templateHeaderDAO.getAllTemplatesWithAccountsSync()
-    }
+    override suspend fun getAllTemplatesWithAccounts(): Result<List<TemplateWithAccounts>> =
+        safeCall(appExceptionMapper) {
+            withContext(Dispatchers.IO) {
+                templateHeaderDAO.getAllTemplatesWithAccountsSync()
+            }
+        }
 
     // ========================================
     // Mutation Operations
     // ========================================
 
     @Deprecated("Use saveTemplate() instead. Internal use for backup/restore only.")
-    override suspend fun insertTemplateWithAccounts(templateWithAccounts: TemplateWithAccounts) {
+    override suspend fun insertTemplateWithAccounts(templateWithAccounts: TemplateWithAccounts): Result<Unit> =
+        safeCall(appExceptionMapper) {
+            withContext(Dispatchers.IO) {
+                // Insert header first
+                val templateId = templateHeaderDAO.insertSync(templateWithAccounts.header)
+                // Then insert each account with the new template ID
+                for (acc in templateWithAccounts.accounts) {
+                    acc.templateId = templateId
+                    templateAccountDAO.insertSync(acc)
+                }
+            }
+        }
+
+    override suspend fun deleteTemplateById(id: Long): Result<Boolean> = safeCall(appExceptionMapper) {
         withContext(Dispatchers.IO) {
-            // Insert header first
-            val templateId = templateHeaderDAO.insertSync(templateWithAccounts.header)
-            // Then insert each account with the new template ID
-            for (acc in templateWithAccounts.accounts) {
-                acc.templateId = templateId
-                templateAccountDAO.insertSync(acc)
+            val template = templateHeaderDAO.getTemplateSync(id)
+            if (template != null) {
+                templateHeaderDAO.deleteSync(template)
+                true
+            } else {
+                false
             }
         }
     }
 
-    override suspend fun deleteTemplateById(id: Long): Boolean = withContext(Dispatchers.IO) {
-        val template = templateHeaderDAO.getTemplateSync(id)
-        if (template != null) {
-            templateHeaderDAO.deleteSync(template)
-            true
-        } else {
-            false
-        }
-    }
-
     @Deprecated("Returns DB entity. Consider using domain model alternative in future.")
-    override suspend fun duplicateTemplate(id: Long): TemplateWithAccounts? {
-        return withContext(Dispatchers.IO) {
-            val src = templateHeaderDAO.getTemplateWithAccountsSync(id) ?: return@withContext null
+    override suspend fun duplicateTemplate(id: Long): Result<TemplateWithAccounts?> = safeCall(appExceptionMapper) {
+        withContext(Dispatchers.IO) {
+            val src = templateHeaderDAO.getTemplateWithAccountsSync(id)
+                ?: return@withContext null
             val dup = src.createDuplicate()
             dup.header.id = templateHeaderDAO.insertSync(dup.header)
             for (dupAcc in dup.accounts) {
@@ -149,42 +166,44 @@ class TemplateRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun deleteAllTemplates() {
+    override suspend fun deleteAllTemplates(): Result<Unit> = safeCall(appExceptionMapper) {
         withContext(Dispatchers.IO) {
             templateHeaderDAO.deleteAllSync()
         }
     }
 
-    private suspend fun saveTemplateWithAccounts(header: TemplateHeader, accounts: List<TemplateAccount>): Long =
-        withContext(Dispatchers.IO) {
-            val isNew = header.id == 0L
-            val savedId = if (isNew) {
-                templateHeaderDAO.insertSync(header)
-            } else {
-                templateHeaderDAO.updateSync(header)
-                header.id
-            }
-
-            // Save accounts using the existing DAO pattern
-            templateAccountDAO.prepareForSave(savedId)
-
-            for (account in accounts) {
-                if (account.id <= 0) {
-                    account.id = 0
-                    account.templateId = savedId
-                    templateAccountDAO.insertSync(account)
-                } else {
-                    account.templateId = savedId
-                    templateAccountDAO.updateSync(account)
-                }
-            }
-
-            templateAccountDAO.finishSave(savedId)
-            savedId
+    private suspend fun saveTemplateWithAccountsInternal(
+        header: TemplateHeader,
+        accounts: List<TemplateAccount>
+    ): Long = withContext(Dispatchers.IO) {
+        val isNew = header.id == 0L
+        val savedId = if (isNew) {
+            templateHeaderDAO.insertSync(header)
+        } else {
+            templateHeaderDAO.updateSync(header)
+            header.id
         }
 
-    override suspend fun saveTemplate(template: Template): Long = withContext(Dispatchers.IO) {
+        // Save accounts using the existing DAO pattern
+        templateAccountDAO.prepareForSave(savedId)
+
+        for (account in accounts) {
+            if (account.id <= 0) {
+                account.id = 0
+                account.templateId = savedId
+                templateAccountDAO.insertSync(account)
+            } else {
+                account.templateId = savedId
+                templateAccountDAO.updateSync(account)
+            }
+        }
+
+        templateAccountDAO.finishSave(savedId)
+        savedId
+    }
+
+    override suspend fun saveTemplate(template: Template): Result<Long> = safeCall(appExceptionMapper) {
         val entity = template.toEntity()
-        saveTemplateWithAccounts(entity.header, entity.accounts)
+        saveTemplateWithAccountsInternal(entity.header, entity.accounts)
     }
 }

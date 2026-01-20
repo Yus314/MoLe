@@ -128,7 +128,7 @@ class RepositoryConcurrencyTest {
     fun `concurrent reads while inserting return consistent data`() = runTest {
         // Pre-populate some data
         repeat(5) { i ->
-            profileRepository.insertProfile(createTestProfile(name = "Initial Profile $i"))
+            profileRepository.insertProfile(createTestProfile(name = "Initial Profile $i")).getOrThrow()
         }
 
         // Concurrent reads and inserts
@@ -136,11 +136,11 @@ class RepositoryConcurrencyTest {
             async {
                 if (index % 2 == 0) {
                     // Even: insert
-                    profileRepository.insertProfile(createTestProfile(name = "New Profile $index"))
+                    profileRepository.insertProfile(createTestProfile(name = "New Profile $index")).getOrThrow()
                     -1L // Signal insert operation
                 } else {
                     // Odd: read
-                    profileRepository.getProfileCount().toLong()
+                    profileRepository.getProfileCount().getOrThrow().toLong()
                 }
             }
         }.awaitAll()
@@ -150,7 +150,7 @@ class RepositoryConcurrencyTest {
         assertTrue(readResults.all { it >= 5 })
 
         // Final count should include all inserts
-        val finalCount = profileRepository.getProfileCount()
+        val finalCount = profileRepository.getProfileCount().getOrThrow()
         assertTrue(finalCount >= 10) // 5 initial + 5 inserts
     }
 
@@ -159,8 +159,8 @@ class RepositoryConcurrencyTest {
         val profile1 = createTestProfile(id = 1L, name = "Profile 1")
         val profile2 = createTestProfile(id = 2L, name = "Profile 2")
 
-        profileRepository.insertProfile(profile1)
-        profileRepository.insertProfile(profile2)
+        profileRepository.insertProfile(profile1).getOrThrow()
+        profileRepository.insertProfile(profile2).getOrThrow()
 
         // Rapid profile switches
         val switches = 20
@@ -239,13 +239,13 @@ class RepositoryConcurrencyTest {
             transactionRepository.insertTransaction(
                 createTestTransaction(profileId = profileId, description = "TX $i"),
                 profileId
-            )
+            ).getOrThrow()
         }
 
         assertEquals(10, transactionRepository.observeAllTransactions(profileId).first().size)
 
         // Delete all
-        val deleted = transactionRepository.deleteAllForProfile(profileId)
+        val deleted = transactionRepository.deleteAllForProfile(profileId).getOrThrow()
 
         assertEquals(10, deleted)
         assertEquals(0, transactionRepository.observeAllTransactions(profileId).first().size)
@@ -271,69 +271,73 @@ class ConcurrentFakeProfileRepository : ProfileRepository {
         MutableStateFlow(profiles.values.sortedBy { it.orderNo }.toList())
     }
 
-    override suspend fun getAllProfiles(): List<Profile> = synchronized(lock) {
-        profiles.values.sortedBy { it.orderNo }.toList()
+    override suspend fun getAllProfiles(): Result<List<Profile>> = synchronized(lock) {
+        Result.success(profiles.values.sortedBy { it.orderNo }.toList())
     }
 
     override fun observeProfileById(profileId: Long): Flow<Profile?> = synchronized(lock) {
         MutableStateFlow(profiles[profileId])
     }
 
-    override suspend fun getProfileById(profileId: Long): Profile? = synchronized(lock) {
-        profiles[profileId]
+    override suspend fun getProfileById(profileId: Long): Result<Profile?> = synchronized(lock) {
+        Result.success(profiles[profileId])
     }
 
     override fun observeProfileByUuid(uuid: String): Flow<Profile?> = synchronized(lock) {
         MutableStateFlow(profiles.values.find { it.uuid == uuid })
     }
 
-    override suspend fun getProfileByUuid(uuid: String): Profile? = synchronized(lock) {
-        profiles.values.find { it.uuid == uuid }
+    override suspend fun getProfileByUuid(uuid: String): Result<Profile?> = synchronized(lock) {
+        Result.success(profiles.values.find { it.uuid == uuid })
     }
 
-    override suspend fun getAnyProfile(): Profile? = synchronized(lock) {
-        profiles.values.firstOrNull()
+    override suspend fun getAnyProfile(): Result<Profile?> = synchronized(lock) {
+        Result.success(profiles.values.firstOrNull())
     }
 
-    override suspend fun getProfileCount(): Int = synchronized(lock) {
-        profiles.size
+    override suspend fun getProfileCount(): Result<Int> = synchronized(lock) {
+        Result.success(profiles.size)
     }
 
-    override suspend fun insertProfile(profile: Profile): Long = synchronized(lock) {
+    override suspend fun insertProfile(profile: Profile): Result<Long> = synchronized(lock) {
         val id = if (profile.id == null || profile.id == 0L) idCounter.getAndIncrement().toLong() else profile.id
         val profileWithId = profile.copy(id = id)
         profiles[id] = profileWithId
-        id
+        Result.success(id)
     }
 
-    override suspend fun updateProfile(profile: Profile): Unit = synchronized(lock) {
-        val id = profile.id ?: return
+    override suspend fun updateProfile(profile: Profile): Result<Unit> = synchronized(lock) {
+        val id = profile.id ?: return Result.success(Unit)
         profiles[id] = profile
         if (_currentProfile.value?.id == id) {
             _currentProfile.value = profile
         }
+        Result.success(Unit)
     }
 
-    override suspend fun deleteProfile(profile: Profile): Unit = synchronized(lock) {
-        val id = profile.id ?: return
+    override suspend fun deleteProfile(profile: Profile): Result<Unit> = synchronized(lock) {
+        val id = profile.id ?: return Result.success(Unit)
         profiles.remove(id)
         if (_currentProfile.value?.id == id) {
             _currentProfile.value = profiles.values.firstOrNull()
         }
+        Result.success(Unit)
     }
 
-    override suspend fun updateProfileOrder(profiles: List<Profile>): Unit = synchronized(lock) {
+    override suspend fun updateProfileOrder(profiles: List<Profile>): Result<Unit> = synchronized(lock) {
         profiles.forEachIndexed { index, profile ->
             val id = profile.id ?: return@forEachIndexed
             this.profiles[id]?.let { existing ->
                 this.profiles[id] = existing.copy(orderNo = index)
             }
         }
+        Result.success(Unit)
     }
 
-    override suspend fun deleteAllProfiles(): Unit = synchronized(lock) {
+    override suspend fun deleteAllProfiles(): Result<Unit> = synchronized(lock) {
         profiles.clear()
         _currentProfile.value = null
+        Result.success(Unit)
     }
 }
 
@@ -380,56 +384,63 @@ class ConcurrentFakeTransactionRepository : TransactionRepository {
     }
 
     // Suspend methods (no suffix)
-    override suspend fun getTransactionById(transactionId: Long): Transaction? = synchronized(lock) {
-        transactions[transactionId]?.transaction
+    override suspend fun getTransactionById(transactionId: Long): Result<Transaction?> = synchronized(lock) {
+        Result.success(transactions[transactionId]?.transaction)
     }
 
-    override suspend fun searchByDescription(term: String): List<TransactionDAO.DescriptionContainer> =
+    override suspend fun searchByDescription(term: String): Result<List<TransactionDAO.DescriptionContainer>> =
         synchronized(lock) {
-            transactions.values
-                .filter { it.transaction.description.contains(term, true) }
-                .distinctBy { it.transaction.description }
-                .map {
-                    TransactionDAO.DescriptionContainer().apply {
-                        description = it.transaction.description
+            Result.success(
+                transactions.values
+                    .filter { it.transaction.description.contains(term, true) }
+                    .distinctBy { it.transaction.description }
+                    .map {
+                        TransactionDAO.DescriptionContainer().apply {
+                            description = it.transaction.description
+                        }
                     }
-                }
+            )
         }
 
-    override suspend fun getFirstByDescription(description: String): Transaction? = synchronized(lock) {
-        transactions.values.find { it.transaction.description == description }?.transaction
+    override suspend fun getFirstByDescription(description: String): Result<Transaction?> = synchronized(lock) {
+        Result.success(transactions.values.find { it.transaction.description == description }?.transaction)
     }
 
-    override suspend fun getFirstByDescriptionHavingAccount(description: String, accountTerm: String): Transaction? =
-        synchronized(lock) {
+    override suspend fun getFirstByDescriptionHavingAccount(
+        description: String,
+        accountTerm: String
+    ): Result<Transaction?> = synchronized(lock) {
+        Result.success(
             transactions.values.find { stored ->
                 stored.transaction.description == description &&
                     stored.transaction.lines.any { it.accountName.contains(accountTerm, true) }
             }?.transaction
-        }
+        )
+    }
 
     // Domain model mutation methods
-    override suspend fun insertTransaction(transaction: Transaction, profileId: Long): Transaction {
+    override suspend fun insertTransaction(transaction: Transaction, profileId: Long): Result<Transaction> {
         val id = synchronized(lock) {
             val newId = transaction.id ?: idCounter.getAndIncrement().toLong()
             val txWithId = transaction.copy(id = newId)
             transactions[newId] = StoredTransaction(txWithId, profileId)
             newId
         }
-        return transaction.copy(id = id)
+        return Result.success(transaction.copy(id = id))
     }
 
-    override suspend fun storeTransaction(transaction: Transaction, profileId: Long) {
+    override suspend fun storeTransaction(transaction: Transaction, profileId: Long): Result<Unit> {
         insertTransaction(transaction, profileId)
+        return Result.success(Unit)
     }
 
-    override suspend fun deleteTransactionById(transactionId: Long): Int = synchronized(lock) {
+    override suspend fun deleteTransactionById(transactionId: Long): Result<Int> = synchronized(lock) {
         val existed = transactions.containsKey(transactionId)
         transactions.remove(transactionId)
-        if (existed) 1 else 0
+        Result.success(if (existed) 1 else 0)
     }
 
-    override suspend fun deleteTransactionsByIds(transactionIds: List<Long>): Int = synchronized(lock) {
+    override suspend fun deleteTransactionsByIds(transactionIds: List<Long>): Result<Int> = synchronized(lock) {
         var count = 0
         transactionIds.forEach { id ->
             if (transactions.containsKey(id)) {
@@ -437,24 +448,27 @@ class ConcurrentFakeTransactionRepository : TransactionRepository {
             }
             transactions.remove(id)
         }
-        count
+        Result.success(count)
     }
 
-    override suspend fun storeTransactionsAsDomain(txList: List<Transaction>, profileId: Long) {
+    override suspend fun storeTransactionsAsDomain(txList: List<Transaction>, profileId: Long): Result<Unit> {
         txList.forEach { tx ->
             insertTransaction(tx, profileId)
         }
+        return Result.success(Unit)
     }
 
-    override suspend fun deleteAllForProfile(profileId: Long): Int = synchronized(lock) {
+    override suspend fun deleteAllForProfile(profileId: Long): Result<Int> = synchronized(lock) {
         val toRemove = transactions.values.filter { it.profileId == profileId }
         toRemove.forEach { transactions.remove(it.transaction.id) }
-        toRemove.size
+        Result.success(toRemove.size)
     }
 
-    override suspend fun getMaxLedgerId(profileId: Long): Long? = synchronized(lock) {
-        transactions.values
-            .filter { it.profileId == profileId }
-            .maxOfOrNull { it.transaction.ledgerId }
+    override suspend fun getMaxLedgerId(profileId: Long): Result<Long?> = synchronized(lock) {
+        Result.success(
+            transactions.values
+                .filter { it.profileId == profileId }
+                .maxOfOrNull { it.transaction.ledgerId }
+        )
     }
 }

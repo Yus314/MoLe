@@ -29,6 +29,11 @@ import net.ktnx.mobileledger.domain.model.Profile
  * - Current profile selection state management
  * - CRUD operations for profiles
  *
+ * ## Error Handling
+ *
+ * All suspend functions return `Result<T>` to handle errors explicitly.
+ * Use `result.getOrNull()`, `result.getOrElse {}`, or `result.onSuccess/onFailure` to handle results.
+ *
  * ## Migration Note (008-data-layer-repository)
  *
  * This repository replaces the following from AppStateManager:
@@ -94,9 +99,9 @@ interface ProfileRepository {
     /**
      * Get all profiles ordered by their display order.
      *
-     * @return The complete profile list
+     * @return Result containing the complete profile list
      */
-    suspend fun getAllProfiles(): List<Profile>
+    suspend fun getAllProfiles(): Result<List<Profile>>
 
     /**
      * Observe a profile by its ID.
@@ -110,9 +115,9 @@ interface ProfileRepository {
      * Get a profile by its ID.
      *
      * @param profileId The profile ID
-     * @return The profile or null if not found
+     * @return Result containing the profile or null if not found
      */
-    suspend fun getProfileById(profileId: Long): Profile?
+    suspend fun getProfileById(profileId: Long): Result<Profile?>
 
     /**
      * Observe a profile by its UUID.
@@ -126,23 +131,23 @@ interface ProfileRepository {
      * Get a profile by its UUID.
      *
      * @param uuid The profile UUID
-     * @return The profile or null if not found
+     * @return Result containing the profile or null if not found
      */
-    suspend fun getProfileByUuid(uuid: String): Profile?
+    suspend fun getProfileByUuid(uuid: String): Result<Profile?>
 
     /**
      * Get any available profile (useful for fallback/initialization).
      *
-     * @return The first available profile or null if none exist
+     * @return Result containing the first available profile or null if none exist
      */
-    suspend fun getAnyProfile(): Profile?
+    suspend fun getAnyProfile(): Result<Profile?>
 
     /**
      * Get the total number of profiles.
      *
-     * @return The profile count
+     * @return Result containing the profile count
      */
-    suspend fun getProfileCount(): Int
+    suspend fun getProfileCount(): Result<Int>
 
     // ========================================
     // Mutation Operations
@@ -154,9 +159,9 @@ interface ProfileRepository {
      * The profile's orderNo will be set automatically.
      *
      * @param profile The profile to insert
-     * @return The ID of the inserted profile
+     * @return Result containing the ID of the inserted profile
      */
-    suspend fun insertProfile(profile: Profile): Long
+    suspend fun insertProfile(profile: Profile): Result<Long>
 
     /**
      * Update an existing profile.
@@ -164,8 +169,9 @@ interface ProfileRepository {
      * If this profile is the current profile, observers will be notified.
      *
      * @param profile The profile to update
+     * @return Result indicating success or failure
      */
-    suspend fun updateProfile(profile: Profile)
+    suspend fun updateProfile(profile: Profile): Result<Unit>
 
     /**
      * Delete a profile.
@@ -174,18 +180,22 @@ interface ProfileRepository {
      * set to another available profile or null if no profiles remain.
      *
      * @param profile The profile to delete
+     * @return Result indicating success or failure
      */
-    suspend fun deleteProfile(profile: Profile)
+    suspend fun deleteProfile(profile: Profile): Result<Unit>
 
     /**
      * Update the order of profiles.
      *
      * @param profiles The list of profiles in their new order
+     * @return Result indicating success or failure
      */
-    suspend fun updateProfileOrder(profiles: List<Profile>)
+    suspend fun updateProfileOrder(profiles: List<Profile>): Result<Unit>
 
     /**
      * Delete all profiles.
+     *
+     * @return Result indicating success or failure
      */
-    suspend fun deleteAllProfiles()
+    suspend fun deleteAllProfiles(): Result<Unit>
 }

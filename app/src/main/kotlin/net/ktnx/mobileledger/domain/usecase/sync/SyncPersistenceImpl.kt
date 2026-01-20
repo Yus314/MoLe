@@ -52,15 +52,17 @@ class SyncPersistenceImpl @Inject constructor(
         val accountsWithState = accounts.map { account ->
             coroutineContext.ensureActive()
             // Preserve existing UI state if account exists
-            val existing = accountRepository.getByNameWithAmounts(profileId, account.name)
+            val existing = accountRepository.getByNameWithAmounts(profileId, account.name).getOrNull()
             account.withStateFrom(existing)
         }
         logcat { "Account list prepared. Storing" }
         accountRepository.storeAccountsAsDomain(accountsWithState, profileId)
+            .getOrThrow()
         logcat { "Account list stored" }
 
         logcat { "Storing transaction list" }
         transactionRepository.storeTransactionsAsDomain(transactions, profileId)
+            .getOrThrow()
         logcat { "Transactions stored" }
 
         optionRepository.setLastSyncTimestamp(profileId, Date().time)

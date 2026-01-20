@@ -104,7 +104,8 @@ class RawConfigReader(inputStream: InputStream) {
 
         for (t in templatesList) {
             coroutineContext.ensureActive()
-            if (templateRepository.getTemplateWithAccountsByUuid(t.header.uuid) == null) {
+            val existing = templateRepository.getTemplateWithAccountsByUuid(t.header.uuid).getOrNull()
+            if (existing == null) {
                 templateRepository.saveTemplate(t.toDomain())
             }
         }
@@ -115,7 +116,8 @@ class RawConfigReader(inputStream: InputStream) {
 
         for (p in profilesList) {
             coroutineContext.ensureActive()
-            if (profileRepository.getProfileByUuid(p.uuid) == null) {
+            val existing = profileRepository.getProfileByUuid(p.uuid).getOrNull()
+            if (existing == null) {
                 profileRepository.insertProfile(p.toDomain())
             }
         }
@@ -126,7 +128,8 @@ class RawConfigReader(inputStream: InputStream) {
 
         for (c in commoditiesList) {
             coroutineContext.ensureActive()
-            if (currencyRepository.getCurrencyAsDomainByName(c.name) == null) {
+            val existing = currencyRepository.getCurrencyAsDomainByName(c.name).getOrNull()
+            if (existing == null) {
                 currencyRepository.saveCurrency(c.toDomain())
             }
         }
@@ -142,7 +145,7 @@ class RawConfigReader(inputStream: InputStream) {
         }
 
         val currentProfileUuid = currentProfile ?: return
-        val p = profileRepository.getProfileByUuid(currentProfileUuid)
+        val p = profileRepository.getProfileByUuid(currentProfileUuid).getOrNull()
 
         if (p != null) {
             logcat { "Restoring current profile ${p.name}" }

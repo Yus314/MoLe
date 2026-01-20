@@ -122,7 +122,17 @@ class AccountSummaryViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                val domainAccounts = accountRepository.getAllWithAmounts(profileId, showZeroBalances)
+                val result = accountRepository.getAllWithAmounts(profileId, showZeroBalances)
+                if (result.isFailure) {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            error = result.exceptionOrNull()?.message ?: "Unknown error loading accounts"
+                        )
+                    }
+                    return@launch
+                }
+                val domainAccounts = result.getOrElse { emptyList() }
 
                 // Delegate hierarchy resolution to UseCase
                 val resolvedAccounts = accountHierarchyResolver.resolve(domainAccounts)

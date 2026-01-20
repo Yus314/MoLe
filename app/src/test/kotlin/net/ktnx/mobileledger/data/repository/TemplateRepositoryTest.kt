@@ -95,9 +95,9 @@ class TemplateRepositoryTest {
 
     @Test
     fun `observeAllTemplatesAsDomain returns templates sorted by fallback and name`() = runTest {
-        repository.saveTemplate(createTestTemplate(name = "Zebra", isFallback = false))
-        repository.saveTemplate(createTestTemplate(name = "Apple", isFallback = false))
-        repository.saveTemplate(createTestTemplate(name = "Fallback", isFallback = true))
+        repository.saveTemplate(createTestTemplate(name = "Zebra", isFallback = false)).getOrThrow()
+        repository.saveTemplate(createTestTemplate(name = "Apple", isFallback = false)).getOrThrow()
+        repository.saveTemplate(createTestTemplate(name = "Fallback", isFallback = true)).getOrThrow()
 
         val templates = repository.observeAllTemplatesAsDomain().first()
 
@@ -122,9 +122,9 @@ class TemplateRepositoryTest {
     @Test
     fun `getTemplateAsDomain returns template when exists`() = runTest {
         val template = createTestTemplate(name = "Test")
-        val id = repository.saveTemplate(template)
+        val id = repository.saveTemplate(template).getOrThrow()
 
-        val result = repository.getTemplateAsDomain(id)
+        val result = repository.getTemplateAsDomain(id).getOrNull()
 
         assertNotNull(result)
         assertEquals("Test", result?.name)
@@ -136,7 +136,7 @@ class TemplateRepositoryTest {
 
     @Test
     fun `getTemplateAsDomain returns null for non-existent id`() = runTest {
-        val result = repository.getTemplateAsDomain(999L)
+        val result = repository.getTemplateAsDomain(999L).getOrNull()
         assertNull(result)
     }
 
@@ -149,9 +149,9 @@ class TemplateRepositoryTest {
                 createTestLine(accountName = "Expenses:Utilities")
             )
         )
-        val id = repository.saveTemplate(template)
+        val id = repository.saveTemplate(template).getOrThrow()
 
-        val result = repository.getTemplateAsDomain(id)
+        val result = repository.getTemplateAsDomain(id).getOrNull()
 
         assertNotNull(result)
         assertEquals("Payment", result?.name)
@@ -166,7 +166,7 @@ class TemplateRepositoryTest {
     fun `getAllTemplatesAsDomain returns all templates with lines`() = runTest {
         repository.saveTemplate(
             createTestTemplate(name = "T1", lines = listOf(createTestLine(accountName = "A:B")))
-        )
+        ).getOrThrow()
         repository.saveTemplate(
             createTestTemplate(
                 name = "T2",
@@ -175,9 +175,9 @@ class TemplateRepositoryTest {
                     createTestLine(accountName = "E:F")
                 )
             )
-        )
+        ).getOrThrow()
 
-        val result = repository.getAllTemplatesAsDomain()
+        val result = repository.getAllTemplatesAsDomain().getOrThrow()
 
         assertEquals(2, result.size)
     }
@@ -190,10 +190,10 @@ class TemplateRepositoryTest {
     fun `saveTemplate assigns id for new template`() = runTest {
         val template = createTestTemplate(name = "New Template")
 
-        val id = repository.saveTemplate(template)
+        val id = repository.saveTemplate(template).getOrThrow()
 
         assertTrue(id > 0)
-        val stored = repository.getTemplateAsDomain(id)
+        val stored = repository.getTemplateAsDomain(id).getOrNull()
         assertNotNull(stored)
         assertEquals("New Template", stored?.name)
     }
@@ -209,9 +209,9 @@ class TemplateRepositoryTest {
             )
         )
 
-        val id = repository.saveTemplate(template)
+        val id = repository.saveTemplate(template).getOrThrow()
 
-        val stored = repository.getTemplateAsDomain(id)
+        val stored = repository.getTemplateAsDomain(id).getOrNull()
         assertNotNull(stored)
         assertEquals("Full Template", stored?.name)
         assertEquals(3, stored?.lines?.size)
@@ -224,12 +224,12 @@ class TemplateRepositoryTest {
     @Test
     fun `saveTemplate modifies existing template`() = runTest {
         val template = createTestTemplate(name = "Original")
-        val id = repository.saveTemplate(template)
+        val id = repository.saveTemplate(template).getOrThrow()
 
         val updatedTemplate = createTestTemplate(id = id, name = "Updated")
-        repository.saveTemplate(updatedTemplate)
+        repository.saveTemplate(updatedTemplate).getOrThrow()
 
-        val result = repository.getTemplateAsDomain(id)
+        val result = repository.getTemplateAsDomain(id).getOrNull()
         assertEquals("Updated", result?.name)
     }
 
@@ -242,7 +242,7 @@ class TemplateRepositoryTest {
                 createTestLine(accountName = "C:D")
             )
         )
-        val id = repository.saveTemplate(template)
+        val id = repository.saveTemplate(template).getOrThrow()
 
         val updatedTemplate = createTestTemplate(
             id = id,
@@ -252,9 +252,9 @@ class TemplateRepositoryTest {
                 createTestLine(accountName = "Z:W")
             )
         )
-        repository.saveTemplate(updatedTemplate)
+        repository.saveTemplate(updatedTemplate).getOrThrow()
 
-        val result = repository.getTemplateAsDomain(id)
+        val result = repository.getTemplateAsDomain(id).getOrNull()
         assertEquals("Updated", result?.name)
         assertEquals(2, result?.lines?.size)
         assertTrue(result?.lines?.any { it.accountName == "X:Y" } ?: false)
@@ -267,9 +267,9 @@ class TemplateRepositoryTest {
     @Test
     fun `deleteTemplateById removes template`() = runTest {
         val template = createTestTemplate(name = "ToDelete")
-        val id = repository.saveTemplate(template)
+        val id = repository.saveTemplate(template).getOrThrow()
 
-        repository.deleteTemplateById(id)
+        repository.deleteTemplateById(id).getOrThrow()
 
         val remaining = repository.observeAllTemplatesAsDomain().first()
         assertTrue(remaining.isEmpty())
@@ -277,10 +277,10 @@ class TemplateRepositoryTest {
 
     @Test
     fun `deleteTemplateById only removes specified template`() = runTest {
-        val id1 = repository.saveTemplate(createTestTemplate(name = "Template 1"))
-        repository.saveTemplate(createTestTemplate(name = "Template 2"))
+        val id1 = repository.saveTemplate(createTestTemplate(name = "Template 1")).getOrThrow()
+        repository.saveTemplate(createTestTemplate(name = "Template 2")).getOrThrow()
 
-        repository.deleteTemplateById(id1)
+        repository.deleteTemplateById(id1).getOrThrow()
 
         val remaining = repository.observeAllTemplatesAsDomain().first()
         assertEquals(1, remaining.size)
@@ -294,17 +294,17 @@ class TemplateRepositoryTest {
     @Test
     fun `duplicateTemplate returns null for non-existent id`() = runTest {
         @Suppress("DEPRECATION")
-        val result = repository.duplicateTemplate(999L)
+        val result = repository.duplicateTemplate(999L).getOrNull()
         assertNull(result)
     }
 
     @Test
     fun `duplicateTemplate creates copy with new id`() = runTest {
         val template = createTestTemplate(name = "Original")
-        val id = repository.saveTemplate(template)
+        val id = repository.saveTemplate(template).getOrThrow()
 
         @Suppress("DEPRECATION")
-        val duplicate = repository.duplicateTemplate(id)
+        val duplicate = repository.duplicateTemplate(id).getOrNull()
 
         assertNotNull(duplicate)
         assertNotEquals(id, duplicate?.header?.id)
@@ -321,10 +321,10 @@ class TemplateRepositoryTest {
                 createTestLine(accountName = "C:D")
             )
         )
-        val id = repository.saveTemplate(template)
+        val id = repository.saveTemplate(template).getOrThrow()
 
         @Suppress("DEPRECATION")
-        val duplicate = repository.duplicateTemplate(id)
+        val duplicate = repository.duplicateTemplate(id).getOrNull()
 
         assertNotNull(duplicate)
         assertEquals(2, duplicate?.accounts?.size)
@@ -340,11 +340,11 @@ class TemplateRepositoryTest {
 
     @Test
     fun `deleteAllTemplates removes all templates`() = runTest {
-        repository.saveTemplate(createTestTemplate(name = "T1"))
-        repository.saveTemplate(createTestTemplate(name = "T2"))
-        repository.saveTemplate(createTestTemplate(name = "T3"))
+        repository.saveTemplate(createTestTemplate(name = "T1")).getOrThrow()
+        repository.saveTemplate(createTestTemplate(name = "T2")).getOrThrow()
+        repository.saveTemplate(createTestTemplate(name = "T3")).getOrThrow()
 
-        repository.deleteAllTemplates()
+        repository.deleteAllTemplates().getOrThrow()
 
         val templates = repository.observeAllTemplatesAsDomain().first()
         assertTrue(templates.isEmpty())

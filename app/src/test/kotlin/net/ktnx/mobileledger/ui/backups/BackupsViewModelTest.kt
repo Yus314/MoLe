@@ -131,28 +131,28 @@ class BackupsViewModelTest {
 
     @Test
     fun `getProfileCount returns zero when no profiles`() = runTest {
-        val count = profileRepository.getProfileCount()
+        val count = profileRepository.getProfileCount().getOrThrow()
         assertEquals(0, count)
     }
 
     @Test
     fun `getProfileCount returns correct count after inserts`() = runTest {
-        profileRepository.insertProfile(createTestProfile(name = "P1"))
-        profileRepository.insertProfile(createTestProfile(name = "P2"))
+        profileRepository.insertProfile(createTestProfile(name = "P1")).getOrThrow()
+        profileRepository.insertProfile(createTestProfile(name = "P2")).getOrThrow()
 
-        val count = profileRepository.getProfileCount()
+        val count = profileRepository.getProfileCount().getOrThrow()
         assertEquals(2, count)
     }
 
     @Test
     fun `deleteAllProfiles clears profiles and currentProfile`() = runTest {
         val profile = createTestProfile()
-        profileRepository.insertProfile(profile)
+        profileRepository.insertProfile(profile).getOrThrow()
         profileRepository.setCurrentProfile(profile)
 
-        profileRepository.deleteAllProfiles()
+        profileRepository.deleteAllProfiles().getOrThrow()
 
-        assertEquals(0, profileRepository.getProfileCount())
+        assertEquals(0, profileRepository.getProfileCount().getOrThrow())
         assertNull(profileRepository.currentProfile.value)
     }
 
@@ -322,55 +322,68 @@ class FakeProfileRepositoryForBackups : ProfileRepository {
 
     override fun observeAllProfiles(): Flow<List<Profile>> = MutableStateFlow(profiles.values.sortedBy { it.orderNo })
 
-    override suspend fun getAllProfiles(): List<Profile> = profiles.values.sortedBy { it.orderNo }
+    override suspend fun getAllProfiles(): Result<List<Profile>> = Result.success(
+        profiles.values.sortedBy {
+            it.orderNo
+        }
+    )
 
     override fun observeProfileById(profileId: Long): Flow<Profile?> = MutableStateFlow(profiles[profileId])
 
-    override suspend fun getProfileById(profileId: Long): Profile? = profiles[profileId]
+    override suspend fun getProfileById(profileId: Long): Result<Profile?> = Result.success(profiles[profileId])
 
     override fun observeProfileByUuid(uuid: String): Flow<Profile?> =
         MutableStateFlow(profiles.values.find { it.uuid == uuid })
 
-    override suspend fun getProfileByUuid(uuid: String): Profile? = profiles.values.find { it.uuid == uuid }
+    override suspend fun getProfileByUuid(uuid: String): Result<Profile?> = Result.success(
+        profiles.values.find {
+            it.uuid ==
+                uuid
+        }
+    )
 
-    override suspend fun getAnyProfile(): Profile? = profiles.values.firstOrNull()
+    override suspend fun getAnyProfile(): Result<Profile?> = Result.success(profiles.values.firstOrNull())
 
-    override suspend fun getProfileCount(): Int = profiles.size
+    override suspend fun getProfileCount(): Result<Int> = Result.success(profiles.size)
 
-    override suspend fun insertProfile(profile: Profile): Long {
+    override suspend fun insertProfile(profile: Profile): Result<Long> {
         val id = if (profile.id == null || profile.id == 0L) nextId++ else profile.id
         val profileWithId = profile.copy(id = id)
         profiles[id] = profileWithId
-        return id
+        return Result.success(id)
     }
 
-    override suspend fun updateProfile(profile: Profile) {
-        val id = profile.id ?: return
+    override suspend fun updateProfile(profile: Profile): Result<Unit> {
+        val id = profile.id ?: return Result.success(Unit)
         profiles[id] = profile
         if (_currentProfile.value?.id == id) {
             _currentProfile.value = profile
         }
+        return Result.success(Unit)
     }
 
-    override suspend fun deleteProfile(profile: Profile) {
-        val id = profile.id ?: return
+    override suspend fun deleteProfile(profile: Profile): Result<Unit> {
+        val id = profile.id ?: return Result.success(Unit)
         profiles.remove(id)
         if (_currentProfile.value?.id == id) {
             _currentProfile.value = profiles.values.firstOrNull()
         }
+        return Result.success(Unit)
     }
 
-    override suspend fun updateProfileOrder(profiles: List<Profile>) {
+    override suspend fun updateProfileOrder(profiles: List<Profile>): Result<Unit> {
         profiles.forEachIndexed { index, profile ->
             val id = profile.id ?: return@forEachIndexed
             this.profiles[id]?.let { existing ->
                 this.profiles[id] = existing.copy(orderNo = index)
             }
         }
+        return Result.success(Unit)
     }
 
-    override suspend fun deleteAllProfiles() {
+    override suspend fun deleteAllProfiles(): Result<Unit> {
         profiles.clear()
         _currentProfile.value = null
+        return Result.success(Unit)
     }
 }

@@ -126,7 +126,7 @@ class AccountRepositoryTest {
         repository.addTestAccount(testProfileId, createTestAccount(name = "Assets:Cash"))
         repository.addTestAccount(testProfileId, createTestAccount(name = "Expenses:Food"))
 
-        val accounts = repository.getAllWithAmounts(testProfileId, true)
+        val accounts = repository.getAllWithAmounts(testProfileId, true).getOrThrow()
 
         assertEquals(2, accounts.size)
     }
@@ -137,7 +137,7 @@ class AccountRepositoryTest {
 
     @Test
     fun `getByNameWithAmounts returns null for non-existent name`() = runTest {
-        val result = repository.getByNameWithAmounts(testProfileId, "NonExistent")
+        val result = repository.getByNameWithAmounts(testProfileId, "NonExistent").getOrNull()
         assertNull(result)
     }
 
@@ -145,7 +145,7 @@ class AccountRepositoryTest {
     fun `getByNameWithAmounts returns account when exists`() = runTest {
         repository.addTestAccount(testProfileId, createTestAccount(name = "Assets:Cash"))
 
-        val result = repository.getByNameWithAmounts(testProfileId, "Assets:Cash")
+        val result = repository.getByNameWithAmounts(testProfileId, "Assets:Cash").getOrNull()
 
         assertNotNull(result)
         assertEquals("Assets:Cash", result?.name)
@@ -186,7 +186,7 @@ class AccountRepositoryTest {
         repository.addTestAccount(testProfileId, createTestAccount(name = "Assets:Bank:Checking"))
         repository.addTestAccount(testProfileId, createTestAccount(name = "Expenses:Food"))
 
-        val results = repository.searchAccountNames(testProfileId, "Assets")
+        val results = repository.searchAccountNames(testProfileId, "Assets").getOrThrow()
 
         assertEquals(2, results.size)
         assertTrue(results.contains("Assets:Cash"))
@@ -197,7 +197,7 @@ class AccountRepositoryTest {
     fun `searchAccountNames is case insensitive`() = runTest {
         repository.addTestAccount(testProfileId, createTestAccount(name = "Assets:Cash"))
 
-        val results = repository.searchAccountNames(testProfileId, "ASSETS")
+        val results = repository.searchAccountNames(testProfileId, "ASSETS").getOrThrow()
 
         assertEquals(1, results.size)
         assertEquals("Assets:Cash", results[0])
@@ -207,7 +207,7 @@ class AccountRepositoryTest {
     fun `searchAccountNames matches substring`() = runTest {
         repository.addTestAccount(testProfileId, createTestAccount(name = "Assets:Bank:Checking"))
 
-        val results = repository.searchAccountNames(testProfileId, "Bank")
+        val results = repository.searchAccountNames(testProfileId, "Bank").getOrThrow()
 
         assertEquals(1, results.size)
     }
@@ -222,7 +222,7 @@ class AccountRepositoryTest {
         repository.addTestAccount(2L, createTestAccount(name = "Assets:Bank"))
         repository.addTestAccount(3L, createTestAccount(name = "Expenses:Food"))
 
-        val results = repository.searchAccountNamesGlobal("Assets")
+        val results = repository.searchAccountNamesGlobal("Assets").getOrThrow()
 
         assertEquals(2, results.size)
     }
@@ -231,7 +231,7 @@ class AccountRepositoryTest {
     fun `searchAccountNamesGlobal returns empty for no match`() = runTest {
         repository.addTestAccount(testProfileId, createTestAccount(name = "Assets:Cash"))
 
-        val results = repository.searchAccountNamesGlobal("NonExistent")
+        val results = repository.searchAccountNamesGlobal("NonExistent").getOrThrow()
 
         assertTrue(results.isEmpty())
     }
@@ -248,7 +248,7 @@ class AccountRepositoryTest {
             createTestAccount(name = "NewAccount1"),
             createTestAccount(name = "NewAccount2")
         )
-        repository.storeAccountsAsDomain(newAccounts, testProfileId)
+        repository.storeAccountsAsDomain(newAccounts, testProfileId).getOrThrow()
 
         val accounts = repository.observeAllWithAmounts(testProfileId, true).first()
         assertEquals(2, accounts.size)
@@ -261,7 +261,7 @@ class AccountRepositoryTest {
         repository.addTestAccount(2L, createTestAccount(name = "OtherProfile"))
 
         val newAccounts = listOf(createTestAccount(name = "Profile1Account"))
-        repository.storeAccountsAsDomain(newAccounts, testProfileId)
+        repository.storeAccountsAsDomain(newAccounts, testProfileId).getOrThrow()
 
         val profile1Accounts = repository.observeAllWithAmounts(testProfileId, true).first()
         val profile2Accounts = repository.observeAllWithAmounts(2L, true).first()
@@ -278,7 +278,7 @@ class AccountRepositoryTest {
 
     @Test
     fun `getCountForProfile returns zero when no accounts`() = runTest {
-        val count = repository.getCountForProfile(testProfileId)
+        val count = repository.getCountForProfile(testProfileId).getOrThrow()
         assertEquals(0, count)
     }
 
@@ -288,7 +288,7 @@ class AccountRepositoryTest {
         repository.addTestAccount(testProfileId, createTestAccount(name = "B"))
         repository.addTestAccount(2L, createTestAccount(name = "C"))
 
-        val count = repository.getCountForProfile(testProfileId)
+        val count = repository.getCountForProfile(testProfileId).getOrThrow()
         assertEquals(2, count)
     }
 
@@ -301,10 +301,10 @@ class AccountRepositoryTest {
         repository.addTestAccount(1L, createTestAccount(name = "A"))
         repository.addTestAccount(2L, createTestAccount(name = "B"))
 
-        repository.deleteAllAccounts()
+        repository.deleteAllAccounts().getOrThrow()
 
-        val count1 = repository.getCountForProfile(1L)
-        val count2 = repository.getCountForProfile(2L)
+        val count1 = repository.getCountForProfile(1L).getOrThrow()
+        val count2 = repository.getCountForProfile(2L).getOrThrow()
         assertEquals(0, count1)
         assertEquals(0, count2)
     }
@@ -382,35 +382,42 @@ class FakeAccountRepository : AccountRepository {
     // Suspend methods (no suffix)
     // ========================================
 
-    override suspend fun getAllWithAmounts(profileId: Long, includeZeroBalances: Boolean): List<Account> =
-        getAccountsForProfile(profileId)
-            .filter { includeZeroBalances || hasNonZeroBalance(it) }
+    override suspend fun getAllWithAmounts(profileId: Long, includeZeroBalances: Boolean): Result<List<Account>> =
+        Result.success(
+            getAccountsForProfile(profileId)
+                .filter { includeZeroBalances || hasNonZeroBalance(it) }
+        )
 
-    override suspend fun getByNameWithAmounts(profileId: Long, accountName: String): Account? {
+    override suspend fun getByNameWithAmounts(profileId: Long, accountName: String): Result<Account?> {
         val account = accounts.values.find { it.profileId == profileId && it.account.name == accountName }
-        return account?.account
+        return Result.success(account?.account)
     }
 
-    override suspend fun searchAccountNames(profileId: Long, term: String): List<String> =
-        searchAccountNamesInternal(profileId, term)
+    override suspend fun searchAccountNames(profileId: Long, term: String): Result<List<String>> =
+        Result.success(searchAccountNamesInternal(profileId, term))
 
     private fun searchAccountNamesInternal(profileId: Long, term: String): List<String> = accounts.values
         .filter { it.profileId == profileId && it.account.name.contains(term, ignoreCase = true) }
         .map { it.account.name }
 
-    override suspend fun searchAccountsWithAmounts(profileId: Long, term: String): List<Account> = accounts.values
-        .filter { it.profileId == profileId && it.account.name.contains(term, ignoreCase = true) }
-        .map { it.account }
+    override suspend fun searchAccountsWithAmounts(profileId: Long, term: String): Result<List<Account>> =
+        Result.success(
+            accounts.values
+                .filter { it.profileId == profileId && it.account.name.contains(term, ignoreCase = true) }
+                .map { it.account }
+        )
 
-    override suspend fun searchAccountNamesGlobal(term: String): List<String> = accounts.values
-        .filter { it.account.name.contains(term, ignoreCase = true) }
-        .map { it.account.name }
+    override suspend fun searchAccountNamesGlobal(term: String): Result<List<String>> = Result.success(
+        accounts.values
+            .filter { it.account.name.contains(term, ignoreCase = true) }
+            .map { it.account.name }
+    )
 
     // ========================================
     // Mutation methods
     // ========================================
 
-    override suspend fun storeAccountsAsDomain(accountsList: List<Account>, profileId: Long) {
+    override suspend fun storeAccountsAsDomain(accountsList: List<Account>, profileId: Long): Result<Unit> {
         // Remove existing accounts for this profile
         val toRemove = accounts.values.filter { it.profileId == profileId }.map { it.account.id }
         toRemove.filterNotNull().forEach { accounts.remove(it) }
@@ -420,13 +427,15 @@ class FakeAccountRepository : AccountRepository {
             val id = account.id ?: nextId++
             accounts[id] = StoredAccount(account.copy(id = id), profileId)
         }
+        return Result.success(Unit)
     }
 
-    override suspend fun getCountForProfile(profileId: Long): Int = accounts.values.count {
-        it.profileId == profileId
-    }
+    override suspend fun getCountForProfile(profileId: Long): Result<Int> = Result.success(
+        accounts.values.count { it.profileId == profileId }
+    )
 
-    override suspend fun deleteAllAccounts() {
+    override suspend fun deleteAllAccounts(): Result<Unit> {
         accounts.clear()
+        return Result.success(Unit)
     }
 }

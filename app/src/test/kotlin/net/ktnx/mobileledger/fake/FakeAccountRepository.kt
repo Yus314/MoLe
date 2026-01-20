@@ -84,36 +84,40 @@ class FakeAccountRepository : AccountRepository {
         MutableStateFlow(accountNames.values.flatten().filter { it.contains(term, ignoreCase = true) })
 
     // Suspend methods (no suffix)
-    override suspend fun getAllWithAmounts(profileId: Long, includeZeroBalances: Boolean): List<Account> {
+    override suspend fun getAllWithAmounts(profileId: Long, includeZeroBalances: Boolean): Result<List<Account>> {
         val accounts = domainAccounts[profileId] ?: emptyList()
-        return if (includeZeroBalances) {
+        val filtered = if (includeZeroBalances) {
             accounts
         } else {
             accounts.filter { it.hasAmounts && it.amounts.any { amt -> amt.amount != 0f } }
         }
+        return Result.success(filtered)
     }
 
-    override suspend fun getByNameWithAmounts(profileId: Long, accountName: String): Account? =
-        domainAccounts[profileId]?.find { it.name == accountName }
+    override suspend fun getByNameWithAmounts(profileId: Long, accountName: String): Result<Account?> =
+        Result.success(domainAccounts[profileId]?.find { it.name == accountName })
 
-    override suspend fun searchAccountNames(profileId: Long, term: String): List<String> =
-        accountNames[profileId]?.filter { it.contains(term, ignoreCase = true) } ?: emptyList()
+    override suspend fun searchAccountNames(profileId: Long, term: String): Result<List<String>> =
+        Result.success(accountNames[profileId]?.filter { it.contains(term, ignoreCase = true) } ?: emptyList())
 
-    override suspend fun searchAccountsWithAmounts(profileId: Long, term: String): List<Account> =
-        domainAccounts[profileId]?.filter { it.name.contains(term, ignoreCase = true) } ?: emptyList()
+    override suspend fun searchAccountsWithAmounts(profileId: Long, term: String): Result<List<Account>> =
+        Result.success(domainAccounts[profileId]?.filter { it.name.contains(term, ignoreCase = true) } ?: emptyList())
 
-    override suspend fun searchAccountNamesGlobal(term: String): List<String> =
-        accountNames.values.flatten().filter { it.contains(term, ignoreCase = true) }
+    override suspend fun searchAccountNamesGlobal(term: String): Result<List<String>> =
+        Result.success(accountNames.values.flatten().filter { it.contains(term, ignoreCase = true) })
 
-    override suspend fun storeAccountsAsDomain(accounts: List<Account>, profileId: Long) {
+    override suspend fun storeAccountsAsDomain(accounts: List<Account>, profileId: Long): Result<Unit> {
         domainAccounts[profileId] = accounts.toMutableList()
         accountNames[profileId] = accounts.map { it.name }.toMutableList()
+        return Result.success(Unit)
     }
 
-    override suspend fun getCountForProfile(profileId: Long): Int = domainAccounts[profileId]?.size ?: 0
+    override suspend fun getCountForProfile(profileId: Long): Result<Int> =
+        Result.success(domainAccounts[profileId]?.size ?: 0)
 
-    override suspend fun deleteAllAccounts() {
+    override suspend fun deleteAllAccounts(): Result<Unit> {
         domainAccounts.clear()
         accountNames.clear()
+        return Result.success(Unit)
     }
 }

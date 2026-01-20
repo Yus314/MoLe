@@ -123,13 +123,13 @@ class ConfigBackupImpl @Inject constructor(
                 if (profileRepository.currentProfile.value == null) {
                     coroutineContext.ensureActive()
                     var p = if (currentProfileUuid != null) {
-                        profileRepository.getProfileByUuid(currentProfileUuid)
+                        profileRepository.getProfileByUuid(currentProfileUuid).getOrNull()
                     } else {
                         null
                     }
 
                     if (p == null) {
-                        p = profileRepository.getAnyProfile()
+                        p = profileRepository.getAnyProfile().getOrNull()
                     }
 
                     p?.let { profileRepository.setCurrentProfile(it) }

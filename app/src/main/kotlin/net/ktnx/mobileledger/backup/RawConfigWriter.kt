@@ -83,7 +83,7 @@ class RawConfigWriter(
     private suspend fun writeConfigTemplates() {
         // Intentionally using DB entity method for backup - needs access to UUID and internal fields
         @Suppress("DEPRECATION")
-        val templates = templateRepository.getAllTemplatesWithAccounts()
+        val templates = templateRepository.getAllTemplatesWithAccounts().getOrElse { return }
 
         if (templates.isEmpty()) return
 
@@ -131,7 +131,7 @@ class RawConfigWriter(
 
     @Throws(IOException::class)
     private suspend fun writeCommodities() {
-        val list = currencyRepository.getAllCurrenciesAsDomain()
+        val list = currencyRepository.getAllCurrenciesAsDomain().getOrElse { return }
         if (list.isEmpty()) return
 
         w.name(BackupKeys.COMMODITIES).beginArray()
@@ -147,7 +147,7 @@ class RawConfigWriter(
 
     @Throws(IOException::class)
     private suspend fun writeProfiles() {
-        val profiles = profileRepository.getAllProfiles()
+        val profiles = profileRepository.getAllProfiles().getOrElse { return }
 
         if (profiles.isEmpty()) return
 

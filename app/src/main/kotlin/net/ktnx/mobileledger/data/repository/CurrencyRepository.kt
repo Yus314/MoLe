@@ -27,6 +27,11 @@ import net.ktnx.mobileledger.domain.model.Currency
  * - Reactive access to currencies via Flow
  * - CRUD operations for currencies
  *
+ * ## Error Handling
+ *
+ * All suspend functions return `Result<T>` to handle errors explicitly.
+ * Use `result.getOrNull()`, `result.getOrElse {}`, or `result.onSuccess/onFailure` to handle results.
+ *
  * ## Usage
  *
  * ```kotlin
@@ -55,9 +60,9 @@ interface CurrencyRepository {
     /**
      * Get all currencies as domain models.
      *
-     * @return List of all currency domain models
+     * @return Result containing list of all currency domain models
      */
-    suspend fun getAllCurrenciesAsDomain(): List<Currency>
+    suspend fun getAllCurrenciesAsDomain(): Result<List<Currency>>
 
     /**
      * Observe a currency as domain model by its ID.
@@ -71,17 +76,17 @@ interface CurrencyRepository {
      * Get a currency as domain model by its ID.
      *
      * @param id The currency ID
-     * @return The currency domain model or null if not found
+     * @return Result containing the currency domain model or null if not found
      */
-    suspend fun getCurrencyAsDomain(id: Long): Currency?
+    suspend fun getCurrencyAsDomain(id: Long): Result<Currency?>
 
     /**
      * Get a currency as domain model by its name.
      *
      * @param name The currency name
-     * @return The currency domain model or null if not found
+     * @return Result containing the currency domain model or null if not found
      */
-    suspend fun getCurrencyAsDomainByName(name: String): Currency?
+    suspend fun getCurrencyAsDomainByName(name: String): Result<Currency?>
 
     /**
      * Observe a currency as domain model by its name.
@@ -97,23 +102,25 @@ interface CurrencyRepository {
 
     /**
      * Delete all currencies.
+     *
+     * @return Result indicating success or failure
      */
-    suspend fun deleteAllCurrencies()
+    suspend fun deleteAllCurrencies(): Result<Unit>
 
     /**
      * Save a currency domain model.
      * Handles insert/update automatically based on whether the currency has an ID.
      *
      * @param currency The currency domain model to save
-     * @return The saved currency ID
+     * @return Result containing the saved currency ID
      */
-    suspend fun saveCurrency(currency: Currency): Long
+    suspend fun saveCurrency(currency: Currency): Result<Long>
 
     /**
      * Delete a currency by its name.
      *
      * @param name The currency name to delete
-     * @return true if deleted, false if not found
+     * @return Result containing true if deleted, false if not found
      */
-    suspend fun deleteCurrencyByName(name: String): Boolean
+    suspend fun deleteCurrencyByName(name: String): Result<Boolean>
 }

@@ -72,15 +72,19 @@ class TemplateApplicatorViewModel @Inject constructor(
     private fun showTemplateSelector() {
         viewModelScope.launch {
             _uiState.update { it.copy(isSearching = true) }
-            val templates = templateRepository.getAllTemplatesAsDomain()
-                .map { it.toTemplateItem() }
-            _uiState.update {
-                it.copy(
-                    showTemplateSelector = true,
-                    availableTemplates = templates,
-                    isSearching = false
-                )
-            }
+            templateRepository.getAllTemplatesAsDomain()
+                .onSuccess { templates ->
+                    _uiState.update {
+                        it.copy(
+                            showTemplateSelector = true,
+                            availableTemplates = templates.map { t -> t.toTemplateItem() },
+                            isSearching = false
+                        )
+                    }
+                }
+                .onFailure {
+                    _uiState.update { it.copy(isSearching = false) }
+                }
         }
     }
 
@@ -90,7 +94,7 @@ class TemplateApplicatorViewModel @Inject constructor(
 
     private fun applyTemplate(templateId: Long) {
         viewModelScope.launch {
-            val template = templateRepository.getTemplateAsDomain(templateId)
+            val template = templateRepository.getTemplateAsDomain(templateId).getOrNull()
             if (template != null) {
                 val effect = buildApplyTemplateEffect(template)
                 _effects.send(effect)
@@ -130,11 +134,13 @@ class TemplateApplicatorViewModel @Inject constructor(
      */
     private fun applyTemplateFromQr(qrText: String) {
         viewModelScope.launch {
-            val templates = templateRepository.getAllTemplatesAsDomain()
-            val matched = templateMatcher.findMatch(qrText, templates)
-            if (matched != null) {
-                applyMatchedTemplate(matched)
-            }
+            templateRepository.getAllTemplatesAsDomain()
+                .onSuccess { templates ->
+                    val matched = templateMatcher.findMatch(qrText, templates)
+                    if (matched != null) {
+                        applyMatchedTemplate(matched)
+                    }
+                }
         }
     }
 
@@ -172,20 +178,26 @@ class TemplateApplicatorViewModel @Inject constructor(
     private fun searchTemplates(query: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isSearching = true) }
-            val templates = if (query.isBlank()) {
-                templateRepository.getAllTemplatesAsDomain()
-            } else {
-                templateRepository.getAllTemplatesAsDomain().filter {
-                    it.name.contains(query, ignoreCase = true) ||
-                        it.transactionDescription?.contains(query, ignoreCase = true) == true
+            templateRepository.getAllTemplatesAsDomain()
+                .onSuccess { allTemplates ->
+                    val templates = if (query.isBlank()) {
+                        allTemplates
+                    } else {
+                        allTemplates.filter {
+                            it.name.contains(query, ignoreCase = true) ||
+                                it.transactionDescription?.contains(query, ignoreCase = true) == true
+                        }
+                    }
+                    _uiState.update {
+                        it.copy(
+                            availableTemplates = templates.map { t -> t.toTemplateItem() },
+                            isSearching = false
+                        )
+                    }
                 }
-            }
-            _uiState.update {
-                it.copy(
-                    availableTemplates = templates.map { it.toTemplateItem() },
-                    isSearching = false
-                )
-            }
+                .onFailure {
+                    _uiState.update { it.copy(isSearching = false) }
+                }
         }
     }
 

@@ -326,10 +326,12 @@ class TransactionListViewModel @Inject constructor(
     private fun searchAccountNames(query: String) {
         val profileId = profileRepository.currentProfile.value?.id ?: return
         viewModelScope.launch {
-            val suggestions = accountRepository.searchAccountNames(profileId, query).take(10)
-            _uiState.update {
-                it.copy(accountSuggestions = suggestions.toImmutableList())
-            }
+            accountRepository.searchAccountNames(profileId, query)
+                .onSuccess { names ->
+                    _uiState.update {
+                        it.copy(accountSuggestions = names.take(10).toImmutableList())
+                    }
+                }
         }
     }
 

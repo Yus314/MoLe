@@ -28,6 +28,11 @@ import net.ktnx.mobileledger.domain.model.Account
  * - Account lookup and search operations
  * - Batch sync operations for account data
  *
+ * ## Error Handling
+ *
+ * All suspend functions return `Result<T>` to handle errors explicitly.
+ * Use `result.getOrNull()`, `result.getOrElse {}`, or `result.onSuccess/onFailure` to handle results.
+ *
  * ## Usage
  *
  * ```kotlin
@@ -95,18 +100,18 @@ interface AccountRepository {
      *
      * @param profileId The profile ID
      * @param includeZeroBalances Whether to include accounts with zero balance
-     * @return The account list
+     * @return Result containing the account list
      */
-    suspend fun getAllWithAmounts(profileId: Long, includeZeroBalances: Boolean): List<Account>
+    suspend fun getAllWithAmounts(profileId: Long, includeZeroBalances: Boolean): Result<List<Account>>
 
     /**
      * Get an account by name with its amounts.
      *
      * @param profileId The profile ID
      * @param accountName The account name
-     * @return The account with amounts or null if not found
+     * @return Result containing the account with amounts or null if not found
      */
-    suspend fun getByNameWithAmounts(profileId: Long, accountName: String): Account?
+    suspend fun getByNameWithAmounts(profileId: Long, accountName: String): Result<Account?>
 
     // ========================================
     // Search Operations (suspend - no suffix)
@@ -117,26 +122,26 @@ interface AccountRepository {
      *
      * @param profileId The profile ID
      * @param term The search term
-     * @return List of matching account names
+     * @return Result containing list of matching account names
      */
-    suspend fun searchAccountNames(profileId: Long, term: String): List<String>
+    suspend fun searchAccountNames(profileId: Long, term: String): Result<List<String>>
 
     /**
      * Search for accounts with amounts matching a term within a profile.
      *
      * @param profileId The profile ID
      * @param term The search term
-     * @return List of matching accounts with amounts
+     * @return Result containing list of matching accounts with amounts
      */
-    suspend fun searchAccountsWithAmounts(profileId: Long, term: String): List<Account>
+    suspend fun searchAccountsWithAmounts(profileId: Long, term: String): Result<List<Account>>
 
     /**
      * Search for account names matching a term across all profiles.
      *
      * @param term The search term
-     * @return List of matching account names
+     * @return Result containing list of matching account names
      */
-    suspend fun searchAccountNamesGlobal(term: String): List<String>
+    suspend fun searchAccountNamesGlobal(term: String): Result<List<String>>
 
     // ========================================
     // Mutation Operations
@@ -150,19 +155,22 @@ interface AccountRepository {
      *
      * @param accounts The domain model accounts to store
      * @param profileId The profile ID
+     * @return Result indicating success or failure
      */
-    suspend fun storeAccountsAsDomain(accounts: List<Account>, profileId: Long)
+    suspend fun storeAccountsAsDomain(accounts: List<Account>, profileId: Long): Result<Unit>
 
     /**
      * Get the count of accounts for a profile.
      *
      * @param profileId The profile ID
-     * @return The account count
+     * @return Result containing the account count
      */
-    suspend fun getCountForProfile(profileId: Long): Int
+    suspend fun getCountForProfile(profileId: Long): Result<Int>
 
     /**
      * Delete all accounts.
+     *
+     * @return Result indicating success or failure
      */
-    suspend fun deleteAllAccounts()
+    suspend fun deleteAllAccounts(): Result<Unit>
 }

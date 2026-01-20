@@ -108,7 +108,7 @@ class ProfileDetailViewModel @Inject constructor(
 
     private suspend fun loadProfile(profileId: Long) {
         withContext(ioDispatcher) {
-            val profile = profileRepository.getProfileById(profileId)
+            val profile = profileRepository.getProfileById(profileId).getOrNull()
             if (profile != null) {
                 orderNo = profile.orderNo
                 val detectedVersion = if (profile.isVersionPre_1_20_1) {
@@ -364,7 +364,7 @@ class ProfileDetailViewModel @Inject constructor(
 
         // Load existing profile to get uuid if updating
         val existingProfile = if (state.profileId > 0) {
-            profileRepository.getProfileById(state.profileId)
+            profileRepository.getProfileById(state.profileId).getOrNull()
         } else {
             null
         }

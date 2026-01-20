@@ -33,6 +33,7 @@ import net.ktnx.mobileledger.db.Account
 import net.ktnx.mobileledger.db.AccountValue
 import net.ktnx.mobileledger.db.TransactionWithAccounts
 import net.ktnx.mobileledger.domain.model.Transaction
+import net.ktnx.mobileledger.domain.usecase.AppExceptionMapper
 import net.ktnx.mobileledger.utils.AccountNameUtils
 import net.ktnx.mobileledger.utils.Misc
 
@@ -43,6 +44,7 @@ import net.ktnx.mobileledger.utils.Misc
  * - Converts LiveData to Flow for reactive data access
  * - Uses Dispatchers.IO for database operations
  * - Delegates all operations to the underlying DAO
+ * - Returns Result<T> for all suspend operations with error handling
  *
  * Thread-safety: All operations are safe to call from any coroutine context.
  */
@@ -51,7 +53,8 @@ class TransactionRepositoryImpl @Inject constructor(
     private val transactionDAO: TransactionDAO,
     private val transactionAccountDAO: TransactionAccountDAO,
     private val accountDAO: AccountDAO,
-    private val accountValueDAO: AccountValueDAO
+    private val accountValueDAO: AccountValueDAO,
+    private val appExceptionMapper: AppExceptionMapper
 ) : TransactionRepository {
 
     // ========================================
@@ -77,43 +80,57 @@ class TransactionRepositoryImpl @Inject constructor(
     // Query Operations - Suspend (no suffix)
     // ========================================
 
-    override suspend fun getTransactionById(transactionId: Long): Transaction? = withContext(Dispatchers.IO) {
-        transactionDAO.getByIdWithAccountsSync(transactionId)?.let { TransactionMapper.toDomain(it) }
+    override suspend fun getTransactionById(transactionId: Long): Result<Transaction?> = safeCall(appExceptionMapper) {
+        withContext(Dispatchers.IO) {
+            transactionDAO.getByIdWithAccountsSync(transactionId)?.let { TransactionMapper.toDomain(it) }
+        }
     }
 
-    override suspend fun searchByDescription(term: String): List<TransactionDAO.DescriptionContainer> =
-        withContext(Dispatchers.IO) {
-            transactionDAO.lookupDescriptionSync(term.uppercase(java.util.Locale.ROOT))
+    override suspend fun searchByDescription(term: String): Result<List<TransactionDAO.DescriptionContainer>> =
+        safeCall(appExceptionMapper) {
+            withContext(Dispatchers.IO) {
+                transactionDAO.lookupDescriptionSync(term.uppercase(java.util.Locale.ROOT))
+            }
         }
 
-    override suspend fun getFirstByDescription(description: String): Transaction? = withContext(Dispatchers.IO) {
-        transactionDAO.getFirstByDescriptionSync(description)?.let { TransactionMapper.toDomain(it) }
-    }
+    override suspend fun getFirstByDescription(description: String): Result<Transaction?> =
+        safeCall(appExceptionMapper) {
+            withContext(Dispatchers.IO) {
+                transactionDAO.getFirstByDescriptionSync(description)?.let { TransactionMapper.toDomain(it) }
+            }
+        }
 
-    override suspend fun getFirstByDescriptionHavingAccount(description: String, accountTerm: String): Transaction? =
+    override suspend fun getFirstByDescriptionHavingAccount(
+        description: String,
+        accountTerm: String
+    ): Result<Transaction?> = safeCall(appExceptionMapper) {
         withContext(Dispatchers.IO) {
             transactionDAO.getFirstByDescriptionHavingAccountSync(description, accountTerm)
                 ?.let { TransactionMapper.toDomain(it) }
         }
+    }
 
     // ========================================
     // Mutation Operations (Domain Models)
     // ========================================
 
-    override suspend fun insertTransaction(transaction: Transaction, profileId: Long): Transaction =
-        withContext(Dispatchers.IO) {
-            val entity = TransactionMapper.toEntity(transaction, profileId)
-            appendTransactionInternal(entity)
-            // Return the updated domain model with generated ID
-            TransactionMapper.toDomain(entity)
+    override suspend fun insertTransaction(transaction: Transaction, profileId: Long): Result<Transaction> =
+        safeCall(appExceptionMapper) {
+            withContext(Dispatchers.IO) {
+                val entity = TransactionMapper.toEntity(transaction, profileId)
+                appendTransactionInternal(entity)
+                // Return the updated domain model with generated ID
+                TransactionMapper.toDomain(entity)
+            }
         }
 
-    override suspend fun storeTransaction(transaction: Transaction, profileId: Long) {
-        withContext(Dispatchers.IO) {
-            val entity = TransactionMapper.toEntity(transaction, profileId)
-            storeTransactionInternal(entity)
+    override suspend fun storeTransaction(transaction: Transaction, profileId: Long): Result<Unit> =
+        safeCall(appExceptionMapper) {
+            withContext(Dispatchers.IO) {
+                val entity = TransactionMapper.toEntity(transaction, profileId)
+                storeTransactionInternal(entity)
+            }
         }
-    }
 
     /**
      * Internal method to append a new transaction.
@@ -198,43 +215,53 @@ class TransactionRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun deleteTransactionById(transactionId: Long): Int = withContext(Dispatchers.IO) {
-        transactionDAO.deleteByIdSync(transactionId)
+    override suspend fun deleteTransactionById(transactionId: Long): Result<Int> = safeCall(appExceptionMapper) {
+        withContext(Dispatchers.IO) {
+            transactionDAO.deleteByIdSync(transactionId)
+        }
     }
 
-    override suspend fun deleteTransactionsByIds(transactionIds: List<Long>): Int = withContext(Dispatchers.IO) {
-        transactionDAO.deleteByIdsSync(transactionIds)
-    }
+    override suspend fun deleteTransactionsByIds(transactionIds: List<Long>): Result<Int> =
+        safeCall(appExceptionMapper) {
+            withContext(Dispatchers.IO) {
+                transactionDAO.deleteByIdsSync(transactionIds)
+            }
+        }
 
     // ========================================
     // Sync Operations
     // ========================================
 
-    override suspend fun storeTransactionsAsDomain(transactions: List<Transaction>, profileId: Long) {
-        withContext(Dispatchers.IO) {
-            val generation = transactionDAO.getGenerationSync(profileId) + 1
+    override suspend fun storeTransactionsAsDomain(transactions: List<Transaction>, profileId: Long): Result<Unit> =
+        safeCall(appExceptionMapper) {
+            withContext(Dispatchers.IO) {
+                val generation = transactionDAO.getGenerationSync(profileId) + 1
 
-            for (domainTransaction in transactions) {
-                val entity = TransactionMapper.toEntity(domainTransaction, profileId)
-                entity.transaction.generation = generation
-                storeTransactionInternal(entity)
+                for (domainTransaction in transactions) {
+                    val entity = TransactionMapper.toEntity(domainTransaction, profileId)
+                    entity.transaction.generation = generation
+                    storeTransactionInternal(entity)
+                }
+
+                logcat { "Purging old transactions" }
+                var removed = transactionDAO.purgeOldTransactionsSync(profileId, generation)
+                logcat { "Purged $removed transactions" }
+
+                removed = transactionDAO.purgeOldTransactionAccountsSync(profileId, generation)
+                logcat { "Purged $removed transaction accounts" }
             }
+        }
 
-            logcat { "Purging old transactions" }
-            var removed = transactionDAO.purgeOldTransactionsSync(profileId, generation)
-            logcat { "Purged $removed transactions" }
-
-            removed = transactionDAO.purgeOldTransactionAccountsSync(profileId, generation)
-            logcat { "Purged $removed transaction accounts" }
+    override suspend fun deleteAllForProfile(profileId: Long): Result<Int> = safeCall(appExceptionMapper) {
+        withContext(Dispatchers.IO) {
+            transactionDAO.deleteAllSync(profileId)
         }
     }
 
-    override suspend fun deleteAllForProfile(profileId: Long): Int = withContext(Dispatchers.IO) {
-        transactionDAO.deleteAllSync(profileId)
-    }
-
-    override suspend fun getMaxLedgerId(profileId: Long): Long? = withContext(Dispatchers.IO) {
-        val result = transactionDAO.getMaxLedgerIdSync(profileId)
-        if (result == 0L) null else result
+    override suspend fun getMaxLedgerId(profileId: Long): Result<Long?> = safeCall(appExceptionMapper) {
+        withContext(Dispatchers.IO) {
+            val result = transactionDAO.getMaxLedgerIdSync(profileId)
+            if (result == 0L) null else result
+        }
     }
 }

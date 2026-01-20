@@ -42,15 +42,17 @@ class FakeCurrencyRepository : CurrencyRepository {
     override fun observeAllCurrenciesAsDomain(): Flow<List<DomainCurrency>> =
         currenciesFlow.map { list -> list.map { it.toDomain() } }
 
-    override suspend fun getAllCurrenciesAsDomain(): List<DomainCurrency> = currencies.values.map { it.toDomain() }
+    override suspend fun getAllCurrenciesAsDomain(): Result<List<DomainCurrency>> =
+        Result.success(currencies.values.map { it.toDomain() })
 
     override fun observeCurrencyAsDomain(id: Long): Flow<DomainCurrency?> =
         currenciesFlow.map { list -> list.find { it.id == id }?.toDomain() }
 
-    override suspend fun getCurrencyAsDomain(id: Long): DomainCurrency? = currencies[id]?.toDomain()
+    override suspend fun getCurrencyAsDomain(id: Long): Result<DomainCurrency?> =
+        Result.success(currencies[id]?.toDomain())
 
-    override suspend fun getCurrencyAsDomainByName(name: String): DomainCurrency? =
-        currencies.values.find { it.name == name }?.toDomain()
+    override suspend fun getCurrencyAsDomainByName(name: String): Result<DomainCurrency?> =
+        Result.success(currencies.values.find { it.name == name }?.toDomain())
 
     override fun observeCurrencyAsDomainByName(name: String): Flow<DomainCurrency?> =
         currenciesFlow.map { list -> list.find { it.name == name }?.toDomain() }
@@ -59,28 +61,29 @@ class FakeCurrencyRepository : CurrencyRepository {
     // Mutation Operations
     // ========================================
 
-    override suspend fun deleteAllCurrencies() {
+    override suspend fun deleteAllCurrencies(): Result<Unit> {
         currencies.clear()
         emitFlow()
+        return Result.success(Unit)
     }
 
-    override suspend fun saveCurrency(currency: DomainCurrency): Long {
+    override suspend fun saveCurrency(currency: DomainCurrency): Result<Long> {
         val entity = currency.toEntity()
         val id = if (entity.id == 0L) nextId++ else entity.id
         entity.id = id
         currencies[id] = entity
         emitFlow()
-        return id
+        return Result.success(id)
     }
 
-    override suspend fun deleteCurrencyByName(name: String): Boolean {
+    override suspend fun deleteCurrencyByName(name: String): Result<Boolean> {
         val currency = currencies.values.find { it.name == name }
         return if (currency != null) {
             currencies.remove(currency.id)
             emitFlow()
-            true
+            Result.success(true)
         } else {
-            false
+            Result.success(false)
         }
     }
 

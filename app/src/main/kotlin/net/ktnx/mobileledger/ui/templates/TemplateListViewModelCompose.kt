@@ -106,42 +106,43 @@ class TemplateListViewModelCompose @Inject constructor(
 
     private fun deleteTemplate(templateId: Long) {
         viewModelScope.launch {
-            try {
-                val template = templateRepository.getTemplateAsDomain(templateId)
-                if (template != null) {
-                    deletedTemplate = template
-                    templateRepository.deleteTemplateById(templateId)
-                    _effects.send(TemplateListEffect.ShowUndoSnackbar(template.name, templateId))
+            templateRepository.getTemplateAsDomain(templateId)
+                .onSuccess { template ->
+                    if (template != null) {
+                        deletedTemplate = template
+                        templateRepository.deleteTemplateById(templateId)
+                        _effects.send(TemplateListEffect.ShowUndoSnackbar(template.name, templateId))
+                    }
                 }
-            } catch (e: Exception) {
-                logcat { "Error deleting template: ${e.asLog()}" }
-                _effects.send(TemplateListEffect.ShowError("テンプレートの削除に失敗しました"))
-            }
+                .onFailure { e ->
+                    logcat { "Error deleting template: ${e.asLog()}" }
+                    _effects.send(TemplateListEffect.ShowError("テンプレートの削除に失敗しました"))
+                }
         }
     }
 
     private fun undoDelete() {
         val template = deletedTemplate ?: return
         viewModelScope.launch {
-            try {
-                templateRepository.saveTemplate(template)
-                deletedTemplate = null
-            } catch (e: Exception) {
-                logcat { "Error restoring template: ${e.asLog()}" }
-                _effects.send(TemplateListEffect.ShowError("テンプレートの復元に失敗しました"))
-            }
+            templateRepository.saveTemplate(template)
+                .onSuccess {
+                    deletedTemplate = null
+                }
+                .onFailure { e ->
+                    logcat { "Error restoring template: ${e.asLog()}" }
+                    _effects.send(TemplateListEffect.ShowError("テンプレートの復元に失敗しました"))
+                }
         }
     }
 
     private fun duplicateTemplate(templateId: Long) {
         viewModelScope.launch {
-            try {
-                @Suppress("DEPRECATION")
-                templateRepository.duplicateTemplate(templateId)
-            } catch (e: Exception) {
-                logcat { "Error duplicating template: ${e.message}" }
-                _effects.send(TemplateListEffect.ShowError("テンプレートの複製に失敗しました"))
-            }
+            @Suppress("DEPRECATION")
+            templateRepository.duplicateTemplate(templateId)
+                .onFailure { e ->
+                    logcat { "Error duplicating template: ${e.message}" }
+                    _effects.send(TemplateListEffect.ShowError("テンプレートの複製に失敗しました"))
+                }
         }
     }
 

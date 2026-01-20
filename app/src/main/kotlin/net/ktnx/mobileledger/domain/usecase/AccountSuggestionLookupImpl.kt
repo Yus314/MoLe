@@ -34,7 +34,7 @@ class AccountSuggestionLookupImpl @Inject constructor(
             return emptyList()
         }
         val termUpper = term.uppercase()
-        return accountRepository.searchAccountNames(profileId, termUpper)
+        return accountRepository.searchAccountNames(profileId, termUpper).getOrElse { emptyList() }
     }
 
     override fun isTermValid(term: String): Boolean = term.length >= AccountSuggestionLookup.DEFAULT_MIN_TERM_LENGTH

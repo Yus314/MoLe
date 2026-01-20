@@ -77,7 +77,7 @@ class ProfileSelectionViewModel @Inject constructor(
 
     private fun selectProfile(profileId: Long) {
         viewModelScope.launch {
-            val profile = profileRepository.getProfileById(profileId)
+            val profile = profileRepository.getProfileById(profileId).getOrNull()
             if (profile != null) {
                 profileRepository.setCurrentProfile(profile)
             }
@@ -90,7 +90,7 @@ class ProfileSelectionViewModel @Inject constructor(
 
     private fun reorderProfiles(orderedProfiles: List<ProfileListItem>) {
         viewModelScope.launch {
-            val allProfiles = profileRepository.getAllProfiles()
+            val allProfiles = profileRepository.getAllProfiles().getOrElse { return@launch }
             val reorderedProfiles = orderedProfiles.mapNotNull { item ->
                 allProfiles.find { it.id == item.id }
             }

@@ -51,7 +51,7 @@ class DatabaseInitializerImpl @Inject constructor(
 
             // ProfileRepository を通じてデータベースにアクセス
             // これにより Room データベースが初期化される
-            val profileCount = profileRepository.getProfileCount()
+            val profileCount = profileRepository.getProfileCount().getOrThrow()
             val hasProfiles = profileCount > 0
 
             logcat { "Database initialization complete. Profile count: $profileCount" }
