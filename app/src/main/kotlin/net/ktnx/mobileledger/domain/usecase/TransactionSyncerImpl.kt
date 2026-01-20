@@ -17,17 +17,12 @@
 
 package net.ktnx.mobileledger.domain.usecase
 
-import android.os.OperationCanceledException
 import com.fasterxml.jackson.core.JsonParseException
 import com.fasterxml.jackson.databind.RuntimeJsonMappingException
 import java.io.BufferedReader
-import java.io.IOException
 import java.io.InputStreamReader
-import java.net.MalformedURLException
-import java.net.SocketTimeoutException
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
-import java.text.ParseException
 import java.util.Date
 import java.util.regex.Pattern
 import javax.inject.Inject
@@ -42,20 +37,16 @@ import logcat.LogPriority
 import logcat.asLog
 import logcat.logcat
 import net.ktnx.mobileledger.async.TransactionParser
-import net.ktnx.mobileledger.data.repository.AccountRepository
-import net.ktnx.mobileledger.data.repository.OptionRepository
-import net.ktnx.mobileledger.data.repository.TransactionRepository
-import net.ktnx.mobileledger.data.repository.mapper.AccountMapper.withStateFrom
 import net.ktnx.mobileledger.di.IoDispatcher
 import net.ktnx.mobileledger.domain.model.Account
 import net.ktnx.mobileledger.domain.model.AccountAmount
 import net.ktnx.mobileledger.domain.model.Profile
-import net.ktnx.mobileledger.domain.model.SyncError
-import net.ktnx.mobileledger.domain.model.SyncException
 import net.ktnx.mobileledger.domain.model.SyncProgress
 import net.ktnx.mobileledger.domain.model.SyncResult
 import net.ktnx.mobileledger.domain.model.Transaction
 import net.ktnx.mobileledger.domain.model.TransactionLine
+import net.ktnx.mobileledger.domain.usecase.sync.SyncExceptionMapper
+import net.ktnx.mobileledger.domain.usecase.sync.SyncPersistence
 import net.ktnx.mobileledger.json.API
 import net.ktnx.mobileledger.json.AccountListParser
 import net.ktnx.mobileledger.json.ApiNotSupportedException
@@ -84,9 +75,8 @@ import net.ktnx.mobileledger.utils.SimpleDate
 @Singleton
 class TransactionSyncerImpl @Inject constructor(
     private val hledgerClient: HledgerClient,
-    private val accountRepository: AccountRepository,
-    private val transactionRepository: TransactionRepository,
-    private val optionRepository: OptionRepository,
+    private val syncPersistence: SyncPersistence,
+    private val syncExceptionMapper: SyncExceptionMapper,
     private val appStateService: AppStateService,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : TransactionSyncer {
@@ -134,7 +124,7 @@ class TransactionSyncerImpl @Inject constructor(
             // Save to database
             coroutineContext.ensureActive()
             emit(SyncProgress.Indeterminate("データを保存中..."))
-            saveAccountsAndTransactions(profile, accounts, transactions)
+            syncPersistence.saveAccountsAndTransactions(profile, accounts, transactions)
 
             // Update sync info
             appStateService.updateSyncInfo(
@@ -153,7 +143,7 @@ class TransactionSyncerImpl @Inject constructor(
                 duration = duration
             )
         } catch (e: Exception) {
-            throw mapToSyncException(e)
+            throw syncExceptionMapper.mapToSyncException(e)
         }
     }.flowOn(ioDispatcher)
 
@@ -558,74 +548,6 @@ class TransactionSyncerImpl @Inject constructor(
             comment = null,
             lines = lines.toList()
         )
-    }
-
-    /**
-     * アカウントと取引をデータベースに保存する
-     *
-     * ドメインモデルを直接受け取り、Repository を使用して保存する。
-     * これにより、domain層からdb層への直接依存を排除する。
-     */
-    private suspend fun saveAccountsAndTransactions(
-        profile: Profile,
-        accounts: List<Account>,
-        transactions: List<Transaction>
-    ) {
-        val profileId = profile.id ?: throw IllegalStateException("Cannot sync unsaved profile")
-
-        logcat { "Preparing account list" }
-        val accountsWithState = accounts.map { account ->
-            coroutineContext.ensureActive()
-            // Preserve existing UI state if account exists
-            val existing = accountRepository.getByNameWithAmounts(profileId, account.name)
-            account.withStateFrom(existing)
-        }
-        logcat { "Account list prepared. Storing" }
-        accountRepository.storeAccountsAsDomain(accountsWithState, profileId)
-        logcat { "Account list stored" }
-
-        logcat { "Storing transaction list" }
-        transactionRepository.storeTransactionsAsDomain(transactions, profileId)
-        logcat { "Transactions stored" }
-
-        optionRepository.setLastSyncTimestamp(profileId, Date().time)
-    }
-
-    /**
-     * 例外を SyncException にマッピングする
-     */
-    private fun mapToSyncException(e: Throwable): SyncException {
-        val syncError = when (e) {
-            is SyncException -> return e
-
-            is SocketTimeoutException -> SyncError.TimeoutError(message = "サーバーが応答しません")
-
-            is MalformedURLException -> SyncError.NetworkError(message = "無効なサーバーURLです", cause = e)
-
-            is NetworkAuthenticationException ->
-                SyncError.AuthenticationError(message = "認証に失敗しました", httpCode = 401)
-
-            is NetworkHttpException ->
-                SyncError.ServerError(message = e.message ?: "サーバーエラー", httpCode = e.statusCode)
-
-            is IOException -> SyncError.NetworkError(message = e.localizedMessage ?: "ネットワークエラー", cause = e)
-
-            is RuntimeJsonMappingException -> SyncError.ParseError(message = "JSONパースエラー", cause = e)
-
-            is ParseException -> SyncError.ParseError(message = "データ解析エラー", cause = e)
-
-            is OperationCanceledException -> SyncError.Cancelled
-
-            is ApiNotSupportedException -> SyncError.ApiVersionError(message = "サポートされていないAPIバージョンです")
-
-            is kotlinx.coroutines.CancellationException -> SyncError.Cancelled
-
-            else -> SyncError.UnknownError(
-                message = e.localizedMessage ?: "予期しないエラーが発生しました",
-                cause = e
-            )
-        }
-        return SyncException(syncError)
     }
 
     private enum class ParserState {
