@@ -22,9 +22,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
-import net.ktnx.mobileledger.db.Account as DbAccount
-import net.ktnx.mobileledger.db.AccountValue
-import net.ktnx.mobileledger.db.AccountWithAmounts
 import net.ktnx.mobileledger.domain.model.Account
 import net.ktnx.mobileledger.domain.model.AccountAmount
 import org.junit.Assert.assertEquals
@@ -367,12 +364,6 @@ class FakeAccountRepository : AccountRepository {
         return MutableStateFlow(result)
     }
 
-    @Suppress("DEPRECATION")
-    override fun observeByName(profileId: Long, accountName: String): Flow<DbAccount?> {
-        val account = accounts.values.find { it.profileId == profileId && it.account.name == accountName }
-        return MutableStateFlow(account?.let { toDbAccount(it.account, profileId) })
-    }
-
     override fun observeByNameWithAmounts(profileId: Long, accountName: String): Flow<Account?> {
         val account = accounts.values.find { it.profileId == profileId && it.account.name == accountName }
         return MutableStateFlow(account?.account)
@@ -395,18 +386,6 @@ class FakeAccountRepository : AccountRepository {
         getAccountsForProfile(profileId)
             .filter { includeZeroBalances || hasNonZeroBalance(it) }
 
-    @Suppress("DEPRECATION")
-    override suspend fun getById(id: Long): DbAccount? {
-        val stored = accounts[id] ?: return null
-        return toDbAccount(stored.account, stored.profileId)
-    }
-
-    @Suppress("DEPRECATION")
-    override suspend fun getByName(profileId: Long, accountName: String): DbAccount? {
-        val account = accounts.values.find { it.profileId == profileId && it.account.name == accountName }
-        return account?.let { toDbAccount(it.account, profileId) }
-    }
-
     override suspend fun getByNameWithAmounts(profileId: Long, accountName: String): Account? {
         val account = accounts.values.find { it.profileId == profileId && it.account.name == accountName }
         return account?.account
@@ -428,65 +407,8 @@ class FakeAccountRepository : AccountRepository {
         .map { it.account.name }
 
     // ========================================
-    // Deprecated mutation methods (still needed for interface)
+    // Mutation methods
     // ========================================
-
-    @Suppress("DEPRECATION")
-    override suspend fun insertAccount(account: DbAccount): Long {
-        val id = if (account.id == 0L) nextId++ else account.id
-        val domainAccount = Account(
-            id = id,
-            name = account.name,
-            level = account.level,
-            isExpanded = account.expanded,
-            isVisible = true,
-            amounts = emptyList()
-        )
-        accounts[id] = StoredAccount(domainAccount, account.profileId)
-        return id
-    }
-
-    @Suppress("DEPRECATION")
-    override suspend fun insertAccountWithAmounts(accountWithAmounts: AccountWithAmounts) {
-        val dbAccount = accountWithAmounts.account
-        val id = if (dbAccount.id == 0L) nextId++ else dbAccount.id
-        val domainAccount = Account(
-            id = id,
-            name = dbAccount.name,
-            level = dbAccount.level,
-            isExpanded = dbAccount.expanded,
-            isVisible = true,
-            amounts = accountWithAmounts.amounts.map { AccountAmount(currency = it.currency, amount = it.value) }
-        )
-        accounts[id] = StoredAccount(domainAccount, dbAccount.profileId)
-    }
-
-    @Suppress("DEPRECATION")
-    override suspend fun updateAccount(account: DbAccount) {
-        if (accounts.containsKey(account.id)) {
-            val existing = accounts[account.id]!!
-            val updated = existing.account.copy(
-                name = account.name,
-                level = account.level,
-                isExpanded = account.expanded
-            )
-            accounts[account.id] = StoredAccount(updated, account.profileId)
-        }
-    }
-
-    @Suppress("DEPRECATION")
-    override suspend fun storeAccounts(accountsList: List<AccountWithAmounts>, profileId: Long) {
-        // Remove existing accounts for this profile
-        val toRemove = accounts.values.filter { it.profileId == profileId }.map { it.account.id }
-        toRemove.filterNotNull().forEach { accounts.remove(it) }
-
-        // Add new accounts
-        accountsList.forEach { accountWithAmounts ->
-            val dbAccount = accountWithAmounts.account
-            dbAccount.profileId = profileId
-            insertAccountWithAmounts(accountWithAmounts)
-        }
-    }
 
     override suspend fun storeAccountsAsDomain(accountsList: List<Account>, profileId: Long) {
         // Remove existing accounts for this profile
@@ -506,19 +428,5 @@ class FakeAccountRepository : AccountRepository {
 
     override suspend fun deleteAllAccounts() {
         accounts.clear()
-    }
-
-    // ========================================
-    // Helper for deprecated methods
-    // ========================================
-
-    private fun toDbAccount(account: Account, profileId: Long): DbAccount = DbAccount().apply {
-        this.id = account.id ?: 0L
-        this.profileId = profileId
-        this.name = account.name
-        this.nameUpper = account.name.uppercase()
-        this.level = account.level
-        this.expanded = account.isExpanded
-        this.parentName = account.parentName
     }
 }

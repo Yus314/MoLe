@@ -18,8 +18,7 @@
 package net.ktnx.mobileledger.data.repository
 
 import kotlinx.coroutines.flow.Flow
-import net.ktnx.mobileledger.db.Currency as DbCurrency
-import net.ktnx.mobileledger.domain.model.Currency as DomainCurrency
+import net.ktnx.mobileledger.domain.model.Currency
 
 /**
  * Repository interface for Currency data access.
@@ -35,7 +34,7 @@ import net.ktnx.mobileledger.domain.model.Currency as DomainCurrency
  * class CurrencyViewModel @Inject constructor(
  *     private val currencyRepository: CurrencyRepository
  * ) : ViewModel() {
- *     val currencies = currencyRepository.getAllCurrencies()
+ *     val currencies = currencyRepository.observeAllCurrenciesAsDomain()
  *         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
  * }
  * ```
@@ -43,7 +42,7 @@ import net.ktnx.mobileledger.domain.model.Currency as DomainCurrency
 interface CurrencyRepository {
 
     // ========================================
-    // Domain Model Query Operations
+    // Query Operations
     // ========================================
 
     /**
@@ -51,14 +50,14 @@ interface CurrencyRepository {
      *
      * @return Flow that emits the currency domain model list whenever it changes
      */
-    fun observeAllCurrenciesAsDomain(): Flow<List<DomainCurrency>>
+    fun observeAllCurrenciesAsDomain(): Flow<List<Currency>>
 
     /**
      * Get all currencies as domain models.
      *
      * @return List of all currency domain models
      */
-    suspend fun getAllCurrenciesAsDomain(): List<DomainCurrency>
+    suspend fun getAllCurrenciesAsDomain(): List<Currency>
 
     /**
      * Observe a currency as domain model by its ID.
@@ -66,7 +65,7 @@ interface CurrencyRepository {
      * @param id The currency ID
      * @return Flow that emits the currency domain model when it changes
      */
-    fun observeCurrencyAsDomain(id: Long): Flow<DomainCurrency?>
+    fun observeCurrencyAsDomain(id: Long): Flow<Currency?>
 
     /**
      * Get a currency as domain model by its ID.
@@ -74,7 +73,7 @@ interface CurrencyRepository {
      * @param id The currency ID
      * @return The currency domain model or null if not found
      */
-    suspend fun getCurrencyAsDomain(id: Long): DomainCurrency?
+    suspend fun getCurrencyAsDomain(id: Long): Currency?
 
     /**
      * Get a currency as domain model by its name.
@@ -82,7 +81,7 @@ interface CurrencyRepository {
      * @param name The currency name
      * @return The currency domain model or null if not found
      */
-    suspend fun getCurrencyAsDomainByName(name: String): DomainCurrency?
+    suspend fun getCurrencyAsDomainByName(name: String): Currency?
 
     /**
      * Observe a currency as domain model by its name.
@@ -90,108 +89,11 @@ interface CurrencyRepository {
      * @param name The currency name
      * @return Flow that emits the currency domain model when it changes
      */
-    fun observeCurrencyAsDomainByName(name: String): Flow<DomainCurrency?>
-
-    // ========================================
-    // Database Entity Query Operations (for internal use)
-    // Note: These methods are deprecated. Use domain model methods instead.
-    // ========================================
-
-    /**
-     * Observe all currencies.
-     *
-     * @return Flow that emits the currency list whenever it changes
-     */
-    @Deprecated(
-        message = "Use observeAllCurrenciesAsDomain() instead",
-        replaceWith = ReplaceWith("observeAllCurrenciesAsDomain()")
-    )
-    fun observeAllCurrencies(): Flow<List<DbCurrency>>
-
-    /**
-     * Get all currencies.
-     *
-     * @return List of all currencies
-     */
-    @Deprecated(
-        message = "Use getAllCurrenciesAsDomain() instead",
-        replaceWith = ReplaceWith("getAllCurrenciesAsDomain()")
-    )
-    suspend fun getAllCurrencies(): List<DbCurrency>
-
-    /**
-     * Observe a currency by its ID.
-     *
-     * @param id The currency ID
-     * @return Flow that emits the currency when it changes
-     */
-    @Deprecated(
-        message = "Use observeCurrencyAsDomain(id) instead",
-        replaceWith = ReplaceWith("observeCurrencyAsDomain(id)")
-    )
-    fun observeCurrencyById(id: Long): Flow<DbCurrency?>
-
-    /**
-     * Observe a currency by its name.
-     *
-     * @param name The currency name
-     * @return Flow that emits the currency when it changes
-     */
-    @Deprecated(
-        message = "Use observeCurrencyAsDomainByName(name) instead",
-        replaceWith = ReplaceWith("observeCurrencyAsDomainByName(name)")
-    )
-    fun observeCurrencyByName(name: String): Flow<DbCurrency?>
-
-    /**
-     * Get a currency by its name.
-     *
-     * @param name The currency name
-     * @return The currency or null if not found
-     */
-    @Deprecated(
-        message = "Use getCurrencyAsDomainByName(name) instead",
-        replaceWith = ReplaceWith("getCurrencyAsDomainByName(name)")
-    )
-    suspend fun getCurrencyByName(name: String): DbCurrency?
+    fun observeCurrencyAsDomainByName(name: String): Flow<Currency?>
 
     // ========================================
     // Mutation Operations
     // ========================================
-
-    /**
-     * Insert a new currency.
-     *
-     * @param currency The currency to insert
-     * @return The ID of the inserted currency
-     */
-    @Deprecated(
-        message = "Use saveCurrency(DomainCurrency) instead",
-        replaceWith = ReplaceWith("saveCurrency(currency.toDomain())")
-    )
-    suspend fun insertCurrency(currency: DbCurrency): Long
-
-    /**
-     * Update an existing currency.
-     *
-     * @param currency The currency to update
-     */
-    @Deprecated(
-        message = "Use saveCurrency(DomainCurrency) instead",
-        replaceWith = ReplaceWith("saveCurrency(currency.toDomain())")
-    )
-    suspend fun updateCurrency(currency: DbCurrency)
-
-    /**
-     * Delete a currency.
-     *
-     * @param currency The currency to delete
-     */
-    @Deprecated(
-        message = "Use deleteCurrencyByName(name) instead",
-        replaceWith = ReplaceWith("deleteCurrencyByName(currency.name)")
-    )
-    suspend fun deleteCurrency(currency: DbCurrency)
 
     /**
      * Delete all currencies.
@@ -205,7 +107,7 @@ interface CurrencyRepository {
      * @param currency The currency domain model to save
      * @return The saved currency ID
      */
-    suspend fun saveCurrency(currency: DomainCurrency): Long
+    suspend fun saveCurrency(currency: Currency): Long
 
     /**
      * Delete a currency by its name.

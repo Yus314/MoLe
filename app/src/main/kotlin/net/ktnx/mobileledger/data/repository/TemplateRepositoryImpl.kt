@@ -97,26 +97,6 @@ class TemplateRepositoryImpl @Inject constructor(
     // Database Entity Query Operations (for internal use)
     // ========================================
 
-    @Deprecated("Use observeAllTemplatesAsDomain() instead")
-    override fun observeAllTemplates(): Flow<List<TemplateHeader>> = templateHeaderDAO.getTemplates()
-
-    @Deprecated("Use observeTemplateAsDomain() instead")
-    override fun observeTemplateById(id: Long): Flow<TemplateHeader?> = templateHeaderDAO.getTemplate(id)
-
-    @Deprecated("Use getTemplateAsDomain() instead")
-    override suspend fun getTemplateById(id: Long): TemplateHeader? = withContext(Dispatchers.IO) {
-        templateHeaderDAO.getTemplateSync(id)
-    }
-
-    @Deprecated("Use observeTemplateAsDomain() instead")
-    override fun observeTemplateWithAccounts(id: Long): Flow<TemplateWithAccounts?> =
-        templateHeaderDAO.getTemplateWithAccounts(id)
-
-    @Deprecated("Use getTemplateAsDomain() instead")
-    override suspend fun getTemplateWithAccounts(id: Long): TemplateWithAccounts? = withContext(Dispatchers.IO) {
-        templateHeaderDAO.getTemplateWithAccountsSync(id)
-    }
-
     @Deprecated("Internal use for backup/restore only")
     override suspend fun getTemplateWithAccountsByUuid(uuid: String): TemplateWithAccounts? =
         withContext(Dispatchers.IO) {

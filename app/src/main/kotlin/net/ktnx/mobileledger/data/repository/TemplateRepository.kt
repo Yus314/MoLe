@@ -18,7 +18,6 @@
 package net.ktnx.mobileledger.data.repository
 
 import kotlinx.coroutines.flow.Flow
-import net.ktnx.mobileledger.db.TemplateHeader
 import net.ktnx.mobileledger.db.TemplateWithAccounts
 import net.ktnx.mobileledger.domain.model.Template
 
@@ -82,65 +81,6 @@ interface TemplateRepository {
     // Database Entity Query Operations (for internal use)
     // Note: These methods are deprecated. Use domain model methods instead.
     // ========================================
-
-    /**
-     * Observe all templates ordered by fallback status and name.
-     *
-     * @return Flow that emits the template list whenever it changes
-     */
-    @Deprecated(
-        message = "Use observeAllTemplatesAsDomain() instead",
-        replaceWith = ReplaceWith("observeAllTemplatesAsDomain()")
-    )
-    fun observeAllTemplates(): Flow<List<TemplateHeader>>
-
-    /**
-     * Observe a template by its ID.
-     *
-     * @param id The template ID
-     * @return Flow that emits the template when it changes
-     */
-    @Deprecated(
-        message = "Use observeTemplateAsDomain() instead",
-        replaceWith = ReplaceWith("observeTemplateAsDomain(id)")
-    )
-    fun observeTemplateById(id: Long): Flow<TemplateHeader?>
-
-    /**
-     * Get a template by its ID.
-     *
-     * @param id The template ID
-     * @return The template or null if not found
-     */
-    @Deprecated(
-        message = "Use getTemplateAsDomain() instead",
-        replaceWith = ReplaceWith("getTemplateAsDomain(id)")
-    )
-    suspend fun getTemplateById(id: Long): TemplateHeader?
-
-    /**
-     * Observe a template with its accounts.
-     *
-     * @param id The template ID
-     * @return Flow that emits the template with accounts when it changes
-     */
-    @Deprecated(
-        message = "Use observeTemplateAsDomain() instead",
-        replaceWith = ReplaceWith("observeTemplateAsDomain(id)")
-    )
-    fun observeTemplateWithAccounts(id: Long): Flow<TemplateWithAccounts?>
-
-    /**
-     * Get a template with its accounts.
-     *
-     * @param id The template ID
-     * @return The template with accounts or null if not found
-     */
-    @Deprecated(
-        message = "Use getTemplateAsDomain() instead",
-        replaceWith = ReplaceWith("getTemplateAsDomain(id)")
-    )
-    suspend fun getTemplateWithAccounts(id: Long): TemplateWithAccounts?
 
     /**
      * Get a template with its accounts by UUID.

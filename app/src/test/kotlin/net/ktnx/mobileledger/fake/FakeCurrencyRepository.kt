@@ -56,37 +56,8 @@ class FakeCurrencyRepository : CurrencyRepository {
         currenciesFlow.map { list -> list.find { it.name == name }?.toDomain() }
 
     // ========================================
-    // Database Entity Query Operations
+    // Mutation Operations
     // ========================================
-
-    override fun observeAllCurrencies(): Flow<List<Currency>> = currenciesFlow
-
-    override suspend fun getAllCurrencies(): List<Currency> = currencies.values.toList()
-
-    override fun observeCurrencyById(id: Long): Flow<Currency?> = MutableStateFlow(currencies[id])
-
-    override fun observeCurrencyByName(name: String): Flow<Currency?> =
-        MutableStateFlow(currencies.values.find { it.name == name })
-
-    override suspend fun getCurrencyByName(name: String): Currency? = currencies.values.find { it.name == name }
-
-    override suspend fun insertCurrency(currency: Currency): Long {
-        val id = if (currency.id == 0L) nextId++ else currency.id
-        currency.id = id
-        currencies[id] = currency
-        emitFlow()
-        return id
-    }
-
-    override suspend fun updateCurrency(currency: Currency) {
-        currencies[currency.id] = currency
-        emitFlow()
-    }
-
-    override suspend fun deleteCurrency(currency: Currency) {
-        currencies.remove(currency.id)
-        emitFlow()
-    }
 
     override suspend fun deleteAllCurrencies() {
         currencies.clear()
@@ -95,12 +66,11 @@ class FakeCurrencyRepository : CurrencyRepository {
 
     override suspend fun saveCurrency(currency: DomainCurrency): Long {
         val entity = currency.toEntity()
-        return if (entity.id == 0L) {
-            insertCurrency(entity)
-        } else {
-            updateCurrency(entity)
-            entity.id
-        }
+        val id = if (entity.id == 0L) nextId++ else entity.id
+        entity.id = id
+        currencies[id] = entity
+        emitFlow()
+        return id
     }
 
     override suspend fun deleteCurrencyByName(name: String): Boolean {

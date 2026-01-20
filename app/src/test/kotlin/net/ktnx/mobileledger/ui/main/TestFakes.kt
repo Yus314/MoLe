@@ -26,8 +26,6 @@ import net.ktnx.mobileledger.data.repository.AccountRepository
 import net.ktnx.mobileledger.data.repository.OptionRepository
 import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.data.repository.TransactionRepository
-import net.ktnx.mobileledger.db.Account as DbAccount
-import net.ktnx.mobileledger.db.AccountWithAmounts
 import net.ktnx.mobileledger.db.TransactionWithAccounts
 import net.ktnx.mobileledger.domain.model.Account
 import net.ktnx.mobileledger.domain.model.AccountAmount
@@ -291,8 +289,6 @@ class FakeAccountRepositoryForViewModel : AccountRepository {
         return MutableStateFlow(filtered)
     }
 
-    override fun observeByName(profileId: Long, accountName: String): Flow<DbAccount?> = MutableStateFlow(null)
-
     override fun observeByNameWithAmounts(profileId: Long, accountName: String): Flow<Account?> =
         MutableStateFlow(domainAccounts[profileId]?.find { it.name == accountName })
 
@@ -313,10 +309,6 @@ class FakeAccountRepositoryForViewModel : AccountRepository {
         }
     }
 
-    override suspend fun getById(id: Long): DbAccount? = null
-
-    override suspend fun getByName(profileId: Long, accountName: String): DbAccount? = null
-
     override suspend fun getByNameWithAmounts(profileId: Long, accountName: String): Account? =
         domainAccounts[profileId]?.find { it.name == accountName }
 
@@ -328,14 +320,6 @@ class FakeAccountRepositoryForViewModel : AccountRepository {
 
     override suspend fun searchAccountNamesGlobal(term: String): List<String> =
         accountNames.values.flatten().filter { it.contains(term, ignoreCase = true) }
-
-    override suspend fun insertAccount(account: DbAccount): Long = 0L
-
-    override suspend fun insertAccountWithAmounts(accountWithAmounts: AccountWithAmounts) {}
-
-    override suspend fun updateAccount(account: DbAccount) {}
-
-    override suspend fun storeAccounts(accounts: List<AccountWithAmounts>, profileId: Long) {}
 
     override suspend fun storeAccountsAsDomain(accounts: List<Account>, profileId: Long) {
         domainAccounts[profileId] = accounts.toMutableList()

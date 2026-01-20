@@ -492,8 +492,6 @@ class FakeAccountRepositoryForAccountSummary : AccountRepository {
     override fun observeAllWithAmounts(profileId: Long, includeZeroBalances: Boolean) =
         MutableStateFlow(domainAccounts[profileId] ?: emptyList())
 
-    override fun observeByName(profileId: Long, accountName: String) = MutableStateFlow<DbAccount?>(null)
-
     override fun observeByNameWithAmounts(profileId: Long, accountName: String) =
         MutableStateFlow(domainAccounts[profileId]?.find { it.name == accountName })
 
@@ -518,10 +516,6 @@ class FakeAccountRepositoryForAccountSummary : AccountRepository {
         }
     }
 
-    override suspend fun getById(id: Long): DbAccount? = null
-
-    override suspend fun getByName(profileId: Long, accountName: String): DbAccount? = null
-
     override suspend fun getByNameWithAmounts(profileId: Long, accountName: String): Account? =
         domainAccounts[profileId]?.find { it.name == accountName }
 
@@ -535,14 +529,6 @@ class FakeAccountRepositoryForAccountSummary : AccountRepository {
         accountNames.values.flatten().filter { it.contains(term, ignoreCase = true) }
 
     override suspend fun getCountForProfile(profileId: Long): Int = domainAccounts[profileId]?.size ?: 0
-
-    override suspend fun insertAccount(account: DbAccount): Long = 0L
-
-    override suspend fun insertAccountWithAmounts(accountWithAmounts: AccountWithAmounts) {}
-
-    override suspend fun updateAccount(account: DbAccount) {}
-
-    override suspend fun storeAccounts(accounts: List<AccountWithAmounts>, profileId: Long) {}
 
     override suspend fun deleteAllAccounts() {
         domainAccounts.clear()

@@ -23,7 +23,6 @@ import kotlinx.coroutines.flow.map
 import net.ktnx.mobileledger.data.repository.TemplateRepository
 import net.ktnx.mobileledger.data.repository.mapper.TemplateMapper.toDomain
 import net.ktnx.mobileledger.data.repository.mapper.TemplateMapper.toEntity
-import net.ktnx.mobileledger.db.TemplateHeader
 import net.ktnx.mobileledger.db.TemplateWithAccounts
 import net.ktnx.mobileledger.domain.model.Template
 
@@ -55,17 +54,6 @@ class FakeTemplateRepository : TemplateRepository {
     // ========================================
     // Database Entity Query Operations
     // ========================================
-
-    override fun observeAllTemplates(): Flow<List<TemplateHeader>> =
-        MutableStateFlow(templates.values.map { it.header }.sortedBy { it.name })
-
-    override fun observeTemplateById(id: Long): Flow<TemplateHeader?> = MutableStateFlow(templates[id]?.header)
-
-    override suspend fun getTemplateById(id: Long): TemplateHeader? = templates[id]?.header
-
-    override fun observeTemplateWithAccounts(id: Long): Flow<TemplateWithAccounts?> = MutableStateFlow(templates[id])
-
-    override suspend fun getTemplateWithAccounts(id: Long): TemplateWithAccounts? = templates[id]
 
     override suspend fun getTemplateWithAccountsByUuid(uuid: String): TemplateWithAccounts? =
         templates.values.find { it.header.uuid == uuid }

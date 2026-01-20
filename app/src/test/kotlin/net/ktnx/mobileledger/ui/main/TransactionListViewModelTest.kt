@@ -881,9 +881,6 @@ class FakeAccountRepositoryForTransactionList : net.ktnx.mobileledger.data.repos
     override fun observeAllWithAmounts(profileId: Long, includeZeroBalances: Boolean) =
         MutableStateFlow<List<net.ktnx.mobileledger.domain.model.Account>>(emptyList())
 
-    override fun observeByName(profileId: Long, accountName: String) =
-        MutableStateFlow<net.ktnx.mobileledger.db.Account?>(null)
-
     override fun observeByNameWithAmounts(profileId: Long, accountName: String) =
         MutableStateFlow<net.ktnx.mobileledger.domain.model.Account?>(null)
 
@@ -896,10 +893,6 @@ class FakeAccountRepositoryForTransactionList : net.ktnx.mobileledger.data.repos
     // Suspend methods (no suffix)
     override suspend fun getAllWithAmounts(profileId: Long, includeZeroBalances: Boolean) =
         emptyList<net.ktnx.mobileledger.domain.model.Account>()
-
-    override suspend fun getById(id: Long): net.ktnx.mobileledger.db.Account? = null
-
-    override suspend fun getByName(profileId: Long, accountName: String): net.ktnx.mobileledger.db.Account? = null
 
     override suspend fun getByNameWithAmounts(
         profileId: Long,
@@ -914,14 +907,6 @@ class FakeAccountRepositoryForTransactionList : net.ktnx.mobileledger.data.repos
 
     override suspend fun searchAccountNamesGlobal(term: String) =
         accountNames.values.flatten().filter { it.contains(term, ignoreCase = true) }
-
-    override suspend fun insertAccount(account: net.ktnx.mobileledger.db.Account) = 0L
-
-    override suspend fun insertAccountWithAmounts(accountWithAmounts: net.ktnx.mobileledger.db.AccountWithAmounts) {}
-
-    override suspend fun updateAccount(account: net.ktnx.mobileledger.db.Account) {}
-
-    override suspend fun storeAccounts(accounts: List<net.ktnx.mobileledger.db.AccountWithAmounts>, profileId: Long) {}
 
     override suspend fun getCountForProfile(profileId: Long) = accountNames[profileId]?.size ?: 0
 

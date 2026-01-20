@@ -27,8 +27,6 @@ import net.ktnx.mobileledger.dao.AccountDAO
 import net.ktnx.mobileledger.dao.AccountValueDAO
 import net.ktnx.mobileledger.data.repository.mapper.AccountMapper.toDomain
 import net.ktnx.mobileledger.data.repository.mapper.AccountMapper.toEntity
-import net.ktnx.mobileledger.db.Account as DbAccount
-import net.ktnx.mobileledger.db.AccountWithAmounts
 import net.ktnx.mobileledger.domain.model.Account
 
 /**
@@ -55,10 +53,6 @@ class AccountRepositoryImpl @Inject constructor(
         accountDAO.getAllWithAmounts(profileId, includeZeroBalances)
             .map { entities -> entities.map { it.toDomain() } }
 
-    @Deprecated("Use observeByNameWithAmounts() instead")
-    override fun observeByName(profileId: Long, accountName: String): Flow<DbAccount?> =
-        accountDAO.getByName(profileId, accountName)
-
     override fun observeByNameWithAmounts(profileId: Long, accountName: String): Flow<Account?> =
         accountDAO.getByNameWithAmounts(profileId, accountName)
             .map { it?.toDomain() }
@@ -84,16 +78,6 @@ class AccountRepositoryImpl @Inject constructor(
             accountDAO.getAllWithAmountsSync(profileId, includeZeroBalances)
                 .map { it.toDomain() }
         }
-
-    @Deprecated("Use getByNameWithAmounts() with profile ID and name instead")
-    override suspend fun getById(id: Long): DbAccount? = withContext(Dispatchers.IO) {
-        accountDAO.getByIdSync(id)
-    }
-
-    @Deprecated("Use getByNameWithAmounts() instead")
-    override suspend fun getByName(profileId: Long, accountName: String): DbAccount? = withContext(Dispatchers.IO) {
-        accountDAO.getByNameSync(profileId, accountName)
-    }
 
     override suspend fun getByNameWithAmounts(profileId: Long, accountName: String): Account? =
         withContext(Dispatchers.IO) {
@@ -122,64 +106,12 @@ class AccountRepositoryImpl @Inject constructor(
     // Mutation Operations
     // ========================================
 
-    @Deprecated("Use storeAccountsAsDomain() for batch operations instead")
-    override suspend fun insertAccount(account: DbAccount): Long = withContext(Dispatchers.IO) {
-        accountDAO.insertSync(account)
-    }
-
-    @Deprecated("Use storeAccountsAsDomain() for batch operations instead")
-    override suspend fun insertAccountWithAmounts(accountWithAmounts: AccountWithAmounts) {
-        withContext(Dispatchers.IO) {
-            val account = accountWithAmounts.account
-            account.id = accountDAO.insertSync(account)
-            for (value in accountWithAmounts.amounts) {
-                value.accountId = account.id
-                value.generation = account.generation
-                value.id = accountValueDAO.insertSync(value)
-            }
-        }
-    }
-
-    @Deprecated("Use storeAccountsAsDomain() for batch operations instead")
-    override suspend fun updateAccount(account: DbAccount) {
-        withContext(Dispatchers.IO) {
-            accountDAO.updateSync(account)
-        }
-    }
-
-    // ========================================
-    // Sync Operations
-    // ========================================
-
-    @Deprecated("Use storeAccountsAsDomain() instead")
-    override suspend fun storeAccounts(accounts: List<AccountWithAmounts>, profileId: Long) {
-        withContext(Dispatchers.IO) {
-            val generation = accountDAO.getGenerationSync(profileId) + 1
-
-            for (rec in accounts) {
-                rec.account.generation = generation
-                rec.account.profileId = profileId
-                // Insert account
-                val account = rec.account
-                account.id = accountDAO.insertSync(account)
-                // Insert amounts
-                for (value in rec.amounts) {
-                    value.accountId = account.id
-                    value.generation = account.generation
-                    value.id = accountValueDAO.insertSync(value)
-                }
-            }
-            accountDAO.purgeOldAccountsSync(profileId, generation)
-            accountDAO.purgeOldAccountValuesSync(profileId, generation)
-        }
-    }
-
     override suspend fun storeAccountsAsDomain(accounts: List<Account>, profileId: Long) {
         withContext(Dispatchers.IO) {
             val generation = accountDAO.getGenerationSync(profileId) + 1
 
             for (domainAccount in accounts) {
-                val entity: AccountWithAmounts = domainAccount.toEntity(profileId)
+                val entity = domainAccount.toEntity(profileId)
                 entity.account.generation = generation
 
                 // Check for existing account to preserve amountsExpanded (not in domain model)

@@ -18,9 +18,6 @@
 package net.ktnx.mobileledger.data.repository
 
 import kotlinx.coroutines.flow.Flow
-import net.ktnx.mobileledger.dao.AccountDAO
-import net.ktnx.mobileledger.db.Account as DbAccount
-import net.ktnx.mobileledger.db.AccountWithAmounts
 import net.ktnx.mobileledger.domain.model.Account
 
 /**
@@ -39,7 +36,7 @@ import net.ktnx.mobileledger.domain.model.Account
  *     private val accountRepository: AccountRepository
  * ) : ViewModel() {
  *     fun loadAccounts(profileId: Long, includeZeroBalances: Boolean) =
- *         accountRepository.getAllWithAmounts(profileId, includeZeroBalances)
+ *         accountRepository.observeAllWithAmounts(profileId, includeZeroBalances)
  *             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
  * }
  * ```
@@ -58,19 +55,6 @@ interface AccountRepository {
      * @return Flow that emits the account list whenever it changes
      */
     fun observeAllWithAmounts(profileId: Long, includeZeroBalances: Boolean): Flow<List<Account>>
-
-    /**
-     * Observe an account by name within a profile.
-     *
-     * @param profileId The profile ID
-     * @param accountName The account name
-     * @return Flow that emits the account when it changes
-     */
-    @Deprecated(
-        message = "Use observeByNameWithAmounts() instead",
-        replaceWith = ReplaceWith("observeByNameWithAmounts(profileId, accountName)")
-    )
-    fun observeByName(profileId: Long, accountName: String): Flow<DbAccount?>
 
     /**
      * Observe an account by name with its amounts.
@@ -116,31 +100,6 @@ interface AccountRepository {
     suspend fun getAllWithAmounts(profileId: Long, includeZeroBalances: Boolean): List<Account>
 
     /**
-     * Get an account by its ID.
-     *
-     * @param id The account ID
-     * @return The account or null if not found
-     */
-    @Deprecated(
-        message = "Use getByNameWithAmounts() with profile ID and name instead",
-        replaceWith = ReplaceWith("getByNameWithAmounts(profileId, accountName)")
-    )
-    suspend fun getById(id: Long): DbAccount?
-
-    /**
-     * Get an account by name within a profile.
-     *
-     * @param profileId The profile ID
-     * @param accountName The account name
-     * @return The account or null if not found
-     */
-    @Deprecated(
-        message = "Use getByNameWithAmounts() instead",
-        replaceWith = ReplaceWith("getByNameWithAmounts(profileId, accountName)")
-    )
-    suspend fun getByName(profileId: Long, accountName: String): DbAccount?
-
-    /**
      * Get an account by name with its amounts.
      *
      * @param profileId The profile ID
@@ -182,58 +141,6 @@ interface AccountRepository {
     // ========================================
     // Mutation Operations
     // ========================================
-
-    /**
-     * Insert an account.
-     *
-     * @param account The account to insert
-     * @return The ID of the inserted account
-     */
-    @Deprecated(
-        message = "Use storeAccountsAsDomain() for batch operations instead",
-        replaceWith = ReplaceWith("storeAccountsAsDomain(listOf(account.toDomain()), profileId)")
-    )
-    suspend fun insertAccount(account: DbAccount): Long
-
-    /**
-     * Insert an account with its amounts.
-     *
-     * @param accountWithAmounts The account with amounts to insert
-     */
-    @Deprecated(
-        message = "Use storeAccountsAsDomain() for batch operations instead",
-        replaceWith = ReplaceWith("storeAccountsAsDomain(listOf(accountWithAmounts.toDomain()), profileId)")
-    )
-    suspend fun insertAccountWithAmounts(accountWithAmounts: AccountWithAmounts)
-
-    /**
-     * Update an existing account.
-     *
-     * @param account The account to update
-     */
-    @Deprecated(
-        message = "Use storeAccountsAsDomain() for batch operations instead",
-        replaceWith = ReplaceWith("storeAccountsAsDomain(listOf(account.toDomain()), profileId)")
-    )
-    suspend fun updateAccount(account: DbAccount)
-
-    // ========================================
-    // Sync Operations
-    // ========================================
-
-    /**
-     * Store a batch of accounts with amounts for a profile.
-     *
-     * This operation handles generation tracking and purges old data.
-     *
-     * @param accounts The accounts to store
-     * @param profileId The profile ID
-     */
-    @Deprecated(
-        message = "Use storeAccountsAsDomain() instead",
-        replaceWith = ReplaceWith("storeAccountsAsDomain(accounts.map { it.toDomain() }, profileId)")
-    )
-    suspend fun storeAccounts(accounts: List<AccountWithAmounts>, profileId: Long)
 
     /**
      * Store a batch of accounts using domain models.
