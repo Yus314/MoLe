@@ -21,6 +21,8 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import net.ktnx.mobileledger.domain.model.Profile
+import net.ktnx.mobileledger.domain.usecase.TransactionAccountRowManager
+import net.ktnx.mobileledger.domain.usecase.TransactionAccountRowManagerImpl
 import net.ktnx.mobileledger.domain.usecase.TransactionBalanceCalculator
 import net.ktnx.mobileledger.domain.usecase.TransactionBalanceCalculatorImpl
 import net.ktnx.mobileledger.fake.FakeAccountRepository
@@ -59,6 +61,7 @@ class AccountRowsViewModelTest {
     private lateinit var currencyFormatter: FakeCurrencyFormatter
     private lateinit var rowIdGenerator: FakeRowIdGenerator
     private lateinit var balanceCalculator: TransactionBalanceCalculator
+    private lateinit var rowManager: TransactionAccountRowManager
 
     private lateinit var viewModel: AccountRowsViewModel
 
@@ -70,6 +73,7 @@ class AccountRowsViewModelTest {
         currencyFormatter = FakeCurrencyFormatter()
         rowIdGenerator = FakeRowIdGenerator()
         balanceCalculator = TransactionBalanceCalculatorImpl()
+        rowManager = TransactionAccountRowManagerImpl()
     }
 
     private fun createTestProfile(
@@ -94,7 +98,8 @@ class AccountRowsViewModelTest {
             currencyRepository = currencyRepository,
             currencyFormatter = currencyFormatter,
             rowIdGenerator = rowIdGenerator,
-            balanceCalculator = balanceCalculator
+            balanceCalculator = balanceCalculator,
+            rowManager = rowManager
         )
     }
 

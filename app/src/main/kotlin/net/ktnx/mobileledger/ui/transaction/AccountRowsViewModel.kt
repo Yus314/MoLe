@@ -35,6 +35,7 @@ import logcat.logcat
 import net.ktnx.mobileledger.data.repository.AccountRepository
 import net.ktnx.mobileledger.data.repository.CurrencyRepository
 import net.ktnx.mobileledger.data.repository.ProfileRepository
+import net.ktnx.mobileledger.domain.usecase.TransactionAccountRowManager
 import net.ktnx.mobileledger.domain.usecase.TransactionBalanceCalculator
 import net.ktnx.mobileledger.service.CurrencyFormatter
 import net.ktnx.mobileledger.service.RowIdGenerator
@@ -46,7 +47,8 @@ class AccountRowsViewModel @Inject constructor(
     private val currencyRepository: CurrencyRepository,
     private val currencyFormatter: CurrencyFormatter,
     private val rowIdGenerator: RowIdGenerator,
-    private val balanceCalculator: TransactionBalanceCalculator
+    private val balanceCalculator: TransactionBalanceCalculator,
+    private val rowManager: TransactionAccountRowManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AccountRowsUiState())
@@ -112,13 +114,7 @@ class AccountRowsViewModel @Inject constructor(
     private fun updateAccountName(rowId: Int, name: String) {
         _uiState.update { state ->
             state.copy(
-                accounts = state.accounts.map { row ->
-                    if (row.id == rowId) {
-                        row.copy(accountName = name)
-                    } else {
-                        row
-                    }
-                }
+                accounts = rowManager.updateRow(state.accounts, rowId) { it.copy(accountName = name) }
             )
         }
         lookupAccountSuggestions(rowId, name)
@@ -180,14 +176,10 @@ class AccountRowsViewModel @Inject constructor(
 
     private fun updateAmount(rowId: Int, amountText: String) {
         _uiState.update { state ->
+            val isValid = validateAmount(amountText)
             state.copy(
-                accounts = state.accounts.map { row ->
-                    if (row.id == rowId) {
-                        val isValid = validateAmount(amountText)
-                        row.copy(amountText = amountText, isAmountValid = isValid)
-                    } else {
-                        row
-                    }
+                accounts = rowManager.updateRow(state.accounts, rowId) {
+                    it.copy(amountText = amountText, isAmountValid = isValid)
                 }
             )
         }
@@ -242,9 +234,7 @@ class AccountRowsViewModel @Inject constructor(
     private fun updateCurrency(rowId: Int, currency: String) {
         _uiState.update { state ->
             state.copy(
-                accounts = state.accounts.map { row ->
-                    if (row.id == rowId) row.copy(currency = currency) else row
-                },
+                accounts = rowManager.updateRow(state.accounts, rowId) { it.copy(currency = currency) },
                 showCurrencySelector = false,
                 currencySelectorRowId = null
             )
@@ -255,9 +245,7 @@ class AccountRowsViewModel @Inject constructor(
     private fun updateAccountComment(rowId: Int, comment: String) {
         _uiState.update { state ->
             state.copy(
-                accounts = state.accounts.map { row ->
-                    if (row.id == rowId) row.copy(comment = comment) else row
-                }
+                accounts = rowManager.updateRow(state.accounts, rowId) { it.copy(comment = comment) }
             )
         }
     }
@@ -266,59 +254,31 @@ class AccountRowsViewModel @Inject constructor(
         val defaultCurrency = _uiState.value.defaultCurrency
         _uiState.update { state ->
             val newRow = TransactionAccountRow(id = rowIdGenerator.nextId(), currency = defaultCurrency)
-            val newAccounts = if (afterRowId != null) {
-                val index = state.accounts.indexOfFirst { it.id == afterRowId }
-                if (index >= 0) {
-                    state.accounts.toMutableList().apply {
-                        add(index + 1, newRow)
-                    }
-                } else {
-                    state.accounts + newRow
-                }
-            } else {
-                state.accounts + newRow
-            }
-            state.copy(accounts = updateLastFlags(newAccounts))
+            state.copy(accounts = rowManager.addRow(state.accounts, afterRowId, newRow))
         }
     }
 
     private fun removeAccountRow(rowId: Int) {
         _uiState.update { state ->
-            if (state.accounts.size <= 2) return@update state
-            val newAccounts = state.accounts.filter { it.id != rowId }
-            state.copy(accounts = updateLastFlags(newAccounts))
+            state.copy(accounts = rowManager.removeRow(state.accounts, rowId))
         }
         ensureMinimumRows()
     }
 
     private fun moveAccountRow(fromIndex: Int, toIndex: Int) {
         _uiState.update { state ->
-            val accounts = state.accounts.toMutableList()
-            if (fromIndex in accounts.indices && toIndex in accounts.indices) {
-                val item = accounts.removeAt(fromIndex)
-                accounts.add(toIndex, item)
-            }
-            state.copy(accounts = updateLastFlags(accounts))
+            state.copy(accounts = rowManager.moveRow(state.accounts, fromIndex, toIndex))
         }
     }
-
-    private fun updateLastFlags(accounts: List<TransactionAccountRow>): List<TransactionAccountRow> =
-        accounts.mapIndexed { index, row ->
-            row.copy(isLast = index == accounts.lastIndex)
-        }
 
     private fun ensureMinimumRows() {
         _uiState.update { state ->
             val defaultCurrency = state.defaultCurrency
-            val minRows = 2
-            if (state.accounts.size < minRows) {
-                val additionalRows = (state.accounts.size until minRows).map {
+            state.copy(
+                accounts = rowManager.ensureMinimumRows(state.accounts) {
                     TransactionAccountRow(id = rowIdGenerator.nextId(), currency = defaultCurrency)
                 }
-                state.copy(accounts = updateLastFlags(state.accounts + additionalRows))
-            } else {
-                state
-            }
+            )
         }
     }
 
@@ -421,16 +381,12 @@ class AccountRowsViewModel @Inject constructor(
     private fun setRows(rows: List<TransactionAccountRow>) {
         val defaultCurrency = _uiState.value.defaultCurrency
 
-        val accounts = if (rows.size >= 2) {
-            rows
-        } else {
-            rows + List(2 - rows.size) {
-                TransactionAccountRow(id = rowIdGenerator.nextId(), currency = defaultCurrency)
-            }
-        }
-
         _uiState.update { state ->
-            state.copy(accounts = updateLastFlags(accounts))
+            state.copy(
+                accounts = rowManager.setRows(rows) {
+                    TransactionAccountRow(id = rowIdGenerator.nextId(), currency = defaultCurrency)
+                }
+            )
         }
         recalculateAmountHints()
     }
