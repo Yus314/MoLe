@@ -56,12 +56,13 @@ class CurrencyMapperTest {
     }
 
     @Test
-    fun `toDomain with unknown position defaults to after`() {
+    fun `toDomain with unknown position matches UNKNOWN enum`() {
+        // "unknown" now matches UNKNOWN enum value (case-insensitive)
         val entity = DbCurrency(id = 1L, name = "EUR", position = "unknown", hasGap = true)
 
         val domain = entity.toDomain()
 
-        assertEquals(CurrencyPosition.AFTER, domain.position)
+        assertEquals(CurrencyPosition.UNKNOWN, domain.position)
     }
 
     @Test

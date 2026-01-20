@@ -108,17 +108,6 @@ class TemplateAccount : TemplateBase {
         this.position = position.toLong()
     }
 
-    /**
-     * @deprecated Use CurrencyRepository.getCurrencyById() instead.
-     * This method violates the Repository pattern by accessing the database directly.
-     */
-    @Deprecated("Use CurrencyRepository.getCurrencyById() instead", ReplaceWith(""))
-    fun getCurrencyObject(): Currency? {
-        val curr = currency
-        if (curr == null || curr <= 0) return null
-        return DB.get().getCurrencyDAO().getByIdSync(curr)
-    }
-
     fun createDuplicate(header: TemplateHeader): TemplateAccount {
         val dup = TemplateAccount(this)
         dup.id = 0

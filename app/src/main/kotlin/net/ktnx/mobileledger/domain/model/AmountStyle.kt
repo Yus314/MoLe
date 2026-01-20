@@ -15,7 +15,7 @@
  * along with MoLe. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ktnx.mobileledger.model
+package net.ktnx.mobileledger.domain.model
 
 import java.util.Locale
 import kotlin.math.abs
@@ -155,8 +155,8 @@ data class AmountStyle(
             // Default to AFTER when globalPos is not set
             val position = when {
                 currency.isNullOrEmpty() -> Position.NONE
-                globalPos == Currency.Position.BEFORE -> Position.BEFORE
-                globalPos == Currency.Position.AFTER -> Position.AFTER
+                globalPos == CurrencyPosition.BEFORE -> Position.BEFORE
+                globalPos == CurrencyPosition.AFTER -> Position.AFTER
                 else -> Position.NONE
             }
 

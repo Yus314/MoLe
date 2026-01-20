@@ -17,7 +17,7 @@
 
 package net.ktnx.mobileledger.json.common
 
-import net.ktnx.mobileledger.model.AmountStyle
+import net.ktnx.mobileledger.domain.model.AmountStyle
 
 /**
  * Utility object providing common functionality for ParsedLedgerAccount implementations.

@@ -85,9 +85,9 @@ data class Profile(
     val defaultCommodityOrEmpty: String get() = defaultCommodity ?: ""
 
     /**
-     * 1.19以前のバージョンかどうか
+     * 1.20.1以前のバージョンかどうか
      */
-    val isVersionPre_1_19: Boolean get() = serverVersion?.isPre_1_19 ?: false
+    val isVersionPre_1_20_1: Boolean get() = serverVersion?.isPre_1_20_1 ?: false
 
     /**
      * 検出されたメジャーバージョン

@@ -56,7 +56,7 @@ object ProfileMapper {
         serverVersion = ServerVersion(
             major = detectedVersionMajor,
             minor = detectedVersionMinor,
-            isPre_1_19 = detectedVersionPre_1_19
+            isPre_1_20_1 = detectedVersionPre_1_19
         )
     )
 
@@ -83,7 +83,7 @@ object ProfileMapper {
         showCommodityByDefault = this@toEntity.showCommodityByDefault
         setDefaultCommodity(this@toEntity.defaultCommodity)
         showCommentsByDefault = this@toEntity.showCommentsByDefault
-        detectedVersionPre_1_19 = this@toEntity.serverVersion?.isPre_1_19 ?: false
+        detectedVersionPre_1_19 = this@toEntity.serverVersion?.isPre_1_20_1 ?: false
         detectedVersionMajor = this@toEntity.serverVersion?.major ?: 0
         detectedVersionMinor = this@toEntity.serverVersion?.minor ?: 0
     }

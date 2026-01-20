@@ -31,9 +31,9 @@ import kotlinx.coroutines.launch
 import logcat.logcat
 import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.data.repository.TemplateRepository
+import net.ktnx.mobileledger.domain.model.MatchedTemplate
 import net.ktnx.mobileledger.domain.model.Template
 import net.ktnx.mobileledger.domain.model.TemplateLine
-import net.ktnx.mobileledger.model.MatchedTemplate
 import net.ktnx.mobileledger.service.CurrencyFormatter
 import net.ktnx.mobileledger.service.RowIdGenerator
 

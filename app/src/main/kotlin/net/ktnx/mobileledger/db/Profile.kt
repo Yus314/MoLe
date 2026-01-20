@@ -21,7 +21,6 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import androidx.room.Transaction
 import java.util.UUID
 import net.ktnx.mobileledger.utils.Misc
 
@@ -131,23 +130,6 @@ class Profile {
         result = 31 * result + name.hashCode()
         result = 31 * result + uuid.hashCode()
         return result
-    }
-
-    /**
-     * @deprecated Use ProfileRepository.deleteProfileData() instead.
-     * This method violates the Repository pattern by accessing the database directly.
-     */
-    @Deprecated("Use ProfileRepository.deleteProfileData() instead", ReplaceWith(""))
-    @Transaction
-    fun wipeAllDataSync() {
-        val optDao = DB.get().getOptionDAO()
-        optDao.deleteSync(optDao.allForProfileSync(id))
-
-        val accDao = DB.get().getAccountDAO()
-        accDao.deleteSync(accDao.allForProfileSync(id))
-
-        val trnDao = DB.get().getTransactionDAO()
-        trnDao.deleteSync(trnDao.getAllForProfileUnorderedSync(id))
     }
 
     companion object {

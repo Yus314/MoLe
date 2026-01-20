@@ -49,7 +49,6 @@ import net.ktnx.mobileledger.domain.model.ProfileAuthentication
 import net.ktnx.mobileledger.domain.model.ServerVersion
 import net.ktnx.mobileledger.domain.usecase.VersionDetector
 import net.ktnx.mobileledger.json.API
-import net.ktnx.mobileledger.model.HledgerVersion
 import net.ktnx.mobileledger.service.AuthDataProvider
 
 @HiltViewModel
@@ -111,10 +110,10 @@ class ProfileDetailViewModel @Inject constructor(
             val profile = profileRepository.getProfileById(profileId)
             if (profile != null) {
                 orderNo = profile.orderNo
-                val detectedVersion = if (profile.isVersionPre_1_19) {
-                    HledgerVersion(true)
+                val detectedVersion = if (profile.isVersionPre_1_20_1) {
+                    ServerVersion.preLegacy()
                 } else if (profile.detectedVersionMajor > 0) {
-                    HledgerVersion(profile.detectedVersionMajor, profile.detectedVersionMinor)
+                    ServerVersion(profile.detectedVersionMajor, profile.detectedVersionMinor)
                 } else {
                     null
                 }
@@ -346,16 +345,6 @@ class ProfileDetailViewModel @Inject constructor(
 
             try {
                 val state = _uiState.value
-                val version = state.detectedVersion
-                val serverVersion = if (version != null) {
-                    ServerVersion(
-                        major = version.major,
-                        minor = version.minor,
-                        isPre_1_19 = version.isPre_1_20_1
-                    )
-                } else {
-                    null
-                }
 
                 val authentication = if (state.useAuthentication) {
                     ProfileAuthentication(user = state.authUser, password = state.authPassword)
@@ -385,7 +374,7 @@ class ProfileDetailViewModel @Inject constructor(
                     showCommodityByDefault = state.showCommodityByDefault,
                     defaultCommodity = state.defaultCommodity,
                     showCommentsByDefault = state.showCommentsByDefault,
-                    serverVersion = serverVersion
+                    serverVersion = state.detectedVersion
                 )
 
                 if (profile.id != null && profile.id > 0) {
@@ -444,7 +433,7 @@ class ProfileDetailViewModel @Inject constructor(
         }
     }
 
-    private suspend fun detectVersion(): HledgerVersion? {
+    private suspend fun detectVersion(): ServerVersion? {
         val state = _uiState.value
 
         val result = versionDetector.detect(
@@ -456,37 +445,17 @@ class ProfileDetailViewModel @Inject constructor(
 
         return result.fold(
             onSuccess = { versionString ->
-                parseVersionString(versionString)
+                ServerVersion.parse(versionString).also { version ->
+                    if (version == null) {
+                        logcat { "Unrecognised version string '$versionString'" }
+                    }
+                }
             },
             onFailure = { error ->
                 logcat { "Version detection failed: ${error.message}" }
                 null
             }
         )
-    }
-
-    private fun parseVersionString(versionString: String): HledgerVersion? {
-        // Handle pre-1.19 case
-        if (versionString == "pre-1.19") {
-            return HledgerVersion(true)
-        }
-
-        // Parse "major.minor" format
-        val parts = versionString.split(".")
-        if (parts.size >= 2) {
-            val major = parts[0].toIntOrNull() ?: return null
-            val minor = parts[1].toIntOrNull() ?: return null
-            val patch = if (parts.size >= 3) parts[2].toIntOrNull() else null
-
-            return if (patch != null) {
-                HledgerVersion(major, minor, patch)
-            } else {
-                HledgerVersion(major, minor)
-            }
-        }
-
-        logcat { "Unrecognised version string '$versionString'" }
-        return null
     }
 
     private fun setAuthenticationData() {

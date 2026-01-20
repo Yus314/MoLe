@@ -15,7 +15,7 @@
  * along with MoLe. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ktnx.mobileledger.model
+package net.ktnx.mobileledger.domain.model
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse

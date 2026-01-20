@@ -25,7 +25,13 @@ enum class CurrencyPosition {
     BEFORE,
 
     /** 金額の後に表示 (100円) */
-    AFTER;
+    AFTER,
+
+    /** 不明 */
+    UNKNOWN,
+
+    /** 表示しない */
+    NONE;
 
     /**
      * enum を Int に変換

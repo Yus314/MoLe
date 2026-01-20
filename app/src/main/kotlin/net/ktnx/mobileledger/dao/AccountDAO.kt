@@ -28,7 +28,6 @@ import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 import net.ktnx.mobileledger.db.Account
 import net.ktnx.mobileledger.db.AccountWithAmounts
-import net.ktnx.mobileledger.db.DB
 
 @Dao
 abstract class AccountDAO : BaseDAO<Account>() {
@@ -38,18 +37,6 @@ abstract class AccountDAO : BaseDAO<Account>() {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     abstract fun insertSync(items: List<Account>)
-
-    @Transaction
-    open fun insertSync(accountWithAmounts: AccountWithAmounts) {
-        val valueDAO = DB.get().getAccountValueDAO()
-        val account = accountWithAmounts.account
-        account.id = insertSync(account)
-        for (value in accountWithAmounts.amounts) {
-            value.accountId = account.id
-            value.generation = account.generation
-            value.id = valueDAO.insertSync(value)
-        }
-    }
 
     @Update
     abstract override fun updateSync(item: Account)
@@ -178,19 +165,6 @@ abstract class AccountDAO : BaseDAO<Account>() {
             ":currentGeneration"
     )
     abstract fun purgeOldAccountValuesSync(profileId: Long, currentGeneration: Long)
-
-    @Transaction
-    open fun storeAccountsSync(accounts: List<AccountWithAmounts>, profileId: Long) {
-        val generation = getGenerationSync(profileId) + 1
-
-        for (rec in accounts) {
-            rec.account.generation = generation
-            rec.account.profileId = profileId
-            insertSync(rec)
-        }
-        purgeOldAccountsSync(profileId, generation)
-        purgeOldAccountValuesSync(profileId, generation)
-    }
 
     class AccountNameContainer {
         @ColumnInfo

@@ -64,7 +64,7 @@ import java.text.DateFormatSymbols
 import java.util.Calendar
 import java.util.Locale
 import kotlinx.collections.immutable.ImmutableList
-import net.ktnx.mobileledger.model.AmountStyle
+import net.ktnx.mobileledger.domain.model.AmountStyle
 import net.ktnx.mobileledger.ui.components.WeakOverscrollContainer
 import net.ktnx.mobileledger.utils.SimpleDate
 

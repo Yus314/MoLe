@@ -19,7 +19,7 @@ package net.ktnx.mobileledger.service
 
 import java.util.Locale
 import kotlinx.coroutines.flow.StateFlow
-import net.ktnx.mobileledger.model.Currency
+import net.ktnx.mobileledger.domain.model.CurrencyPosition
 
 /**
  * Currency/number formatting service interface.
@@ -72,7 +72,7 @@ interface CurrencyFormatter {
     /**
      * Currency symbol position.
      */
-    val currencySymbolPosition: StateFlow<Currency.Position>
+    val currencySymbolPosition: StateFlow<CurrencyPosition>
 
     /**
      * Whether there's a space between symbol and number.
@@ -138,5 +138,5 @@ interface CurrencyFormatter {
      * @param symbolPosition Currency symbol position
      * @param hasGap Whether there's a space between symbol and number
      */
-    fun updateFromAmountStyle(symbolPosition: Currency.Position, hasGap: Boolean)
+    fun updateFromAmountStyle(symbolPosition: CurrencyPosition, hasGap: Boolean)
 }

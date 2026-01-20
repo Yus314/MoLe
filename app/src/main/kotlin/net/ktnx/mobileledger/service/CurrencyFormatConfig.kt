@@ -19,7 +19,7 @@ package net.ktnx.mobileledger.service
 
 import java.text.DecimalFormatSymbols
 import java.util.Locale
-import net.ktnx.mobileledger.model.Currency
+import net.ktnx.mobileledger.domain.model.CurrencyPosition
 
 /**
  * Currency format configuration.
@@ -32,7 +32,7 @@ import net.ktnx.mobileledger.model.Currency
  */
 data class CurrencyFormatConfig(
     val locale: Locale,
-    val symbolPosition: Currency.Position,
+    val symbolPosition: CurrencyPosition,
     val hasGap: Boolean,
     val decimalSeparator: Char,
     val groupingSeparator: Char
@@ -45,7 +45,7 @@ data class CurrencyFormatConfig(
             val symbols = DecimalFormatSymbols.getInstance(locale)
             return CurrencyFormatConfig(
                 locale = locale,
-                symbolPosition = Currency.Position.BEFORE,
+                symbolPosition = CurrencyPosition.BEFORE,
                 hasGap = true,
                 decimalSeparator = symbols.decimalSeparator,
                 groupingSeparator = symbols.groupingSeparator

@@ -93,8 +93,9 @@ class ProfileMapperTest {
         assertNotNull(domainProfile.serverVersion)
         assertEquals(1, domainProfile.serverVersion?.major)
         assertEquals(19, domainProfile.serverVersion?.minor)
-        assertTrue(domainProfile.serverVersion?.isPre_1_19 ?: false)
-        assertEquals("1.19", domainProfile.serverVersion?.displayString)
+        assertTrue(domainProfile.serverVersion?.isPre_1_20_1 ?: false)
+        // When isPre_1_20_1 is true, displayString returns "(before 1.20)"
+        assertEquals("(before 1.20)", domainProfile.serverVersion?.displayString)
     }
 
     @Test
@@ -195,7 +196,7 @@ class ProfileMapperTest {
     @Test
     fun `toEntity maps serverVersion fields`() {
         val domainProfile = createDomainProfile(
-            serverVersion = ServerVersion(major = 1, minor = 19, isPre_1_19 = true)
+            serverVersion = ServerVersion(major = 1, minor = 19, isPre_1_20_1 = true)
         )
 
         val dbProfile = domainProfile.toEntity()
@@ -242,7 +243,7 @@ class ProfileMapperTest {
             showCommodityByDefault = true,
             defaultCommodity = "EUR",
             showCommentsByDefault = false,
-            serverVersion = ServerVersion(major = 2, minor = 5, isPre_1_19 = false)
+            serverVersion = ServerVersion(major = 2, minor = 5, isPre_1_20_1 = false)
         )
 
         val dbProfile = original.toEntity()

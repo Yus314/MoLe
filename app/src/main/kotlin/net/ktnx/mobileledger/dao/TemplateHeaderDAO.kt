@@ -24,7 +24,6 @@ import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
-import net.ktnx.mobileledger.db.DB
 import net.ktnx.mobileledger.db.TemplateHeader
 import net.ktnx.mobileledger.db.TemplateWithAccounts
 
@@ -70,13 +69,4 @@ abstract class TemplateHeaderDAO {
     @Transaction
     @Query("SELECT * FROM templates ORDER BY is_fallback, UPPER(name)")
     abstract fun getTemplatesWithAccounts(): Flow<List<TemplateWithAccounts>>
-
-    @Transaction
-    open fun insertSync(templateWithAccounts: TemplateWithAccounts) {
-        val templateId = insertSync(templateWithAccounts.header)
-        for (acc in templateWithAccounts.accounts) {
-            acc.templateId = templateId
-            DB.get().getTemplateAccountDAO().insertSync(acc)
-        }
-    }
 }

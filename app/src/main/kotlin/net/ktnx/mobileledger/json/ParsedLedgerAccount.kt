@@ -19,7 +19,7 @@ package net.ktnx.mobileledger.json
 
 import net.ktnx.mobileledger.domain.model.Account
 import net.ktnx.mobileledger.domain.model.AccountAmount
-import net.ktnx.mobileledger.model.AmountStyle
+import net.ktnx.mobileledger.domain.model.AmountStyle
 
 abstract class ParsedLedgerAccount {
     open var aname: String = ""

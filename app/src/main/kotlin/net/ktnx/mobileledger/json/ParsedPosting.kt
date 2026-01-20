@@ -18,7 +18,7 @@
 package net.ktnx.mobileledger.json
 
 import net.ktnx.mobileledger.di.CurrencyFormatterEntryPoint
-import net.ktnx.mobileledger.model.Currency
+import net.ktnx.mobileledger.domain.model.CurrencyPosition
 
 open class ParsedPosting {
     companion object {
@@ -29,7 +29,7 @@ open class ParsedPosting {
         @JvmStatic
         protected fun getCommoditySide(): Char {
             val formatter = CurrencyFormatterEntryPoint.getOrNull() ?: return 'L'
-            return if (formatter.currencySymbolPosition.value == Currency.Position.AFTER) {
+            return if (formatter.currencySymbolPosition.value == CurrencyPosition.AFTER) {
                 'R'
             } else {
                 'L'

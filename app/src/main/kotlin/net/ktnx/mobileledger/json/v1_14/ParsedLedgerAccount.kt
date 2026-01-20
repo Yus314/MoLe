@@ -18,8 +18,8 @@
 package net.ktnx.mobileledger.json.v1_14
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import net.ktnx.mobileledger.domain.model.AmountStyle
 import net.ktnx.mobileledger.json.ParsedLedgerAccount as BaseAccount
-import net.ktnx.mobileledger.model.AmountStyle
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 open class ParsedLedgerAccount : BaseAccount() {

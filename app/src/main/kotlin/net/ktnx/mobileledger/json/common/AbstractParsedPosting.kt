@@ -18,7 +18,7 @@
 package net.ktnx.mobileledger.json.common
 
 import net.ktnx.mobileledger.di.CurrencyFormatterEntryPoint
-import net.ktnx.mobileledger.model.Currency
+import net.ktnx.mobileledger.domain.model.CurrencyPosition
 
 /**
  * Utility object providing common functionality for ParsedPosting implementations.
@@ -35,7 +35,7 @@ object PostingHelper {
     @JvmStatic
     fun getCommoditySide(): Char {
         val formatter = CurrencyFormatterEntryPoint.getOrNull() ?: return 'L'
-        return if (formatter.currencySymbolPosition.value == Currency.Position.AFTER) 'R' else 'L'
+        return if (formatter.currencySymbolPosition.value == CurrencyPosition.AFTER) 'R' else 'L'
     }
 
     /**

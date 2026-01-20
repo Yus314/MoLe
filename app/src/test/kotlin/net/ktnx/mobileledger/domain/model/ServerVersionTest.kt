@@ -46,35 +46,35 @@ class ServerVersionTest {
     }
 
     @Test
-    fun `isPre_1_19 defaults to false`() {
+    fun `isPre_1_20_1 defaults to false`() {
         val version = ServerVersion(major = 1, minor = 19)
 
-        assertFalse(version.isPre_1_19)
+        assertFalse(version.isPre_1_20_1)
     }
 
     @Test
-    fun `isPre_1_19 can be set to true`() {
-        val version = ServerVersion(major = 1, minor = 18, isPre_1_19 = true)
+    fun `isPre_1_20_1 can be set to true`() {
+        val version = ServerVersion(major = 1, minor = 18, isPre_1_20_1 = true)
 
-        assertTrue(version.isPre_1_19)
+        assertTrue(version.isPre_1_20_1)
     }
 
     @Test
     fun `serverVersion with same values are equal`() {
-        val version1 = ServerVersion(major = 1, minor = 19, isPre_1_19 = false)
-        val version2 = ServerVersion(major = 1, minor = 19, isPre_1_19 = false)
+        val version1 = ServerVersion(major = 1, minor = 19, isPre_1_20_1 = false)
+        val version2 = ServerVersion(major = 1, minor = 19, isPre_1_20_1 = false)
 
         assertEquals(version1, version2)
     }
 
     @Test
     fun `serverVersion copy preserves values`() {
-        val original = ServerVersion(major = 1, minor = 19, isPre_1_19 = true)
+        val original = ServerVersion(major = 1, minor = 19, isPre_1_20_1 = true)
 
         val copied = original.copy(minor = 20)
 
         assertEquals(1, copied.major)
         assertEquals(20, copied.minor)
-        assertTrue(copied.isPre_1_19)
+        assertTrue(copied.isPre_1_20_1)
     }
 }

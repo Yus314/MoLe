@@ -26,14 +26,8 @@ import androidx.room.Query
 import androidx.room.Update
 import java.util.Locale
 import kotlinx.coroutines.flow.Flow
-import logcat.logcat
-import net.ktnx.mobileledger.db.Account
-import net.ktnx.mobileledger.db.AccountValue
-import net.ktnx.mobileledger.db.DB
 import net.ktnx.mobileledger.db.Transaction
 import net.ktnx.mobileledger.db.TransactionWithAccounts
-import net.ktnx.mobileledger.utils.AccountNameUtils
-import net.ktnx.mobileledger.utils.Misc
 
 @Dao
 abstract class TransactionDAO : BaseDAO<Transaction>() {
@@ -181,107 +175,6 @@ abstract class TransactionDAO : BaseDAO<Transaction>() {
     fun getMaxLedgerIdSync(profileId: Long): Long {
         val result = getMaxLedgerIdPOJOSync(profileId) ?: return 0
         return result.ledgerId
-    }
-
-    @androidx.room.Transaction
-    open fun storeTransactionsSync(list: List<TransactionWithAccounts>, profileId: Long) {
-        val generation = getGenerationSync(profileId) + 1
-
-        for (tr in list) {
-            tr.transaction.generation = generation
-            tr.transaction.profileId = profileId
-            storeSync(tr)
-        }
-
-        logcat { "Purging old transactions" }
-        var removed = purgeOldTransactionsSync(profileId, generation)
-        logcat { "Purged $removed transactions" }
-
-        removed = purgeOldTransactionAccountsSync(profileId, generation)
-        logcat { "Purged $removed transaction accounts" }
-    }
-
-    @androidx.room.Transaction
-    open fun storeSync(rec: TransactionWithAccounts) {
-        val trAccDao = DB.get().getTransactionAccountDAO()
-
-        var transaction = rec.transaction
-        val existing = getByLedgerId(transaction.profileId, transaction.ledgerId)
-        if (existing != null) {
-            if (Misc.equalStrings(transaction.dataHash, existing.dataHash)) {
-                updateGenerationWithAccounts(existing.id, rec.transaction.generation)
-                return
-            }
-
-            existing.copyDataFrom(transaction)
-            updateSync(existing)
-
-            transaction = existing
-        } else {
-            transaction.id = insertSync(transaction)
-        }
-
-        for (trAcc in rec.accounts ?: emptyList()) {
-            trAcc.transactionId = transaction.id
-            trAcc.generation = transaction.generation
-            val existingAcc = trAccDao.getByOrderNoSync(trAcc.transactionId, trAcc.orderNo)
-            if (existingAcc != null) {
-                existingAcc.copyDataFrom(trAcc)
-                trAccDao.updateSync(existingAcc)
-            } else {
-                trAcc.id = trAccDao.insertSync(trAcc)
-            }
-        }
-    }
-
-    @androidx.room.Transaction
-    open fun appendSync(rec: TransactionWithAccounts) {
-        val trAccDao = DB.get().getTransactionAccountDAO()
-        val accDao = DB.get().getAccountDAO()
-        val accValDao = DB.get().getAccountValueDAO()
-
-        val transaction = rec.transaction
-        val profileId = transaction.profileId
-        transaction.generation = getGenerationSync(profileId)
-        transaction.ledgerId = getMaxLedgerIdSync(profileId) + 1
-        transaction.id = insertSync(transaction)
-
-        for (trAcc in rec.accounts ?: emptyList()) {
-            trAcc.transactionId = transaction.id
-            trAcc.generation = transaction.generation
-            trAcc.id = trAccDao.insertSync(trAcc)
-
-            var accName: String? = trAcc.accountName
-            while (accName != null) {
-                var acc = accDao.getByNameSync(profileId, accName)
-                if (acc == null) {
-                    acc = Account()
-                    acc.profileId = profileId
-                    acc.name = accName
-                    acc.nameUpper = accName.uppercase()
-                    acc.parentName = AccountNameUtils.extractParentName(accName)
-                    acc.level = AccountNameUtils.determineLevel(acc.name)
-                    acc.generation = trAcc.generation
-
-                    acc.id = accDao.insertSync(acc)
-                }
-
-                var accVal = accValDao.getByCurrencySync(acc.id, trAcc.currency)
-                if (accVal == null) {
-                    accVal = AccountValue()
-                    accVal.accountId = acc.id
-                    accVal.generation = trAcc.generation
-                    accVal.currency = trAcc.currency
-                    accVal.value = trAcc.amount
-                    accVal.id = accValDao.insertSync(accVal)
-                } else {
-                    accVal.value = accVal.value + trAcc.amount
-                    accValDao.updateSync(accVal)
-                }
-
-                accName = AccountNameUtils.extractParentName(accName)
-            }
-        }
     }
 
     class TransactionGenerationContainer(@ColumnInfo var generation: Long)

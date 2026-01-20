@@ -98,7 +98,8 @@ class CurrencyPositionTest {
 
     @Test
     fun `fromString with invalid value returns AFTER`() {
-        assertEquals(CurrencyPosition.AFTER, CurrencyPosition.fromString("unknown"))
+        // "unknown" now matches UNKNOWN enum value (case-insensitive)
+        assertEquals(CurrencyPosition.UNKNOWN, CurrencyPosition.fromString("unknown"))
         assertEquals(CurrencyPosition.AFTER, CurrencyPosition.fromString(""))
         assertEquals(CurrencyPosition.AFTER, CurrencyPosition.fromString("left"))
     }

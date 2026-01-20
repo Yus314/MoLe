@@ -20,7 +20,7 @@ package net.ktnx.mobileledger.ui.main
 import androidx.compose.runtime.Stable
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
-import net.ktnx.mobileledger.model.AmountStyle
+import net.ktnx.mobileledger.domain.model.AmountStyle
 import net.ktnx.mobileledger.utils.SimpleDate
 
 /**

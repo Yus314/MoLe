@@ -19,8 +19,8 @@ package net.ktnx.mobileledger.ui.profile
 
 import net.ktnx.mobileledger.domain.model.FutureDates
 import net.ktnx.mobileledger.domain.model.Profile
+import net.ktnx.mobileledger.domain.model.ServerVersion
 import net.ktnx.mobileledger.json.API
-import net.ktnx.mobileledger.model.HledgerVersion
 import net.ktnx.mobileledger.utils.Colors
 
 data class ProfileDetailUiState(
@@ -39,7 +39,7 @@ data class ProfileDetailUiState(
     val showCommentsByDefault: Boolean = true,
     val showCommodityByDefault: Boolean = false,
     val defaultCommodity: String? = null,
-    val detectedVersion: HledgerVersion? = null,
+    val detectedVersion: ServerVersion? = null,
 
     // UI状態
     val isLoading: Boolean = false,

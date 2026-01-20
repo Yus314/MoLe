@@ -28,7 +28,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import logcat.logcat
-import net.ktnx.mobileledger.model.Currency
+import net.ktnx.mobileledger.domain.model.CurrencyPosition
 
 /**
  * Implementation of [CurrencyFormatter].
@@ -45,8 +45,8 @@ class CurrencyFormatterImpl @Inject constructor() : CurrencyFormatter {
     private val _config = MutableStateFlow(CurrencyFormatConfig.fromLocale(Locale.getDefault()))
     override val config: StateFlow<CurrencyFormatConfig> = _config.asStateFlow()
 
-    private val _currencySymbolPosition = MutableStateFlow(Currency.Position.BEFORE)
-    override val currencySymbolPosition: StateFlow<Currency.Position> =
+    private val _currencySymbolPosition = MutableStateFlow(CurrencyPosition.BEFORE)
+    override val currencySymbolPosition: StateFlow<CurrencyPosition> =
         _currencySymbolPosition.asStateFlow()
 
     private val _currencyGap = MutableStateFlow(true)
@@ -65,8 +65,8 @@ class CurrencyFormatterImpl @Inject constructor() : CurrencyFormatter {
         val gap = if (_currencyGap.value) " " else ""
 
         return when (_currencySymbolPosition.value) {
-            Currency.Position.BEFORE -> "$symbol$gap$formatted"
-            Currency.Position.AFTER -> "$formatted$gap$symbol"
+            CurrencyPosition.BEFORE -> "$symbol$gap$formatted"
+            CurrencyPosition.AFTER -> "$formatted$gap$symbol"
             else -> formatted
         }
     }
@@ -101,18 +101,18 @@ class CurrencyFormatterImpl @Inject constructor() : CurrencyFormatter {
 
         when {
             formatted.startsWith(symbol) -> {
-                _currencySymbolPosition.value = Currency.Position.BEFORE
+                _currencySymbolPosition.value = CurrencyPosition.BEFORE
                 val canary = formatted[symbol.length]
                 _currencyGap.value = canary != '1'
             }
 
             formatted.endsWith(symbol) -> {
-                _currencySymbolPosition.value = Currency.Position.AFTER
+                _currencySymbolPosition.value = CurrencyPosition.AFTER
                 val canary = formatted[formatted.length - symbol.length - 1]
                 _currencyGap.value = canary != '6'
             }
 
-            else -> _currencySymbolPosition.value = Currency.Position.NONE
+            else -> _currencySymbolPosition.value = CurrencyPosition.NONE
         }
 
         numberFormatter = NumberFormat.getNumberInstance(locale).apply {
@@ -134,7 +134,7 @@ class CurrencyFormatterImpl @Inject constructor() : CurrencyFormatter {
         )
     }
 
-    override fun updateFromAmountStyle(symbolPosition: Currency.Position, hasGap: Boolean) {
+    override fun updateFromAmountStyle(symbolPosition: CurrencyPosition, hasGap: Boolean) {
         _currencySymbolPosition.value = symbolPosition
         _currencyGap.value = hasGap
         _config.value = _config.value.copy(

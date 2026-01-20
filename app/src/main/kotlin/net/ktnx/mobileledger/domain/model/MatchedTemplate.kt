@@ -15,9 +15,17 @@
  * along with MoLe. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ktnx.mobileledger.model
+package net.ktnx.mobileledger.domain.model
 
 import java.util.regex.MatchResult
-import net.ktnx.mobileledger.domain.model.Template
 
-data class MatchedTemplate(@JvmField val template: Template, @JvmField val matchResult: MatchResult)
+/**
+ * テンプレートとそのマッチ結果を保持するバリューオブジェクト
+ *
+ * @property template マッチしたテンプレート
+ * @property matchResult 正規表現のマッチ結果
+ */
+data class MatchedTemplate(
+    @JvmField val template: Template,
+    @JvmField val matchResult: MatchResult
+)

@@ -23,7 +23,7 @@ import java.util.Locale
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import net.ktnx.mobileledger.model.Currency
+import net.ktnx.mobileledger.domain.model.CurrencyPosition
 import net.ktnx.mobileledger.service.CurrencyFormatConfig
 import net.ktnx.mobileledger.service.CurrencyFormatter
 
@@ -40,8 +40,8 @@ class FakeCurrencyFormatter : CurrencyFormatter {
     private val _config = MutableStateFlow(CurrencyFormatConfig.fromLocale(Locale.US))
     override val config: StateFlow<CurrencyFormatConfig> = _config.asStateFlow()
 
-    private val _currencySymbolPosition = MutableStateFlow(Currency.Position.BEFORE)
-    override val currencySymbolPosition: StateFlow<Currency.Position> = _currencySymbolPosition.asStateFlow()
+    private val _currencySymbolPosition = MutableStateFlow(CurrencyPosition.BEFORE)
+    override val currencySymbolPosition: StateFlow<CurrencyPosition> = _currencySymbolPosition.asStateFlow()
 
     private val _currencyGap = MutableStateFlow(false)
     override val currencyGap: StateFlow<Boolean> = _currencyGap.asStateFlow()
@@ -51,7 +51,7 @@ class FakeCurrencyFormatter : CurrencyFormatter {
     override fun formatCurrency(amount: Float, currencySymbol: String?): String {
         val formatted = decimalFormat.format(amount)
         return if (currencySymbol != null) {
-            if (_currencySymbolPosition.value == Currency.Position.BEFORE) {
+            if (_currencySymbolPosition.value == CurrencyPosition.BEFORE) {
                 if (_currencyGap.value) "$currencySymbol $formatted" else "$currencySymbol$formatted"
             } else {
                 if (_currencyGap.value) "$formatted $currencySymbol" else "$formatted$currencySymbol"
@@ -77,7 +77,7 @@ class FakeCurrencyFormatter : CurrencyFormatter {
         _config.value = CurrencyFormatConfig.fromLocale(locale)
     }
 
-    override fun updateFromAmountStyle(symbolPosition: Currency.Position, hasGap: Boolean) {
+    override fun updateFromAmountStyle(symbolPosition: CurrencyPosition, hasGap: Boolean) {
         _currencySymbolPosition.value = symbolPosition
         _currencyGap.value = hasGap
     }
@@ -86,7 +86,7 @@ class FakeCurrencyFormatter : CurrencyFormatter {
         _locale.value = newLocale
     }
 
-    fun setCurrencySymbolPosition(position: Currency.Position) {
+    fun setCurrencySymbolPosition(position: CurrencyPosition) {
         _currencySymbolPosition.value = position
     }
 

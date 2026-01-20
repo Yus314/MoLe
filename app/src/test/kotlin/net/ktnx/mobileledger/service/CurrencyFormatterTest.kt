@@ -19,7 +19,7 @@ package net.ktnx.mobileledger.service
 
 import java.text.ParseException
 import java.util.Locale
-import net.ktnx.mobileledger.model.Currency
+import net.ktnx.mobileledger.domain.model.CurrencyPosition
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -148,11 +148,11 @@ class CurrencyFormatterTest {
     fun `updateFromAmountStyle updates position and gap`() {
         formatter.refresh(Locale.US)
 
-        formatter.updateFromAmountStyle(Currency.Position.AFTER, false)
+        formatter.updateFromAmountStyle(CurrencyPosition.AFTER, false)
 
-        assertEquals(Currency.Position.AFTER, formatter.currencySymbolPosition.value)
+        assertEquals(CurrencyPosition.AFTER, formatter.currencySymbolPosition.value)
         assertFalse(formatter.currencyGap.value)
-        assertEquals(Currency.Position.AFTER, formatter.config.value.symbolPosition)
+        assertEquals(CurrencyPosition.AFTER, formatter.config.value.symbolPosition)
         assertFalse(formatter.config.value.hasGap)
     }
 
@@ -160,7 +160,7 @@ class CurrencyFormatterTest {
     fun `currencySymbolPosition flow is updated on refresh`() {
         formatter.refresh(Locale.US)
         // US typically has symbol before
-        assertEquals(Currency.Position.BEFORE, formatter.currencySymbolPosition.value)
+        assertEquals(CurrencyPosition.BEFORE, formatter.currencySymbolPosition.value)
     }
 
     @Test
@@ -177,12 +177,12 @@ class CurrencyFormatterTest {
         formatter.refresh(Locale.US)
 
         // With gap (default for many locales)
-        formatter.updateFromAmountStyle(Currency.Position.BEFORE, true)
+        formatter.updateFromAmountStyle(CurrencyPosition.BEFORE, true)
         val withGap = formatter.formatCurrency(100f, "$")
         assertTrue("Should have space after symbol", withGap.startsWith("$ "))
 
         // Without gap
-        formatter.updateFromAmountStyle(Currency.Position.BEFORE, false)
+        formatter.updateFromAmountStyle(CurrencyPosition.BEFORE, false)
         val noGap = formatter.formatCurrency(100f, "$")
         assertFalse("Should not have space after symbol", noGap.startsWith("$ "))
         assertTrue("Should start with symbol", noGap.startsWith("$"))
@@ -191,7 +191,7 @@ class CurrencyFormatterTest {
     @Test
     fun `formatCurrency AFTER position works correctly`() {
         formatter.refresh(Locale.US)
-        formatter.updateFromAmountStyle(Currency.Position.AFTER, true)
+        formatter.updateFromAmountStyle(CurrencyPosition.AFTER, true)
 
         val result = formatter.formatCurrency(100f, "€")
         assertTrue("Should end with symbol", result.endsWith("€"))
@@ -200,7 +200,7 @@ class CurrencyFormatterTest {
     @Test
     fun `formatCurrency NONE position omits symbol`() {
         formatter.refresh(Locale.US)
-        formatter.updateFromAmountStyle(Currency.Position.NONE, false)
+        formatter.updateFromAmountStyle(CurrencyPosition.NONE, false)
 
         val result = formatter.formatCurrency(100f, "€")
         assertFalse("Should not contain symbol", result.contains("€"))
