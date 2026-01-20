@@ -32,6 +32,10 @@ import net.ktnx.mobileledger.domain.usecase.ProfilePersistence
 import net.ktnx.mobileledger.domain.usecase.ProfilePersistenceImpl
 import net.ktnx.mobileledger.domain.usecase.ProfileValidator
 import net.ktnx.mobileledger.domain.usecase.ProfileValidatorImpl
+import net.ktnx.mobileledger.domain.usecase.TemplateAccountRowManager
+import net.ktnx.mobileledger.domain.usecase.TemplateAccountRowManagerImpl
+import net.ktnx.mobileledger.domain.usecase.TemplateDataMapper
+import net.ktnx.mobileledger.domain.usecase.TemplateDataMapperImpl
 import net.ktnx.mobileledger.domain.usecase.TemplateMatcher
 import net.ktnx.mobileledger.domain.usecase.TemplateMatcherImpl
 import net.ktnx.mobileledger.domain.usecase.TemplatePatternValidator
@@ -109,4 +113,12 @@ abstract class UseCaseModule {
     @Binds
     @Singleton
     abstract fun bindTransactionDateNavigator(impl: TransactionDateNavigatorImpl): TransactionDateNavigator
+
+    @Binds
+    @Singleton
+    abstract fun bindTemplateAccountRowManager(impl: TemplateAccountRowManagerImpl): TemplateAccountRowManager
+
+    @Binds
+    @Singleton
+    abstract fun bindTemplateDataMapper(impl: TemplateDataMapperImpl): TemplateDataMapper
 }

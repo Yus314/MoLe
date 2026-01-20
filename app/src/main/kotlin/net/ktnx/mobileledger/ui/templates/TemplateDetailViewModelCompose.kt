@@ -31,10 +31,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import logcat.logcat
 import net.ktnx.mobileledger.data.repository.TemplateRepository
-import net.ktnx.mobileledger.domain.model.Template
-import net.ktnx.mobileledger.domain.model.TemplateLine
+import net.ktnx.mobileledger.domain.usecase.TemplateAccountRowManager
+import net.ktnx.mobileledger.domain.usecase.TemplateDataMapper
 import net.ktnx.mobileledger.domain.usecase.TemplatePatternValidator
-import net.ktnx.mobileledger.utils.Misc
 
 /**
  * ViewModel for the template detail screen using Compose.
@@ -43,7 +42,9 @@ import net.ktnx.mobileledger.utils.Misc
 @HiltViewModel
 class TemplateDetailViewModelCompose @Inject constructor(
     private val templateRepository: TemplateRepository,
-    private val patternValidator: TemplatePatternValidator
+    private val patternValidator: TemplatePatternValidator,
+    private val rowManager: TemplateAccountRowManager,
+    private val dataMapper: TemplateDataMapper
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(TemplateDetailUiState())
@@ -71,33 +72,8 @@ class TemplateDetailViewModelCompose @Inject constructor(
                 val template = templateRepository.getTemplateAsDomain(templateId)
 
                 if (template != null) {
-                    val accountRows = template.lines.mapIndexed { index, line ->
-                        TemplateAccountRow(
-                            id = line.id ?: syntheticId.getAndDecrement(),
-                            position = index,
-                            accountName = extractMatchableValue(
-                                line.accountName,
-                                line.accountNameGroup
-                            ),
-                            accountComment = extractMatchableValue(
-                                line.comment,
-                                line.commentGroup
-                            ),
-                            amount = extractMatchableValueFloat(
-                                line.amount,
-                                line.amountGroup
-                            ),
-                            currency = extractMatchableValueCurrency(
-                                line.currencyId,
-                                line.currencyGroup
-                            ),
-                            negateAmount = line.negateAmount
-                        )
-                    }.ifEmpty {
-                        listOf(
-                            TemplateAccountRow(id = syntheticId.getAndDecrement()),
-                            TemplateAccountRow(id = syntheticId.getAndDecrement())
-                        )
+                    val accountRows = dataMapper.toAccountRows(template) {
+                        syntheticId.getAndDecrement()
                     }
 
                     _uiState.update {
@@ -106,23 +82,23 @@ class TemplateDetailViewModelCompose @Inject constructor(
                             name = template.name,
                             pattern = template.pattern,
                             testText = template.testText ?: "",
-                            transactionDescription = extractMatchableValue(
+                            transactionDescription = dataMapper.extractMatchableValue(
                                 template.transactionDescription,
                                 template.transactionDescriptionMatchGroup
                             ),
-                            transactionComment = extractMatchableValue(
+                            transactionComment = dataMapper.extractMatchableValue(
                                 template.transactionComment,
                                 template.transactionCommentMatchGroup
                             ),
-                            dateYear = extractMatchableValueInt(
+                            dateYear = dataMapper.extractMatchableValueInt(
                                 template.dateYear,
                                 template.dateYearMatchGroup
                             ),
-                            dateMonth = extractMatchableValueInt(
+                            dateMonth = dataMapper.extractMatchableValueInt(
                                 template.dateMonth,
                                 template.dateMonthMatchGroup
                             ),
-                            dateDay = extractMatchableValueInt(
+                            dateDay = dataMapper.extractMatchableValueInt(
                                 template.dateDay,
                                 template.dateDayMatchGroup
                             ),
@@ -144,34 +120,6 @@ class TemplateDetailViewModelCompose @Inject constructor(
             }
         }
     }
-
-    private fun extractMatchableValue(literal: String?, matchGroup: Int?): MatchableValue =
-        if (matchGroup != null && matchGroup > 0) {
-            MatchableValue.MatchGroup(matchGroup)
-        } else {
-            MatchableValue.Literal(literal ?: "")
-        }
-
-    private fun extractMatchableValueInt(literal: Int?, matchGroup: Int?): MatchableValue =
-        if (matchGroup != null && matchGroup > 0) {
-            MatchableValue.MatchGroup(matchGroup)
-        } else {
-            MatchableValue.Literal(literal?.toString() ?: "")
-        }
-
-    private fun extractMatchableValueFloat(literal: Float?, matchGroup: Int?): MatchableValue =
-        if (matchGroup != null && matchGroup > 0) {
-            MatchableValue.MatchGroup(matchGroup)
-        } else {
-            MatchableValue.Literal(literal?.toString() ?: "")
-        }
-
-    private fun extractMatchableValueCurrency(currencyId: Long?, matchGroup: Int?): MatchableValue =
-        if (matchGroup != null && matchGroup > 0) {
-            MatchableValue.MatchGroup(matchGroup)
-        } else {
-            MatchableValue.Literal(currencyId?.toString() ?: "")
-        }
 
     fun onEvent(event: TemplateDetailEvent) {
         when (event) {
@@ -274,142 +222,67 @@ class TemplateDetailViewModelCompose @Inject constructor(
 
     private fun updateAccountName(index: Int, value: MatchableValue) {
         _uiState.update { state ->
-            val accounts = state.accounts.toMutableList()
-            if (index in accounts.indices) {
-                accounts[index] = accounts[index].copy(accountName = value)
-            }
-            state.copy(accounts = accounts, hasUnsavedChanges = true)
+            val updated = rowManager.updateRow(state.accounts, index) { it.copy(accountName = value) }
+            state.copy(accounts = updated, hasUnsavedChanges = true)
         }
         ensureEmptyRow()
     }
 
     private fun updateAccountComment(index: Int, value: MatchableValue) {
         _uiState.update { state ->
-            val accounts = state.accounts.toMutableList()
-            if (index in accounts.indices) {
-                accounts[index] = accounts[index].copy(accountComment = value)
-            }
-            state.copy(accounts = accounts, hasUnsavedChanges = true)
+            val updated = rowManager.updateRow(state.accounts, index) { it.copy(accountComment = value) }
+            state.copy(accounts = updated, hasUnsavedChanges = true)
         }
     }
 
     private fun updateAccountAmount(index: Int, value: MatchableValue) {
         _uiState.update { state ->
-            val accounts = state.accounts.toMutableList()
-            if (index in accounts.indices) {
-                accounts[index] = accounts[index].copy(amount = value)
-            }
-            state.copy(accounts = accounts, hasUnsavedChanges = true)
+            val updated = rowManager.updateRow(state.accounts, index) { it.copy(amount = value) }
+            state.copy(accounts = updated, hasUnsavedChanges = true)
         }
         ensureEmptyRow()
     }
 
     private fun updateAccountCurrency(index: Int, value: MatchableValue) {
         _uiState.update { state ->
-            val accounts = state.accounts.toMutableList()
-            if (index in accounts.indices) {
-                accounts[index] = accounts[index].copy(currency = value)
-            }
-            state.copy(accounts = accounts, hasUnsavedChanges = true)
+            val updated = rowManager.updateRow(state.accounts, index) { it.copy(currency = value) }
+            state.copy(accounts = updated, hasUnsavedChanges = true)
         }
     }
 
     private fun updateAccountNegateAmount(index: Int, negate: Boolean) {
         _uiState.update { state ->
-            val accounts = state.accounts.toMutableList()
-            if (index in accounts.indices) {
-                accounts[index] = accounts[index].copy(negateAmount = negate)
-            }
-            state.copy(accounts = accounts, hasUnsavedChanges = true)
+            val updated = rowManager.updateRow(state.accounts, index) { it.copy(negateAmount = negate) }
+            state.copy(accounts = updated, hasUnsavedChanges = true)
         }
     }
 
     private fun removeAccountRow(index: Int) {
         _uiState.update { state ->
-            val accounts = state.accounts.toMutableList()
-            if (index in accounts.indices && accounts.size > 2) {
-                accounts.removeAt(index)
-                // Update positions
-                accounts.forEachIndexed { i, row ->
-                    accounts[i] = row.copy(position = i)
-                }
-            }
-            state.copy(accounts = accounts, hasUnsavedChanges = true)
+            val updated = rowManager.removeRow(state.accounts, index)
+            state.copy(accounts = updated, hasUnsavedChanges = true)
         }
         ensureEmptyRow()
     }
 
     private fun moveAccountRow(fromIndex: Int, toIndex: Int) {
         _uiState.update { state ->
-            val accounts = state.accounts.toMutableList()
-            if (fromIndex in accounts.indices && toIndex in accounts.indices) {
-                val item = accounts.removeAt(fromIndex)
-                accounts.add(toIndex, item)
-                // Update positions
-                accounts.forEachIndexed { i, row ->
-                    accounts[i] = row.copy(position = i)
-                }
-            }
-            state.copy(accounts = accounts, hasUnsavedChanges = true)
+            val updated = rowManager.moveRow(state.accounts, fromIndex, toIndex)
+            state.copy(accounts = updated, hasUnsavedChanges = true)
         }
     }
 
     private fun addAccountRow() {
         _uiState.update { state ->
-            val accounts = state.accounts.toMutableList()
-            val newRow = TemplateAccountRow(
-                id = syntheticId.getAndDecrement(),
-                position = accounts.size
-            )
-            accounts.add(newRow)
-            state.copy(accounts = accounts, hasUnsavedChanges = true)
+            val updated = rowManager.addRow(state.accounts, syntheticId.getAndDecrement())
+            state.copy(accounts = updated, hasUnsavedChanges = true)
         }
     }
 
     private fun ensureEmptyRow() {
         _uiState.update { state ->
-            val accounts = state.accounts.toMutableList()
-
-            // Ensure we have at least 2 rows
-            while (accounts.size < 2) {
-                accounts.add(
-                    TemplateAccountRow(
-                        id = syntheticId.getAndDecrement(),
-                        position = accounts.size
-                    )
-                )
-            }
-
-            // Ensure there's at least one empty row at the end
-            val hasEmptyRow = accounts.any { it.isEmpty() }
-            if (!hasEmptyRow) {
-                accounts.add(
-                    TemplateAccountRow(
-                        id = syntheticId.getAndDecrement(),
-                        position = accounts.size
-                    )
-                )
-            }
-
-            // Remove extra empty rows (keep max 1 empty row, unless at positions 0-1)
-            val emptyIndices = accounts.mapIndexedNotNull { index, row ->
-                if (row.isEmpty() && index >= 2) index else null
-            }
-            if (emptyIndices.size > 1) {
-                // Keep only the last empty row
-                emptyIndices.dropLast(1).reversed().forEach { index ->
-                    accounts.removeAt(index)
-                }
-            }
-
-            // Update positions
-            accounts.forEachIndexed { i, row ->
-                if (row.position != i) {
-                    accounts[i] = row.copy(position = i)
-                }
-            }
-
-            state.copy(accounts = accounts)
+            val updated = rowManager.ensureValidRowState(state.accounts) { syntheticId.getAndDecrement() }
+            state.copy(accounts = updated)
         }
     }
 
@@ -432,7 +305,7 @@ class TemplateDetailViewModelCompose @Inject constructor(
             _uiState.update { it.copy(isSaving = true) }
 
             try {
-                val template = buildTemplateDomainModel(state)
+                val template = dataMapper.toTemplate(state)
                 templateRepository.saveTemplate(template)
 
                 _uiState.update { it.copy(isSaving = false, hasUnsavedChanges = false) }
@@ -445,47 +318,6 @@ class TemplateDetailViewModelCompose @Inject constructor(
             }
         }
     }
-
-    private fun buildTemplateDomainModel(state: TemplateDetailUiState): Template {
-        val lines = state.accounts
-            .filterIndexed { index, row -> !row.isEmpty() || index < 2 }
-            .map { row -> buildTemplateLine(row) }
-
-        return Template(
-            id = state.templateId,
-            name = Misc.trim(state.name) ?: "",
-            pattern = state.pattern,
-            testText = state.testText.ifEmpty { null },
-            transactionDescription = state.transactionDescription
-                .takeIf { it.isLiteral() }?.getLiteralValue()?.ifEmpty { null },
-            transactionDescriptionMatchGroup = state.transactionDescription
-                .takeIf { it.isMatchGroup() }?.getMatchGroup(),
-            transactionComment = state.transactionComment
-                .takeIf { it.isLiteral() }?.getLiteralValue()?.ifEmpty { null },
-            transactionCommentMatchGroup = state.transactionComment.takeIf { it.isMatchGroup() }?.getMatchGroup(),
-            dateYear = state.dateYear.takeIf { it.isLiteral() }?.getLiteralValue()?.toIntOrNull(),
-            dateYearMatchGroup = state.dateYear.takeIf { it.isMatchGroup() }?.getMatchGroup(),
-            dateMonth = state.dateMonth.takeIf { it.isLiteral() }?.getLiteralValue()?.toIntOrNull(),
-            dateMonthMatchGroup = state.dateMonth.takeIf { it.isMatchGroup() }?.getMatchGroup(),
-            dateDay = state.dateDay.takeIf { it.isLiteral() }?.getLiteralValue()?.toIntOrNull(),
-            dateDayMatchGroup = state.dateDay.takeIf { it.isMatchGroup() }?.getMatchGroup(),
-            isFallback = state.isFallback,
-            lines = lines
-        )
-    }
-
-    private fun buildTemplateLine(row: TemplateAccountRow): TemplateLine = TemplateLine(
-        id = if (row.id > 0) row.id else null,
-        accountName = row.accountName.takeIf { it.isLiteral() }?.getLiteralValue()?.ifEmpty { null },
-        accountNameGroup = row.accountName.takeIf { it.isMatchGroup() }?.getMatchGroup(),
-        amount = row.amount.takeIf { it.isLiteral() }?.getLiteralValue()?.toFloatOrNull(),
-        amountGroup = row.amount.takeIf { it.isMatchGroup() }?.getMatchGroup(),
-        currencyId = row.currency.takeIf { it.isLiteral() }?.getLiteralValue()?.toLongOrNull(),
-        currencyGroup = row.currency.takeIf { it.isMatchGroup() }?.getMatchGroup(),
-        comment = row.accountComment.takeIf { it.isLiteral() }?.getLiteralValue()?.ifEmpty { null },
-        commentGroup = row.accountComment.takeIf { it.isMatchGroup() }?.getMatchGroup(),
-        negateAmount = row.negateAmount
-    )
 
     private fun handleNavigateBack() {
         if (_uiState.value.hasUnsavedChanges) {
@@ -535,8 +367,5 @@ class TemplateDetailViewModelCompose @Inject constructor(
                 _effects.send(TemplateDetailEffect.ShowError("テンプレートの削除に失敗しました"))
             }
         }
-    }
-
-    companion object {
     }
 }
