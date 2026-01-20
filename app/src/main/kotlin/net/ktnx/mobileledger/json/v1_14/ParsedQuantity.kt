@@ -17,29 +17,9 @@
 
 package net.ktnx.mobileledger.json.v1_14
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import kotlin.math.pow
+import net.ktnx.mobileledger.json.ParsedQuantity as BaseQuantity
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-open class ParsedQuantity() {
-    var decimalMantissa: Long = 0
-    var decimalPlaces: Int = 0
-
-    constructor(input: String) : this() {
-        parseString(input)
-    }
-
-    fun asFloat(): Float = (decimalMantissa * 10.0.pow(-decimalPlaces.toDouble())).toFloat()
-
-    fun parseString(input: String) {
-        val pointPos = input.indexOf('.')
-        if (pointPos >= 0) {
-            val integral = input.replace(".", "")
-            decimalMantissa = integral.toLong()
-            decimalPlaces = input.length - pointPos - 1
-        } else {
-            decimalMantissa = input.toLong()
-            decimalPlaces = 0
-        }
-    }
-}
+/**
+ * v1_14 用 ParsedQuantity - 基底クラスと同一
+ */
+typealias ParsedQuantity = BaseQuantity

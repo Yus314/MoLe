@@ -17,8 +17,9 @@
 
 package net.ktnx.mobileledger.json.v1_23
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import net.ktnx.mobileledger.json.ParsedQuantity as BaseQuantity
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-class ParsedQuantity : BaseQuantity()
+/**
+ * v1_23 用 ParsedQuantity - 基底クラスと同一
+ */
+typealias ParsedQuantity = BaseQuantity

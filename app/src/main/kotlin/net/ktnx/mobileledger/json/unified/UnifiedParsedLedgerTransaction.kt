@@ -1,0 +1,212 @@
+/*
+ * Copyright © 2026 Damyan Ivanov.
+ * This file is part of MoLe.
+ * MoLe is free software: you can distribute it and/or modify it
+ * under the term of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your opinion), any later version.
+ *
+ * MoLe is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License terms for details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with MoLe. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+package net.ktnx.mobileledger.json.unified
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonSetter
+import com.fasterxml.jackson.databind.JsonNode
+import java.text.ParseException
+import net.ktnx.mobileledger.domain.model.Transaction
+import net.ktnx.mobileledger.json.config.ApiVersionConfig
+import net.ktnx.mobileledger.json.config.TransactionIdType
+import net.ktnx.mobileledger.utils.Globals
+import net.ktnx.mobileledger.utils.Misc
+
+/**
+ * 統合 ParsedLedgerTransaction - 全 API バージョンの差分を吸収
+ *
+ * バージョン間の差分:
+ * - v1_14-v1_40: tsourcepos は単一オブジェクト
+ * - v1_50: tsourcepos はリスト（開始位置と終了位置）
+ * - v1_14-v1_23: ptransaction_ は Int
+ * - v1_32+: ptransaction_ は String
+ */
+@JsonIgnoreProperties(ignoreUnknown = true)
+class UnifiedParsedLedgerTransaction {
+    var tdate: String? = null
+    var tdate2: String? = null
+    var tdescription: String? = null
+    var tcomment: String? = null
+    var tcode: String = ""
+    var tstatus: String = "Unmarked"
+    var tprecedingcomment: String = ""
+    var ttags: MutableList<List<String>> = mutableListOf()
+    var tpostings: MutableList<UnifiedParsedPosting>? = null
+
+    /**
+     * ソース位置（リストとして正規化）
+     *
+     * v1_14-v1_40: 単一オブジェクト → 1要素のリストに変換
+     * v1_50: リスト → そのまま
+     */
+    var tsourcepos: MutableList<UnifiedParsedSourcePos> = mutableListOf()
+
+    private var _tindex: Int = 0
+
+    /**
+     * トランザクションインデックス
+     *
+     * setter で全ての posting の ptransaction_ も更新する
+     */
+    var tindex: Int
+        get() = _tindex
+        set(value) {
+            _tindex = value
+            tpostings?.forEach { it.setTransactionIdAsString(value.toString()) }
+        }
+
+    /**
+     * tsourcepos を JSON から設定（単一オブジェクトまたはリスト対応）
+     */
+    @JsonSetter("tsourcepos")
+    fun setTsourceposFromJson(value: Any?) {
+        tsourcepos.clear()
+        when (value) {
+            is List<*> -> {
+                // v1_50: リスト形式
+                value.filterNotNull().forEach { item ->
+                    val pos = parseSourcePos(item)
+                    if (pos != null) {
+                        tsourcepos.add(pos)
+                    }
+                }
+            }
+
+            is Map<*, *> -> {
+                // v1_14-v1_40: 単一オブジェクト
+                val pos = parseSourcePos(value)
+                if (pos != null) {
+                    tsourcepos.add(pos)
+                }
+            }
+
+            is JsonNode -> {
+                if (value.isArray) {
+                    value.forEach { item ->
+                        val pos = UnifiedParsedSourcePos().apply {
+                            if (item.has("tag")) tag = item.get("tag").asText()
+                            if (item.has("contents")) {
+                                // contents は ["filename", [line, column]] 形式
+                            }
+                        }
+                        tsourcepos.add(pos)
+                    }
+                } else if (value.isObject) {
+                    val pos = UnifiedParsedSourcePos().apply {
+                        if (value.has("tag")) tag = value.get("tag").asText()
+                    }
+                    tsourcepos.add(pos)
+                }
+            }
+        }
+
+        // デフォルト値を設定（空の場合）
+        if (tsourcepos.isEmpty()) {
+            tsourcepos.add(UnifiedParsedSourcePos())
+        }
+    }
+
+    private fun parseSourcePos(item: Any?): UnifiedParsedSourcePos? = when (item) {
+        is Map<*, *> -> UnifiedParsedSourcePos().apply {
+            tag = (item["tag"] as? String) ?: "JournalSourcePos"
+        }
+
+        else -> null
+    }
+
+    /**
+     * Posting を追加
+     */
+    fun addPosting(posting: UnifiedParsedPosting) {
+        posting.setTransactionIdAsString(tindex.toString())
+        if (tpostings == null) {
+            tpostings = mutableListOf()
+        }
+        tpostings?.add(posting)
+    }
+
+    /**
+     * ドメインモデルに変換
+     */
+    @Throws(ParseException::class)
+    fun toDomain(): Transaction {
+        val date = tdate?.let { Globals.parseIsoDate(it) }
+            ?: throw ParseException("Transaction date is required", 0)
+
+        return Transaction(
+            id = null,
+            ledgerId = tindex.toLong(),
+            date = date,
+            description = tdescription ?: "",
+            comment = tcomment?.trim()?.takeIf { it.isNotEmpty() },
+            lines = tpostings?.map { it.toDomain() } ?: emptyList()
+        )
+    }
+
+    companion object {
+        /**
+         * ドメインモデルから Transaction を生成
+         *
+         * @param tr 変換元のトランザクション
+         * @param config API バージョン設定
+         * @return 生成した UnifiedParsedLedgerTransaction
+         */
+        fun fromDomain(tr: Transaction, config: ApiVersionConfig): UnifiedParsedLedgerTransaction =
+            UnifiedParsedLedgerTransaction().apply {
+                tcomment = Misc.nullIsEmpty(tr.comment)
+                tprecedingcomment = ""
+                tpostings = tr.lines
+                    .filter { it.accountName.isNotEmpty() }
+                    .map { UnifiedParsedPosting.fromDomain(it, config) }
+                    .toMutableList()
+                tdate = Globals.formatIsoDate(tr.date)
+                tdate2 = null
+                tindex = 1
+                tdescription = tr.description
+
+                // tsourcepos の初期化（v1_50 用に2要素）
+                tsourcepos.clear()
+                tsourcepos.add(UnifiedParsedSourcePos())
+                if (config == ApiVersionConfig.V1_50) {
+                    val endPos = UnifiedParsedSourcePos()
+                    tsourcepos.add(endPos)
+                }
+            }
+
+        /**
+         * JSON シリアライズ時に tsourcepos を API バージョンに応じた形式で取得
+         */
+        fun getSourcePosForSerialization(transaction: UnifiedParsedLedgerTransaction, config: ApiVersionConfig): Any =
+            if (config == ApiVersionConfig.V1_50) {
+                // v1_50: リスト形式
+                transaction.tsourcepos
+            } else {
+                // v1_14-v1_40: 単一オブジェクト
+                transaction.tsourcepos.firstOrNull() ?: UnifiedParsedSourcePos()
+            }
+    }
+
+    /**
+     * JSON シリアライズ用: ptransaction_ の型を API バージョンに応じて変換
+     */
+    fun getTransactionIdForPostingSerialization(config: ApiVersionConfig): (Int) -> Any =
+        when (config.transactionIdType) {
+            TransactionIdType.IntType -> { value -> value }
+            TransactionIdType.StringType -> { value -> value.toString() }
+        }
+}

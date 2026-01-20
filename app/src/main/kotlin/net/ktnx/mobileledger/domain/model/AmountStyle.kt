@@ -58,6 +58,24 @@ data class AmountStyle(
 
     companion object {
         /**
+         * Creates an AmountStyle from unified ParsedStyle (all versions)
+         */
+        @JvmStatic
+        fun fromParsedStyle(
+            parsedStyle: net.ktnx.mobileledger.json.unified.UnifiedParsedStyle?,
+            currency: String?
+        ): AmountStyle? {
+            if (parsedStyle == null) return null
+
+            val position = determinePosition(parsedStyle.ascommodityside, currency)
+            val spaced = parsedStyle.isAscommodityspaced
+            val precision = parsedStyle.asprecision
+            val decimalMark = parsedStyle.asdecimalmark
+
+            return AmountStyle(position, spaced, precision, decimalMark)
+        }
+
+        /**
          * Creates an AmountStyle from hledger's ParsedStyle JSON object (v1.50+)
          */
         @JvmStatic

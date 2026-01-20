@@ -1,5 +1,5 @@
 /*
- * Copyright © 2020 Damyan Ivanov.
+ * Copyright © 2026 Damyan Ivanov.
  * This file is part of MoLe.
  * MoLe is free software: you can distribute it and/or modify it
  * under the term of the GNU General Public License as published by
@@ -15,11 +15,21 @@
  * along with MoLe. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ktnx.mobileledger.json.v1_40
+package net.ktnx.mobileledger.json.unified
 
-import net.ktnx.mobileledger.json.ParsedQuantity as BaseQuantity
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 
 /**
- * v1_40 用 ParsedQuantity - 基底クラスと同一
+ * 統合 ParsedSourcePos - 全 API バージョンで同一構造
+ *
+ * hledger ジャーナルファイル内のソース位置を表す。
+ * contents は ["ファイル名", [行番号, 列番号]] の形式。
  */
-typealias ParsedQuantity = BaseQuantity
+@JsonIgnoreProperties(ignoreUnknown = true)
+class UnifiedParsedSourcePos {
+    /** タグ（通常は "JournalSourcePos"） */
+    var tag: String = "JournalSourcePos"
+
+    /** ソース位置情報 ["filename", [line, column]] */
+    var contents: MutableList<Any> = mutableListOf("", arrayOf(1, 1))
+}
