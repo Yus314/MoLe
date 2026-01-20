@@ -21,6 +21,8 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import net.ktnx.mobileledger.domain.model.Profile
+import net.ktnx.mobileledger.domain.usecase.AccountSuggestionLookup
+import net.ktnx.mobileledger.domain.usecase.AccountSuggestionLookupImpl
 import net.ktnx.mobileledger.domain.usecase.TransactionAccountRowManager
 import net.ktnx.mobileledger.domain.usecase.TransactionAccountRowManagerImpl
 import net.ktnx.mobileledger.domain.usecase.TransactionBalanceCalculator
@@ -62,6 +64,7 @@ class AccountRowsViewModelTest {
     private lateinit var rowIdGenerator: FakeRowIdGenerator
     private lateinit var balanceCalculator: TransactionBalanceCalculator
     private lateinit var rowManager: TransactionAccountRowManager
+    private lateinit var suggestionLookup: AccountSuggestionLookup
 
     private lateinit var viewModel: AccountRowsViewModel
 
@@ -74,6 +77,7 @@ class AccountRowsViewModelTest {
         rowIdGenerator = FakeRowIdGenerator()
         balanceCalculator = TransactionBalanceCalculatorImpl()
         rowManager = TransactionAccountRowManagerImpl()
+        suggestionLookup = AccountSuggestionLookupImpl(accountRepository)
     }
 
     private fun createTestProfile(
@@ -94,12 +98,12 @@ class AccountRowsViewModelTest {
 
         return AccountRowsViewModel(
             profileRepository = profileRepository,
-            accountRepository = accountRepository,
             currencyRepository = currencyRepository,
             currencyFormatter = currencyFormatter,
             rowIdGenerator = rowIdGenerator,
             balanceCalculator = balanceCalculator,
-            rowManager = rowManager
+            rowManager = rowManager,
+            suggestionLookup = suggestionLookup
         )
     }
 

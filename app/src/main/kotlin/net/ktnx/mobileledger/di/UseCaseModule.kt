@@ -24,6 +24,8 @@ import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 import net.ktnx.mobileledger.domain.usecase.AccountHierarchyResolver
 import net.ktnx.mobileledger.domain.usecase.AccountHierarchyResolverImpl
+import net.ktnx.mobileledger.domain.usecase.AccountSuggestionLookup
+import net.ktnx.mobileledger.domain.usecase.AccountSuggestionLookupImpl
 import net.ktnx.mobileledger.domain.usecase.ConfigBackup
 import net.ktnx.mobileledger.domain.usecase.ConfigBackupImpl
 import net.ktnx.mobileledger.domain.usecase.DatabaseInitializer
@@ -127,4 +129,8 @@ abstract class UseCaseModule {
     @Binds
     @Singleton
     abstract fun bindTransactionAccountRowManager(impl: TransactionAccountRowManagerImpl): TransactionAccountRowManager
+
+    @Binds
+    @Singleton
+    abstract fun bindAccountSuggestionLookup(impl: AccountSuggestionLookupImpl): AccountSuggestionLookup
 }

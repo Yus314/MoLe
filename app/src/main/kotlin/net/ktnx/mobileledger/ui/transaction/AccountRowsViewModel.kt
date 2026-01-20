@@ -32,9 +32,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import logcat.logcat
-import net.ktnx.mobileledger.data.repository.AccountRepository
 import net.ktnx.mobileledger.data.repository.CurrencyRepository
 import net.ktnx.mobileledger.data.repository.ProfileRepository
+import net.ktnx.mobileledger.domain.usecase.AccountSuggestionLookup
 import net.ktnx.mobileledger.domain.usecase.TransactionAccountRowManager
 import net.ktnx.mobileledger.domain.usecase.TransactionBalanceCalculator
 import net.ktnx.mobileledger.service.CurrencyFormatter
@@ -43,12 +43,12 @@ import net.ktnx.mobileledger.service.RowIdGenerator
 @HiltViewModel
 class AccountRowsViewModel @Inject constructor(
     private val profileRepository: ProfileRepository,
-    private val accountRepository: AccountRepository,
     private val currencyRepository: CurrencyRepository,
     private val currencyFormatter: CurrencyFormatter,
     private val rowIdGenerator: RowIdGenerator,
     private val balanceCalculator: TransactionBalanceCalculator,
-    private val rowManager: TransactionAccountRowManager
+    private val rowManager: TransactionAccountRowManager,
+    private val suggestionLookup: AccountSuggestionLookup
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AccountRowsUiState())
@@ -127,7 +127,7 @@ class AccountRowsViewModel @Inject constructor(
 
         accountSuggestionJob?.cancel()
 
-        if (term.length < 2) {
+        if (!suggestionLookup.isTermValid(term)) {
             logcat { "term too short (${term.length}), clearing suggestions" }
             _uiState.update {
                 it.copy(
@@ -140,24 +140,11 @@ class AccountRowsViewModel @Inject constructor(
         }
 
         accountSuggestionJob = viewModelScope.launch {
-            delay(50)
+            delay(AccountSuggestionLookup.DEFAULT_DEBOUNCE_MS)
 
-            val profile = profileRepository.currentProfile.value
-            logcat { "profileId=${profile?.id}" }
+            val profileId = profileRepository.currentProfile.value?.id ?: return@launch
 
-            if (profile == null) {
-                logcat { "profile is null, returning" }
-                return@launch
-            }
-
-            val profileId = profile.id ?: run {
-                logcat { "profile has no id, returning" }
-                return@launch
-            }
-
-            val termUpper = term.uppercase()
-            logcat { "querying DB: profileId=$profileId, term='$termUpper'" }
-            val suggestions = accountRepository.searchAccountNames(profileId, termUpper)
+            val suggestions = suggestionLookup.search(profileId, term)
 
             if (isActive) {
                 logcat { "got ${suggestions.size} suggestions for row $rowId: ${suggestions.take(3)}" }
@@ -168,8 +155,6 @@ class AccountRowsViewModel @Inject constructor(
                         accountSuggestionsForRowId = rowId
                     )
                 }
-            } else {
-                logcat { "job cancelled, discarding ${suggestions.size} suggestions" }
             }
         }
     }
