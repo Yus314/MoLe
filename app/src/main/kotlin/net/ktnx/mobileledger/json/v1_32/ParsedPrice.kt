@@ -17,15 +17,9 @@
 
 package net.ktnx.mobileledger.json.v1_32
 
-class ParsedPrice {
-    var tag: String = "NoPrice"
-    var contents: Contents? = null
+import net.ktnx.mobileledger.json.unified.UnifiedParsedPrice
 
-    class Contents {
-        var aprice: ParsedPrice? = null
-        var aquantity: ParsedQuantity? = null
-        var acommodity: String = ""
-        var aismultiplier: Boolean = false
-        var astyle: ParsedStyle? = null
-    }
-}
+/**
+ * v1_32 用 ParsedPrice - 統合クラスへのエイリアス
+ */
+typealias ParsedPrice = UnifiedParsedPrice

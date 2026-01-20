@@ -17,10 +17,9 @@
 
 package net.ktnx.mobileledger.json.v1_40
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import net.ktnx.mobileledger.json.ParsedBalance as BaseBalance
+import net.ktnx.mobileledger.json.unified.UnifiedParsedBalance
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-class ParsedBalance : BaseBalance() {
-    var astyle: ParsedStyle? = null
-}
+/**
+ * v1_40 用 ParsedBalance - 統合クラスへのエイリアス
+ */
+typealias ParsedBalance = UnifiedParsedBalance

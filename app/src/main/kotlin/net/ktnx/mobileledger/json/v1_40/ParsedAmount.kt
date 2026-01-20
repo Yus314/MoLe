@@ -17,13 +17,9 @@
 
 package net.ktnx.mobileledger.json.v1_40
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import net.ktnx.mobileledger.json.unified.UnifiedParsedAmount
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-class ParsedAmount {
-    var acommodity: String? = null
-    var aquantity: ParsedQuantity? = null
-    var aismultiplier: Boolean = false
-    var astyle: ParsedStyle? = null
-    var acost: ParsedPrice? = null
-}
+/**
+ * v1_40 用 ParsedAmount - 統合クラスへのエイリアス
+ */
+typealias ParsedAmount = UnifiedParsedAmount

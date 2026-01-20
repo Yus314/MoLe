@@ -17,9 +17,9 @@
 
 package net.ktnx.mobileledger.json.v1_14
 
-import net.ktnx.mobileledger.json.ParsedQuantity as BaseQuantity
+import net.ktnx.mobileledger.json.unified.UnifiedParsedQuantity
 
 /**
- * v1_14 用 ParsedQuantity - 基底クラスと同一
+ * v1_14 用 ParsedQuantity - 統合クラスへのエイリアス
  */
-typealias ParsedQuantity = BaseQuantity
+typealias ParsedQuantity = UnifiedParsedQuantity
