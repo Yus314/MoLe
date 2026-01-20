@@ -17,17 +17,18 @@
 
 package net.ktnx.mobileledger.json
 
+import net.ktnx.mobileledger.json.unified.UnifiedParsedQuantity
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class ParsedQuantityTest {
     @Test
     fun fromString() {
-        var pq = ParsedQuantity("-22")
+        var pq = UnifiedParsedQuantity("-22")
         assertEquals(0, pq.decimalPlaces)
         assertEquals(-22L, pq.decimalMantissa)
 
-        pq = ParsedQuantity("-123.45")
+        pq = UnifiedParsedQuantity("-123.45")
         assertEquals(2, pq.decimalPlaces)
         assertEquals(-12345L, pq.decimalMantissa)
     }

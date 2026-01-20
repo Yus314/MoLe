@@ -79,32 +79,6 @@ data class AmountStyle(
         }
 
         /**
-         * Creates an AmountStyle from base ParsedStyle (for backward compatibility)
-         *
-         * Note: This is used only when the base ParsedStyle class is directly referenced.
-         * In most cases, use the UnifiedParsedStyle version instead.
-         */
-        @JvmStatic
-        fun fromBaseParsedStyle(parsedStyle: net.ktnx.mobileledger.json.ParsedStyle?, currency: String?): AmountStyle? {
-            if (parsedStyle == null) return null
-
-            val position = determinePosition(parsedStyle.ascommodityside, currency)
-            val spaced = parsedStyle.isAscommodityspaced
-
-            // Handle decimal mark from ParsedStyle
-            val decimalMark = when (parsedStyle.asdecimalpoint) {
-                ',' -> ","
-                '.' -> "."
-                else -> "."
-            }
-
-            // Get precision - default to 2 if not specified in older versions
-            val precision = 2
-
-            return AmountStyle(position, spaced, precision, decimalMark)
-        }
-
-        /**
          * Helper method to determine currency position from side character
          */
         private fun determinePosition(side: Char, currency: String?): Position = when {
