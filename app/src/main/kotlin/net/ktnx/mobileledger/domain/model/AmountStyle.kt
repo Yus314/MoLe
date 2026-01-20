@@ -59,6 +59,9 @@ data class AmountStyle(
     companion object {
         /**
          * Creates an AmountStyle from unified ParsedStyle (all versions)
+         *
+         * All version-specific ParsedStyle classes are now typealiases to UnifiedParsedStyle,
+         * so this single method handles all API versions.
          */
         @JvmStatic
         fun fromParsedStyle(
@@ -76,64 +79,13 @@ data class AmountStyle(
         }
 
         /**
-         * Creates an AmountStyle from hledger's ParsedStyle JSON object (v1.50+)
+         * Creates an AmountStyle from base ParsedStyle (for backward compatibility)
+         *
+         * Note: This is used only when the base ParsedStyle class is directly referenced.
+         * In most cases, use the UnifiedParsedStyle version instead.
          */
         @JvmStatic
-        fun fromParsedStyle(
-            parsedStyle: net.ktnx.mobileledger.json.v1_50.ParsedStyle?,
-            currency: String?
-        ): AmountStyle? {
-            if (parsedStyle == null) return null
-
-            val position = determinePosition(parsedStyle.ascommodityside, currency)
-            val spaced = parsedStyle.isAscommodityspaced
-            val precision = parsedStyle.asprecision
-            val decimalMark = parsedStyle.asdecimalmark
-
-            return AmountStyle(position, spaced, precision, decimalMark)
-        }
-
-        /**
-         * Creates an AmountStyle from hledger's ParsedStyle JSON object (v1.40)
-         */
-        @JvmStatic
-        fun fromParsedStyle(
-            parsedStyle: net.ktnx.mobileledger.json.v1_40.ParsedStyle?,
-            currency: String?
-        ): AmountStyle? {
-            if (parsedStyle == null) return null
-
-            val position = determinePosition(parsedStyle.ascommodityside, currency)
-            val spaced = parsedStyle.isAscommodityspaced
-            val precision = parsedStyle.asprecision
-            val decimalMark = parsedStyle.asdecimalmark
-
-            return AmountStyle(position, spaced, precision, decimalMark)
-        }
-
-        /**
-         * Creates an AmountStyle from hledger's ParsedStyle JSON object (v1.32)
-         */
-        @JvmStatic
-        fun fromParsedStyle(
-            parsedStyle: net.ktnx.mobileledger.json.v1_32.ParsedStyle?,
-            currency: String?
-        ): AmountStyle? {
-            if (parsedStyle == null) return null
-
-            val position = determinePosition(parsedStyle.ascommodityside, currency)
-            val spaced = parsedStyle.isAscommodityspaced
-            val precision = parsedStyle.asprecision
-            val decimalMark = parsedStyle.asdecimalmark
-
-            return AmountStyle(position, spaced, precision, decimalMark)
-        }
-
-        /**
-         * Creates an AmountStyle from hledger's ParsedStyle JSON object (base/old versions)
-         */
-        @JvmStatic
-        fun fromParsedStyle(parsedStyle: net.ktnx.mobileledger.json.ParsedStyle?, currency: String?): AmountStyle? {
+        fun fromBaseParsedStyle(parsedStyle: net.ktnx.mobileledger.json.ParsedStyle?, currency: String?): AmountStyle? {
             if (parsedStyle == null) return null
 
             val position = determinePosition(parsedStyle.ascommodityside, currency)

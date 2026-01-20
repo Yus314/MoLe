@@ -17,11 +17,17 @@
 
 package net.ktnx.mobileledger.json.common
 
+import net.ktnx.mobileledger.json.unified.UnifiedParsedStyle
+
 /**
  * Strategy interface for version-specific style configuration.
  *
  * Different hledger API versions use different JSON field names and structures
  * for amount formatting. This sealed interface abstracts those differences.
+ *
+ * Note: All version-specific ParsedStyle classes are now typealiases to UnifiedParsedStyle,
+ * so the type checks are simplified. The different configurers exist to set the appropriate
+ * fields for each API version's expected JSON output format.
  */
 sealed interface StyleConfigurer {
     /**
@@ -33,33 +39,30 @@ sealed interface StyleConfigurer {
 
     /**
      * Group A: v1_14, v1_15 - uses asdecimalpoint (Char)
+     *
+     * Sets asprecision and asdecimalpoint for older API versions.
      */
     data object DecimalPointChar : StyleConfigurer {
         override fun configureStyle(style: Any, precision: Int) {
-            when (style) {
-                is net.ktnx.mobileledger.json.v1_14.ParsedStyle -> {
-                    style.asprecision = precision
-                    style.asdecimalpoint = '.'
-                }
-
-                is net.ktnx.mobileledger.json.v1_15.ParsedStyle -> {
-                    style.asprecision = precision
-                    style.asdecimalpoint = '.'
-                }
+            if (style is UnifiedParsedStyle) {
+                style.asprecision = precision
+                style.asdecimalpoint = '.'
             }
         }
     }
 
     /**
      * v1_19_1 only - uses asdecimalpoint (Char) with ParsedPrecision object
+     *
+     * Note: UnifiedParsedStyle stores precision as Int, and the @JsonSetter
+     * handles deserialization of ParsedPrecision objects. For serialization,
+     * additional handling may be needed in the serializer.
      */
     data object DecimalPointCharWithParsedPrecision : StyleConfigurer {
         override fun configureStyle(style: Any, precision: Int) {
-            when (style) {
-                is net.ktnx.mobileledger.json.v1_19_1.ParsedStyle -> {
-                    style.asprecision = net.ktnx.mobileledger.json.v1_19_1.ParsedPrecision(precision)
-                    style.asdecimalpoint = '.'
-                }
+            if (style is UnifiedParsedStyle) {
+                style.asprecision = precision
+                style.asdecimalpoint = '.'
             }
         }
     }
@@ -69,11 +72,9 @@ sealed interface StyleConfigurer {
      */
     data object DecimalPointCharIntPrecision : StyleConfigurer {
         override fun configureStyle(style: Any, precision: Int) {
-            when (style) {
-                is net.ktnx.mobileledger.json.v1_23.ParsedStyle -> {
-                    style.asprecision = precision
-                    style.asdecimalpoint = '.'
-                }
+            if (style is UnifiedParsedStyle) {
+                style.asprecision = precision
+                style.asdecimalpoint = '.'
             }
         }
     }
@@ -83,24 +84,10 @@ sealed interface StyleConfigurer {
      */
     data object DecimalMarkString : StyleConfigurer {
         override fun configureStyle(style: Any, precision: Int) {
-            when (style) {
-                is net.ktnx.mobileledger.json.v1_32.ParsedStyle -> {
-                    style.asprecision = precision
-                    style.asdecimalmark = "."
-                    style.asrounding = "NoRounding"
-                }
-
-                is net.ktnx.mobileledger.json.v1_40.ParsedStyle -> {
-                    style.asprecision = precision
-                    style.asdecimalmark = "."
-                    style.asrounding = "NoRounding"
-                }
-
-                is net.ktnx.mobileledger.json.v1_50.ParsedStyle -> {
-                    style.asprecision = precision
-                    style.asdecimalmark = "."
-                    style.asrounding = "NoRounding"
-                }
+            if (style is UnifiedParsedStyle) {
+                style.asprecision = precision
+                style.asdecimalmark = "."
+                style.asrounding = "NoRounding"
             }
         }
     }

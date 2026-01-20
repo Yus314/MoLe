@@ -57,6 +57,18 @@ class UnifiedParsedStyle {
     var asdecimalmark: String = "."
 
     /**
+     * 互換性プロパティ: asdecimalpoint (Char) アクセサ
+     *
+     * 既存コードとの互換性のため、Char としてアクセスできるようにする。
+     * 内部的には asdecimalmark (String) に委譲する。
+     */
+    var asdecimalpoint: Char
+        get() = asdecimalmark.firstOrNull() ?: '.'
+        set(value) {
+            asdecimalmark = value.toString()
+        }
+
+    /**
      * 小数点精度
      *
      * v1_19_1 では ParsedPrecision オブジェクトだが、Int に平坦化する

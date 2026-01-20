@@ -17,12 +17,9 @@
 
 package net.ktnx.mobileledger.json.v1_50
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import net.ktnx.mobileledger.json.ParsedStyle as BaseStyle
+import net.ktnx.mobileledger.json.unified.UnifiedParsedStyle
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-open class ParsedStyle : BaseStyle() {
-    var asprecision: Int = 0
-    var asdecimalmark: String = "."
-    var asrounding: String = "NoRounding"
-}
+/**
+ * v1_50 用 ParsedStyle - 統合クラスへのエイリアス
+ */
+typealias ParsedStyle = UnifiedParsedStyle
