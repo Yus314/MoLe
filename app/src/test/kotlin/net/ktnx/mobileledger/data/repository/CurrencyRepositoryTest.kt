@@ -18,15 +18,11 @@
 package net.ktnx.mobileledger.data.repository
 
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.runTest
-import net.ktnx.mobileledger.data.repository.mapper.CurrencyMapper.toDomain
-import net.ktnx.mobileledger.data.repository.mapper.CurrencyMapper.toEntity
-import net.ktnx.mobileledger.db.Currency
-import net.ktnx.mobileledger.domain.model.Currency as DomainCurrency
+import net.ktnx.mobileledger.domain.model.Currency
+import net.ktnx.mobileledger.domain.model.CurrencyPosition
+import net.ktnx.mobileledger.fake.FakeCurrencyRepository
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -62,160 +58,158 @@ class CurrencyRepositoryTest {
     private fun createTestCurrency(
         id: Long = 0L,
         name: String = "USD",
-        position: String = "after",
+        position: CurrencyPosition = CurrencyPosition.AFTER,
         hasGap: Boolean = true
     ): Currency = Currency(id, name, position, hasGap)
 
     // ========================================
-    // observeAllCurrencies tests
+    // observeAllCurrenciesAsDomain tests
     // ========================================
 
     @Test
-    fun `observeAllCurrencies returns empty list when no currencies`() = runTest {
-        val currencies = repository.observeAllCurrencies().first()
+    fun `observeAllCurrenciesAsDomain returns empty list when no currencies`() = runTest {
+        val currencies = repository.observeAllCurrenciesAsDomain().first()
         assertTrue(currencies.isEmpty())
     }
 
     @Test
-    fun `observeAllCurrencies returns all currencies`() = runTest {
-        repository.insertCurrency(createTestCurrency(name = "USD"))
-        repository.insertCurrency(createTestCurrency(name = "EUR"))
-        repository.insertCurrency(createTestCurrency(name = "JPY"))
+    fun `observeAllCurrenciesAsDomain returns all currencies`() = runTest {
+        repository.saveCurrency(createTestCurrency(name = "USD"))
+        repository.saveCurrency(createTestCurrency(name = "EUR"))
+        repository.saveCurrency(createTestCurrency(name = "JPY"))
 
-        val currencies = repository.observeAllCurrencies().first()
+        val currencies = repository.observeAllCurrenciesAsDomain().first()
 
         assertEquals(3, currencies.size)
     }
 
     // ========================================
-    // getAllCurrencies tests
+    // getAllCurrenciesAsDomain tests
     // ========================================
 
     @Test
-    fun `getAllCurrencies returns all currencies`() = runTest {
-        repository.insertCurrency(createTestCurrency(name = "USD"))
-        repository.insertCurrency(createTestCurrency(name = "EUR"))
+    fun `getAllCurrenciesAsDomain returns all currencies`() = runTest {
+        repository.saveCurrency(createTestCurrency(name = "USD"))
+        repository.saveCurrency(createTestCurrency(name = "EUR"))
 
-        val currencies = repository.getAllCurrencies()
+        val currencies = repository.getAllCurrenciesAsDomain()
 
         assertEquals(2, currencies.size)
     }
 
     // ========================================
-    // observeCurrencyById tests
+    // observeCurrencyAsDomain tests
     // ========================================
 
     @Test
-    fun `observeCurrencyById returns null for non-existent id`() = runTest {
-        val result = repository.observeCurrencyById(999L).first()
+    fun `observeCurrencyAsDomain returns null for non-existent id`() = runTest {
+        val result = repository.observeCurrencyAsDomain(999L).first()
         assertNull(result)
     }
 
     @Test
-    fun `observeCurrencyById returns currency when exists`() = runTest {
+    fun `observeCurrencyAsDomain returns currency when exists`() = runTest {
         val currency = createTestCurrency(name = "USD")
-        val id = repository.insertCurrency(currency)
+        val id = repository.saveCurrency(currency)
 
-        val result = repository.observeCurrencyById(id).first()
+        val result = repository.observeCurrencyAsDomain(id).first()
 
         assertNotNull(result)
         assertEquals("USD", result?.name)
     }
 
     // ========================================
-    // observeCurrencyByName tests
+    // observeCurrencyAsDomainByName tests
     // ========================================
 
     @Test
-    fun `observeCurrencyByName returns null for non-existent name`() = runTest {
-        val result = repository.observeCurrencyByName("UNKNOWN").first()
+    fun `observeCurrencyAsDomainByName returns null for non-existent name`() = runTest {
+        val result = repository.observeCurrencyAsDomainByName("UNKNOWN").first()
         assertNull(result)
     }
 
     @Test
-    fun `getCurrencyByName returns currency when exists`() = runTest {
-        repository.insertCurrency(createTestCurrency(name = "USD"))
+    fun `getCurrencyAsDomainByName returns currency when exists`() = runTest {
+        repository.saveCurrency(createTestCurrency(name = "USD"))
 
-        val result = repository.getCurrencyByName("USD")
+        val result = repository.getCurrencyAsDomainByName("USD")
 
         assertNotNull(result)
         assertEquals("USD", result?.name)
     }
 
     // ========================================
-    // insertCurrency tests
+    // saveCurrency tests
     // ========================================
 
     @Test
-    fun `insertCurrency assigns id and returns it`() = runTest {
+    fun `saveCurrency assigns id and returns it`() = runTest {
         val currency = createTestCurrency(name = "USD")
 
-        val id = repository.insertCurrency(currency)
+        val id = repository.saveCurrency(currency)
 
         assertTrue(id > 0)
-        val stored = repository.observeCurrencyById(id).first()
+        val stored = repository.observeCurrencyAsDomain(id).first()
         assertNotNull(stored)
         assertEquals("USD", stored?.name)
     }
 
     @Test
-    fun `insertCurrency preserves all properties`() = runTest {
+    fun `saveCurrency preserves all properties`() = runTest {
         val currency = createTestCurrency(
             name = "EUR",
-            position = "before",
+            position = CurrencyPosition.BEFORE,
             hasGap = false
         )
 
-        val id = repository.insertCurrency(currency)
-        val stored = repository.observeCurrencyById(id).first()
+        val id = repository.saveCurrency(currency)
+        val stored = repository.observeCurrencyAsDomain(id).first()
 
         assertNotNull(stored)
         assertEquals("EUR", stored?.name)
-        assertEquals("before", stored?.position)
+        assertEquals(CurrencyPosition.BEFORE, stored?.position)
         assertEquals(false, stored?.hasGap)
     }
 
     // ========================================
-    // updateCurrency tests
+    // saveCurrency update tests
     // ========================================
 
     @Test
-    fun `updateCurrency modifies existing currency`() = runTest {
-        val currency = createTestCurrency(name = "USD", position = "after")
-        val id = repository.insertCurrency(currency)
+    fun `saveCurrency with id modifies existing currency`() = runTest {
+        val currency = createTestCurrency(name = "USD", position = CurrencyPosition.AFTER)
+        val id = repository.saveCurrency(currency)
 
-        val updated = createTestCurrency(id = id, name = "USD", position = "before")
-        repository.updateCurrency(updated)
+        val updated = createTestCurrency(id = id, name = "USD", position = CurrencyPosition.BEFORE)
+        repository.saveCurrency(updated)
 
-        val result = repository.observeCurrencyById(id).first()
-        assertEquals("before", result?.position)
+        val result = repository.observeCurrencyAsDomain(id).first()
+        assertEquals(CurrencyPosition.BEFORE, result?.position)
     }
 
     // ========================================
-    // deleteCurrency tests
+    // deleteCurrencyByName tests
     // ========================================
 
     @Test
-    fun `deleteCurrency removes currency`() = runTest {
+    fun `deleteCurrencyByName removes currency`() = runTest {
         val currency = createTestCurrency(name = "USD")
-        val id = repository.insertCurrency(currency)
+        repository.saveCurrency(currency)
 
-        repository.deleteCurrency(currency.apply { this.id = id })
+        repository.deleteCurrencyByName("USD")
 
-        val remaining = repository.observeAllCurrencies().first()
+        val remaining = repository.observeAllCurrenciesAsDomain().first()
         assertTrue(remaining.isEmpty())
     }
 
     @Test
-    fun `deleteCurrency only removes specified currency`() = runTest {
-        val usd = createTestCurrency(name = "USD")
-        val eur = createTestCurrency(name = "EUR")
-        val usdId = repository.insertCurrency(usd)
-        repository.insertCurrency(eur)
+    fun `deleteCurrencyByName only removes specified currency`() = runTest {
+        repository.saveCurrency(createTestCurrency(name = "USD"))
+        repository.saveCurrency(createTestCurrency(name = "EUR"))
 
-        repository.deleteCurrency(usd.apply { this.id = usdId })
+        repository.deleteCurrencyByName("USD")
 
-        val remaining = repository.observeAllCurrencies().first()
+        val remaining = repository.observeAllCurrenciesAsDomain().first()
         assertEquals(1, remaining.size)
         assertEquals("EUR", remaining[0].name)
     }
@@ -226,105 +220,13 @@ class CurrencyRepositoryTest {
 
     @Test
     fun `deleteAllCurrencies removes all currencies`() = runTest {
-        repository.insertCurrency(createTestCurrency(name = "USD"))
-        repository.insertCurrency(createTestCurrency(name = "EUR"))
-        repository.insertCurrency(createTestCurrency(name = "JPY"))
+        repository.saveCurrency(createTestCurrency(name = "USD"))
+        repository.saveCurrency(createTestCurrency(name = "EUR"))
+        repository.saveCurrency(createTestCurrency(name = "JPY"))
 
         repository.deleteAllCurrencies()
 
-        val currencies = repository.observeAllCurrencies().first()
+        val currencies = repository.observeAllCurrenciesAsDomain().first()
         assertTrue(currencies.isEmpty())
-    }
-}
-
-/**
- * Fake implementation of [CurrencyRepository] for unit testing.
- *
- * This implementation provides an in-memory store that allows testing
- * without a real database or Room infrastructure.
- */
-class FakeCurrencyRepository : CurrencyRepository {
-
-    private val currencies = mutableMapOf<Long, Currency>()
-    private var nextId = 1L
-    private val currenciesFlow = MutableStateFlow<List<Currency>>(emptyList())
-
-    private fun emitChanges() {
-        currenciesFlow.value = currencies.values.toList()
-    }
-
-    // Domain Model Query Operations
-    override fun observeAllCurrenciesAsDomain(): Flow<List<DomainCurrency>> =
-        currenciesFlow.map { list -> list.map { it.toDomain() } }
-
-    override suspend fun getAllCurrenciesAsDomain(): List<DomainCurrency> = currencies.values.map { it.toDomain() }
-
-    override fun observeCurrencyAsDomain(id: Long): Flow<DomainCurrency?> =
-        currenciesFlow.map { list -> list.find { it.id == id }?.toDomain() }
-
-    override suspend fun getCurrencyAsDomain(id: Long): DomainCurrency? = currencies[id]?.toDomain()
-
-    override suspend fun getCurrencyAsDomainByName(name: String): DomainCurrency? =
-        currencies.values.find { it.name == name }?.toDomain()
-
-    override fun observeCurrencyAsDomainByName(name: String): Flow<DomainCurrency?> =
-        currenciesFlow.map { list -> list.find { it.name == name }?.toDomain() }
-
-    // Database Entity Query Operations
-    override fun observeAllCurrencies(): Flow<List<Currency>> = MutableStateFlow(currencies.values.toList())
-
-    override suspend fun getAllCurrencies(): List<Currency> = currencies.values.toList()
-
-    override fun observeCurrencyById(id: Long): Flow<Currency?> = MutableStateFlow(currencies[id])
-
-    override fun observeCurrencyByName(name: String): Flow<Currency?> =
-        MutableStateFlow(currencies.values.find { it.name == name })
-
-    override suspend fun getCurrencyByName(name: String): Currency? = currencies.values.find { it.name == name }
-
-    override suspend fun insertCurrency(currency: Currency): Long {
-        val id = if (currency.id == 0L) nextId++ else currency.id
-        val newCurrency = Currency(id, currency.name, currency.position, currency.hasGap)
-        currencies[id] = newCurrency
-        emitChanges()
-        return id
-    }
-
-    override suspend fun updateCurrency(currency: Currency) {
-        if (currencies.containsKey(currency.id)) {
-            currencies[currency.id] = currency
-            emitChanges()
-        }
-    }
-
-    override suspend fun deleteCurrency(currency: Currency) {
-        currencies.remove(currency.id)
-        emitChanges()
-    }
-
-    override suspend fun deleteAllCurrencies() {
-        currencies.clear()
-        emitChanges()
-    }
-
-    override suspend fun saveCurrency(currency: DomainCurrency): Long {
-        val entity = currency.toEntity()
-        return if (entity.id == 0L) {
-            insertCurrency(entity)
-        } else {
-            updateCurrency(entity)
-            entity.id
-        }
-    }
-
-    override suspend fun deleteCurrencyByName(name: String): Boolean {
-        val currency = currencies.values.find { it.name == name }
-        return if (currency != null) {
-            currencies.remove(currency.id)
-            emitChanges()
-            true
-        } else {
-            false
-        }
     }
 }

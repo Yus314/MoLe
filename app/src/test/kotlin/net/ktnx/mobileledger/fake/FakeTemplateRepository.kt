@@ -40,8 +40,10 @@ class FakeTemplateRepository : TemplateRepository {
     // Domain Model Query Operations
     // ========================================
 
-    override fun observeAllTemplatesAsDomain(): Flow<List<Template>> =
-        templatesFlow.map { list -> list.map { it.toDomain() } }
+    override fun observeAllTemplatesAsDomain(): Flow<List<Template>> = templatesFlow.map { list ->
+        list.sortedWith(compareBy({ it.header.isFallback }, { it.header.name }))
+            .map { it.toDomain() }
+    }
 
     override fun observeTemplateAsDomain(id: Long): Flow<Template?> =
         templatesFlow.map { list -> list.find { it.header.id == id }?.toDomain() }

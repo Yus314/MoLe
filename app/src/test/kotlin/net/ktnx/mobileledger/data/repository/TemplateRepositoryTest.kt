@@ -17,19 +17,12 @@
 
 package net.ktnx.mobileledger.data.repository
 
-import java.util.UUID
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.runTest
-import net.ktnx.mobileledger.data.repository.mapper.TemplateMapper.toDomain
-import net.ktnx.mobileledger.data.repository.mapper.TemplateMapper.toEntity
-import net.ktnx.mobileledger.db.TemplateAccount
-import net.ktnx.mobileledger.db.TemplateHeader
-import net.ktnx.mobileledger.db.TemplateWithAccounts
-import net.ktnx.mobileledger.domain.model.Template as DomainTemplate
+import net.ktnx.mobileledger.domain.model.Template
+import net.ktnx.mobileledger.domain.model.TemplateLine
+import net.ktnx.mobileledger.fake.FakeTemplateRepository
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
@@ -43,7 +36,7 @@ import org.junit.Test
  *
  * These tests verify:
  * - CRUD operations work correctly
- * - Template with accounts retrieval
+ * - Template with lines retrieval
  * - Template duplication functionality
  * - Flow emissions occur on data changes
  *
@@ -65,55 +58,48 @@ class TemplateRepositoryTest {
     // ========================================
 
     private fun createTestTemplate(
-        id: Long = 0L,
+        id: Long? = null,
         name: String = "Test Template",
-        regularExpression: String = ".*",
-        uuid: String = UUID.randomUUID().toString(),
-        isFallback: Boolean = false
-    ): TemplateHeader = TemplateHeader(id, name, regularExpression).apply {
-        this.uuid = uuid
-        this.isFallback = isFallback
-    }
+        pattern: String = ".*",
+        isFallback: Boolean = false,
+        lines: List<TemplateLine> = emptyList()
+    ): Template = Template(
+        id = id,
+        name = name,
+        pattern = pattern,
+        isFallback = isFallback,
+        lines = lines
+    )
 
-    private fun createTestTemplateWithAccounts(
-        id: Long = 0L,
-        name: String = "Test Template",
-        accountNames: List<String> = listOf("Assets:Cash", "Expenses:Food")
-    ): TemplateWithAccounts {
-        val header = createTestTemplate(id = id, name = name)
-        val accounts = accountNames.mapIndexed { index, accountName ->
-            TemplateAccount(0L, id, index.toLong()).apply {
-                this.accountName = accountName
-            }
-        }
-        return TemplateWithAccounts().apply {
-            this.header = header
-            this.accounts = accounts
-        }
-    }
-
-    private fun wrapHeader(header: TemplateHeader): TemplateWithAccounts = TemplateWithAccounts().apply {
-        this.header = header
-        this.accounts = emptyList()
-    }
+    private fun createTestLine(
+        id: Long? = null,
+        accountName: String = "Assets:Cash",
+        amount: Float? = null,
+        currencyId: Long? = null
+    ): TemplateLine = TemplateLine(
+        id = id,
+        accountName = accountName,
+        amount = amount,
+        currencyId = currencyId
+    )
 
     // ========================================
-    // getAllTemplates tests
+    // observeAllTemplatesAsDomain tests
     // ========================================
 
     @Test
-    fun `getAllTemplates returns empty list when no templates`() = runTest {
-        val templates = repository.observeAllTemplates().first()
+    fun `observeAllTemplatesAsDomain returns empty list when no templates`() = runTest {
+        val templates = repository.observeAllTemplatesAsDomain().first()
         assertTrue(templates.isEmpty())
     }
 
     @Test
-    fun `getAllTemplates returns templates sorted by fallback and name`() = runTest {
-        repository.insertTemplateWithAccounts(wrapHeader(createTestTemplate(name = "Zebra", isFallback = false)))
-        repository.insertTemplateWithAccounts(wrapHeader(createTestTemplate(name = "Apple", isFallback = false)))
-        repository.insertTemplateWithAccounts(wrapHeader(createTestTemplate(name = "Fallback", isFallback = true)))
+    fun `observeAllTemplatesAsDomain returns templates sorted by fallback and name`() = runTest {
+        repository.saveTemplate(createTestTemplate(name = "Zebra", isFallback = false))
+        repository.saveTemplate(createTestTemplate(name = "Apple", isFallback = false))
+        repository.saveTemplate(createTestTemplate(name = "Fallback", isFallback = true))
 
-        val templates = repository.observeAllTemplates().first()
+        val templates = repository.observeAllTemplatesAsDomain().first()
 
         assertEquals(3, templates.size)
         // Non-fallback templates sorted by name first
@@ -124,162 +110,154 @@ class TemplateRepositoryTest {
     }
 
     // ========================================
-    // getTemplateById tests
+    // observeTemplateAsDomain tests
     // ========================================
 
     @Test
-    fun `getTemplateById returns null for non-existent id`() = runTest {
-        val result = repository.observeTemplateById(999L).first()
+    fun `observeTemplateAsDomain returns null for non-existent id`() = runTest {
+        val result = repository.observeTemplateAsDomain(999L).first()
         assertNull(result)
     }
 
     @Test
-    fun `getTemplateByIdSync returns template when exists`() = runTest {
+    fun `getTemplateAsDomain returns template when exists`() = runTest {
         val template = createTestTemplate(name = "Test")
-        repository.insertTemplateWithAccounts(wrapHeader(template))
-        val id = template.id
+        val id = repository.saveTemplate(template)
 
-        val result = repository.getTemplateById(id)
+        val result = repository.getTemplateAsDomain(id)
 
         assertNotNull(result)
         assertEquals("Test", result?.name)
     }
 
     // ========================================
-    // getTemplateWithAccounts tests
+    // getTemplateAsDomain with lines tests
     // ========================================
 
     @Test
-    fun `getTemplateWithAccounts returns null for non-existent id`() = runTest {
-        val result = repository.observeTemplateWithAccounts(999L).first()
+    fun `getTemplateAsDomain returns null for non-existent id`() = runTest {
+        val result = repository.getTemplateAsDomain(999L)
         assertNull(result)
     }
 
     @Test
-    fun `getTemplateWithAccountsSync returns template with accounts`() = runTest {
-        val templateWithAccounts = createTestTemplateWithAccounts(
+    fun `getTemplateAsDomain returns template with lines`() = runTest {
+        val template = createTestTemplate(
             name = "Payment",
-            accountNames = listOf("Assets:Bank", "Expenses:Utilities")
+            lines = listOf(
+                createTestLine(accountName = "Assets:Bank"),
+                createTestLine(accountName = "Expenses:Utilities")
+            )
         )
-        repository.insertTemplateWithAccounts(templateWithAccounts)
+        val id = repository.saveTemplate(template)
 
-        val result = repository.getTemplateWithAccounts(templateWithAccounts.header.id)
+        val result = repository.getTemplateAsDomain(id)
 
         assertNotNull(result)
-        assertEquals("Payment", result?.header?.name)
-        assertEquals(2, result?.accounts?.size)
+        assertEquals("Payment", result?.name)
+        assertEquals(2, result?.lines?.size)
     }
 
     // ========================================
-    // getTemplateWithAccountsByUuidSync tests
+    // getAllTemplatesAsDomain tests
     // ========================================
 
     @Test
-    fun `getTemplateWithAccountsByUuidSync returns null for non-existent uuid`() = runTest {
-        val result = repository.getTemplateWithAccountsByUuid("non-existent-uuid")
-        assertNull(result)
-    }
-
-    @Test
-    fun `getTemplateWithAccountsByUuidSync returns template when exists`() = runTest {
-        val uuid = "test-uuid-12345"
-        val template = createTestTemplate(name = "UUID Test", uuid = uuid)
-        repository.insertTemplateWithAccounts(wrapHeader(template))
-
-        val result = repository.getTemplateWithAccountsByUuid(uuid)
-
-        assertNotNull(result)
-        assertEquals("UUID Test", result?.header?.name)
-    }
-
-    // ========================================
-    // getAllTemplatesWithAccountsSync tests
-    // ========================================
-
-    @Test
-    fun `getAllTemplatesWithAccountsSync returns all templates with accounts`() = runTest {
-        repository.insertTemplateWithAccounts(
-            createTestTemplateWithAccounts(name = "T1", accountNames = listOf("A:B"))
+    fun `getAllTemplatesAsDomain returns all templates with lines`() = runTest {
+        repository.saveTemplate(
+            createTestTemplate(name = "T1", lines = listOf(createTestLine(accountName = "A:B")))
         )
-        repository.insertTemplateWithAccounts(
-            createTestTemplateWithAccounts(name = "T2", accountNames = listOf("C:D", "E:F"))
+        repository.saveTemplate(
+            createTestTemplate(
+                name = "T2",
+                lines = listOf(
+                    createTestLine(accountName = "C:D"),
+                    createTestLine(accountName = "E:F")
+                )
+            )
         )
 
-        val result = repository.getAllTemplatesWithAccounts()
+        val result = repository.getAllTemplatesAsDomain()
 
         assertEquals(2, result.size)
     }
 
     // ========================================
-    // insertTemplateWithAccounts tests
+    // saveTemplate tests (insert)
     // ========================================
 
     @Test
-    fun `insertTemplateWithAccounts assigns id`() = runTest {
+    fun `saveTemplate assigns id for new template`() = runTest {
         val template = createTestTemplate(name = "New Template")
 
-        repository.insertTemplateWithAccounts(wrapHeader(template))
-        val id = template.id
+        val id = repository.saveTemplate(template)
 
         assertTrue(id > 0)
-        val stored = repository.getTemplateById(id)
+        val stored = repository.getTemplateAsDomain(id)
         assertNotNull(stored)
         assertEquals("New Template", stored?.name)
     }
 
-    // ========================================
-    // insertTemplateWithAccounts tests
-    // ========================================
-
     @Test
-    fun `insertTemplateWithAccounts stores header and accounts`() = runTest {
-        val templateWithAccounts = createTestTemplateWithAccounts(
+    fun `saveTemplate stores header and lines`() = runTest {
+        val template = createTestTemplate(
             name = "Full Template",
-            accountNames = listOf("Assets:Cash", "Expenses:Food", "Liabilities:Card")
+            lines = listOf(
+                createTestLine(accountName = "Assets:Cash"),
+                createTestLine(accountName = "Expenses:Food"),
+                createTestLine(accountName = "Liabilities:Card")
+            )
         )
 
-        repository.insertTemplateWithAccounts(templateWithAccounts)
+        val id = repository.saveTemplate(template)
 
-        val stored = repository.getTemplateWithAccounts(templateWithAccounts.header.id)
+        val stored = repository.getTemplateAsDomain(id)
         assertNotNull(stored)
-        assertEquals("Full Template", stored?.header?.name)
-        assertEquals(3, stored?.accounts?.size)
+        assertEquals("Full Template", stored?.name)
+        assertEquals(3, stored?.lines?.size)
     }
 
     // ========================================
-    // saveTemplate (update) tests
+    // saveTemplate tests (update)
     // ========================================
 
     @Test
     fun `saveTemplate modifies existing template`() = runTest {
         val template = createTestTemplate(name = "Original")
-        repository.insertTemplateWithAccounts(wrapHeader(template))
-        val id = template.id
+        val id = repository.saveTemplate(template)
 
-        val updatedHeader = createTestTemplate(id = id, name = "Updated")
-        repository.insertTemplateWithAccounts(wrapHeader(updatedHeader))
+        val updatedTemplate = createTestTemplate(id = id, name = "Updated")
+        repository.saveTemplate(updatedTemplate)
 
-        val result = repository.getTemplateById(id)
+        val result = repository.getTemplateAsDomain(id)
         assertEquals("Updated", result?.name)
     }
 
     @Test
-    fun `saveTemplate preserves accounts when updating`() = runTest {
-        val templateWithAccounts = createTestTemplateWithAccounts(
+    fun `saveTemplate updates lines when updating`() = runTest {
+        val template = createTestTemplate(
             name = "Original",
-            accountNames = listOf("A:B", "C:D")
+            lines = listOf(
+                createTestLine(accountName = "A:B"),
+                createTestLine(accountName = "C:D")
+            )
         )
-        repository.insertTemplateWithAccounts(templateWithAccounts)
+        val id = repository.saveTemplate(template)
 
-        val updatedWithAccounts = TemplateWithAccounts().apply {
-            header = templateWithAccounts.header.apply { name = "Updated" }
-            accounts = templateWithAccounts.accounts
-        }
-        repository.insertTemplateWithAccounts(updatedWithAccounts)
+        val updatedTemplate = createTestTemplate(
+            id = id,
+            name = "Updated",
+            lines = listOf(
+                createTestLine(accountName = "X:Y"),
+                createTestLine(accountName = "Z:W")
+            )
+        )
+        repository.saveTemplate(updatedTemplate)
 
-        val result = repository.getTemplateWithAccounts(templateWithAccounts.header.id)
-        assertEquals("Updated", result?.header?.name)
-        assertEquals(2, result?.accounts?.size)
+        val result = repository.getTemplateAsDomain(id)
+        assertEquals("Updated", result?.name)
+        assertEquals(2, result?.lines?.size)
+        assertTrue(result?.lines?.any { it.accountName == "X:Y" } ?: false)
     }
 
     // ========================================
@@ -289,64 +267,64 @@ class TemplateRepositoryTest {
     @Test
     fun `deleteTemplateById removes template`() = runTest {
         val template = createTestTemplate(name = "ToDelete")
-        repository.insertTemplateWithAccounts(wrapHeader(template))
-        val id = template.id
+        val id = repository.saveTemplate(template)
 
         repository.deleteTemplateById(id)
 
-        val remaining = repository.observeAllTemplates().first()
+        val remaining = repository.observeAllTemplatesAsDomain().first()
         assertTrue(remaining.isEmpty())
     }
 
     @Test
     fun `deleteTemplateById only removes specified template`() = runTest {
-        val t1 = createTestTemplate(name = "Template 1")
-        val t2 = createTestTemplate(name = "Template 2")
-        repository.insertTemplateWithAccounts(wrapHeader(t1))
-        repository.insertTemplateWithAccounts(wrapHeader(t2))
-        val id1 = t1.id
+        val id1 = repository.saveTemplate(createTestTemplate(name = "Template 1"))
+        repository.saveTemplate(createTestTemplate(name = "Template 2"))
 
         repository.deleteTemplateById(id1)
 
-        val remaining = repository.observeAllTemplates().first()
+        val remaining = repository.observeAllTemplatesAsDomain().first()
         assertEquals(1, remaining.size)
         assertEquals("Template 2", remaining[0].name)
     }
 
     // ========================================
-    // duplicateTemplate tests
+    // duplicateTemplate tests (still uses deprecated method)
     // ========================================
 
     @Test
     fun `duplicateTemplate returns null for non-existent id`() = runTest {
+        @Suppress("DEPRECATION")
         val result = repository.duplicateTemplate(999L)
         assertNull(result)
     }
 
     @Test
-    fun `duplicateTemplate creates copy with new id and uuid`() = runTest {
-        val originalUuid = "original-uuid"
-        val template = createTestTemplate(name = "Original", uuid = originalUuid)
-        repository.insertTemplateWithAccounts(wrapHeader(template))
-        val id = template.id
+    fun `duplicateTemplate creates copy with new id`() = runTest {
+        val template = createTestTemplate(name = "Original")
+        val id = repository.saveTemplate(template)
 
+        @Suppress("DEPRECATION")
         val duplicate = repository.duplicateTemplate(id)
 
         assertNotNull(duplicate)
         assertNotEquals(id, duplicate?.header?.id)
-        assertNotEquals(originalUuid, duplicate?.header?.uuid)
-        assertEquals("Original", duplicate?.header?.name)
+        // Fake implementation adds " (copy)" suffix
+        assertEquals("Original (copy)", duplicate?.header?.name)
     }
 
     @Test
-    fun `duplicateTemplate copies accounts to new template`() = runTest {
-        val templateWithAccounts = createTestTemplateWithAccounts(
-            name = "WithAccounts",
-            accountNames = listOf("A:B", "C:D")
+    fun `duplicateTemplate copies lines to new template`() = runTest {
+        val template = createTestTemplate(
+            name = "WithLines",
+            lines = listOf(
+                createTestLine(accountName = "A:B"),
+                createTestLine(accountName = "C:D")
+            )
         )
-        repository.insertTemplateWithAccounts(templateWithAccounts)
+        val id = repository.saveTemplate(template)
 
-        val duplicate = repository.duplicateTemplate(templateWithAccounts.header.id)
+        @Suppress("DEPRECATION")
+        val duplicate = repository.duplicateTemplate(id)
 
         assertNotNull(duplicate)
         assertEquals(2, duplicate?.accounts?.size)
@@ -362,190 +340,13 @@ class TemplateRepositoryTest {
 
     @Test
     fun `deleteAllTemplates removes all templates`() = runTest {
-        repository.insertTemplateWithAccounts(wrapHeader(createTestTemplate(name = "T1")))
-        repository.insertTemplateWithAccounts(wrapHeader(createTestTemplate(name = "T2")))
-        repository.insertTemplateWithAccounts(wrapHeader(createTestTemplate(name = "T3")))
+        repository.saveTemplate(createTestTemplate(name = "T1"))
+        repository.saveTemplate(createTestTemplate(name = "T2"))
+        repository.saveTemplate(createTestTemplate(name = "T3"))
 
         repository.deleteAllTemplates()
 
-        val templates = repository.observeAllTemplates().first()
+        val templates = repository.observeAllTemplatesAsDomain().first()
         assertTrue(templates.isEmpty())
-    }
-}
-
-/**
- * Fake implementation of [TemplateRepository] for unit testing.
- *
- * This implementation provides an in-memory store that allows testing
- * without a real database or Room infrastructure.
- */
-class FakeTemplateRepository : TemplateRepository {
-
-    private val templates = mutableMapOf<Long, TemplateHeader>()
-    private val templateAccounts = mutableMapOf<Long, MutableList<TemplateAccount>>()
-    private var nextTemplateId = 1L
-    private var nextAccountId = 1L
-    private val templatesFlow = MutableStateFlow<List<TemplateWithAccounts>>(emptyList())
-
-    private fun emitChanges() {
-        templatesFlow.value = getAllTemplatesWithAccountsInternalSync()
-    }
-
-    private fun getSortedTemplates(): List<TemplateHeader> =
-        templates.values.sortedWith(compareBy({ it.isFallback }, { it.name }))
-
-    private fun getAllTemplatesWithAccountsInternalSync(): List<TemplateWithAccounts> =
-        getSortedTemplates().map { header: TemplateHeader ->
-            val result = TemplateWithAccounts()
-            result.header = header
-            result.accounts = templateAccounts[header.id] ?: emptyList()
-            result
-        }
-
-    // Domain Model Query Operations
-    override fun observeAllTemplatesAsDomain(): Flow<List<DomainTemplate>> =
-        templatesFlow.map { list -> list.map { it.toDomain() } }
-
-    override fun observeTemplateAsDomain(id: Long): Flow<DomainTemplate?> =
-        templatesFlow.map { list -> list.find { it.header.id == id }?.toDomain() }
-
-    override suspend fun getTemplateAsDomain(id: Long): DomainTemplate? =
-        getTemplateWithAccountsInternal(id)?.toDomain()
-
-    override suspend fun getAllTemplatesAsDomain(): List<DomainTemplate> =
-        getAllTemplatesWithAccountsInternalSync().map { it.toDomain() }
-
-    // Database Entity Query Operations
-    override fun observeAllTemplates(): Flow<List<TemplateHeader>> = MutableStateFlow(getSortedTemplates())
-
-    override fun observeTemplateById(id: Long): Flow<TemplateHeader?> = MutableStateFlow(templates[id])
-
-    override suspend fun getTemplateById(id: Long): TemplateHeader? = templates[id]
-
-    override fun observeTemplateWithAccounts(id: Long): Flow<TemplateWithAccounts?> =
-        MutableStateFlow(getTemplateWithAccountsInternal(id))
-
-    override suspend fun getTemplateWithAccounts(id: Long): TemplateWithAccounts? = getTemplateWithAccountsInternal(id)
-
-    private fun getTemplateWithAccountsInternal(id: Long): TemplateWithAccounts? {
-        val header = templates[id] ?: return null
-        val accounts = templateAccounts[id] ?: emptyList()
-        val result = TemplateWithAccounts()
-        result.header = header
-        result.accounts = accounts
-        return result
-    }
-
-    override suspend fun getTemplateWithAccountsByUuid(uuid: String): TemplateWithAccounts? {
-        val header = templates.values.find { it.uuid == uuid } ?: return null
-        val accounts = templateAccounts[header.id] ?: emptyList()
-        val result = TemplateWithAccounts()
-        result.header = header
-        result.accounts = accounts
-        return result
-    }
-
-    override suspend fun getAllTemplatesWithAccounts(): List<TemplateWithAccounts> =
-        getAllTemplatesWithAccountsInternalSync()
-
-    private fun insertTemplateInternal(template: TemplateHeader): Long {
-        val id = if (template.id == 0L) nextTemplateId++ else template.id
-        template.id = id
-        templates[id] = template
-        templateAccounts[id] = mutableListOf()
-        return id
-    }
-
-    override suspend fun insertTemplateWithAccounts(templateWithAccounts: TemplateWithAccounts) {
-        val headerId = insertTemplateInternal(templateWithAccounts.header)
-        templateWithAccounts.header.id = headerId
-        val inputAccounts: List<TemplateAccount> = templateWithAccounts.accounts
-        val accounts = mutableListOf<TemplateAccount>()
-        for (account in inputAccounts) {
-            val accountId = nextAccountId++
-            val newAccount = TemplateAccount(accountId, headerId, account.position)
-            newAccount.accountName = account.accountName
-            newAccount.currency = account.currency
-            newAccount.amount = account.amount
-            newAccount.accountComment = account.accountComment
-            accounts.add(newAccount)
-        }
-        templateAccounts[headerId] = accounts
-        emitChanges()
-    }
-
-    override suspend fun deleteTemplateById(id: Long): Boolean {
-        val existed = templates.containsKey(id)
-        templates.remove(id)
-        templateAccounts.remove(id)
-        emitChanges()
-        return existed
-    }
-
-    override suspend fun duplicateTemplate(id: Long): TemplateWithAccounts? {
-        val original = getTemplateWithAccountsInternal(id) ?: return null
-
-        val newHeader = TemplateHeader(original.header).apply {
-            this.id = 0L
-            this.uuid = UUID.randomUUID().toString()
-        }
-        val newId = insertTemplateInternal(newHeader)
-        newHeader.id = newId
-
-        val originalAccounts: List<TemplateAccount> = original.accounts
-        val newAccounts = mutableListOf<TemplateAccount>()
-        for (account in originalAccounts) {
-            val accountId = nextAccountId++
-            val newAccount = TemplateAccount(accountId, newId, account.position)
-            newAccount.accountName = account.accountName
-            newAccount.currency = account.currency
-            newAccount.amount = account.amount
-            newAccount.accountComment = account.accountComment
-            newAccounts.add(newAccount)
-        }
-        templateAccounts[newId] = newAccounts
-
-        val result = TemplateWithAccounts()
-        result.header = newHeader
-        result.accounts = newAccounts
-        return result
-    }
-
-    private fun saveTemplateWithAccountsInternal(header: TemplateHeader, accounts: List<TemplateAccount>): Long {
-        val isNew = header.id == 0L
-        val savedId = if (isNew) {
-            val id = nextTemplateId++
-            header.id = id
-            templates[id] = header
-            id
-        } else {
-            templates[header.id] = header
-            header.id
-        }
-
-        // Save accounts
-        val savedAccounts = mutableListOf<TemplateAccount>()
-        for (account in accounts) {
-            val accountId = if (account.id <= 0) nextAccountId++ else account.id
-            account.id = accountId
-            account.templateId = savedId
-            savedAccounts.add(account)
-        }
-        templateAccounts[savedId] = savedAccounts
-
-        return savedId
-    }
-
-    override suspend fun deleteAllTemplates() {
-        templates.clear()
-        templateAccounts.clear()
-        emitChanges()
-    }
-
-    override suspend fun saveTemplate(template: DomainTemplate): Long {
-        val entity = template.toEntity()
-        val result = saveTemplateWithAccountsInternal(entity.header, entity.accounts)
-        emitChanges()
-        return result
     }
 }

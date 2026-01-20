@@ -40,8 +40,7 @@ import org.junit.Test
  * These tests verify:
  * - Account retrieval with and without amounts
  * - Search functionality across profiles
- * - CRUD operations for accounts
- * - Batch sync operations
+ * - Batch sync operations for accounts
  *
  * Note: For proper Flow testing with Room, use instrumentation tests.
  * These unit tests use a fake repository that implements the interface directly.
@@ -62,39 +61,21 @@ class AccountRepositoryTest {
     // ========================================
 
     private fun createTestAccount(
-        id: Long = 0L,
-        profileId: Long = testProfileId,
+        id: Long? = null,
         name: String = "Assets:Cash",
-        level: Int = 1
-    ): DbAccount = DbAccount().apply {
-        this.id = id
-        this.profileId = profileId
-        this.name = name
-        this.nameUpper = name.uppercase()
-        this.level = level
-        this.parentName = if (name.contains(":")) name.substringBeforeLast(":") else null
-    }
+        level: Int = 1,
+        amounts: List<AccountAmount> = emptyList()
+    ): Account = Account(
+        id = id,
+        name = name,
+        level = level,
+        isExpanded = true,
+        isVisible = true,
+        amounts = amounts
+    )
 
-    private fun createTestAccountWithAmounts(
-        id: Long = 0L,
-        profileId: Long = testProfileId,
-        name: String = "Assets:Cash",
-        amounts: List<AccountValue> = emptyList()
-    ): AccountWithAmounts = AccountWithAmounts().apply {
-        this.account = createTestAccount(id, profileId, name)
-        this.amounts = amounts
-    }
-
-    private fun createTestAccountValue(
-        accountId: Long,
-        amount: Float = 100.0f,
-        currency: String = "USD"
-    ): AccountValue = AccountValue().apply {
-        this.id = 0L
-        this.accountId = accountId
-        this.value = amount
-        this.currency = currency
-    }
+    private fun createTestAccountAmount(amount: Float = 100.0f, currency: String = "USD"): AccountAmount =
+        AccountAmount(currency = currency, amount = amount)
 
     // ========================================
     // observeAllWithAmounts tests (Flow)
@@ -108,10 +89,10 @@ class AccountRepositoryTest {
 
     @Test
     fun `observeAllWithAmounts filters by profile`() = runTest {
-        repository.insertAccount(createTestAccount(profileId = 1L, name = "Assets:Cash"))
-        repository.insertAccount(createTestAccount(profileId = 2L, name = "Assets:Bank"))
+        repository.addTestAccount(testProfileId, createTestAccount(name = "Assets:Cash"))
+        repository.addTestAccount(2L, createTestAccount(name = "Assets:Bank"))
 
-        val accounts = repository.observeAllWithAmounts(1L, true).first()
+        val accounts = repository.observeAllWithAmounts(testProfileId, true).first()
 
         assertEquals(1, accounts.size)
         assertEquals("Assets:Cash", accounts[0].name)
@@ -120,14 +101,16 @@ class AccountRepositoryTest {
     @Test
     fun `observeAllWithAmounts filters zero balances when requested`() = runTest {
         // Account with balance
-        val accountWithBalance = createTestAccountWithAmounts(
-            name = "Assets:Cash",
-            amounts = listOf(createTestAccountValue(1L, 100.0f))
+        repository.addTestAccount(
+            testProfileId,
+            createTestAccount(
+                name = "Assets:Cash",
+                amounts = listOf(createTestAccountAmount(100.0f))
+            )
         )
-        repository.insertAccountWithAmounts(accountWithBalance)
 
         // Account with zero balance
-        repository.insertAccount(createTestAccount(name = "Assets:Empty"))
+        repository.addTestAccount(testProfileId, createTestAccount(name = "Assets:Empty"))
 
         val withZero = repository.observeAllWithAmounts(testProfileId, true).first()
         val withoutZero = repository.observeAllWithAmounts(testProfileId, false).first()
@@ -143,8 +126,8 @@ class AccountRepositoryTest {
 
     @Test
     fun `getAllWithAmounts returns accounts`() = runTest {
-        repository.insertAccount(createTestAccount(name = "Assets:Cash"))
-        repository.insertAccount(createTestAccount(name = "Expenses:Food"))
+        repository.addTestAccount(testProfileId, createTestAccount(name = "Assets:Cash"))
+        repository.addTestAccount(testProfileId, createTestAccount(name = "Expenses:Food"))
 
         val accounts = repository.getAllWithAmounts(testProfileId, true)
 
@@ -152,62 +135,48 @@ class AccountRepositoryTest {
     }
 
     // ========================================
-    // getById tests (suspend)
+    // getByNameWithAmounts tests (suspend)
     // ========================================
 
     @Test
-    fun `getById returns null for non-existent id`() = runTest {
-        val result = repository.getById(999L)
+    fun `getByNameWithAmounts returns null for non-existent name`() = runTest {
+        val result = repository.getByNameWithAmounts(testProfileId, "NonExistent")
         assertNull(result)
     }
 
     @Test
-    fun `getById returns account when exists`() = runTest {
-        val account = createTestAccount(name = "Assets:Cash")
-        val id = repository.insertAccount(account)
+    fun `getByNameWithAmounts returns account when exists`() = runTest {
+        repository.addTestAccount(testProfileId, createTestAccount(name = "Assets:Cash"))
 
-        val result = repository.getById(id)
+        val result = repository.getByNameWithAmounts(testProfileId, "Assets:Cash")
 
         assertNotNull(result)
         assertEquals("Assets:Cash", result?.name)
     }
 
     // ========================================
-    // observeByName tests (Flow)
+    // observeByNameWithAmounts tests (Flow)
     // ========================================
 
     @Test
-    fun `observeByName returns null for non-existent name`() = runTest {
-        val result = repository.observeByName(testProfileId, "NonExistent").first()
+    fun `observeByNameWithAmounts returns null for non-existent name`() = runTest {
+        val result = repository.observeByNameWithAmounts(testProfileId, "NonExistent").first()
         assertNull(result)
     }
 
     @Test
-    fun `observeByName scopes to profile`() = runTest {
-        repository.insertAccount(createTestAccount(profileId = 1L, name = "Assets:Cash"))
-        repository.insertAccount(createTestAccount(profileId = 2L, name = "Assets:Cash"))
+    fun `observeByNameWithAmounts scopes to profile`() = runTest {
+        repository.addTestAccount(1L, createTestAccount(name = "Assets:Cash"))
+        repository.addTestAccount(2L, createTestAccount(name = "Assets:Cash"))
 
-        val result1 = repository.observeByName(1L, "Assets:Cash").first()
-        val result2 = repository.observeByName(2L, "Assets:Cash").first()
+        val result1 = repository.observeByNameWithAmounts(1L, "Assets:Cash").first()
+        val result2 = repository.observeByNameWithAmounts(2L, "Assets:Cash").first()
 
         assertNotNull(result1)
         assertNotNull(result2)
-        assertEquals(1L, result1?.profileId)
-        assertEquals(2L, result2?.profileId)
-    }
-
-    // ========================================
-    // getByName tests (suspend)
-    // ========================================
-
-    @Test
-    fun `getByName returns account when exists`() = runTest {
-        repository.insertAccount(createTestAccount(name = "Assets:Cash"))
-
-        val result = repository.getByName(testProfileId, "Assets:Cash")
-
-        assertNotNull(result)
-        assertEquals("Assets:Cash", result?.name)
+        // Both should return the account (scoped by profile)
+        assertEquals("Assets:Cash", result1?.name)
+        assertEquals("Assets:Cash", result2?.name)
     }
 
     // ========================================
@@ -216,9 +185,9 @@ class AccountRepositoryTest {
 
     @Test
     fun `searchAccountNames returns matching accounts`() = runTest {
-        repository.insertAccount(createTestAccount(name = "Assets:Cash"))
-        repository.insertAccount(createTestAccount(name = "Assets:Bank:Checking"))
-        repository.insertAccount(createTestAccount(name = "Expenses:Food"))
+        repository.addTestAccount(testProfileId, createTestAccount(name = "Assets:Cash"))
+        repository.addTestAccount(testProfileId, createTestAccount(name = "Assets:Bank:Checking"))
+        repository.addTestAccount(testProfileId, createTestAccount(name = "Expenses:Food"))
 
         val results = repository.searchAccountNames(testProfileId, "Assets")
 
@@ -229,7 +198,7 @@ class AccountRepositoryTest {
 
     @Test
     fun `searchAccountNames is case insensitive`() = runTest {
-        repository.insertAccount(createTestAccount(name = "Assets:Cash"))
+        repository.addTestAccount(testProfileId, createTestAccount(name = "Assets:Cash"))
 
         val results = repository.searchAccountNames(testProfileId, "ASSETS")
 
@@ -239,7 +208,7 @@ class AccountRepositoryTest {
 
     @Test
     fun `searchAccountNames matches substring`() = runTest {
-        repository.insertAccount(createTestAccount(name = "Assets:Bank:Checking"))
+        repository.addTestAccount(testProfileId, createTestAccount(name = "Assets:Bank:Checking"))
 
         val results = repository.searchAccountNames(testProfileId, "Bank")
 
@@ -252,9 +221,9 @@ class AccountRepositoryTest {
 
     @Test
     fun `searchAccountNamesGlobal searches across all profiles`() = runTest {
-        repository.insertAccount(createTestAccount(profileId = 1L, name = "Assets:Cash"))
-        repository.insertAccount(createTestAccount(profileId = 2L, name = "Assets:Bank"))
-        repository.insertAccount(createTestAccount(profileId = 3L, name = "Expenses:Food"))
+        repository.addTestAccount(1L, createTestAccount(name = "Assets:Cash"))
+        repository.addTestAccount(2L, createTestAccount(name = "Assets:Bank"))
+        repository.addTestAccount(3L, createTestAccount(name = "Expenses:Food"))
 
         val results = repository.searchAccountNamesGlobal("Assets")
 
@@ -263,7 +232,7 @@ class AccountRepositoryTest {
 
     @Test
     fun `searchAccountNamesGlobal returns empty for no match`() = runTest {
-        repository.insertAccount(createTestAccount(name = "Assets:Cash"))
+        repository.addTestAccount(testProfileId, createTestAccount(name = "Assets:Cash"))
 
         val results = repository.searchAccountNamesGlobal("NonExistent")
 
@@ -271,54 +240,18 @@ class AccountRepositoryTest {
     }
 
     // ========================================
-    // insertAccount tests
+    // storeAccountsAsDomain tests
     // ========================================
 
     @Test
-    fun `insertAccount assigns id and returns it`() = runTest {
-        val account = createTestAccount(name = "Assets:Cash")
-
-        val id = repository.insertAccount(account)
-
-        assertTrue(id > 0)
-        val stored = repository.getById(id)
-        assertNotNull(stored)
-        assertEquals("Assets:Cash", stored?.name)
-    }
-
-    // ========================================
-    // updateAccount tests
-    // ========================================
-
-    @Test
-    fun `updateAccount modifies existing account`() = runTest {
-        val account = createTestAccount(name = "Original")
-        val id = repository.insertAccount(account)
-
-        val updated = createTestAccount(id = id, name = "Updated")
-        repository.updateAccount(updated)
-
-        val result = repository.getById(id)
-        assertEquals("Updated", result?.name)
-    }
-
-    // ========================================
-    // deleteAccount tests
-    // ========================================
-
-    // ========================================
-    // storeAccounts tests
-    // ========================================
-
-    @Test
-    fun `storeAccounts replaces all accounts for profile`() = runTest {
-        repository.insertAccount(createTestAccount(name = "OldAccount"))
+    fun `storeAccountsAsDomain replaces all accounts for profile`() = runTest {
+        repository.addTestAccount(testProfileId, createTestAccount(name = "OldAccount"))
 
         val newAccounts = listOf(
-            createTestAccountWithAmounts(name = "NewAccount1"),
-            createTestAccountWithAmounts(name = "NewAccount2")
+            createTestAccount(name = "NewAccount1"),
+            createTestAccount(name = "NewAccount2")
         )
-        repository.storeAccounts(newAccounts, testProfileId)
+        repository.storeAccountsAsDomain(newAccounts, testProfileId)
 
         val accounts = repository.observeAllWithAmounts(testProfileId, true).first()
         assertEquals(2, accounts.size)
@@ -327,13 +260,11 @@ class AccountRepositoryTest {
     }
 
     @Test
-    fun `storeAccounts does not affect other profiles`() = runTest {
-        repository.insertAccount(createTestAccount(profileId = 2L, name = "OtherProfile"))
+    fun `storeAccountsAsDomain does not affect other profiles`() = runTest {
+        repository.addTestAccount(2L, createTestAccount(name = "OtherProfile"))
 
-        val newAccounts = listOf(
-            createTestAccountWithAmounts(name = "Profile1Account")
-        )
-        repository.storeAccounts(newAccounts, testProfileId)
+        val newAccounts = listOf(createTestAccount(name = "Profile1Account"))
+        repository.storeAccountsAsDomain(newAccounts, testProfileId)
 
         val profile1Accounts = repository.observeAllWithAmounts(testProfileId, true).first()
         val profile2Accounts = repository.observeAllWithAmounts(2L, true).first()
@@ -356,9 +287,9 @@ class AccountRepositoryTest {
 
     @Test
     fun `getCountForProfile returns correct count`() = runTest {
-        repository.insertAccount(createTestAccount(profileId = testProfileId, name = "A"))
-        repository.insertAccount(createTestAccount(profileId = testProfileId, name = "B"))
-        repository.insertAccount(createTestAccount(profileId = 2L, name = "C"))
+        repository.addTestAccount(testProfileId, createTestAccount(name = "A"))
+        repository.addTestAccount(testProfileId, createTestAccount(name = "B"))
+        repository.addTestAccount(2L, createTestAccount(name = "C"))
 
         val count = repository.getCountForProfile(testProfileId)
         assertEquals(2, count)
@@ -370,8 +301,8 @@ class AccountRepositoryTest {
 
     @Test
     fun `deleteAllAccounts removes all accounts`() = runTest {
-        repository.insertAccount(createTestAccount(profileId = 1L, name = "A"))
-        repository.insertAccount(createTestAccount(profileId = 2L, name = "B"))
+        repository.addTestAccount(1L, createTestAccount(name = "A"))
+        repository.addTestAccount(2L, createTestAccount(name = "B"))
 
         repository.deleteAllAccounts()
 
@@ -387,168 +318,207 @@ class AccountRepositoryTest {
  *
  * This implementation provides an in-memory store that allows testing
  * without a real database or Room infrastructure.
- * Now uses domain models (Account) for query operations.
+ * Uses domain models (Account) for query operations.
  */
 class FakeAccountRepository : AccountRepository {
 
-    private val dbAccounts = mutableMapOf<Long, DbAccount>()
-    private val accountAmounts = mutableMapOf<Long, MutableList<AccountValue>>()
+    // Internal storage using domain models with profileId association
+    private data class StoredAccount(val account: Account, val profileId: Long)
+
+    private val accounts = mutableMapOf<Long, StoredAccount>()
     private var nextId = 1L
 
-    private fun emitChanges() {
-        // Placeholder for Flow updates
+    // ========================================
+    // Test Helper Methods (not part of interface)
+    // ========================================
+
+    /**
+     * Test helper to add a single account without replacing all accounts.
+     * This method is only for test setup.
+     */
+    fun addTestAccount(profileId: Long, account: Account): Long {
+        val id = account.id ?: nextId++
+        val accountWithId = account.copy(id = id)
+        accounts[id] = StoredAccount(accountWithId, profileId)
+        return id
     }
 
-    private fun getAccountsForProfile(profileId: Long): List<DbAccount> =
-        dbAccounts.values.filter { it.profileId == profileId }
-
-    private fun hasNonZeroBalance(accountId: Long): Boolean {
-        val amounts = accountAmounts[accountId] ?: return false
-        return amounts.any { it.value != 0f }
+    fun reset() {
+        accounts.clear()
+        nextId = 1L
     }
 
-    private fun toDomain(dbAccount: DbAccount): Account = Account(
-        id = dbAccount.id,
-        name = dbAccount.name,
-        level = dbAccount.level,
-        isExpanded = dbAccount.expanded,
-        isVisible = true,
-        amounts = (accountAmounts[dbAccount.id] ?: emptyList()).map {
-            AccountAmount(currency = it.currency, amount = it.value)
-        }
-    )
+    // ========================================
+    // Private helpers
+    // ========================================
 
+    private fun getAccountsForProfile(profileId: Long): List<Account> =
+        accounts.values.filter { it.profileId == profileId }.map { it.account }
+
+    private fun hasNonZeroBalance(account: Account): Boolean = account.amounts.any { it.amount != 0f }
+
+    // ========================================
     // Flow methods (observe prefix)
+    // ========================================
+
     override fun observeAllWithAmounts(profileId: Long, includeZeroBalances: Boolean): Flow<List<Account>> {
         val result = getAccountsForProfile(profileId)
-            .filter { includeZeroBalances || hasNonZeroBalance(it.id) }
-            .map { toDomain(it) }
+            .filter { includeZeroBalances || hasNonZeroBalance(it) }
         return MutableStateFlow(result)
     }
 
-    override fun observeByName(profileId: Long, accountName: String): Flow<DbAccount?> = MutableStateFlow(
-        dbAccounts.values.find { it.profileId == profileId && it.name == accountName }
-    )
+    @Suppress("DEPRECATION")
+    override fun observeByName(profileId: Long, accountName: String): Flow<DbAccount?> {
+        val account = accounts.values.find { it.profileId == profileId && it.account.name == accountName }
+        return MutableStateFlow(account?.let { toDbAccount(it.account, profileId) })
+    }
 
     override fun observeByNameWithAmounts(profileId: Long, accountName: String): Flow<Account?> {
-        val account = dbAccounts.values.find { it.profileId == profileId && it.name == accountName }
-        return MutableStateFlow(account?.let { toDomain(it) })
+        val account = accounts.values.find { it.profileId == profileId && it.account.name == accountName }
+        return MutableStateFlow(account?.account)
     }
 
     override fun observeSearchAccountNames(profileId: Long, term: String): Flow<List<String>> =
         MutableStateFlow(searchAccountNamesInternal(profileId, term))
 
     override fun observeSearchAccountNamesGlobal(term: String): Flow<List<String>> = MutableStateFlow(
-        dbAccounts.values
-            .filter { it.name.contains(term, ignoreCase = true) }
-            .map { it.name }
+        accounts.values
+            .filter { it.account.name.contains(term, ignoreCase = true) }
+            .map { it.account.name }
     )
 
+    // ========================================
     // Suspend methods (no suffix)
+    // ========================================
+
     override suspend fun getAllWithAmounts(profileId: Long, includeZeroBalances: Boolean): List<Account> =
         getAccountsForProfile(profileId)
-            .filter { includeZeroBalances || hasNonZeroBalance(it.id) }
-            .map { toDomain(it) }
+            .filter { includeZeroBalances || hasNonZeroBalance(it) }
 
-    override suspend fun getById(id: Long): DbAccount? = dbAccounts[id]
+    @Suppress("DEPRECATION")
+    override suspend fun getById(id: Long): DbAccount? {
+        val stored = accounts[id] ?: return null
+        return toDbAccount(stored.account, stored.profileId)
+    }
 
-    override suspend fun getByName(profileId: Long, accountName: String): DbAccount? =
-        dbAccounts.values.find { it.profileId == profileId && it.name == accountName }
+    @Suppress("DEPRECATION")
+    override suspend fun getByName(profileId: Long, accountName: String): DbAccount? {
+        val account = accounts.values.find { it.profileId == profileId && it.account.name == accountName }
+        return account?.let { toDbAccount(it.account, profileId) }
+    }
 
     override suspend fun getByNameWithAmounts(profileId: Long, accountName: String): Account? {
-        val account = dbAccounts.values.find { it.profileId == profileId && it.name == accountName }
-        return account?.let { toDomain(it) }
+        val account = accounts.values.find { it.profileId == profileId && it.account.name == accountName }
+        return account?.account
     }
 
     override suspend fun searchAccountNames(profileId: Long, term: String): List<String> =
         searchAccountNamesInternal(profileId, term)
 
-    private fun searchAccountNamesInternal(profileId: Long, term: String): List<String> = dbAccounts.values
-        .filter { it.profileId == profileId && it.name.contains(term, ignoreCase = true) }
-        .map { it.name }
+    private fun searchAccountNamesInternal(profileId: Long, term: String): List<String> = accounts.values
+        .filter { it.profileId == profileId && it.account.name.contains(term, ignoreCase = true) }
+        .map { it.account.name }
 
-    override suspend fun searchAccountsWithAmounts(profileId: Long, term: String): List<Account> = dbAccounts.values
-        .filter { it.profileId == profileId && it.name.contains(term, ignoreCase = true) }
-        .map { toDomain(it) }
+    override suspend fun searchAccountsWithAmounts(profileId: Long, term: String): List<Account> = accounts.values
+        .filter { it.profileId == profileId && it.account.name.contains(term, ignoreCase = true) }
+        .map { it.account }
 
-    override suspend fun searchAccountNamesGlobal(term: String): List<String> = dbAccounts.values
-        .filter { it.name.contains(term, ignoreCase = true) }
-        .map { it.name }
+    override suspend fun searchAccountNamesGlobal(term: String): List<String> = accounts.values
+        .filter { it.account.name.contains(term, ignoreCase = true) }
+        .map { it.account.name }
 
+    // ========================================
+    // Deprecated mutation methods (still needed for interface)
+    // ========================================
+
+    @Suppress("DEPRECATION")
     override suspend fun insertAccount(account: DbAccount): Long {
         val id = if (account.id == 0L) nextId++ else account.id
-        account.id = id
-        dbAccounts[id] = account
-        accountAmounts[id] = mutableListOf()
-        emitChanges()
+        val domainAccount = Account(
+            id = id,
+            name = account.name,
+            level = account.level,
+            isExpanded = account.expanded,
+            isVisible = true,
+            amounts = emptyList()
+        )
+        accounts[id] = StoredAccount(domainAccount, account.profileId)
         return id
     }
 
+    @Suppress("DEPRECATION")
     override suspend fun insertAccountWithAmounts(accountWithAmounts: AccountWithAmounts) {
-        val id = insertAccount(accountWithAmounts.account)
-        accountAmounts[id] = accountWithAmounts.amounts.toMutableList()
+        val dbAccount = accountWithAmounts.account
+        val id = if (dbAccount.id == 0L) nextId++ else dbAccount.id
+        val domainAccount = Account(
+            id = id,
+            name = dbAccount.name,
+            level = dbAccount.level,
+            isExpanded = dbAccount.expanded,
+            isVisible = true,
+            amounts = accountWithAmounts.amounts.map { AccountAmount(currency = it.currency, amount = it.value) }
+        )
+        accounts[id] = StoredAccount(domainAccount, dbAccount.profileId)
     }
 
+    @Suppress("DEPRECATION")
     override suspend fun updateAccount(account: DbAccount) {
-        if (dbAccounts.containsKey(account.id)) {
-            dbAccounts[account.id] = account
-            emitChanges()
+        if (accounts.containsKey(account.id)) {
+            val existing = accounts[account.id]!!
+            val updated = existing.account.copy(
+                name = account.name,
+                level = account.level,
+                isExpanded = account.expanded
+            )
+            accounts[account.id] = StoredAccount(updated, account.profileId)
         }
     }
 
-    override suspend fun storeAccounts(accounts: List<AccountWithAmounts>, profileId: Long) {
+    @Suppress("DEPRECATION")
+    override suspend fun storeAccounts(accountsList: List<AccountWithAmounts>, profileId: Long) {
         // Remove existing accounts for this profile
-        val toRemove = this.dbAccounts.values.filter { it.profileId == profileId }.map { it.id }
-        toRemove.forEach {
-            this.dbAccounts.remove(it)
-            this.accountAmounts.remove(it)
-        }
+        val toRemove = accounts.values.filter { it.profileId == profileId }.map { it.account.id }
+        toRemove.filterNotNull().forEach { accounts.remove(it) }
 
         // Add new accounts
-        accounts.forEach { accountWithAmounts ->
-            accountWithAmounts.account.profileId = profileId
+        accountsList.forEach { accountWithAmounts ->
+            val dbAccount = accountWithAmounts.account
+            dbAccount.profileId = profileId
             insertAccountWithAmounts(accountWithAmounts)
         }
     }
 
-    override suspend fun storeAccountsAsDomain(accounts: List<Account>, profileId: Long) {
+    override suspend fun storeAccountsAsDomain(accountsList: List<Account>, profileId: Long) {
         // Remove existing accounts for this profile
-        val toRemove = this.dbAccounts.values.filter { it.profileId == profileId }.map { it.id }
-        toRemove.forEach {
-            this.dbAccounts.remove(it)
-            this.accountAmounts.remove(it)
-        }
+        val toRemove = accounts.values.filter { it.profileId == profileId }.map { it.account.id }
+        toRemove.filterNotNull().forEach { accounts.remove(it) }
 
         // Add new accounts from domain models
-        accounts.forEach { account ->
+        accountsList.forEach { account ->
             val id = account.id ?: nextId++
-            val dbAccount = DbAccount().apply {
-                this.id = id
-                this.profileId = profileId
-                this.name = account.name
-                this.nameUpper = account.name.uppercase()
-                this.parentName = account.parentName
-                this.level = account.level
-                this.expanded = account.isExpanded
-            }
-            dbAccounts[id] = dbAccount
-            accountAmounts[id] = account.amounts.map { amt ->
-                AccountValue().apply {
-                    this.accountId = id
-                    this.currency = amt.currency
-                    this.value = amt.amount
-                }
-            }.toMutableList()
+            accounts[id] = StoredAccount(account.copy(id = id), profileId)
         }
     }
 
-    override suspend fun getCountForProfile(profileId: Long): Int = dbAccounts.values.count {
+    override suspend fun getCountForProfile(profileId: Long): Int = accounts.values.count {
         it.profileId == profileId
     }
 
     override suspend fun deleteAllAccounts() {
-        dbAccounts.clear()
-        accountAmounts.clear()
-        emitChanges()
+        accounts.clear()
+    }
+
+    // ========================================
+    // Helper for deprecated methods
+    // ========================================
+
+    private fun toDbAccount(account: Account, profileId: Long): DbAccount = DbAccount().apply {
+        this.id = account.id ?: 0L
+        this.profileId = profileId
+        this.name = account.name
+        this.nameUpper = account.name.uppercase()
+        this.level = account.level
+        this.expanded = account.isExpanded
+        this.parentName = account.parentName
     }
 }
