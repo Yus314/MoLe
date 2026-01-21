@@ -184,6 +184,41 @@ class MiscTest {
     }
 
     // ========================================
+    // stringEqualToCharSequence tests
+    // ========================================
+
+    @Test
+    fun `stringEqualToCharSequence returns true for equal strings`() {
+        assertTrue(Misc.stringEqualToCharSequence("hello", "hello"))
+    }
+
+    @Test
+    fun `stringEqualToCharSequence returns false for different strings`() {
+        assertFalse(Misc.stringEqualToCharSequence("hello", "world"))
+    }
+
+    @Test
+    fun `stringEqualToCharSequence returns true for null and empty CharSequence`() {
+        assertTrue(Misc.stringEqualToCharSequence(null, ""))
+    }
+
+    @Test
+    fun `stringEqualToCharSequence returns true for empty string and empty CharSequence`() {
+        assertTrue(Misc.stringEqualToCharSequence("", ""))
+    }
+
+    @Test
+    fun `stringEqualToCharSequence returns false for null and non-empty CharSequence`() {
+        assertFalse(Misc.stringEqualToCharSequence(null, "hello"))
+    }
+
+    @Test
+    fun `stringEqualToCharSequence handles StringBuilder`() {
+        val sb = StringBuilder("test")
+        assertTrue(Misc.stringEqualToCharSequence("test", sb))
+    }
+
+    // ========================================
     // trim tests
     // ========================================
 
