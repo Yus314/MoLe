@@ -113,6 +113,78 @@ class TemplateTest {
         assertEquals("Modified", modified.name)
         assertEquals(original.id, modified.id)
     }
+
+    // ========================================
+    // Match group properties
+    // ========================================
+
+    @Test
+    fun `template with description match group`() {
+        val template = Template(
+            name = "Test",
+            pattern = "(.+)",
+            transactionDescriptionMatchGroup = 1
+        )
+        assertEquals(1, template.transactionDescriptionMatchGroup)
+        assertNull(template.transactionDescription)
+    }
+
+    @Test
+    fun `template with comment match group`() {
+        val template = Template(
+            name = "Test",
+            pattern = "(.+)",
+            transactionCommentMatchGroup = 2
+        )
+        assertEquals(2, template.transactionCommentMatchGroup)
+        assertNull(template.transactionComment)
+    }
+
+    // ========================================
+    // Date literal properties
+    // ========================================
+
+    @Test
+    fun `template with date literals`() {
+        val template = Template(
+            name = "Test",
+            pattern = ".*",
+            dateYear = 2026,
+            dateMonth = 1,
+            dateDay = 21
+        )
+        assertEquals(2026, template.dateYear)
+        assertEquals(1, template.dateMonth)
+        assertEquals(21, template.dateDay)
+    }
+
+    @Test
+    fun `template date literals default to null`() {
+        val template = Template(
+            name = "Test",
+            pattern = ".*"
+        )
+        assertNull(template.dateYear)
+        assertNull(template.dateMonth)
+        assertNull(template.dateDay)
+    }
+
+    @Test
+    fun `template with mixed date literals and groups`() {
+        val template = Template(
+            name = "Test",
+            pattern = "(\\d{4})-(\\d{2})",
+            dateYear = 2026,
+            dateMonthMatchGroup = 1,
+            dateDayMatchGroup = 2
+        )
+        assertEquals(2026, template.dateYear)
+        assertNull(template.dateYearMatchGroup)
+        assertEquals(1, template.dateMonthMatchGroup)
+        assertNull(template.dateMonth)
+        assertEquals(2, template.dateDayMatchGroup)
+        assertNull(template.dateDay)
+    }
 }
 
 class TemplateLineTest {

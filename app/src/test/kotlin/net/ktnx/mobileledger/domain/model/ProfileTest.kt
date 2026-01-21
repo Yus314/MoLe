@@ -105,6 +105,72 @@ class ProfileTest {
         assertEquals(123L, profile.id)
     }
 
+    // ========================================
+    // Server version properties
+    // ========================================
+
+    @Test
+    fun `isVersionPre_1_20_1 returns false when serverVersion is null`() {
+        val profile = createTestProfile(serverVersion = null)
+
+        assertFalse(profile.isVersionPre_1_20_1)
+    }
+
+    @Test
+    fun `isVersionPre_1_20_1 returns true when flag is set`() {
+        val profile = createTestProfile(serverVersion = ServerVersion.preLegacy())
+
+        assertTrue(profile.isVersionPre_1_20_1)
+    }
+
+    @Test
+    fun `isVersionPre_1_20_1 returns false for normal version`() {
+        val profile = createTestProfile(serverVersion = ServerVersion(1, 21))
+
+        assertFalse(profile.isVersionPre_1_20_1)
+    }
+
+    @Test
+    fun `detectedVersionMajor returns 0 when serverVersion is null`() {
+        val profile = createTestProfile(serverVersion = null)
+
+        assertEquals(0, profile.detectedVersionMajor)
+    }
+
+    @Test
+    fun `detectedVersionMajor returns major version`() {
+        val profile = createTestProfile(serverVersion = ServerVersion(2, 5))
+
+        assertEquals(2, profile.detectedVersionMajor)
+    }
+
+    @Test
+    fun `detectedVersionMinor returns 0 when serverVersion is null`() {
+        val profile = createTestProfile(serverVersion = null)
+
+        assertEquals(0, profile.detectedVersionMinor)
+    }
+
+    @Test
+    fun `detectedVersionMinor returns minor version`() {
+        val profile = createTestProfile(serverVersion = ServerVersion(1, 25))
+
+        assertEquals(25, profile.detectedVersionMinor)
+    }
+
+    // ========================================
+    // Companion object
+    // ========================================
+
+    @Test
+    fun `NO_PROFILE_ID is 0`() {
+        assertEquals(0L, Profile.NO_PROFILE_ID)
+    }
+
+    // ========================================
+    // Helper method
+    // ========================================
+
     private fun createTestProfile(
         id: Long? = null,
         name: String = "Test Profile",
