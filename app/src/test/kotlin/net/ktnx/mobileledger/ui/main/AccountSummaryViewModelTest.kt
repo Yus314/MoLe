@@ -453,6 +453,182 @@ class AccountSummaryViewModelTest {
         // Then
         assertEquals("Last sync: 10 accounts", viewModel.uiState.value.headerText)
     }
+
+    // ========================================
+    // Additional coverage tests
+    // ========================================
+
+    @Test
+    fun `reloadAccounts reloads with current profile`() = runTest {
+        // Given
+        val profile = createTestProfile(id = 1L)
+        profileRepository.insertProfile(profile).getOrThrow()
+        profileRepository.setCurrentProfile(profile)
+        accountRepository.addAccountWithAmounts(createTestAccount(1L, 1L, "Assets:Cash", null, 100f, "USD"))
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // Add a new account after initial load
+        accountRepository.addAccountWithAmounts(createTestAccount(2L, 1L, "Assets:Bank", null, 500f, "USD"))
+
+        // When
+        viewModel.reloadAccounts()
+        advanceUntilIdle()
+
+        // Then - should have both accounts
+        val accounts = viewModel.uiState.value.accounts.filterIsInstance<AccountSummaryListItem.Account>()
+        assertEquals(2, accounts.size)
+    }
+
+    @Test
+    fun `reloadAccounts does nothing when no profile`() = runTest {
+        // Given - no profile set
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.reloadAccounts()
+        advanceUntilIdle()
+
+        // Then - no crash, empty list
+        val accounts = viewModel.uiState.value.accounts.filterIsInstance<AccountSummaryListItem.Account>()
+        assertTrue(accounts.isEmpty())
+    }
+
+    @Test
+    fun `updateHeaderText updates header item in list`() = runTest {
+        // Given
+        val profile = createTestProfile(id = 1L)
+        profileRepository.insertProfile(profile).getOrThrow()
+        profileRepository.setCurrentProfile(profile)
+        accountRepository.addAccountWithAmounts(createTestAccount(1L, 1L, "Assets:Cash", null, 100f, "USD"))
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.updateHeaderText("Updated header")
+        advanceUntilIdle()
+
+        // Then - header item in list should be updated
+        val headerItem = viewModel.uiState.value.accounts
+            .filterIsInstance<AccountSummaryListItem.Header>()
+            .firstOrNull()
+        assertNotNull(headerItem)
+        assertEquals("Updated header", headerItem?.text)
+    }
+
+    @Test
+    fun `toggleAmountsExpanded with invalid id does nothing`() = runTest {
+        // Given
+        val profile = createTestProfile(id = 1L)
+        profileRepository.insertProfile(profile).getOrThrow()
+        profileRepository.setCurrentProfile(profile)
+        accountRepository.addAccountWithAmounts(createTestAccount(1L, 1L, "Assets:Cash", null, 100f, "USD"))
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.onEvent(AccountSummaryEvent.ToggleAmountsExpanded(999L))
+        advanceUntilIdle()
+
+        // Then - no crash, state unchanged
+        val account = viewModel.uiState.value.accounts
+            .filterIsInstance<AccountSummaryListItem.Account>()
+            .find { it.id == 1L }
+        assertNotNull(account)
+        assertFalse(account!!.amountsExpanded)
+    }
+
+    @Test
+    fun `profile cleared to null clears accounts`() = runTest {
+        // Given
+        val profile = createTestProfile(id = 1L)
+        profileRepository.insertProfile(profile).getOrThrow()
+        profileRepository.setCurrentProfile(profile)
+        accountRepository.addAccountWithAmounts(createTestAccount(1L, 1L, "Assets:Cash", null, 100f, "USD"))
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // Verify accounts loaded
+        var accounts = viewModel.uiState.value.accounts.filterIsInstance<AccountSummaryListItem.Account>()
+        assertEquals(1, accounts.size)
+
+        // When - clear profile
+        profileRepository.setCurrentProfile(null)
+        advanceUntilIdle()
+
+        // Then - accounts cleared
+        accounts = viewModel.uiState.value.accounts.filterIsInstance<AccountSummaryListItem.Account>()
+        assertTrue(accounts.isEmpty())
+    }
+
+    @Test
+    fun `accounts are formatted with currency`() = runTest {
+        // Given
+        val profile = createTestProfile(id = 1L)
+        profileRepository.insertProfile(profile).getOrThrow()
+        profileRepository.setCurrentProfile(profile)
+        accountRepository.addAccountWithAmounts(createTestAccount(1L, 1L, "Assets:Cash", null, 1234.56f, "EUR"))
+
+        // When
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // Then
+        val account = viewModel.uiState.value.accounts
+            .filterIsInstance<AccountSummaryListItem.Account>()
+            .firstOrNull()
+        assertNotNull(account)
+        assertEquals(1, account!!.amounts.size)
+        assertTrue(account.amounts[0].formattedAmount.contains("EUR"))
+    }
+
+    @Test
+    fun `accounts without currency format correctly`() = runTest {
+        // Given
+        val profile = createTestProfile(id = 1L)
+        profileRepository.insertProfile(profile).getOrThrow()
+        profileRepository.setCurrentProfile(profile)
+        accountRepository.addAccountWithAmounts(createTestAccount(1L, 1L, "Assets:Cash", null, 100.50f, ""))
+
+        // When
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // Then
+        val account = viewModel.uiState.value.accounts
+            .filterIsInstance<AccountSummaryListItem.Account>()
+            .firstOrNull()
+        assertNotNull(account)
+        assertEquals(1, account!!.amounts.size)
+        assertEquals("100.50", account.amounts[0].formattedAmount)
+    }
+
+    @Test
+    fun `toggle zero balance twice restores original state`() = runTest {
+        // Given
+        preferencesRepository.setShowZeroBalanceAccounts(true)
+        val profile = createTestProfile(id = 1L)
+        profileRepository.insertProfile(profile).getOrThrow()
+        profileRepository.setCurrentProfile(profile)
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+        assertTrue(viewModel.uiState.value.showZeroBalanceAccounts)
+
+        // When - toggle twice
+        viewModel.onEvent(AccountSummaryEvent.ToggleZeroBalanceAccounts)
+        advanceUntilIdle()
+        viewModel.onEvent(AccountSummaryEvent.ToggleZeroBalanceAccounts)
+        advanceUntilIdle()
+
+        // Then - back to original
+        assertTrue(viewModel.uiState.value.showZeroBalanceAccounts)
+    }
 }
 
 /**

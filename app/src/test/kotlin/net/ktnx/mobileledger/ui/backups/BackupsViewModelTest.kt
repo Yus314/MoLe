@@ -304,6 +304,145 @@ class BackupsViewModelTest {
         // Then
         assertFalse("backupEnabled should be false without profile", viewModel.uiState.value.backupEnabled)
     }
+
+    // ========================================
+    // Event handler tests
+    // ========================================
+
+    @Test
+    fun `BackupClicked event sends LaunchBackupFilePicker effect`() = runTest {
+        // When
+        viewModel.onEvent(BackupsEvent.BackupClicked)
+        advanceUntilIdle()
+
+        // Then
+        val effect = viewModel.effects.first()
+        assertTrue("Effect should be LaunchBackupFilePicker", effect is BackupsEffect.LaunchBackupFilePicker)
+        val fileName = (effect as BackupsEffect.LaunchBackupFilePicker).suggestedFileName
+        assertTrue("Filename should start with MoLe-", fileName.startsWith("MoLe-"))
+        assertTrue("Filename should end with .json", fileName.endsWith(".json"))
+    }
+
+    @Test
+    fun `RestoreClicked event sends LaunchRestoreFilePicker effect`() = runTest {
+        // When
+        viewModel.onEvent(BackupsEvent.RestoreClicked)
+        advanceUntilIdle()
+
+        // Then
+        val effect = viewModel.effects.first()
+        assertTrue("Effect should be LaunchRestoreFilePicker", effect is BackupsEffect.LaunchRestoreFilePicker)
+    }
+
+    @Test
+    fun `BackupUriSelected event is handled without error`() = runTest {
+        // When - this event is handled by performBackup, so onEvent just acknowledges it
+        viewModel.onEvent(BackupsEvent.BackupUriSelected(testUri))
+        advanceUntilIdle()
+
+        // Then - no exception, no state change
+        assertFalse(viewModel.uiState.value.isBackingUp)
+    }
+
+    @Test
+    fun `RestoreUriSelected event is handled without error`() = runTest {
+        // When - this event is handled by performRestore, so onEvent just acknowledges it
+        viewModel.onEvent(BackupsEvent.RestoreUriSelected(testUri))
+        advanceUntilIdle()
+
+        // Then - no exception, no state change
+        assertFalse(viewModel.uiState.value.isRestoring)
+    }
+
+    @Test
+    fun `MessageShown event is handled without error`() = runTest {
+        // When
+        viewModel.onEvent(BackupsEvent.MessageShown)
+        advanceUntilIdle()
+
+        // Then - no exception
+        // The message clearing is done by UI
+    }
+
+    // ========================================
+    // Initial state tests
+    // ========================================
+
+    @Test
+    fun `initial state has backup disabled when no profile`() = runTest {
+        // Then - initial state
+        val state = viewModel.uiState.value
+        assertFalse("backupEnabled should be false", state.backupEnabled)
+        assertFalse("isBackingUp should be false", state.isBackingUp)
+        assertFalse("isRestoring should be false", state.isRestoring)
+    }
+
+    @Test
+    fun `initial state has backup enabled when profile exists`() = runTest {
+        // Given - profile exists before ViewModel creation
+        val profile = createTestProfile()
+        profileRepository.setCurrentProfile(profile)
+
+        // When - create new ViewModel with profile already set
+        val newViewModel = BackupsViewModel(profileRepository, fakeConfigBackup)
+
+        // Then
+        assertTrue("backupEnabled should be true", newViewModel.uiState.value.backupEnabled)
+    }
+
+    // ========================================
+    // Edge case tests
+    // ========================================
+
+    @Test
+    fun `consecutive backup operations work correctly`() = runTest {
+        // Given
+        fakeConfigBackup.shouldSucceed = true
+
+        // When - perform backup twice
+        viewModel.performBackup(testUri)
+        advanceUntilIdle()
+        viewModel.performBackup(testUri)
+        advanceUntilIdle()
+
+        // Then
+        assertEquals(2, fakeConfigBackup.backupCallCount)
+        assertFalse(viewModel.uiState.value.isBackingUp)
+    }
+
+    @Test
+    fun `consecutive restore operations work correctly`() = runTest {
+        // Given
+        fakeConfigBackup.shouldSucceed = true
+
+        // When - perform restore twice
+        viewModel.performRestore(testUri)
+        advanceUntilIdle()
+        viewModel.performRestore(testUri)
+        advanceUntilIdle()
+
+        // Then
+        assertEquals(2, fakeConfigBackup.restoreCallCount)
+        assertFalse(viewModel.uiState.value.isRestoring)
+    }
+
+    @Test
+    fun `backup then restore sequence works correctly`() = runTest {
+        // Given
+        fakeConfigBackup.shouldSucceed = true
+
+        // When - backup then restore
+        viewModel.performBackup(testUri)
+        advanceUntilIdle()
+        viewModel.performRestore(testUri)
+        advanceUntilIdle()
+
+        // Then
+        assertEquals(1, fakeConfigBackup.backupCallCount)
+        assertEquals(1, fakeConfigBackup.restoreCallCount)
+        assertFalse(viewModel.uiState.value.isBackingUp)
+        assertFalse(viewModel.uiState.value.isRestoring)
+    }
 }
 
 /**

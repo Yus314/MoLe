@@ -707,6 +707,269 @@ class TransactionListViewModelTest {
         // Then
         assertEquals(5, viewModel.uiState.value.foundTransactionIndex)
     }
+
+    // ========================================
+    // Profile change clears filter tests
+    // ========================================
+
+    @Test
+    fun `profile change clears account filter`() = runTest {
+        // Given
+        val profile1 = createTestProfile(id = 1L, name = "Profile 1")
+        val profile2 = createTestProfile(id = 2L, name = "Profile 2")
+        profileRepository.insertProfile(profile1).getOrThrow()
+        profileRepository.insertProfile(profile2).getOrThrow()
+        profileRepository.setCurrentProfile(profile1)
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // Set a filter
+        viewModel.onEvent(TransactionListEvent.SetAccountFilter("Assets:Cash"))
+        advanceUntilIdle()
+        assertEquals("Assets:Cash", viewModel.uiState.value.accountFilter)
+
+        // When - change profile
+        profileRepository.setCurrentProfile(profile2)
+        advanceUntilIdle()
+
+        // Then - filter should be cleared
+        assertNull(viewModel.uiState.value.accountFilter)
+    }
+
+    // ========================================
+    // updateDisplayedTransactionsFromWeb tests
+    // ========================================
+
+    @Test
+    fun `updateDisplayedTransactionsFromWeb updates transactions list`() = runTest {
+        // Given
+        val profile = createTestProfile(id = 1L)
+        profileRepository.insertProfile(profile).getOrThrow()
+        profileRepository.setCurrentProfile(profile)
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        val webTransactions = listOf(
+            DomainTransaction(
+                id = 1L,
+                ledgerId = 1L,
+                date = SimpleDate(2026, 1, 15),
+                description = "Web Transaction 1",
+                lines = listOf(
+                    TransactionLine(
+                        id = 1L,
+                        accountName = "Assets:Cash",
+                        amount = 100f,
+                        currency = "USD"
+                    )
+                )
+            ),
+            DomainTransaction(
+                id = 2L,
+                ledgerId = 2L,
+                date = SimpleDate(2026, 1, 16),
+                description = "Web Transaction 2",
+                lines = listOf(
+                    TransactionLine(
+                        id = 2L,
+                        accountName = "Expenses:Food",
+                        amount = -50f,
+                        currency = "USD"
+                    )
+                )
+            )
+        )
+
+        // When
+        viewModel.updateDisplayedTransactionsFromWeb(webTransactions)
+        advanceUntilIdle()
+
+        // Then
+        val transactions = viewModel.uiState.value.transactions
+            .filterIsInstance<TransactionListDisplayItem.Transaction>()
+        assertEquals(2, transactions.size)
+    }
+
+    @Test
+    fun `updateDisplayedTransactionsFromWeb respects account filter`() = runTest {
+        // Given
+        val profile = createTestProfile(id = 1L)
+        profileRepository.insertProfile(profile).getOrThrow()
+        profileRepository.setCurrentProfile(profile)
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // Set filter before updating from web
+        viewModel.onEvent(TransactionListEvent.SetAccountFilter("Assets"))
+        advanceUntilIdle()
+
+        val webTransactions = listOf(
+            DomainTransaction(
+                id = 1L,
+                ledgerId = 1L,
+                date = SimpleDate(2026, 1, 15),
+                description = "Cash Transaction",
+                lines = listOf(
+                    TransactionLine(
+                        id = 1L,
+                        accountName = "Assets:Cash",
+                        amount = 100f,
+                        currency = "USD"
+                    )
+                )
+            ),
+            DomainTransaction(
+                id = 2L,
+                ledgerId = 2L,
+                date = SimpleDate(2026, 1, 16),
+                description = "Food Purchase",
+                lines = listOf(
+                    TransactionLine(
+                        id = 2L,
+                        accountName = "Expenses:Food",
+                        amount = -50f,
+                        currency = "USD"
+                    )
+                )
+            )
+        )
+
+        // When
+        viewModel.updateDisplayedTransactionsFromWeb(webTransactions)
+        advanceUntilIdle()
+
+        // Then - only transaction with "Assets" account should be included
+        val transactions = viewModel.uiState.value.transactions
+            .filterIsInstance<TransactionListDisplayItem.Transaction>()
+        assertEquals(1, transactions.size)
+        assertEquals("Cash Transaction", transactions[0].description)
+    }
+
+    @Test
+    fun `updateDisplayedTransactionsFromWeb cancels previous job`() = runTest {
+        // Given
+        val profile = createTestProfile(id = 1L)
+        profileRepository.insertProfile(profile).getOrThrow()
+        profileRepository.setCurrentProfile(profile)
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        val firstBatch = listOf(
+            DomainTransaction(
+                id = 1L,
+                ledgerId = 1L,
+                date = SimpleDate(2026, 1, 15),
+                description = "First Batch",
+                lines = listOf(
+                    TransactionLine(id = 1L, accountName = "Assets:Cash", amount = 100f, currency = "USD")
+                )
+            )
+        )
+
+        val secondBatch = listOf(
+            DomainTransaction(
+                id = 2L,
+                ledgerId = 2L,
+                date = SimpleDate(2026, 1, 16),
+                description = "Second Batch",
+                lines = listOf(
+                    TransactionLine(id = 2L, accountName = "Expenses:Food", amount = -50f, currency = "USD")
+                )
+            )
+        )
+
+        // When - call twice rapidly
+        viewModel.updateDisplayedTransactionsFromWeb(firstBatch)
+        // Don't advance - second call should cancel first
+        viewModel.updateDisplayedTransactionsFromWeb(secondBatch)
+        advanceUntilIdle()
+
+        // Then - should show second batch (first was cancelled)
+        val transactions = viewModel.uiState.value.transactions
+            .filterIsInstance<TransactionListDisplayItem.Transaction>()
+        assertEquals(1, transactions.size)
+        assertEquals("Second Batch", transactions[0].description)
+    }
+
+    // ========================================
+    // Empty state tests
+    // ========================================
+
+    @Test
+    fun `loadTransactions with empty repository shows empty list`() = runTest {
+        // Given
+        val profile = createTestProfile(id = 1L)
+        profileRepository.insertProfile(profile).getOrThrow()
+        profileRepository.setCurrentProfile(profile)
+        // No transactions added
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.loadTransactions()
+        advanceUntilIdle()
+
+        // Then - should have only header, no transactions
+        val transactions = viewModel.uiState.value.transactions
+            .filterIsInstance<TransactionListDisplayItem.Transaction>()
+        assertTrue(transactions.isEmpty())
+        assertFalse(viewModel.uiState.value.isLoading)
+        assertNull(viewModel.uiState.value.error)
+    }
+
+    @Test
+    fun `date range is null when no transactions`() = runTest {
+        // Given
+        val profile = createTestProfile(id = 1L)
+        profileRepository.insertProfile(profile).getOrThrow()
+        profileRepository.setCurrentProfile(profile)
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.loadTransactions()
+        advanceUntilIdle()
+
+        // Then
+        assertNull(viewModel.uiState.value.firstTransactionDate)
+        assertNull(viewModel.uiState.value.lastTransactionDate)
+    }
+
+    // ========================================
+    // Debounce edge cases
+    // ========================================
+
+    @Test
+    fun `empty search query clears suggestions`() = runTest {
+        // Given
+        val profile = createTestProfile(id = 1L)
+        profileRepository.insertProfile(profile).getOrThrow()
+        profileRepository.setCurrentProfile(profile)
+        accountRepository.addAccount(1L, "Assets:Cash")
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // First set a filter and get suggestions
+        viewModel.onEvent(TransactionListEvent.SetAccountFilter("Assets"))
+        advanceTimeBy(400)
+        advanceUntilIdle()
+        assertTrue(viewModel.uiState.value.accountSuggestions.isNotEmpty())
+
+        // When - clear filter
+        viewModel.onEvent(TransactionListEvent.ClearAccountFilter)
+        advanceTimeBy(400)
+        advanceUntilIdle()
+
+        // Then - suggestions should be cleared
+        assertTrue(viewModel.uiState.value.accountSuggestions.isEmpty())
+    }
 }
 
 /**

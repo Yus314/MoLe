@@ -17,12 +17,14 @@
 
 package net.ktnx.mobileledger.fake
 
+import kotlinx.coroutines.delay
 import net.ktnx.mobileledger.domain.usecase.DatabaseInitializer
 
 class FakeDatabaseInitializer : DatabaseInitializer {
     var shouldSucceed: Boolean = true
     var hasProfiles: Boolean = false
     var errorToThrow: Exception? = null
+    var delayMs: Long = 0L
     var initializeCallCount = 0
         private set
     private var _isInitialized: Boolean = false
@@ -32,6 +34,9 @@ class FakeDatabaseInitializer : DatabaseInitializer {
 
     override suspend fun initialize(): Result<Boolean> {
         initializeCallCount++
+        if (delayMs > 0) {
+            delay(delayMs)
+        }
         return if (shouldSucceed && errorToThrow == null) {
             _isInitialized = true
             Result.success(hasProfiles)
@@ -44,6 +49,7 @@ class FakeDatabaseInitializer : DatabaseInitializer {
         shouldSucceed = true
         hasProfiles = false
         errorToThrow = null
+        delayMs = 0L
         initializeCallCount = 0
         _isInitialized = false
     }

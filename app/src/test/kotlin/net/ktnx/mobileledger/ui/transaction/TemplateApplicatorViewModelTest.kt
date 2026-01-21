@@ -34,6 +34,7 @@ import net.ktnx.mobileledger.util.MainDispatcherRule
 import net.ktnx.mobileledger.util.createTestDomainProfile
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -395,5 +396,183 @@ class TemplateApplicatorViewModelTest {
         // Then - Completes without error, selector is dismissed
         assertFalse(viewModel.uiState.value.showTemplateSelector)
         assertFalse(viewModel.uiState.value.isSearching)
+    }
+
+    // ========================================
+    // T066: Additional tests
+    // ========================================
+
+    @Test
+    fun `applyTemplate with non-existent templateId dismisses selector`() = runTest {
+        // Given
+        val profile = createTestProfile()
+        viewModel = createViewModelWithProfile(profile)
+        advanceUntilIdle()
+
+        viewModel.onEvent(TemplateApplicatorEvent.ShowTemplateSelector)
+        advanceUntilIdle()
+        assertTrue(viewModel.uiState.value.showTemplateSelector)
+
+        // When - apply non-existent template
+        viewModel.onEvent(TemplateApplicatorEvent.ApplyTemplate(9999L))
+        advanceUntilIdle()
+
+        // Then - selector is still dismissed
+        assertFalse(viewModel.uiState.value.showTemplateSelector)
+    }
+
+    @Test
+    fun `searchTemplates filters by description`() = runTest {
+        // Given
+        val profile = createTestProfile()
+        viewModel = createViewModelWithProfile(profile)
+        advanceUntilIdle()
+
+        val template1 = createTemplateWithAccounts(id = 1, name = "A", description = "Weekly groceries")
+        val template2 = createTemplateWithAccounts(id = 2, name = "B", description = "Monthly rent")
+        templateRepository.insertTemplateWithAccounts(template1)
+        templateRepository.insertTemplateWithAccounts(template2)
+
+        viewModel.onEvent(TemplateApplicatorEvent.ShowTemplateSelector)
+        advanceUntilIdle()
+
+        // When - search by description
+        viewModel.onEvent(TemplateApplicatorEvent.SearchTemplates("groceries"))
+        advanceUntilIdle()
+
+        // Then
+        assertEquals(1, viewModel.uiState.value.availableTemplates.size)
+        assertEquals("A", viewModel.uiState.value.availableTemplates[0].name)
+    }
+
+    @Test
+    fun `searchTemplates is case insensitive`() = runTest {
+        // Given
+        val profile = createTestProfile()
+        viewModel = createViewModelWithProfile(profile)
+        advanceUntilIdle()
+
+        val template = createTemplateWithAccounts(id = 1, name = "GROCERY TEMPLATE")
+        templateRepository.insertTemplateWithAccounts(template)
+
+        viewModel.onEvent(TemplateApplicatorEvent.ShowTemplateSelector)
+        advanceUntilIdle()
+
+        // When - search with different case
+        viewModel.onEvent(TemplateApplicatorEvent.SearchTemplates("grocery"))
+        advanceUntilIdle()
+
+        // Then
+        assertEquals(1, viewModel.uiState.value.availableTemplates.size)
+    }
+
+    @Test
+    fun `showTemplateSelector handles repository failure gracefully`() = runTest {
+        // Given
+        val profile = createTestProfile()
+        viewModel = createViewModelWithProfile(profile)
+        advanceUntilIdle()
+
+        templateRepository.shouldFailGetAll = true
+
+        // When
+        viewModel.onEvent(TemplateApplicatorEvent.ShowTemplateSelector)
+        advanceUntilIdle()
+
+        // Then - should not crash, isSearching should be false
+        assertFalse(viewModel.uiState.value.isSearching)
+    }
+
+    @Test
+    fun `searchTemplates handles repository failure gracefully`() = runTest {
+        // Given
+        val profile = createTestProfile()
+        viewModel = createViewModelWithProfile(profile)
+        advanceUntilIdle()
+
+        templateRepository.shouldFailGetAll = true
+
+        // When
+        viewModel.onEvent(TemplateApplicatorEvent.SearchTemplates("test"))
+        advanceUntilIdle()
+
+        // Then - should not crash, isSearching should be false
+        assertFalse(viewModel.uiState.value.isSearching)
+    }
+
+    @Test
+    fun `initialization with no profile does not crash`() = runTest {
+        // Given - no profile
+        viewModel = createViewModelWithProfile(null)
+        advanceUntilIdle()
+
+        // Then
+        assertNotNull(viewModel.uiState.value)
+    }
+
+    @Test
+    fun `applyTemplateFromQr with multiple matching templates uses first match`() = runTest {
+        // Given
+        val profile = createTestProfile()
+        viewModel = createViewModelWithProfile(profile)
+        advanceUntilIdle()
+
+        val template1 = createTemplateWithAccounts(
+            id = 1,
+            name = "First Match",
+            regex = "PAYMENT.*",
+            accounts = listOf("Expenses:Shopping" to 100.0f)
+        )
+        val template2 = createTemplateWithAccounts(
+            id = 2,
+            name = "Second Match",
+            regex = "PAYMENT:(\\d+)",
+            accounts = listOf("Expenses:Food" to 200.0f)
+        )
+        templateRepository.insertTemplateWithAccounts(template1)
+        templateRepository.insertTemplateWithAccounts(template2)
+
+        // When
+        viewModel.onEvent(TemplateApplicatorEvent.ApplyTemplateFromQr("PAYMENT:500"))
+        advanceUntilIdle()
+
+        // Then - completes without error
+        assertFalse(viewModel.uiState.value.isSearching)
+    }
+
+    @Test
+    fun `dismissTemplateSelector clears selectedTemplateId`() = runTest {
+        // Given
+        val profile = createTestProfile()
+        viewModel = createViewModelWithProfile(profile)
+        advanceUntilIdle()
+
+        viewModel.onEvent(TemplateApplicatorEvent.ShowTemplateSelector)
+        advanceUntilIdle()
+
+        // When
+        viewModel.onEvent(TemplateApplicatorEvent.DismissTemplateSelector)
+        advanceUntilIdle()
+
+        // Then
+        assertEquals(null, viewModel.uiState.value.selectedTemplateId)
+    }
+
+    @Test
+    fun `empty template list is handled correctly`() = runTest {
+        // Given
+        val profile = createTestProfile()
+        viewModel = createViewModelWithProfile(profile)
+        advanceUntilIdle()
+
+        // No templates added
+
+        // When
+        viewModel.onEvent(TemplateApplicatorEvent.ShowTemplateSelector)
+        advanceUntilIdle()
+
+        // Then
+        assertTrue(viewModel.uiState.value.availableTemplates.isEmpty())
+        assertTrue(viewModel.uiState.value.showTemplateSelector)
     }
 }

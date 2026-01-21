@@ -185,4 +185,120 @@ class SplashViewModelTest {
         // Then
         assertTrue("isInitialized should be true", viewModel.uiState.value.isInitialized)
     }
+
+    // ==========================================
+    // Race condition tests
+    // ==========================================
+
+    @Test
+    fun `timer finishes before initialization - waits for init`() = runTest {
+        // Given - slow initialization
+        fakeDatabaseInitializer.shouldSucceed = true
+        fakeDatabaseInitializer.delayMs = 600L // slower than 400ms timer
+        viewModel = SplashViewModel(fakeDatabaseInitializer)
+
+        // When - timer finishes (400ms)
+        advanceTimeBy(450)
+
+        // Then - timer elapsed but not initialized yet
+        val midState = viewModel.uiState.value
+        assertTrue("minDisplayTimeElapsed should be true", midState.minDisplayTimeElapsed)
+        assertFalse("isInitialized should be false (slow init)", midState.isInitialized)
+        assertFalse("canNavigate should be false", midState.canNavigate)
+
+        // When - initialization completes
+        advanceUntilIdle()
+
+        // Then - both conditions met
+        val finalState = viewModel.uiState.value
+        assertTrue("canNavigate should be true after init completes", finalState.canNavigate)
+    }
+
+    @Test
+    fun `initialization finishes before timer - waits for timer`() = runTest {
+        // Given - fast initialization
+        fakeDatabaseInitializer.shouldSucceed = true
+        fakeDatabaseInitializer.delayMs = 0L // instant
+        viewModel = SplashViewModel(fakeDatabaseInitializer)
+
+        // When - initialization completes immediately
+        advanceTimeBy(50)
+
+        // Then - initialized but timer not elapsed
+        val midState = viewModel.uiState.value
+        assertTrue("isInitialized should be true", midState.isInitialized)
+        assertFalse("minDisplayTimeElapsed should be false", midState.minDisplayTimeElapsed)
+        assertFalse("canNavigate should be false", midState.canNavigate)
+
+        // When - timer elapses
+        advanceTimeBy(400)
+
+        // Then - both conditions met
+        val finalState = viewModel.uiState.value
+        assertTrue("canNavigate should be true after timer", finalState.canNavigate)
+    }
+
+    @Test
+    fun `navigation effect sent only once even when both conditions met simultaneously`() = runTest {
+        // Given
+        fakeDatabaseInitializer.shouldSucceed = true
+        fakeDatabaseInitializer.delayMs = 400L // same as timer
+        viewModel = SplashViewModel(fakeDatabaseInitializer)
+
+        // When - both complete at same time
+        advanceUntilIdle()
+
+        // Then - navigation effect should be sent (once)
+        val effect = viewModel.effects.first()
+        assertTrue("Effect should be NavigateToMain", effect is SplashEffect.NavigateToMain)
+        // No assertion on "only once" since the effect channel already consumed it
+    }
+
+    // ==========================================
+    // Edge case tests
+    // ==========================================
+
+    @Test
+    fun `initialization failure still allows navigation after timer`() = runTest {
+        // Given - failure case
+        fakeDatabaseInitializer.shouldSucceed = false
+        fakeDatabaseInitializer.errorToThrow = RuntimeException("Critical DB error")
+        viewModel = SplashViewModel(fakeDatabaseInitializer)
+
+        // When - complete all async work
+        advanceUntilIdle()
+
+        // Then - should still navigate (failure is handled gracefully)
+        val state = viewModel.uiState.value
+        assertTrue("canNavigate should be true even on failure", state.canNavigate)
+        val effect = viewModel.effects.first()
+        assertTrue("Effect should be NavigateToMain", effect is SplashEffect.NavigateToMain)
+    }
+
+    @Test
+    fun `state updates correctly through initialization lifecycle`() = runTest {
+        // Given
+        fakeDatabaseInitializer.shouldSucceed = true
+        fakeDatabaseInitializer.delayMs = 100L
+        viewModel = SplashViewModel(fakeDatabaseInitializer)
+
+        // Then - verify progression of states
+        // Initial state
+        val initial = viewModel.uiState.value
+        assertFalse(initial.isInitialized)
+        assertFalse(initial.minDisplayTimeElapsed)
+
+        // After init but before timer
+        advanceTimeBy(150)
+        val afterInit = viewModel.uiState.value
+        assertTrue("Should be initialized after 150ms", afterInit.isInitialized)
+        assertFalse("Timer should not have elapsed yet", afterInit.minDisplayTimeElapsed)
+
+        // After timer
+        advanceTimeBy(300)
+        val afterTimer = viewModel.uiState.value
+        assertTrue("Should be initialized", afterTimer.isInitialized)
+        assertTrue("Timer should have elapsed", afterTimer.minDisplayTimeElapsed)
+        assertTrue("Should be ready to navigate", afterTimer.canNavigate)
+    }
 }

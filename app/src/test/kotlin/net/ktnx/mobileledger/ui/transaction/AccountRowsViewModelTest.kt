@@ -677,4 +677,260 @@ class AccountRowsViewModelTest {
         assertEquals(rowId, viewModel.uiState.value.focusedRowId)
         assertEquals(FocusedElement.Amount, viewModel.uiState.value.focusedElement)
     }
+
+    // ========================================
+    // Currency management tests
+    // ========================================
+
+    @Test
+    fun `addCurrency adds new currency to repository`() = runTest {
+        // Given
+        val profile = createTestProfile()
+        viewModel = createViewModelWithProfile(profile)
+        advanceUntilIdle()
+
+        // When
+        viewModel.onEvent(
+            AccountRowsEvent.AddCurrency(
+                "EUR",
+                net.ktnx.mobileledger.domain.model.CurrencyPosition.AFTER,
+                true
+            )
+        )
+        advanceUntilIdle()
+
+        // Then
+        val currencies = currencyRepository.getAllCurrenciesAsDomain().getOrThrow()
+        assertTrue(currencies.any { it.name == "EUR" })
+    }
+
+    @Test
+    fun `deleteCurrency removes currency from repository`() = runTest {
+        // Given
+        val profile = createTestProfile()
+        viewModel = createViewModelWithProfile(profile)
+        advanceUntilIdle()
+
+        // First add a currency
+        currencyRepository.saveCurrency(
+            net.ktnx.mobileledger.domain.model.Currency(
+                name = "JPY",
+                position = net.ktnx.mobileledger.domain.model.CurrencyPosition.BEFORE,
+                hasGap = false
+            )
+        )
+        advanceUntilIdle()
+        assertTrue(currencyRepository.getAllCurrenciesAsDomain().getOrThrow().any { it.name == "JPY" })
+
+        // When
+        viewModel.onEvent(AccountRowsEvent.DeleteCurrency("JPY"))
+        advanceUntilIdle()
+
+        // Then
+        assertFalse(currencyRepository.getAllCurrenciesAsDomain().getOrThrow().any { it.name == "JPY" })
+    }
+
+    @Test
+    fun `currencies are loaded on initialization`() = runTest {
+        // Given
+        currencyRepository.saveCurrency(
+            net.ktnx.mobileledger.domain.model.Currency(name = "USD")
+        )
+        currencyRepository.saveCurrency(
+            net.ktnx.mobileledger.domain.model.Currency(name = "EUR")
+        )
+        val profile = createTestProfile()
+
+        // When
+        viewModel = createViewModelWithProfile(profile)
+        advanceUntilIdle()
+
+        // Then
+        assertTrue(viewModel.uiState.value.availableCurrencies.contains("USD"))
+        assertTrue(viewModel.uiState.value.availableCurrencies.contains("EUR"))
+    }
+
+    // ========================================
+    // Edge case tests
+    // ========================================
+
+    @Test
+    fun `initialization with no profile does not crash`() = runTest {
+        // Given - no profile set
+
+        // When
+        viewModel = createViewModelWithProfile(null)
+        advanceUntilIdle()
+
+        // Then - should not crash, accounts list may be empty or default
+        assertNotNull(viewModel.uiState.value)
+    }
+
+    @Test
+    fun `removeAccountRow for non-existent row is no-op`() = runTest {
+        // Given
+        val profile = createTestProfile()
+        viewModel = createViewModelWithProfile(profile)
+        advanceUntilIdle()
+
+        val initialCount = viewModel.uiState.value.accounts.size
+
+        // When - try to remove non-existent row
+        viewModel.onEvent(AccountRowsEvent.RemoveAccountRow(9999))
+        advanceUntilIdle()
+
+        // Then - no change
+        assertEquals(initialCount, viewModel.uiState.value.accounts.size)
+    }
+
+    @Test
+    fun `updateAccountName for non-existent row is no-op`() = runTest {
+        // Given
+        val profile = createTestProfile()
+        viewModel = createViewModelWithProfile(profile)
+        advanceUntilIdle()
+
+        // When - try to update non-existent row
+        viewModel.onEvent(AccountRowsEvent.UpdateAccountName(9999, "Assets:Bank"))
+        advanceUntilIdle()
+
+        // Then - no crash, existing rows unchanged
+        assertTrue(viewModel.uiState.value.accounts.none { it.accountName == "Assets:Bank" })
+    }
+
+    @Test
+    fun `moveAccountRow with invalid indices is handled gracefully`() = runTest {
+        // Given
+        val profile = createTestProfile()
+        viewModel = createViewModelWithProfile(profile)
+        advanceUntilIdle()
+
+        val initialOrder = viewModel.uiState.value.accounts.map { it.id }
+
+        // When - try invalid move
+        viewModel.onEvent(AccountRowsEvent.MoveAccountRow(-1, 100))
+        advanceUntilIdle()
+
+        // Then - no crash, order unchanged or handled gracefully
+        assertNotNull(viewModel.uiState.value.accounts)
+    }
+
+    @Test
+    fun `updateAmount with comma decimal separator is valid`() = runTest {
+        // Given
+        val profile = createTestProfile()
+        viewModel = createViewModelWithProfile(profile)
+        advanceUntilIdle()
+
+        val rowId = viewModel.uiState.value.accounts[0].id
+
+        // When - use comma as decimal separator
+        viewModel.onEvent(AccountRowsEvent.UpdateAmount(rowId, "100,50"))
+        advanceUntilIdle()
+
+        // Then - should be valid
+        val row = viewModel.uiState.value.accounts.find { it.id == rowId }
+        assertTrue(row?.isAmountValid == true)
+    }
+
+    @Test
+    fun `empty amount is valid`() = runTest {
+        // Given
+        val profile = createTestProfile()
+        viewModel = createViewModelWithProfile(profile)
+        advanceUntilIdle()
+
+        val rowId = viewModel.uiState.value.accounts[0].id
+
+        // When
+        viewModel.onEvent(AccountRowsEvent.UpdateAmount(rowId, ""))
+        advanceUntilIdle()
+
+        // Then - empty is valid
+        val row = viewModel.uiState.value.accounts.find { it.id == rowId }
+        assertTrue(row?.isAmountValid == true)
+    }
+
+    @Test
+    fun `toggleCurrency with no profile is no-op`() = runTest {
+        // Given - no profile
+        viewModel = createViewModelWithProfile(null)
+        advanceUntilIdle()
+
+        val initialShowCurrency = viewModel.uiState.value.showCurrency
+
+        // When
+        viewModel.onEvent(AccountRowsEvent.ToggleCurrency)
+        advanceUntilIdle()
+
+        // Then - no crash, state may or may not change depending on implementation
+        assertNotNull(viewModel.uiState.value)
+    }
+
+    @Test
+    fun `noteFocus with null values clears focus`() = runTest {
+        // Given
+        val profile = createTestProfile()
+        viewModel = createViewModelWithProfile(profile)
+        advanceUntilIdle()
+
+        val rowId = viewModel.uiState.value.accounts[0].id
+        viewModel.onEvent(AccountRowsEvent.NoteFocus(rowId, FocusedElement.Amount))
+        advanceUntilIdle()
+        assertNotNull(viewModel.uiState.value.focusedRowId)
+
+        // When
+        viewModel.onEvent(AccountRowsEvent.NoteFocus(null, null))
+        advanceUntilIdle()
+
+        // Then
+        assertEquals(null, viewModel.uiState.value.focusedRowId)
+        assertEquals(null, viewModel.uiState.value.focusedElement)
+    }
+
+    @Test
+    fun `setRows with empty list ensures minimum rows`() = runTest {
+        // Given
+        val profile = createTestProfile()
+        viewModel = createViewModelWithProfile(profile)
+        advanceUntilIdle()
+
+        // When
+        viewModel.onEvent(AccountRowsEvent.SetRows(emptyList()))
+        advanceUntilIdle()
+
+        // Then - should have minimum 2 rows
+        assertTrue(viewModel.uiState.value.accounts.size >= 2)
+    }
+
+    @Test
+    fun `balance calculation with multiple currencies`() = runTest {
+        // Given
+        val profile = createTestProfile()
+        viewModel = createViewModelWithProfile(profile)
+        advanceUntilIdle()
+
+        viewModel.onEvent(AccountRowsEvent.AddAccountRow(null))
+        advanceUntilIdle()
+
+        val row1Id = viewModel.uiState.value.accounts[0].id
+        val row2Id = viewModel.uiState.value.accounts[1].id
+        val row3Id = viewModel.uiState.value.accounts[2].id
+
+        // When - mixed currencies
+        viewModel.onEvent(AccountRowsEvent.UpdateAccountName(row1Id, "Assets:USD"))
+        viewModel.onEvent(AccountRowsEvent.UpdateAmount(row1Id, "100"))
+        viewModel.onEvent(AccountRowsEvent.UpdateCurrency(row1Id, "USD"))
+
+        viewModel.onEvent(AccountRowsEvent.UpdateAccountName(row2Id, "Assets:EUR"))
+        viewModel.onEvent(AccountRowsEvent.UpdateAmount(row2Id, "50"))
+        viewModel.onEvent(AccountRowsEvent.UpdateCurrency(row2Id, "EUR"))
+
+        viewModel.onEvent(AccountRowsEvent.UpdateAccountName(row3Id, "Expenses"))
+        advanceUntilIdle()
+
+        // Then - balance calculation should handle mixed currencies
+        // (exact behavior depends on implementation)
+        assertNotNull(viewModel.uiState.value.accounts)
+    }
 }

@@ -480,4 +480,293 @@ class MainCoordinatorViewModelTest {
         assertEquals(180, viewModel.uiState.value.currentProfileTheme)
         assertFalse(viewModel.uiState.value.currentProfileCanPost)
     }
+
+    // ========================================
+    // Sync state transition tests
+    // ========================================
+
+    @Test
+    fun `startSync with no profile does nothing`() = runTest {
+        // Given - no profile set
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.startSync()
+        advanceUntilIdle()
+
+        // Then - state should remain idle
+        assertTrue(viewModel.syncState.value is SyncState.Idle)
+    }
+
+    @Test
+    fun `startSync with explicit profile syncs that profile`() = runTest {
+        // Given
+        val profile1 = createTestProfile(id = 1L, name = "Profile 1")
+        val profile2 = createTestProfile(id = 2L, name = "Profile 2")
+        profileRepository.insertProfile(profile1)
+        profileRepository.insertProfile(profile2)
+        profileRepository.setCurrentProfile(profile1)
+        transactionSyncer.progressSteps = 1
+        transactionSyncer.delayPerStepMs = 0
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When - sync with explicit profile2
+        viewModel.startSync(profile2)
+        advanceUntilIdle()
+
+        // Then - sync completed
+        assertTrue(viewModel.syncState.value is SyncState.Completed)
+    }
+
+    @Test
+    fun `sync failure updates state to Failed`() = runTest {
+        // Given
+        val profile = createTestProfile()
+        profileRepository.insertProfile(profile)
+        profileRepository.setCurrentProfile(profile)
+        transactionSyncer.shouldSucceed = false
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.startSync()
+        advanceUntilIdle()
+
+        // Then
+        assertTrue(viewModel.syncState.value is SyncState.Failed)
+        assertFalse(viewModel.uiState.value.isRefreshing)
+    }
+
+    @Test
+    fun `cancelSync during sync updates state to Cancelled`() = runTest {
+        // Given
+        val profile = createTestProfile()
+        profileRepository.insertProfile(profile)
+        profileRepository.setCurrentProfile(profile)
+        transactionSyncer.progressSteps = 10 // Long sync
+        transactionSyncer.delayPerStepMs = 100
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When - start sync then cancel
+        viewModel.startSync()
+        viewModel.cancelSync()
+        advanceUntilIdle()
+
+        // Then
+        assertTrue(viewModel.syncState.value is SyncState.Cancelled)
+    }
+
+    @Test
+    fun `clearSyncState resets to Idle`() = runTest {
+        // Given
+        val profile = createTestProfile()
+        profileRepository.insertProfile(profile)
+        profileRepository.setCurrentProfile(profile)
+        transactionSyncer.progressSteps = 1
+        transactionSyncer.delayPerStepMs = 0
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+        viewModel.startSync()
+        advanceUntilIdle()
+
+        // Verify sync completed
+        assertTrue(viewModel.syncState.value is SyncState.Completed)
+
+        // When
+        viewModel.clearSyncState()
+        advanceUntilIdle()
+
+        // Then
+        assertTrue(viewModel.syncState.value is SyncState.Idle)
+    }
+
+    @Test
+    fun `startSync cancels previous sync`() = runTest {
+        // Given
+        val profile = createTestProfile()
+        profileRepository.insertProfile(profile)
+        profileRepository.setCurrentProfile(profile)
+        transactionSyncer.progressSteps = 1
+        transactionSyncer.delayPerStepMs = 0
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When - start sync twice
+        viewModel.startSync()
+        viewModel.startSync()
+        advanceUntilIdle()
+
+        // Then - second sync should complete
+        assertTrue(viewModel.syncState.value is SyncState.Completed)
+    }
+
+    // ========================================
+    // Update info tests
+    // ========================================
+
+    @Test
+    fun `updateProfile updates UI state directly`() = runTest {
+        // Given
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        val profile = createTestProfile(id = 5L, name = "Manual Update", theme = 200, permitPosting = true)
+
+        // When
+        viewModel.updateProfile(profile)
+        advanceUntilIdle()
+
+        // Then
+        assertEquals(5L, viewModel.uiState.value.currentProfileId)
+        assertEquals(200, viewModel.uiState.value.currentProfileTheme)
+        assertTrue(viewModel.uiState.value.currentProfileCanPost)
+    }
+
+    @Test
+    fun `updateProfile with null clears profile state`() = runTest {
+        // Given
+        val profile = createTestProfile(id = 1L)
+        profileRepository.insertProfile(profile)
+        profileRepository.setCurrentProfile(profile)
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        assertEquals(1L, viewModel.uiState.value.currentProfileId)
+
+        // When
+        viewModel.updateProfile(null)
+        advanceUntilIdle()
+
+        // Then
+        assertEquals(null, viewModel.uiState.value.currentProfileId)
+        assertEquals(-1, viewModel.uiState.value.currentProfileTheme)
+        assertFalse(viewModel.uiState.value.currentProfileCanPost)
+    }
+
+    @Test
+    fun `updateLastUpdateInfo updates UI state`() = runTest {
+        // Given
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        val date = java.util.Date()
+
+        // When
+        viewModel.updateLastUpdateInfo(date, 100, 25)
+        advanceUntilIdle()
+
+        // Then
+        assertEquals(date, viewModel.uiState.value.lastUpdateDate)
+        assertEquals(100, viewModel.uiState.value.lastUpdateTransactionCount)
+        assertEquals(25, viewModel.uiState.value.lastUpdateAccountCount)
+    }
+
+    @Test
+    fun `updateLastUpdateInfo with null values uses defaults`() = runTest {
+        // Given
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.updateLastUpdateInfo(null, null, null)
+        advanceUntilIdle()
+
+        // Then
+        assertEquals(null, viewModel.uiState.value.lastUpdateDate)
+        assertEquals(0, viewModel.uiState.value.lastUpdateTransactionCount)
+        assertEquals(0, viewModel.uiState.value.lastUpdateAccountCount)
+    }
+
+    // ========================================
+    // Data reload tests
+    // ========================================
+
+    @Test
+    fun `reloadDataAfterChange signals app state service`() = runTest {
+        // Given
+        viewModel = createViewModel()
+        advanceUntilIdle()
+        val initialVersion = appStateService.dataVersion.value
+
+        // When
+        viewModel.reloadDataAfterChange()
+        advanceUntilIdle()
+
+        // Then
+        assertTrue(appStateService.dataVersion.value > initialVersion)
+    }
+
+    // ========================================
+    // Drawer toggle idempotence tests
+    // ========================================
+
+    @Test
+    fun `openDrawer is idempotent`() = runTest {
+        // Given
+        val profile = createTestProfile()
+        profileRepository.insertProfile(profile)
+        profileRepository.setCurrentProfile(profile)
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When - open drawer multiple times
+        viewModel.onEvent(MainCoordinatorEvent.OpenDrawer)
+        advanceUntilIdle()
+        viewModel.onEvent(MainCoordinatorEvent.OpenDrawer)
+        advanceUntilIdle()
+
+        // Then - still open
+        assertTrue(viewModel.uiState.value.isDrawerOpen)
+    }
+
+    @Test
+    fun `closeDrawer is idempotent`() = runTest {
+        // Given
+        val profile = createTestProfile()
+        profileRepository.insertProfile(profile)
+        profileRepository.setCurrentProfile(profile)
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When - close drawer multiple times (even though it's already closed)
+        viewModel.onEvent(MainCoordinatorEvent.CloseDrawer)
+        advanceUntilIdle()
+        viewModel.onEvent(MainCoordinatorEvent.CloseDrawer)
+        advanceUntilIdle()
+
+        // Then - still closed
+        assertFalse(viewModel.uiState.value.isDrawerOpen)
+    }
+
+    // ========================================
+    // RefreshData event tests
+    // ========================================
+
+    @Test
+    fun `RefreshData event starts sync`() = runTest {
+        // Given
+        val profile = createTestProfile()
+        profileRepository.insertProfile(profile)
+        profileRepository.setCurrentProfile(profile)
+        transactionSyncer.progressSteps = 1
+        transactionSyncer.delayPerStepMs = 0
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.onEvent(MainCoordinatorEvent.RefreshData)
+        advanceUntilIdle()
+
+        // Then
+        assertTrue(viewModel.syncState.value is SyncState.Completed)
+    }
 }

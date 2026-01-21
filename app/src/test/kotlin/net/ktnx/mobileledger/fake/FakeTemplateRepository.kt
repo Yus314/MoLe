@@ -35,6 +35,13 @@ class FakeTemplateRepository : TemplateRepository {
     private val templatesFlow = MutableStateFlow<List<TemplateWithAccounts>>(emptyList())
     private var nextId = 1L
 
+    // Error simulation properties
+    var shouldFailGetTemplate: Boolean = false
+    var shouldFailDuplicate: Boolean = false
+    var shouldFailSave: Boolean = false
+    var shouldFailGetAll: Boolean = false
+    var errorToThrow: Exception = RuntimeException("Fake error for testing")
+
     // ========================================
     // Domain Model Query Operations
     // ========================================
@@ -47,10 +54,17 @@ class FakeTemplateRepository : TemplateRepository {
     override fun observeTemplateAsDomain(id: Long): Flow<Template?> =
         templatesFlow.map { list -> list.find { it.header.id == id }?.toDomain() }
 
-    override suspend fun getTemplateAsDomain(id: Long): Result<Template?> = Result.success(templates[id]?.toDomain())
+    override suspend fun getTemplateAsDomain(id: Long): Result<Template?> = if (shouldFailGetTemplate) {
+        Result.failure(errorToThrow)
+    } else {
+        Result.success(templates[id]?.toDomain())
+    }
 
-    override suspend fun getAllTemplatesAsDomain(): Result<List<Template>> =
+    override suspend fun getAllTemplatesAsDomain(): Result<List<Template>> = if (shouldFailGetAll) {
+        Result.failure(errorToThrow)
+    } else {
         Result.success(templates.values.map { it.toDomain() })
+    }
 
     // ========================================
     // Database Entity Query Operations
@@ -80,6 +94,7 @@ class FakeTemplateRepository : TemplateRepository {
 
     @Deprecated("Use domain model operations instead")
     override suspend fun duplicateTemplate(id: Long): Result<TemplateWithAccounts?> {
+        if (shouldFailDuplicate) return Result.failure(errorToThrow)
         val source = templates[id] ?: return Result.success(null)
         val duplicate = source.createDuplicate()
         val newId = nextId++
@@ -98,6 +113,7 @@ class FakeTemplateRepository : TemplateRepository {
     }
 
     override suspend fun saveTemplate(template: Template): Result<Long> {
+        if (shouldFailSave) return Result.failure(errorToThrow)
         val entity = template.toEntity()
         val header = entity.header
         val accounts = entity.accounts
@@ -119,6 +135,11 @@ class FakeTemplateRepository : TemplateRepository {
     fun reset() {
         templates.clear()
         nextId = 1L
+        shouldFailGetTemplate = false
+        shouldFailDuplicate = false
+        shouldFailSave = false
+        shouldFailGetAll = false
+        errorToThrow = RuntimeException("Fake error for testing")
         emitFlow()
     }
 }
