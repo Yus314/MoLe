@@ -45,6 +45,13 @@ android {
         versionName = "0.22.1"
         testInstrumentationRunner = "net.ktnx.mobileledger.HiltTestRunner"
     }
+
+    // Exclude Compose UI tests from non-Debug unit tests (Robolectric Compose tests require Debug resources)
+    tasks.withType<Test> {
+        if (name.contains("Release") || name.contains("Pre")) {
+            exclude("**/ui/components/**")
+        }
+    }
     signingConfigs {
         create("release") {
             if (keystorePropertiesFile.exists()) {
@@ -167,6 +174,7 @@ dependencies {
     implementation(libs.reorderable)
     debugImplementation(libs.compose.ui.tooling)
     debugImplementation(libs.compose.ui.test.manifest)
+    testImplementation(libs.compose.ui.test.manifest)
 
     // Testing
     testImplementation(libs.junit)
@@ -175,6 +183,8 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.hilt.android.testing)
     testImplementation(libs.robolectric)
+    testImplementation(platform(libs.compose.bom))
+    testImplementation(libs.bundles.compose.testing)
     kspTest(libs.hilt.compiler)
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.test.ext.junit)
