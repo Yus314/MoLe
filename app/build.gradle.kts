@@ -55,6 +55,7 @@ android {
             exclude("**/ui/main/**")
             exclude("**/ui/templates/**")
             exclude("**/ui/profile/**")
+            exclude("**/ui/backups/**")
             exclude("**/robot/**")
         }
     }
