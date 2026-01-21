@@ -40,7 +40,23 @@ class FakeTemplateRepository : TemplateRepository {
     var shouldFailDuplicate: Boolean = false
     var shouldFailSave: Boolean = false
     var shouldFailGetAll: Boolean = false
+    var shouldFailDelete: Boolean = false
     var errorToThrow: Exception = RuntimeException("Fake error for testing")
+
+    // Convenience property for setting all failure modes
+    var shouldFail: Boolean
+        get() = shouldFailGetTemplate && shouldFailSave && shouldFailDelete
+        set(value) {
+            shouldFailGetTemplate = value
+            shouldFailSave = value
+            shouldFailDelete = value
+            shouldFailDuplicate = value
+            shouldFailGetAll = value
+        }
+
+    // Optional template to return (for null testing)
+    var templateToReturn: Template? = null
+    var useCustomTemplate: Boolean = false
 
     // ========================================
     // Domain Model Query Operations
@@ -54,10 +70,10 @@ class FakeTemplateRepository : TemplateRepository {
     override fun observeTemplateAsDomain(id: Long): Flow<Template?> =
         templatesFlow.map { list -> list.find { it.header.id == id }?.toDomain() }
 
-    override suspend fun getTemplateAsDomain(id: Long): Result<Template?> = if (shouldFailGetTemplate) {
-        Result.failure(errorToThrow)
-    } else {
-        Result.success(templates[id]?.toDomain())
+    override suspend fun getTemplateAsDomain(id: Long): Result<Template?> = when {
+        shouldFailGetTemplate -> Result.failure(errorToThrow)
+        useCustomTemplate -> Result.success(templateToReturn)
+        else -> Result.success(templates[id]?.toDomain())
     }
 
     override suspend fun getAllTemplatesAsDomain(): Result<List<Template>> = if (shouldFailGetAll) {
@@ -86,6 +102,7 @@ class FakeTemplateRepository : TemplateRepository {
     }
 
     override suspend fun deleteTemplateById(id: Long): Result<Boolean> {
+        if (shouldFailDelete) return Result.failure(errorToThrow)
         val existed = templates.containsKey(id)
         templates.remove(id)
         emitFlow()
@@ -139,7 +156,10 @@ class FakeTemplateRepository : TemplateRepository {
         shouldFailDuplicate = false
         shouldFailSave = false
         shouldFailGetAll = false
+        shouldFailDelete = false
         errorToThrow = RuntimeException("Fake error for testing")
+        templateToReturn = null
+        useCustomTemplate = false
         emitFlow()
     }
 }

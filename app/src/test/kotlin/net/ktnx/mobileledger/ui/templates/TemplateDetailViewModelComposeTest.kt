@@ -642,4 +642,93 @@ class TemplateDetailViewModelComposeTest {
         // Then
         assertTrue(viewModel.uiState.value.canDelete)
     }
+
+    // ========================================
+    // Error handling tests
+    // ========================================
+
+    @Test
+    fun `initialize handles repository failure`() = runTest {
+        // Given
+        templateRepository.shouldFail = true
+        viewModel = createViewModel()
+
+        // When/Then
+        viewModel.effects.test {
+            viewModel.initialize(1L)
+            advanceUntilIdle()
+
+            val effect = awaitItem()
+            assertTrue(effect is TemplateDetailEffect.ShowError)
+        }
+
+        // State should not be loading
+        assertFalse(viewModel.uiState.value.isLoading)
+    }
+
+    @Test
+    fun `initialize handles null template result`() = runTest {
+        // Given - repository returns success but with null template
+        templateRepository.useCustomTemplate = true
+        templateRepository.templateToReturn = null
+        viewModel = createViewModel()
+
+        // When
+        viewModel.initialize(999L)
+        advanceUntilIdle()
+
+        // Then - should just set loading to false without error
+        assertFalse(viewModel.uiState.value.isLoading)
+    }
+
+    @Test
+    fun `saveTemplate handles repository failure`() = runTest {
+        // Given
+        viewModel = createViewModel()
+        viewModel.initialize(null)
+        advanceUntilIdle()
+
+        viewModel.onEvent(TemplateDetailEvent.UpdateName("Valid Template"))
+        viewModel.onEvent(TemplateDetailEvent.UpdatePattern(".*"))
+        advanceUntilIdle()
+
+        templateRepository.shouldFail = true
+
+        // When/Then
+        viewModel.effects.test {
+            viewModel.onEvent(TemplateDetailEvent.Save)
+            advanceUntilIdle()
+
+            val effect = awaitItem()
+            assertTrue(effect is TemplateDetailEffect.ShowError)
+        }
+
+        // State should not be saving
+        assertFalse(viewModel.uiState.value.isSaving)
+    }
+
+    @Test
+    fun `confirmDelete handles repository failure`() = runTest {
+        // Given
+        val template = createTestTemplate(name = "To Delete")
+        val savedId = templateRepository.saveTemplate(template).getOrThrow()
+
+        viewModel = createViewModel()
+        viewModel.initialize(savedId)
+        advanceUntilIdle()
+
+        templateRepository.shouldFail = true
+
+        // When/Then
+        viewModel.effects.test {
+            viewModel.onEvent(TemplateDetailEvent.ConfirmDelete)
+            advanceUntilIdle()
+
+            val effect = awaitItem()
+            assertTrue(effect is TemplateDetailEffect.ShowError)
+        }
+
+        // State should not be loading
+        assertFalse(viewModel.uiState.value.isLoading)
+    }
 }
