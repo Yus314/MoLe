@@ -745,6 +745,148 @@ class ProfileDetailViewModelTest {
 
         assertNull(viewModel.uiState.value.connectionTestResult)
     }
+
+    // ========================================
+    // Error handling tests
+    // ========================================
+
+    @Test
+    fun `save new profile handles repository insert failure`() = runTest {
+        viewModel = createViewModel()
+        viewModel.initialize(profileId = 0L, initialThemeHue = 0)
+        advanceUntilIdle()
+
+        viewModel.onEvent(ProfileDetailEvent.UpdateName("Test Profile"))
+        viewModel.onEvent(ProfileDetailEvent.UpdateUrl("https://test.com"))
+        profileRepository.shouldFailInsert = true
+
+        viewModel.onEvent(ProfileDetailEvent.Save)
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertFalse(state.isSaving)
+        // Profile should not be in repository
+        assertEquals(0, profileRepository.getProfileCount().getOrThrow())
+    }
+
+    @Test
+    fun `save existing profile handles repository update failure`() = runTest {
+        val profile = createTestProfile(name = "Original", url = "https://original.com")
+        val id = profileRepository.insertProfile(profile).getOrThrow()
+
+        viewModel = createViewModel()
+        viewModel.initialize(profileId = id, initialThemeHue = -1)
+        advanceUntilIdle()
+
+        viewModel.onEvent(ProfileDetailEvent.UpdateName("Updated"))
+        profileRepository.shouldFailUpdate = true
+
+        viewModel.onEvent(ProfileDetailEvent.Save)
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertFalse(state.isSaving)
+        // Original profile should remain unchanged
+        val saved = profileRepository.getProfileById(id).getOrNull()
+        assertEquals("Original", saved?.name)
+    }
+
+    @Test
+    fun `confirmDelete handles repository delete failure`() = runTest {
+        val profile = createTestProfile()
+        val id = profileRepository.insertProfile(profile).getOrThrow()
+        assertEquals(1, profileRepository.getProfileCount().getOrThrow())
+
+        viewModel = createViewModel()
+        viewModel.initialize(profileId = id, initialThemeHue = -1)
+        advanceUntilIdle()
+
+        profileRepository.shouldFailDelete = true
+        viewModel.onEvent(ProfileDetailEvent.ConfirmDelete)
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertFalse(state.isLoading)
+        // Profile should still exist in repository
+        assertEquals(1, profileRepository.getProfileCount().getOrThrow())
+    }
+
+    // ========================================
+    // Connection test tests
+    // ========================================
+
+    @Test
+    fun `testConnection success updates state with detected version`() = runTest {
+        viewModel = createViewModel()
+        viewModel.initialize(profileId = 0L, initialThemeHue = 0)
+        advanceUntilIdle()
+
+        viewModel.onEvent(ProfileDetailEvent.UpdateUrl("https://test.com"))
+        versionDetector.shouldSucceed = true
+        versionDetector.versionToReturn = "1.32"
+
+        viewModel.onEvent(ProfileDetailEvent.TestConnection)
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertFalse(state.isTestingConnection)
+        assertNotNull(state.detectedVersion)
+        assertTrue(state.connectionTestResult is ConnectionTestResult.Success)
+        assertTrue(state.hasUnsavedChanges)
+    }
+
+    @Test
+    fun `testConnection failure updates state with error`() = runTest {
+        viewModel = createViewModel()
+        viewModel.initialize(profileId = 0L, initialThemeHue = 0)
+        advanceUntilIdle()
+
+        viewModel.onEvent(ProfileDetailEvent.UpdateUrl("https://test.com"))
+        versionDetector.shouldSucceed = false
+        versionDetector.errorToThrow = RuntimeException("Connection failed")
+
+        viewModel.onEvent(ProfileDetailEvent.TestConnection)
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertFalse(state.isTestingConnection)
+        assertNull(state.detectedVersion)
+        assertTrue(state.connectionTestResult is ConnectionTestResult.Error)
+    }
+
+    @Test
+    fun `testConnection with unrecognized version returns null but marks as error`() = runTest {
+        viewModel = createViewModel()
+        viewModel.initialize(profileId = 0L, initialThemeHue = 0)
+        advanceUntilIdle()
+
+        viewModel.onEvent(ProfileDetailEvent.UpdateUrl("https://test.com"))
+        versionDetector.shouldSucceed = true
+        versionDetector.versionToReturn = "unknown-version-string"
+
+        viewModel.onEvent(ProfileDetailEvent.TestConnection)
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertFalse(state.isTestingConnection)
+        assertNull(state.detectedVersion)
+        assertTrue(state.connectionTestResult is ConnectionTestResult.Error)
+    }
+
+    @Test
+    fun `testConnection sets loading state to false when complete`() = runTest {
+        viewModel = createViewModel()
+        viewModel.initialize(profileId = 0L, initialThemeHue = 0)
+        advanceUntilIdle()
+
+        viewModel.onEvent(ProfileDetailEvent.UpdateUrl("https://test.com"))
+        viewModel.onEvent(ProfileDetailEvent.TestConnection)
+        advanceUntilIdle()
+
+        // After completion, loading state should be false
+        assertFalse(viewModel.uiState.value.isTestingConnection)
+        assertNotNull(viewModel.uiState.value.connectionTestResult)
+    }
 }
 
 /**
@@ -754,6 +896,12 @@ class FakeProfileRepositoryForProfileDetail : ProfileRepository {
     private val profiles = mutableMapOf<Long, Profile>()
     private var nextId = 1L
     private val _currentProfile = MutableStateFlow<Profile?>(null)
+
+    // Error simulation properties
+    var shouldFailInsert: Boolean = false
+    var shouldFailUpdate: Boolean = false
+    var shouldFailDelete: Boolean = false
+    var errorToThrow: Exception = RuntimeException("Fake error for testing")
 
     override val currentProfile: StateFlow<Profile?> = _currentProfile.asStateFlow()
 
@@ -791,6 +939,7 @@ class FakeProfileRepositoryForProfileDetail : ProfileRepository {
     override suspend fun getProfileCount(): Result<Int> = Result.success(profiles.size)
 
     override suspend fun insertProfile(profile: Profile): Result<Long> {
+        if (shouldFailInsert) return Result.failure(errorToThrow)
         val id = if (profile.id == null || profile.id == 0L) nextId++ else profile.id
         val profileWithId = profile.copy(id = id)
         profiles[id] = profileWithId
@@ -798,6 +947,7 @@ class FakeProfileRepositoryForProfileDetail : ProfileRepository {
     }
 
     override suspend fun updateProfile(profile: Profile): Result<Unit> {
+        if (shouldFailUpdate) return Result.failure(errorToThrow)
         val id = profile.id ?: return Result.success(Unit)
         profiles[id] = profile
         if (_currentProfile.value?.id == id) {
@@ -807,6 +957,7 @@ class FakeProfileRepositoryForProfileDetail : ProfileRepository {
     }
 
     override suspend fun deleteProfile(profile: Profile): Result<Unit> {
+        if (shouldFailDelete) return Result.failure(errorToThrow)
         val id = profile.id ?: return Result.success(Unit)
         profiles.remove(id)
         if (_currentProfile.value?.id == id) {
