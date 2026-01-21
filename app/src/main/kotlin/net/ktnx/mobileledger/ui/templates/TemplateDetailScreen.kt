@@ -130,7 +130,7 @@ fun TemplateDetailScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun TemplateDetailContent(
+internal fun TemplateDetailContent(
     uiState: TemplateDetailUiState,
     snackbarHostState: SnackbarHostState,
     onEvent: (TemplateDetailEvent) -> Unit

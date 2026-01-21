@@ -133,7 +133,7 @@ fun ProfileDetailScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ProfileDetailContent(
+internal fun ProfileDetailContent(
     uiState: ProfileDetailUiState,
     snackbarHostState: SnackbarHostState,
     onEvent: (ProfileDetailEvent) -> Unit,

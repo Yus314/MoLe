@@ -101,7 +101,7 @@ fun TemplateListScreen(viewModel: TemplateListViewModelCompose = hiltViewModel()
 }
 
 @Composable
-private fun TemplateListContent(
+internal fun TemplateListContent(
     uiState: TemplateListUiState,
     snackbarHostState: SnackbarHostState,
     onEvent: (TemplateListEvent) -> Unit

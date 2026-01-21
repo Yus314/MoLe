@@ -58,6 +58,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import kotlinx.coroutines.launch
 import net.ktnx.mobileledger.R
@@ -193,13 +194,17 @@ fun MainScreen(
                 TopAppBar(
                     title = {
                         Text(
-                            profileSelectionUiState.currentProfileName.ifEmpty {
+                            text = profileSelectionUiState.currentProfileName.ifEmpty {
                                 stringResource(R.string.app_name)
-                            }
+                            },
+                            modifier = Modifier.testTag("top_bar_title")
                         )
                     },
                     navigationIcon = {
-                        IconButton(onClick = { onCoordinatorEvent(MainCoordinatorEvent.OpenDrawer) }) {
+                        IconButton(
+                            onClick = { onCoordinatorEvent(MainCoordinatorEvent.OpenDrawer) },
+                            modifier = Modifier.testTag("menu_button")
+                        ) {
                             Icon(
                                 imageVector = Icons.Default.Menu,
                                 contentDescription = stringResource(R.string.nav_header_desc)

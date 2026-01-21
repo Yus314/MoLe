@@ -47,9 +47,15 @@ android {
     }
 
     // Exclude Compose UI tests from non-Debug unit tests (Robolectric Compose tests require Debug resources)
+    // ComponentActivity is only registered in debug manifest via debugImplementation(ui-test-manifest)
     tasks.withType<Test> {
         if (name.contains("Release") || name.contains("Pre")) {
             exclude("**/ui/components/**")
+            exclude("**/ui/transaction/**")
+            exclude("**/ui/main/**")
+            exclude("**/ui/templates/**")
+            exclude("**/ui/profile/**")
+            exclude("**/robot/**")
         }
     }
     signingConfigs {
