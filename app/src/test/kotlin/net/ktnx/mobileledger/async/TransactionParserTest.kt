@@ -151,8 +151,229 @@ class TransactionParserTest {
         assertEquals(0, result.getOrNull()?.size)
     }
 
-    // Note: Full HTML parsing tests are skipped because the legacy HTML format
-    // is complex and specific. The parseTransactionAccountLine tests above
-    // cover the core parsing logic that is reused.
-    // For full integration testing, use actual HTML from a hledger-web instance.
+    // ========================================
+    // parseTransactionAccountLine edge cases
+    // ========================================
+
+    @Test
+    fun `parseTransactionAccountLine handles account with spaces`() {
+        val result = TransactionParser.parseTransactionAccountLine(
+            "  Assets:Bank Checking  100.00"
+        )
+
+        assertNotNull(result)
+        assertEquals("Assets:Bank Checking", result!!.accountName)
+        assertEquals(100.00f, result.amount)
+    }
+
+    @Test
+    fun `parseTransactionAccountLine handles large amounts`() {
+        val result = TransactionParser.parseTransactionAccountLine(
+            "  acc:name  1234567.89"
+        )
+
+        assertNotNull(result)
+        val amount = result!!.amount!!
+        assertTrue(amount > 1234567f && amount < 1234568f)
+    }
+
+    @Test
+    fun `parseTransactionAccountLine handles integer amounts`() {
+        val result = TransactionParser.parseTransactionAccountLine(
+            "  acc:name  1000"
+        )
+
+        assertNotNull(result)
+        assertEquals(1000f, result!!.amount)
+    }
+
+    @Test
+    fun `parseTransactionAccountLine returns null when both pre and post currency present`() {
+        // This is a corner case - having currency on both sides should fail
+        val result = TransactionParser.parseTransactionAccountLine(
+            "  acc:name  \$100.00 EUR"
+        )
+
+        assertNull(result)
+    }
+
+    @Test
+    fun `parseTransactionAccountLine handles zero amount`() {
+        val result = TransactionParser.parseTransactionAccountLine(
+            "  acc:name  0.00"
+        )
+
+        assertNotNull(result)
+        assertEquals(0.0f, result!!.amount)
+    }
+
+    @Test
+    fun `parseTransactionAccountLine handles cleared status marker`() {
+        val result = TransactionParser.parseTransactionAccountLine(
+            "  * acc:name  100.00"
+        )
+
+        assertNotNull(result)
+        assertEquals("acc:name", result!!.accountName)
+        assertEquals(100.00f, result.amount)
+    }
+
+    @Test
+    fun `parseTransactionAccountLine handles pending status marker`() {
+        val result = TransactionParser.parseTransactionAccountLine(
+            "  ! acc:name  -50.00"
+        )
+
+        assertNotNull(result)
+        assertEquals("acc:name", result!!.accountName)
+        assertEquals(-50.00f, result.amount)
+    }
+
+    @Test
+    fun `parseTransactionAccountLine handles EUR currency`() {
+        val result = TransactionParser.parseTransactionAccountLine(
+            "  acc:name  EUR 100.00"
+        )
+
+        assertNotNull(result)
+        assertEquals("EUR", result!!.currency)
+        assertEquals(100.00f, result.amount)
+    }
+
+    @Test
+    fun `parseTransactionAccountLine handles JPY currency suffix`() {
+        val result = TransactionParser.parseTransactionAccountLine(
+            "  acc:name  1000 JPY"
+        )
+
+        assertNotNull(result)
+        assertEquals("JPY", result!!.currency)
+        assertEquals(1000f, result.amount)
+    }
+
+    // ========================================
+    // parseTransactions - comment handling
+    // ========================================
+
+    @Test
+    fun `parseTransactions ignores comment lines`() {
+        val lines = listOf(
+            "; This is a comment",
+            "  ; Indented comment",
+            "   ;  Another comment"
+        )
+
+        val result = parser.parseTransactions(lines)
+
+        assertTrue(result.isSuccess)
+        assertEquals(0, result.getOrNull()?.size)
+    }
+
+    @Test
+    fun `parseTransactions ignores lines starting with space when expecting transaction`() {
+        val lines = listOf(
+            "    Some indented content",
+            "      More indented content"
+        )
+
+        val result = parser.parseTransactions(lines)
+
+        assertTrue(result.isSuccess)
+        assertEquals(0, result.getOrNull()?.size)
+    }
+
+    // ========================================
+    // parseTransactions - end marker
+    // ========================================
+
+    @Test
+    fun `parseTransactions stops at end marker`() {
+        val lines = listOf(
+            "<div>Some content</div>",
+            "<div id=\"addmodal\">Add modal content</div>",
+            "<tr class=\"title\" id=\"transaction-1\">Should not parse</tr>"
+        )
+
+        val result = parser.parseTransactions(lines)
+
+        assertTrue(result.isSuccess)
+        assertEquals(0, result.getOrNull()?.size)
+    }
+
+    // ========================================
+    // TransactionParseException tests
+    // ========================================
+
+    @Test
+    fun `TransactionParseException stores message`() {
+        val exception = TransactionParseException("Test error")
+        assertEquals("Test error", exception.message)
+    }
+
+    @Test
+    fun `TransactionParseException stores cause`() {
+        val cause = RuntimeException("Original cause")
+        val exception = TransactionParseException("Wrapper error", cause)
+
+        assertEquals("Wrapper error", exception.message)
+        assertEquals(cause, exception.cause)
+    }
+
+    @Test
+    fun `TransactionParseException is throwable`() {
+        val exception = TransactionParseException("Test")
+
+        try {
+            throw exception
+        } catch (e: TransactionParseException) {
+            assertEquals("Test", e.message)
+        }
+    }
+
+    @Test
+    fun `TransactionParseException with null cause`() {
+        val exception = TransactionParseException("Message", null)
+
+        assertEquals("Message", exception.message)
+        assertNull(exception.cause)
+    }
+
+    // ========================================
+    // parseTransactions - various inputs
+    // ========================================
+
+    @Test
+    fun `parseTransactions handles null-like empty lines`() {
+        val lines = listOf("", "", "")
+
+        val result = parser.parseTransactions(lines)
+
+        assertTrue(result.isSuccess)
+        assertEquals(0, result.getOrNull()?.size)
+    }
+
+    @Test
+    fun `parseTransactions handles single line input`() {
+        val lines = listOf("<html></html>")
+
+        val result = parser.parseTransactions(lines)
+
+        assertTrue(result.isSuccess)
+    }
+
+    @Test
+    fun `parseTransactions handles mixed content`() {
+        val lines = listOf(
+            "<html>",
+            "; comment line",
+            "",
+            "  indented content",
+            "</html>"
+        )
+
+        val result = parser.parseTransactions(lines)
+
+        assertTrue(result.isSuccess)
+        assertEquals(0, result.getOrNull()?.size)
+    }
 }
