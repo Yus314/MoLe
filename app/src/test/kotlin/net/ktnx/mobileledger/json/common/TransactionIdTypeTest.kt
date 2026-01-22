@@ -22,47 +22,11 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * Unit tests for [TransactionIdType].
+ * Unit tests for [TransactionIdType] implementations.
+ *
+ * Tests the StringType used for hledger API v1_32+.
  */
 class TransactionIdTypeTest {
-
-    // ========================================
-    // IntType tests
-    // ========================================
-
-    @Test
-    fun `IntType defaultValue is 0`() {
-        // Then
-        assertEquals(0, TransactionIdType.IntType.defaultValue)
-    }
-
-    @Test
-    fun `IntType fromIndex returns Int`() {
-        // When
-        val result = TransactionIdType.IntType.fromIndex(42)
-
-        // Then
-        assertTrue(result is Int)
-        assertEquals(42, result)
-    }
-
-    @Test
-    fun `IntType fromIndex with zero returns 0`() {
-        // When
-        val result = TransactionIdType.IntType.fromIndex(0)
-
-        // Then
-        assertEquals(0, result)
-    }
-
-    @Test
-    fun `IntType fromIndex with negative returns negative`() {
-        // When
-        val result = TransactionIdType.IntType.fromIndex(-5)
-
-        // Then
-        assertEquals(-5, result)
-    }
 
     // ========================================
     // StringType tests
@@ -80,7 +44,6 @@ class TransactionIdTypeTest {
         val result = TransactionIdType.StringType.fromIndex(42)
 
         // Then
-        assertTrue(result is String)
         assertEquals("42", result)
     }
 
@@ -105,15 +68,6 @@ class TransactionIdTypeTest {
     // ========================================
     // Type safety tests
     // ========================================
-
-    @Test
-    fun `IntType is a TransactionIdType`() {
-        // Given
-        val type: TransactionIdType = TransactionIdType.IntType
-
-        // Then - should compile and work
-        assertEquals(0, type.defaultValue)
-    }
 
     @Test
     fun `StringType is a TransactionIdType`() {

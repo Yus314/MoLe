@@ -29,7 +29,7 @@ import org.junit.Test
  * Tests verify:
  * - Default values
  * - Property accessors
- * - JSON setter behavior for different formats
+ * - JSON deserialization for v1_32+ format
  */
 class UnifiedParsedStyleTest {
 
@@ -74,70 +74,6 @@ class UnifiedParsedStyleTest {
     }
 
     // ========================================
-    // asdecimalpoint accessor tests
-    // ========================================
-
-    @Test
-    fun `asdecimalpoint getter returns first char of asdecimalmark`() {
-        val style = UnifiedParsedStyle()
-        style.asdecimalmark = ","
-        assertEquals(',', style.asdecimalpoint)
-    }
-
-    @Test
-    fun `asdecimalpoint getter returns period for empty mark`() {
-        val style = UnifiedParsedStyle()
-        style.asdecimalmark = ""
-        assertEquals('.', style.asdecimalpoint)
-    }
-
-    @Test
-    fun `asdecimalpoint setter updates asdecimalmark`() {
-        val style = UnifiedParsedStyle()
-        style.asdecimalpoint = ','
-        assertEquals(",", style.asdecimalmark)
-    }
-
-    // ========================================
-    // setAsdecimalpointFromJson tests
-    // ========================================
-
-    @Test
-    fun `setAsdecimalpointFromJson handles Char input`() {
-        val style = UnifiedParsedStyle()
-        style.setAsdecimalpointFromJson(',')
-        assertEquals(",", style.asdecimalmark)
-    }
-
-    @Test
-    fun `setAsdecimalpointFromJson handles String input`() {
-        val style = UnifiedParsedStyle()
-        style.setAsdecimalpointFromJson(",")
-        assertEquals(",", style.asdecimalmark)
-    }
-
-    @Test
-    fun `setAsdecimalpointFromJson handles empty String`() {
-        val style = UnifiedParsedStyle()
-        style.setAsdecimalpointFromJson("")
-        assertEquals(".", style.asdecimalmark)
-    }
-
-    @Test
-    fun `setAsdecimalpointFromJson handles null`() {
-        val style = UnifiedParsedStyle()
-        style.setAsdecimalpointFromJson(null)
-        assertEquals(".", style.asdecimalmark)
-    }
-
-    @Test
-    fun `setAsdecimalpointFromJson handles unknown type`() {
-        val style = UnifiedParsedStyle()
-        style.setAsdecimalpointFromJson(123)
-        assertEquals(".", style.asdecimalmark)
-    }
-
-    // ========================================
     // setAsprecisionFromJson tests
     // ========================================
 
@@ -153,22 +89,6 @@ class UnifiedParsedStyleTest {
         val style = UnifiedParsedStyle()
         style.setAsprecisionFromJson(3L)
         assertEquals(3, style.asprecision)
-    }
-
-    @Test
-    fun `setAsprecisionFromJson handles Map input v1_19_1 format`() {
-        val style = UnifiedParsedStyle()
-        val map = mapOf("tag" to "Precision", "contents" to 4)
-        style.setAsprecisionFromJson(map)
-        assertEquals(4, style.asprecision)
-    }
-
-    @Test
-    fun `setAsprecisionFromJson handles Map without contents`() {
-        val style = UnifiedParsedStyle()
-        val map = mapOf("tag" to "Precision")
-        style.setAsprecisionFromJson(map)
-        assertEquals(0, style.asprecision)
     }
 
     @Test
@@ -249,40 +169,6 @@ class UnifiedParsedStyleTest {
     }
 
     @Test
-    fun `deserialize style with asdecimalpoint alias`() {
-        val mapper = ObjectMapper()
-        val json = """
-            {
-                "ascommodityside": "R",
-                "ascommodityspaced": false,
-                "asdecimalpoint": ".",
-                "asprecision": 0
-            }
-        """.trimIndent()
-
-        val style = mapper.readValue(json, UnifiedParsedStyle::class.java)
-
-        assertEquals(".", style.asdecimalmark)
-    }
-
-    @Test
-    fun `deserialize style with v1_19_1 precision object`() {
-        val mapper = ObjectMapper()
-        val json = """
-            {
-                "ascommodityside": "L",
-                "ascommodityspaced": false,
-                "asdecimalmark": ".",
-                "asprecision": {"tag": "Precision", "contents": 3}
-            }
-        """.trimIndent()
-
-        val style = mapper.readValue(json, UnifiedParsedStyle::class.java)
-
-        assertEquals(3, style.asprecision)
-    }
-
-    @Test
     fun `deserialize ignores unknown properties`() {
         val mapper = ObjectMapper()
         val json = """
@@ -296,5 +182,22 @@ class UnifiedParsedStyleTest {
         // Should not throw exception
         val style = mapper.readValue(json, UnifiedParsedStyle::class.java)
         assertEquals('L', style.ascommodityside)
+    }
+
+    @Test
+    fun `deserialize style with asrounding`() {
+        val mapper = ObjectMapper()
+        val json = """
+            {
+                "ascommodityside": "R",
+                "asdecimalmark": ".",
+                "asprecision": 2,
+                "asrounding": "NoRounding"
+            }
+        """.trimIndent()
+
+        val style = mapper.readValue(json, UnifiedParsedStyle::class.java)
+
+        assertEquals("NoRounding", style.asrounding)
     }
 }

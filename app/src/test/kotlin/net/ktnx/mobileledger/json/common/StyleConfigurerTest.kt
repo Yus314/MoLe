@@ -24,80 +24,10 @@ import org.junit.Test
 
 /**
  * Unit tests for [StyleConfigurer] implementations.
+ *
+ * Tests the DecimalMarkString configurer for hledger API v1_32+.
  */
 class StyleConfigurerTest {
-
-    // ========================================
-    // DecimalPointChar tests
-    // ========================================
-
-    @Test
-    fun `DecimalPointChar configures style with precision and decimal point`() {
-        // Given
-        val style = UnifiedParsedStyle()
-        val precision = 4
-
-        // When
-        StyleConfigurer.DecimalPointChar.configureStyle(style, precision)
-
-        // Then
-        assertEquals(4, style.asprecision)
-        assertEquals('.', style.asdecimalpoint)
-    }
-
-    @Test
-    fun `DecimalPointChar ignores non-UnifiedParsedStyle objects`() {
-        // Given
-        val notAStyle = "not a style"
-
-        // When/Then - should not throw
-        StyleConfigurer.DecimalPointChar.configureStyle(notAStyle, 2)
-    }
-
-    // ========================================
-    // DecimalPointCharWithParsedPrecision tests
-    // ========================================
-
-    @Test
-    fun `DecimalPointCharWithParsedPrecision configures style correctly`() {
-        // Given
-        val style = UnifiedParsedStyle()
-        val precision = 6
-
-        // When
-        StyleConfigurer.DecimalPointCharWithParsedPrecision.configureStyle(style, precision)
-
-        // Then
-        assertEquals(6, style.asprecision)
-        assertEquals('.', style.asdecimalpoint)
-    }
-
-    @Test
-    fun `DecimalPointCharWithParsedPrecision ignores non-UnifiedParsedStyle objects`() {
-        // Given
-        val notAStyle = 12345
-
-        // When/Then - should not throw
-        StyleConfigurer.DecimalPointCharWithParsedPrecision.configureStyle(notAStyle, 2)
-    }
-
-    // ========================================
-    // DecimalPointCharIntPrecision tests
-    // ========================================
-
-    @Test
-    fun `DecimalPointCharIntPrecision configures style correctly`() {
-        // Given
-        val style = UnifiedParsedStyle()
-        val precision = 3
-
-        // When
-        StyleConfigurer.DecimalPointCharIntPrecision.configureStyle(style, precision)
-
-        // Then
-        assertEquals(3, style.asprecision)
-        assertEquals('.', style.asdecimalpoint)
-    }
 
     // ========================================
     // DecimalMarkString tests
@@ -138,21 +68,20 @@ class StyleConfigurerTest {
 
         // Then
         assertEquals(0, style.asprecision)
-        assertEquals('.', style.asdecimalpoint)
         assertEquals(".", style.asdecimalmark)
         assertNull(style.asrounding)
     }
 
     @Test
-    fun `configureStyle can be called multiple times`() {
+    fun `configureStyle overwrites previous values`() {
         // Given
         val style = UnifiedParsedStyle()
+        style.asprecision = 2
 
-        // When - configure with different configurers
-        StyleConfigurer.DecimalPointChar.configureStyle(style, 2)
+        // When
         StyleConfigurer.DecimalMarkString.configureStyle(style, 4)
 
-        // Then - last configuration wins
+        // Then
         assertEquals(4, style.asprecision)
         assertEquals(".", style.asdecimalmark)
         assertEquals("NoRounding", style.asrounding)

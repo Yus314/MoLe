@@ -18,10 +18,9 @@
 package net.ktnx.mobileledger.json.common
 
 /**
- * Sealed interface abstracting the different transaction ID types across API versions.
+ * Sealed interface abstracting the transaction ID type for hledger API v1_32+.
  *
- * Group A (v1_14, v1_15, v1_19_1, v1_23): ptransaction_ is Int
- * Group B (v1_32, v1_40, v1_50): ptransaction_ is String
+ * All supported API versions (v1_32, v1_40, v1_50) use String transaction IDs.
  */
 sealed interface TransactionIdType {
     /**
@@ -35,15 +34,7 @@ sealed interface TransactionIdType {
     fun fromIndex(index: Int): Any
 
     /**
-     * Integer transaction ID type (Group A: v1_14 - v1_23)
-     */
-    data object IntType : TransactionIdType {
-        override val defaultValue: Int = 0
-        override fun fromIndex(index: Int): Int = index
-    }
-
-    /**
-     * String transaction ID type (Group B: v1_32 - v1_50)
+     * String transaction ID type (v1_32+)
      */
     data object StringType : TransactionIdType {
         override val defaultValue: String = "1"
