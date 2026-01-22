@@ -43,7 +43,6 @@ class FakeTransactionDAO : TransactionDAO() {
     private var currentGeneration = mutableMapOf<Long, Long>() // profileId -> generation
 
     // StateFlow for observing changes
-    private val allTransactionsFlow = mutableMapOf<Long, MutableStateFlow<List<TransactionWithAccounts>>>()
     private val filteredTransactionsFlow =
         mutableMapOf<Pair<Long, String?>, MutableStateFlow<List<TransactionWithAccounts>>>()
     private val transactionByIdFlow = mutableMapOf<Long, MutableStateFlow<TransactionWithAccounts?>>()
@@ -65,10 +64,6 @@ class FakeTransactionDAO : TransactionDAO() {
     }
 
     private fun updateAllFlows() {
-        // Update per-profile Flow
-        allTransactionsFlow.forEach { (profileId, flow) ->
-            flow.value = getTransactionsForProfile(profileId)
-        }
         // Update filtered Flow
         filteredTransactionsFlow.forEach { (key, flow) ->
             val (profileId, accountName) = key
@@ -97,7 +92,7 @@ class FakeTransactionDAO : TransactionDAO() {
             .filter { twa ->
                 twa.transaction.profileId == profileId &&
                     (
-                        accountName == null || twa.accounts.any {
+                        accountName.isNullOrEmpty() || twa.accounts.any {
                             it.accountName.contains(accountName, ignoreCase = true) && it.amount != 0f
                         }
                         )
@@ -218,11 +213,6 @@ class FakeTransactionDAO : TransactionDAO() {
         return TransactionGenerationContainer(generation)
     }
 
-    override fun getAllWithAccounts(profileId: Long): Flow<List<TransactionWithAccounts>> =
-        allTransactionsFlow.getOrPut(profileId) {
-            MutableStateFlow(getTransactionsForProfile(profileId))
-        }
-
     override fun getAllWithAccountsFiltered(
         profileId: Long,
         accountName: String?
@@ -232,12 +222,6 @@ class FakeTransactionDAO : TransactionDAO() {
             MutableStateFlow(getFilteredTransactions(profileId, accountName))
         }
     }
-
-    override fun getAllWithAccountsSync(profileId: Long): List<TransactionWithAccounts> =
-        getTransactionsForProfile(profileId)
-
-    override fun getAllWithAccountsFilteredSync(profileId: Long, accountName: String?): List<TransactionWithAccounts> =
-        getFilteredTransactions(profileId, accountName)
 
     override fun purgeOldTransactionsSync(profileId: Long, currentGeneration: Long): Int {
         val toRemove = transactions.values

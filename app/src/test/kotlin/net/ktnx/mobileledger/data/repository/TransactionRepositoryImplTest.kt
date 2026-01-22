@@ -176,7 +176,7 @@ class TransactionRepositoryImplTest {
     fun `observeAllTransactions returns mapped domain models`() = runTest(testDispatcher) {
         // Given
         val dbEntity = createDbTransactionWithAccounts()
-        every { mockTransactionDAO.getAllWithAccounts(testProfileId) } returns flowOf(listOf(dbEntity))
+        every { mockTransactionDAO.getAllWithAccountsFiltered(testProfileId, null) } returns flowOf(listOf(dbEntity))
 
         // When
         val result = repository.observeAllTransactions(testProfileId).first()
@@ -184,13 +184,13 @@ class TransactionRepositoryImplTest {
         // Then
         assertEquals(1, result.size)
         assertEquals("Test Transaction", result[0].description)
-        verify { mockTransactionDAO.getAllWithAccounts(testProfileId) }
+        verify { mockTransactionDAO.getAllWithAccountsFiltered(testProfileId, null) }
     }
 
     @Test
     fun `observeAllTransactions returns empty list when no transactions`() = runTest(testDispatcher) {
         // Given
-        every { mockTransactionDAO.getAllWithAccounts(testProfileId) } returns flowOf(emptyList())
+        every { mockTransactionDAO.getAllWithAccountsFiltered(testProfileId, null) } returns flowOf(emptyList())
 
         // When
         val result = repository.observeAllTransactions(testProfileId).first()
@@ -203,14 +203,14 @@ class TransactionRepositoryImplTest {
     fun `observeTransactionsFiltered with null account returns all transactions`() = runTest(testDispatcher) {
         // Given
         val dbEntity = createDbTransactionWithAccounts()
-        every { mockTransactionDAO.getAllWithAccounts(testProfileId) } returns flowOf(listOf(dbEntity))
+        every { mockTransactionDAO.getAllWithAccountsFiltered(testProfileId, null) } returns flowOf(listOf(dbEntity))
 
         // When
         val result = repository.observeTransactionsFiltered(testProfileId, null).first()
 
         // Then
         assertEquals(1, result.size)
-        verify { mockTransactionDAO.getAllWithAccounts(testProfileId) }
+        verify { mockTransactionDAO.getAllWithAccountsFiltered(testProfileId, null) }
     }
 
     @Test

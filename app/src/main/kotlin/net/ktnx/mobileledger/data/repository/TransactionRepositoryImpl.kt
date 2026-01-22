@@ -64,15 +64,12 @@ class TransactionRepositoryImpl @Inject constructor(
     // ========================================
 
     override fun observeAllTransactions(profileId: Long): Flow<List<Transaction>> =
-        transactionDAO.getAllWithAccounts(profileId)
+        transactionDAO.getAllWithAccountsFiltered(profileId, null)
             .map { entities -> TransactionMapper.toDomainList(entities) }
 
     override fun observeTransactionsFiltered(profileId: Long, accountName: String?): Flow<List<Transaction>> =
-        if (accountName == null) {
-            transactionDAO.getAllWithAccounts(profileId)
-        } else {
-            transactionDAO.getAllWithAccountsFiltered(profileId, accountName)
-        }.map { entities -> TransactionMapper.toDomainList(entities) }
+        transactionDAO.getAllWithAccountsFiltered(profileId, accountName)
+            .map { entities -> TransactionMapper.toDomainList(entities) }
 
     override fun observeTransactionById(transactionId: Long): Flow<Transaction?> =
         transactionDAO.getByIdWithAccounts(transactionId)

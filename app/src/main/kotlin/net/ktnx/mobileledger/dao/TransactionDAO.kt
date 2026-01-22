@@ -98,37 +98,16 @@ abstract class TransactionDAO : BaseDAO<Transaction>() {
 
     @androidx.room.Transaction
     @Query(
-        "SELECT * FROM transactions WHERE profile_id = :profileId ORDER BY year " +
-            " asc, month asc, day asc, ledger_id asc"
-    )
-    abstract fun getAllWithAccounts(profileId: Long): Flow<List<TransactionWithAccounts>>
-
-    @androidx.room.Transaction
-    @Query(
-        "SELECT distinct(tr.id), tr.ledger_id, tr.profile_id, tr.data_hash, tr.year, tr.month," +
-            " tr.day, tr.description, tr.description_uc, tr.comment, tr.generation FROM " +
-            "transactions tr JOIN transaction_accounts ta ON ta.transaction_id=tr.id WHERE ta" +
-            ".account_name LIKE '%'||:accountName||'%' AND ta.amount <> 0 AND tr.profile_id = " +
-            ":profileId ORDER BY tr.year asc, tr.month asc, tr.day asc, tr.ledger_id asc"
+        "SELECT * FROM transactions tr " +
+            "WHERE tr.profile_id = :profileId " +
+            "AND IIF(:accountName IS NULL OR :accountName = '', 1, " +
+            "    EXISTS(SELECT 1 FROM transaction_accounts ta " +
+            "           WHERE ta.transaction_id = tr.id " +
+            "           AND ta.account_name LIKE '%' || :accountName || '%' " +
+            "           AND ta.amount <> 0)) " +
+            "ORDER BY tr.year ASC, tr.month ASC, tr.day ASC, tr.ledger_id ASC"
     )
     abstract fun getAllWithAccountsFiltered(profileId: Long, accountName: String?): Flow<List<TransactionWithAccounts>>
-
-    @androidx.room.Transaction
-    @Query(
-        "SELECT * FROM transactions WHERE profile_id = :profileId ORDER BY year " +
-            " asc, month asc, day asc, ledger_id asc"
-    )
-    abstract fun getAllWithAccountsSync(profileId: Long): List<TransactionWithAccounts>
-
-    @androidx.room.Transaction
-    @Query(
-        "SELECT distinct(tr.id), tr.ledger_id, tr.profile_id, tr.data_hash, tr.year, tr.month," +
-            " tr.day, tr.description, tr.description_uc, tr.comment, tr.generation FROM " +
-            "transactions tr JOIN transaction_accounts ta ON ta.transaction_id=tr.id WHERE ta" +
-            ".account_name LIKE '%'||:accountName||'%' AND ta.amount <> 0 AND tr.profile_id = " +
-            ":profileId ORDER BY tr.year asc, tr.month asc, tr.day asc, tr.ledger_id asc"
-    )
-    abstract fun getAllWithAccountsFilteredSync(profileId: Long, accountName: String?): List<TransactionWithAccounts>
 
     @Query("DELETE FROM transactions WHERE profile_id = :profileId AND generation <> :currentGeneration")
     abstract fun purgeOldTransactionsSync(profileId: Long, currentGeneration: Long): Int
