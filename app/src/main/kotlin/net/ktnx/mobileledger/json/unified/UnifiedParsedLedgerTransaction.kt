@@ -69,14 +69,13 @@ class UnifiedParsedLedgerTransaction {
         }
 
     /**
-     * tsourcepos を JSON から設定（単一オブジェクトまたはリスト対応）
+     * tsourcepos を JSON から設定（v1_32+ 形式）
      */
     @JsonSetter("tsourcepos")
     fun setTsourceposFromJson(value: Any?) {
         tsourcepos.clear()
         when (value) {
             is List<*> -> {
-                // v1_50: リスト形式
                 value.filterNotNull().forEach { item ->
                     val pos = parseSourcePos(item)
                     if (pos != null) {
@@ -86,7 +85,6 @@ class UnifiedParsedLedgerTransaction {
             }
 
             is Map<*, *> -> {
-                // v1_32-v1_40: 単一オブジェクト
                 val pos = parseSourcePos(value)
                 if (pos != null) {
                     tsourcepos.add(pos)
@@ -97,16 +95,17 @@ class UnifiedParsedLedgerTransaction {
                 if (value.isArray) {
                     value.forEach { item ->
                         val pos = UnifiedParsedSourcePos().apply {
-                            if (item.has("tag")) tag = item.get("tag").asText()
-                            if (item.has("contents")) {
-                                // contents は ["filename", [line, column]] 形式
-                            }
+                            if (item.has("sourceName")) sourceName = item.get("sourceName").asText()
+                            if (item.has("sourceLine")) sourceLine = item.get("sourceLine").asInt()
+                            if (item.has("sourceColumn")) sourceColumn = item.get("sourceColumn").asInt()
                         }
                         tsourcepos.add(pos)
                     }
                 } else if (value.isObject) {
                     val pos = UnifiedParsedSourcePos().apply {
-                        if (value.has("tag")) tag = value.get("tag").asText()
+                        if (value.has("sourceName")) sourceName = value.get("sourceName").asText()
+                        if (value.has("sourceLine")) sourceLine = value.get("sourceLine").asInt()
+                        if (value.has("sourceColumn")) sourceColumn = value.get("sourceColumn").asInt()
                     }
                     tsourcepos.add(pos)
                 }
@@ -121,7 +120,9 @@ class UnifiedParsedLedgerTransaction {
 
     private fun parseSourcePos(item: Any?): UnifiedParsedSourcePos? = when (item) {
         is Map<*, *> -> UnifiedParsedSourcePos().apply {
-            tag = (item["tag"] as? String) ?: "JournalSourcePos"
+            sourceName = (item["sourceName"] as? String) ?: ""
+            sourceLine = (item["sourceLine"] as? Number)?.toInt() ?: 1
+            sourceColumn = (item["sourceColumn"] as? Number)?.toInt() ?: 1
         }
 
         else -> null

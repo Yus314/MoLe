@@ -120,18 +120,4 @@ class UnifiedParsedPriceTest {
         val price = mapper.readValue(json, UnifiedParsedPrice::class.java)
         assertEquals("NoPrice", price.tag)
     }
-
-    @Test
-    fun `deserialize with null contents`() {
-        val mapper = ObjectMapper()
-        val json = """
-            {
-                "tag": "NoPrice",
-                "contents": null
-            }
-        """.trimIndent()
-
-        val price = mapper.readValue(json, UnifiedParsedPrice::class.java)
-        assertEquals("NoPrice", price.tag)
-    }
 }

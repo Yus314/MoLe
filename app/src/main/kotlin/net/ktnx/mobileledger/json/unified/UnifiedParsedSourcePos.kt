@@ -20,31 +20,18 @@ package net.ktnx.mobileledger.json.unified
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 
 /**
- * 統合 ParsedSourcePos - 全 API バージョンの差分を吸収
+ * 統合 ParsedSourcePos - hledger API v1_32+ 用
  *
- * バージョン間の差分:
- * - v1_14-v1_40: tag + contents 形式 (contents は ["filename", [line, column]])
- * - v1_50: sourceName + sourceLine + sourceColumn 形式
- *
- * 両方の形式をサポートし、Jackson が自動的に該当フィールドをマッピングする。
+ * v1_50 形式: sourceName + sourceLine + sourceColumn
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 class UnifiedParsedSourcePos {
-    // v1_14-v1_40 形式
-    /** タグ（通常は "JournalSourcePos"） */
-    var tag: String = "JournalSourcePos"
-
-    /** ソース位置情報 ["filename", [line, column]] */
-    var contents: MutableList<Any> = mutableListOf("", arrayOf(1, 1))
-
-    // v1_50 形式
-
-    /** ソースファイル名 (v1_50+) */
+    /** ソースファイル名 */
     var sourceName: String = ""
 
-    /** ソース行番号 (v1_50+) */
+    /** ソース行番号 */
     var sourceLine: Int = 1
 
-    /** ソース列番号 (v1_50+) */
+    /** ソース列番号 */
     var sourceColumn: Int = 1
 }

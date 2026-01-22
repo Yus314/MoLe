@@ -421,20 +421,21 @@ class UnifiedParsedLedgerTransactionTest {
     @Test
     fun `setTsourceposFromJson handles Map input`() {
         val tx = UnifiedParsedLedgerTransaction()
-        val map = mapOf("tag" to "JournalSourcePos")
+        val map = mapOf("sourceName" to "test.journal", "sourceLine" to 10, "sourceColumn" to 1)
 
         tx.setTsourceposFromJson(map)
 
         assertEquals(1, tx.tsourcepos.size)
-        assertEquals("JournalSourcePos", tx.tsourcepos[0].tag)
+        assertEquals("test.journal", tx.tsourcepos[0].sourceName)
+        assertEquals(10, tx.tsourcepos[0].sourceLine)
     }
 
     @Test
     fun `setTsourceposFromJson handles List input`() {
         val tx = UnifiedParsedLedgerTransaction()
         val list = listOf(
-            mapOf("tag" to "JournalSourcePos"),
-            mapOf("tag" to "JournalSourcePos")
+            mapOf("sourceName" to "a.journal", "sourceLine" to 1),
+            mapOf("sourceName" to "b.journal", "sourceLine" to 2)
         )
 
         tx.setTsourceposFromJson(list)
