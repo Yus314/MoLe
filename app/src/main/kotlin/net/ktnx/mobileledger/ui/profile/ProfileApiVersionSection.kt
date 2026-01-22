@@ -63,7 +63,7 @@ internal fun ProfileApiVersionSection(apiVersion: API, onApiVersionSelected: (AP
             expanded = expanded,
             onDismissRequest = { expanded = false }
         ) {
-            listOf(API.auto, API.html, *API.allVersions).forEach { api ->
+            listOf(API.auto, *API.allVersions).forEach { api ->
                 DropdownMenuItem(
                     text = { Text(api.getDescription(resources)) },
                     onClick = {

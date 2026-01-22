@@ -62,7 +62,9 @@ data class ServerVersion(
     /**
      * このバージョンに適したAPIバージョンを取得
      *
-     * @return 適切なAPIバージョン、または null（バージョン不明の場合）
+     * サポート対象: v1_32 以降のみ
+     *
+     * @return 適切なAPIバージョン、または null（v1_32 未満の場合）
      */
     fun getSuitableApiVersion(): API? {
         if (isPre_1_20_1) return null
@@ -71,11 +73,7 @@ data class ServerVersion(
             atLeast(1, 50) -> API.v1_50
             atLeast(1, 40) -> API.v1_40
             atLeast(1, 32) -> API.v1_32
-            atLeast(1, 23) -> API.v1_23
-            atLeast(1, 19) -> API.v1_19_1
-            atLeast(1, 15) -> API.v1_15
-            atLeast(1, 14) -> API.v1_14
-            else -> null
+            else -> null // Server version < 1.32 is not supported
         }
     }
 

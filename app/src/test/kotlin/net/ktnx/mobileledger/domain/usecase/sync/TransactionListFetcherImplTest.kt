@@ -27,7 +27,6 @@ import net.ktnx.mobileledger.network.NetworkNotFoundException
 import net.ktnx.mobileledger.util.createTestDomainProfile
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -38,7 +37,7 @@ import org.robolectric.RobolectricTestRunner
  * Unit tests for [TransactionListFetcherImpl].
  *
  * Tests verify:
- * - API version handling (auto, html, specific versions)
+ * - API version handling (auto, specific versions v1_32+)
  * - Transaction list fetching and parsing
  * - Progress reporting
  * - Transaction sorting
@@ -61,23 +60,10 @@ class TransactionListFetcherImplTest {
     // ========================================
 
     @Test
-    fun `fetch with html API version returns null`() = runTest {
-        // Given
-        val profile = createTestDomainProfile(apiVersion = API.html.toInt())
-
-        // When
-        val result = fetcher.fetch(profile, 0) { _, _ -> }
-
-        // Then
-        assertNull(result)
-        assertTrue(fakeClient.requestHistory.isEmpty())
-    }
-
-    @Test
     fun `fetch with specific API version uses that version`() = runTest {
         // Given
-        val profile = createTestDomainProfile(apiVersion = API.v1_14.toInt())
-        fakeClient.getResponses["transactions"] = createV114TransactionsJson()
+        val profile = createTestDomainProfile(apiVersion = API.v1_32.toInt())
+        fakeClient.getResponses["transactions"] = createV132TransactionsJson()
 
         // When
         val result = fetcher.fetch(profile, 0) { _, _ -> }
@@ -92,7 +78,7 @@ class TransactionListFetcherImplTest {
     fun `fetch with auto version tries versions until success`() = runTest {
         // Given - auto is apiVersion 0
         val profile = createTestDomainProfile(apiVersion = API.auto.toInt())
-        fakeClient.getResponses["transactions"] = createV114TransactionsJson()
+        fakeClient.getResponses["transactions"] = createV132TransactionsJson()
 
         // When
         val result = fetcher.fetch(profile, 0) { _, _ -> }
@@ -121,8 +107,8 @@ class TransactionListFetcherImplTest {
     @Test
     fun `fetch parses transactions correctly`() = runTest {
         // Given
-        val profile = createTestDomainProfile(apiVersion = API.v1_14.toInt())
-        fakeClient.getResponses["transactions"] = createV114TransactionsJson()
+        val profile = createTestDomainProfile(apiVersion = API.v1_32.toInt())
+        fakeClient.getResponses["transactions"] = createV132TransactionsJson()
 
         // When
         val result = fetcher.fetch(profile, 0) { _, _ -> }
@@ -136,8 +122,8 @@ class TransactionListFetcherImplTest {
     @Test
     fun `fetch parses transaction with postings`() = runTest {
         // Given
-        val profile = createTestDomainProfile(apiVersion = API.v1_14.toInt())
-        fakeClient.getResponses["transactions"] = createV114TransactionWithPostingsJson()
+        val profile = createTestDomainProfile(apiVersion = API.v1_32.toInt())
+        fakeClient.getResponses["transactions"] = createV132TransactionWithPostingsJson()
 
         // When
         val result = fetcher.fetch(profile, 0) { _, _ -> }
@@ -151,7 +137,7 @@ class TransactionListFetcherImplTest {
     @Test
     fun `fetch returns empty list for empty JSON array`() = runTest {
         // Given
-        val profile = createTestDomainProfile(apiVersion = API.v1_14.toInt())
+        val profile = createTestDomainProfile(apiVersion = API.v1_32.toInt())
         fakeClient.getResponses["transactions"] = "[]"
 
         // When
@@ -169,8 +155,8 @@ class TransactionListFetcherImplTest {
     @Test
     fun `fetch reports progress for transactions with postings`() = runTest {
         // Given
-        val profile = createTestDomainProfile(apiVersion = API.v1_14.toInt())
-        fakeClient.getResponses["transactions"] = createV114TransactionWithPostingsJson()
+        val profile = createTestDomainProfile(apiVersion = API.v1_32.toInt())
+        fakeClient.getResponses["transactions"] = createV132TransactionWithPostingsJson()
         val progressReports = mutableListOf<Pair<Int, Int>>()
 
         // When
@@ -186,8 +172,8 @@ class TransactionListFetcherImplTest {
     @Test
     fun `fetch does not report progress when expectedPostingsCount is zero`() = runTest {
         // Given
-        val profile = createTestDomainProfile(apiVersion = API.v1_14.toInt())
-        fakeClient.getResponses["transactions"] = createV114TransactionWithPostingsJson()
+        val profile = createTestDomainProfile(apiVersion = API.v1_32.toInt())
+        fakeClient.getResponses["transactions"] = createV132TransactionWithPostingsJson()
         val progressReports = mutableListOf<Pair<Int, Int>>()
 
         // When
@@ -206,8 +192,8 @@ class TransactionListFetcherImplTest {
     @Test
     fun `fetch sorts transactions by date descending`() = runTest {
         // Given
-        val profile = createTestDomainProfile(apiVersion = API.v1_14.toInt())
-        fakeClient.getResponses["transactions"] = createV114MultipleTransactionsJson()
+        val profile = createTestDomainProfile(apiVersion = API.v1_32.toInt())
+        fakeClient.getResponses["transactions"] = createV132MultipleTransactionsJson()
 
         // When
         val result = fetcher.fetch(profile, 0) { _, _ -> }
@@ -224,8 +210,8 @@ class TransactionListFetcherImplTest {
     @Test
     fun `fetch sorts by ledgerId when dates are equal`() = runTest {
         // Given
-        val profile = createTestDomainProfile(apiVersion = API.v1_14.toInt())
-        fakeClient.getResponses["transactions"] = createV114SameDateTransactionsJson()
+        val profile = createTestDomainProfile(apiVersion = API.v1_32.toInt())
+        fakeClient.getResponses["transactions"] = createV132SameDateTransactionsJson()
 
         // When
         val result = fetcher.fetch(profile, 0) { _, _ -> }
@@ -244,20 +230,20 @@ class TransactionListFetcherImplTest {
     @Test
     fun `fetch returns null when endpoint not found`() = runTest {
         // Given
-        val profile = createTestDomainProfile(apiVersion = API.v1_14.toInt())
+        val profile = createTestDomainProfile(apiVersion = API.v1_32.toInt())
         fakeClient.getResults["transactions"] = Result.failure(NetworkNotFoundException("Not found"))
 
         // When
         val result = fetcher.fetch(profile, 0) { _, _ -> }
 
         // Then
-        assertNull(result)
+        assertEquals(null, result)
     }
 
     @Test(expected = NetworkHttpException::class)
     fun `fetch throws NetworkHttpException for auth error`() = runTest {
         // Given
-        val profile = createTestDomainProfile(apiVersion = API.v1_14.toInt())
+        val profile = createTestDomainProfile(apiVersion = API.v1_32.toInt())
         fakeClient.getResults["transactions"] = Result.failure(
             NetworkAuthenticationException("Unauthorized")
         )
@@ -271,7 +257,7 @@ class TransactionListFetcherImplTest {
     @Test(expected = NetworkHttpException::class)
     fun `fetch throws NetworkHttpException for server error`() = runTest {
         // Given
-        val profile = createTestDomainProfile(apiVersion = API.v1_14.toInt())
+        val profile = createTestDomainProfile(apiVersion = API.v1_32.toInt())
         fakeClient.getResults["transactions"] = Result.failure(
             NetworkHttpException(500, "Internal Server Error")
         )
@@ -285,7 +271,7 @@ class TransactionListFetcherImplTest {
     @Test(expected = RuntimeException::class)
     fun `fetch rethrows unknown exceptions`() = runTest {
         // Given
-        val profile = createTestDomainProfile(apiVersion = API.v1_14.toInt())
+        val profile = createTestDomainProfile(apiVersion = API.v1_32.toInt())
         fakeClient.getResults["transactions"] = Result.failure(
             RuntimeException("Unknown error")
         )
@@ -301,9 +287,9 @@ class TransactionListFetcherImplTest {
     // ========================================
 
     /**
-     * Creates a basic v1.14 transactions JSON response with one transaction.
+     * Creates a basic v1.32 transactions JSON response with one transaction.
      */
-    private fun createV114TransactionsJson(): String = """
+    private fun createV132TransactionsJson(): String = """
         [
             {
                 "tindex": 1,
@@ -315,9 +301,9 @@ class TransactionListFetcherImplTest {
     """.trimIndent()
 
     /**
-     * Creates v1.14 transactions JSON with postings.
+     * Creates v1.32 transactions JSON with postings.
      */
-    private fun createV114TransactionWithPostingsJson(): String = """
+    private fun createV132TransactionWithPostingsJson(): String = """
         [
             {
                 "tindex": 1,
@@ -338,9 +324,9 @@ class TransactionListFetcherImplTest {
     """.trimIndent()
 
     /**
-     * Creates v1.14 transactions JSON with multiple transactions on different dates.
+     * Creates v1.32 transactions JSON with multiple transactions on different dates.
      */
-    private fun createV114MultipleTransactionsJson(): String = """
+    private fun createV132MultipleTransactionsJson(): String = """
         [
             {
                 "tindex": 1,
@@ -364,9 +350,9 @@ class TransactionListFetcherImplTest {
     """.trimIndent()
 
     /**
-     * Creates v1.14 transactions JSON with transactions on the same date.
+     * Creates v1.32 transactions JSON with transactions on the same date.
      */
-    private fun createV114SameDateTransactionsJson(): String = """
+    private fun createV132SameDateTransactionsJson(): String = """
         [
             {
                 "tindex": 1,

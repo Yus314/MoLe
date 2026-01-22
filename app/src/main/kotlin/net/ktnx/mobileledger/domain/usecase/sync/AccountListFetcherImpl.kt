@@ -46,15 +46,9 @@ class AccountListFetcherImpl @Inject constructor(
 
     override suspend fun fetch(profile: Profile): AccountFetchResult? {
         val apiVersion = API.valueOf(profile.apiVersion)
-        return when {
-            apiVersion == API.auto -> fetchAnyVersion(profile)
-
-            apiVersion == API.html -> {
-                logcat { "Declining using JSON API for /accounts with configured legacy API version" }
-                null
-            }
-
-            else -> fetchForVersion(profile, apiVersion)
+        return when (apiVersion) {
+            API.auto -> fetchAnyVersion(profile)
+            API.v1_32, API.v1_40, API.v1_50 -> fetchForVersion(profile, apiVersion)
         }
     }
 

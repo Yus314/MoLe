@@ -54,14 +54,15 @@ abstract class AccountListParser {
         @JvmStatic
         @Throws(IOException::class)
         fun forApiVersion(version: API, input: InputStream): AccountListParser = when (version) {
-            API.v1_14 -> net.ktnx.mobileledger.json.v1_14.AccountListParser(input)
-            API.v1_15 -> net.ktnx.mobileledger.json.v1_15.AccountListParser(input)
-            API.v1_19_1 -> net.ktnx.mobileledger.json.v1_19_1.AccountListParser(input)
-            API.v1_23 -> net.ktnx.mobileledger.json.v1_23.AccountListParser(input)
             API.v1_32 -> net.ktnx.mobileledger.json.v1_32.AccountListParser(input)
+
             API.v1_40 -> net.ktnx.mobileledger.json.v1_40.AccountListParser(input)
+
             API.v1_50 -> net.ktnx.mobileledger.json.v1_50.AccountListParser(input)
-            else -> throw RuntimeException("Unsupported version $version")
+
+            API.auto -> throw RuntimeException(
+                "Cannot create AccountListParser for auto API version - resolve to specific version first"
+            )
         }
     }
 }

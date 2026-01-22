@@ -23,17 +23,15 @@ import com.fasterxml.jackson.databind.JsonNode
 import java.text.ParseException
 import net.ktnx.mobileledger.domain.model.Transaction
 import net.ktnx.mobileledger.json.config.ApiVersionConfig
-import net.ktnx.mobileledger.json.config.TransactionIdType
 import net.ktnx.mobileledger.utils.Globals
 import net.ktnx.mobileledger.utils.Misc
 
 /**
- * 統合 ParsedLedgerTransaction - 全 API バージョンの差分を吸収
+ * 統合 ParsedLedgerTransaction - API バージョン v1_32+ の差分を吸収
  *
  * バージョン間の差分:
- * - v1_14-v1_40: tsourcepos は単一オブジェクト
+ * - v1_32-v1_40: tsourcepos は単一オブジェクト
  * - v1_50: tsourcepos はリスト（開始位置と終了位置）
- * - v1_14-v1_23: ptransaction_ は Int
  * - v1_32+: ptransaction_ は String
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -51,7 +49,7 @@ class UnifiedParsedLedgerTransaction {
     /**
      * ソース位置（リストとして正規化）
      *
-     * v1_14-v1_40: 単一オブジェクト → 1要素のリストに変換
+     * v1_32-v1_40: 単一オブジェクト → 1要素のリストに変換
      * v1_50: リスト → そのまま
      */
     var tsourcepos: MutableList<UnifiedParsedSourcePos> = mutableListOf()
@@ -88,7 +86,7 @@ class UnifiedParsedLedgerTransaction {
             }
 
             is Map<*, *> -> {
-                // v1_14-v1_40: 単一オブジェクト
+                // v1_32-v1_40: 単一オブジェクト
                 val pos = parseSourcePos(value)
                 if (pos != null) {
                     tsourcepos.add(pos)
@@ -196,17 +194,15 @@ class UnifiedParsedLedgerTransaction {
                 // v1_50: リスト形式
                 transaction.tsourcepos
             } else {
-                // v1_14-v1_40: 単一オブジェクト
+                // v1_32-v1_40: 単一オブジェクト
                 transaction.tsourcepos.firstOrNull() ?: UnifiedParsedSourcePos()
             }
     }
 
     /**
-     * JSON シリアライズ用: ptransaction_ の型を API バージョンに応じて変換
+     * JSON シリアライズ用: ptransaction_ の型を取得
+     *
+     * v1_32+ では常に String 型を使用
      */
-    fun getTransactionIdForPostingSerialization(config: ApiVersionConfig): (Int) -> Any =
-        when (config.transactionIdType) {
-            TransactionIdType.IntType -> { value -> value }
-            TransactionIdType.StringType -> { value -> value.toString() }
-        }
+    fun getTransactionIdForPostingSerialization(): (Int) -> Any = { value -> value.toString() }
 }

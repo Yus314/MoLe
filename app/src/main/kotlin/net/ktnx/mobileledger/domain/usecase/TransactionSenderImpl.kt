@@ -17,9 +17,6 @@
 
 package net.ktnx.mobileledger.domain.usecase
 
-import java.io.IOException
-import java.util.Locale
-import java.util.regex.Pattern
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.coroutineContext
@@ -38,13 +35,12 @@ import net.ktnx.mobileledger.json.ApiNotSupportedException
 import net.ktnx.mobileledger.json.Gateway
 import net.ktnx.mobileledger.network.HledgerClient
 import net.ktnx.mobileledger.network.NetworkApiNotSupportedException
-import net.ktnx.mobileledger.utils.Globals
 
 /**
  * Pure Coroutines implementation of [TransactionSender].
  *
- * This implementation converts SendTransactionTask's Thread logic to pure suspend functions,
- * enabling proper integration with ViewModels and deterministic testing via TestDispatcher.
+ * This implementation uses JSON API only (v1_32+).
+ * HTML form fallback has been removed as of the v1_32+ only support update.
  *
  * ## Key Features
  * - No Thread usage (Thread.start(), Thread.join() not used)
@@ -58,10 +54,6 @@ class TransactionSenderImpl @Inject constructor(
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : TransactionSender {
 
-    // Session state for legacy HTML form submission
-    private var token: String? = null
-    private var session: String? = null
-
     override suspend fun send(profile: Profile, transaction: Transaction, simulate: Boolean): Result<Unit> {
         profile.id ?: return Result.failure(IllegalStateException("Cannot send from unsaved profile"))
         return sendInternalWithDomain(profile, transaction, simulate)
@@ -69,7 +61,7 @@ class TransactionSenderImpl @Inject constructor(
 
     /**
      * Send transaction using domain models directly.
-     * Uses JSON API with domain model serialization, falls back to HTML form.
+     * Uses JSON API with domain model serialization (v1_32+ only).
      */
     private suspend fun sendInternalWithDomain(
         profile: Profile,
@@ -97,20 +89,15 @@ class TransactionSenderImpl @Inject constructor(
                     }
 
                     if (!sendOK) {
-                        logcat { "Trying HTML form emulation" }
-                        legacySendOkWithRetry(profile, transaction, simulate)
+                        throw ApiNotSupportedException(
+                            "No supported API version found. Server must support hledger-web 1.32 or later."
+                        )
                     }
                 }
 
-                API.html -> {
-                    legacySendOkWithRetry(profile, transaction, simulate)
-                }
-
-                API.v1_14, API.v1_15, API.v1_19_1, API.v1_23, API.v1_32, API.v1_40, API.v1_50 -> {
+                API.v1_32, API.v1_40, API.v1_50 -> {
                     sendOKViaAPIWithDomain(profile, transaction, profileApiVersion, simulate)
                 }
-
-                else -> error("Unexpected API version: $profileApiVersion")
             }
 
             Result.success(Unit)
@@ -163,101 +150,5 @@ class TransactionSenderImpl @Inject constructor(
                 }
             }
         )
-    }
-
-    /**
-     * Send transaction via legacy HTML form
-     */
-    private suspend fun legacySendOK(profile: Profile, transaction: Transaction, simulate: Boolean): Boolean {
-        coroutineContext.ensureActive()
-
-        val formData = mutableListOf<Pair<String, String>>()
-        formData.add("_formid" to "identify-add")
-        token?.let { formData.add("_token" to it) }
-
-        formData.add("date" to Globals.formatLedgerDate(transaction.date))
-        formData.add("description" to transaction.description)
-        for (line in transaction.lines) {
-            formData.add("account" to line.accountName)
-            val amountStr = if (line.amount != null) {
-                String.format(Locale.US, "%1.2f", line.amount)
-            } else {
-                ""
-            }
-            formData.add("amount" to amountStr)
-        }
-
-        logcat { "Form data: $formData" }
-
-        if (simulate) {
-            logcat { "The request would be: $formData" }
-            delay(1500)
-            return true
-        }
-
-        val cookies = if (!session.isNullOrEmpty()) {
-            mapOf("_SESSION" to session!!)
-        } else {
-            emptyMap()
-        }
-
-        val result = hledgerClient.postForm(profile, "add", formData, cookies)
-
-        return result.fold(
-            onSuccess = { response ->
-                logcat { "Response status: ${response.statusCode}" }
-                when (response.statusCode) {
-                    303 -> true
-
-                    200 -> {
-                        // Update session from cookies
-                        val newSession = response.cookies["_SESSION"]
-                        if (newSession != null) {
-                            session = newSession
-                            logcat { "new session is $session" }
-                        } else {
-                            logcat(LogPriority.WARN) { "Response has no _SESSION cookie" }
-                        }
-
-                        // Extract token from response body
-                        val re = Pattern.compile("<input type=\"hidden\" name=\"_token\" value=\"([^\"]+)\">")
-                        val lines = response.body.lines()
-                        for (line in lines) {
-                            coroutineContext.ensureActive()
-                            val m = re.matcher(line)
-                            if (m.matches()) {
-                                token = m.group(1)
-                                logcat { line }
-                                logcat { "Token=$token" }
-                                return@fold false // retry
-                            }
-                        }
-                        throw IOException("Can't find _token string")
-                    }
-
-                    else -> throw IOException(
-                        String.format(Locale.ROOT, "Error response code %d", response.statusCode)
-                    )
-                }
-            },
-            onFailure = { error ->
-                throw error
-            }
-        )
-    }
-
-    /**
-     * Send transaction via legacy HTML form with retry
-     */
-    private suspend fun legacySendOkWithRetry(profile: Profile, transaction: Transaction, simulate: Boolean) {
-        var tried = 0
-        while (!legacySendOK(profile, transaction, simulate)) {
-            coroutineContext.ensureActive()
-            tried++
-            if (tried >= 2) {
-                throw IOException(String.format(Locale.ROOT, "aborting after %d tries", tried))
-            }
-            delay(100)
-        }
     }
 }

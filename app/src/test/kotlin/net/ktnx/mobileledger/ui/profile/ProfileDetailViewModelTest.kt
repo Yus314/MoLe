@@ -259,9 +259,9 @@ class ProfileDetailViewModelTest {
         viewModel.initialize(profileId = 0L, initialThemeHue = 0)
         advanceUntilIdle()
 
-        viewModel.onEvent(ProfileDetailEvent.UpdateApiVersion(API.v1_23))
+        viewModel.onEvent(ProfileDetailEvent.UpdateApiVersion(API.v1_32))
 
-        assertEquals(API.v1_23, viewModel.uiState.value.apiVersion)
+        assertEquals(API.v1_32, viewModel.uiState.value.apiVersion)
     }
 
     @Test

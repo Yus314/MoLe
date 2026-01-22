@@ -17,7 +17,6 @@
 
 package net.ktnx.mobileledger.json.unified
 
-import net.ktnx.mobileledger.json.config.ApiVersionConfig
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -153,24 +152,6 @@ class UnifiedParsedPostingTest {
     }
 
     // ========================================
-    // setTransactionIdAsInt tests
-    // ========================================
-
-    @Test
-    fun `setTransactionIdAsInt converts to string`() {
-        val posting = UnifiedParsedPosting()
-        posting.setTransactionIdAsInt(99)
-        assertEquals("99", posting.ptransaction_)
-    }
-
-    @Test
-    fun `setTransactionIdAsInt handles zero`() {
-        val posting = UnifiedParsedPosting()
-        posting.setTransactionIdAsInt(0)
-        assertEquals("0", posting.ptransaction_)
-    }
-
-    // ========================================
     // setTransactionIdAsString tests
     // ========================================
 
@@ -267,42 +248,34 @@ class UnifiedParsedPostingTest {
     // ========================================
 
     @Test
-    fun `getTransactionIdForSerialization returns Int for IntType config`() {
+    fun `getTransactionIdForSerialization returns String`() {
         val posting = UnifiedParsedPosting().apply {
             setTransactionIdAsString("42")
         }
-        // V1_14_15 uses IntType
-        val config = ApiVersionConfig.V1_14_15
 
-        val result = posting.getTransactionIdForSerialization(config)
+        val result = posting.getTransactionIdForSerialization()
 
-        assertEquals(42, result)
+        assertEquals("42", result)
     }
 
     @Test
-    fun `getTransactionIdForSerialization returns String for StringType config`() {
+    fun `getTransactionIdForSerialization preserves string value`() {
         val posting = UnifiedParsedPosting().apply {
             setTransactionIdAsString("abc-123")
         }
-        // V1_32_40 uses StringType
-        val config = ApiVersionConfig.V1_32_40
 
-        val result = posting.getTransactionIdForSerialization(config)
+        val result = posting.getTransactionIdForSerialization()
 
         assertEquals("abc-123", result)
     }
 
     @Test
-    fun `getTransactionIdForSerialization returns 0 for invalid Int`() {
-        val posting = UnifiedParsedPosting().apply {
-            setTransactionIdAsString("not-a-number")
-        }
-        // V1_23 uses IntType
-        val config = ApiVersionConfig.V1_23
+    fun `getTransactionIdForSerialization returns default for new posting`() {
+        val posting = UnifiedParsedPosting()
 
-        val result = posting.getTransactionIdForSerialization(config)
+        val result = posting.getTransactionIdForSerialization()
 
-        assertEquals(0, result)
+        assertEquals("0", result)
     }
 
     // ========================================

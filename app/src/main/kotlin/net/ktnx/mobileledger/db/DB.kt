@@ -78,7 +78,7 @@ abstract class DB : RoomDatabase() {
     }
 
     companion object {
-        const val REVISION = 68
+        const val REVISION = 69
         const val DB_NAME = "MoLe.db"
 
         /**

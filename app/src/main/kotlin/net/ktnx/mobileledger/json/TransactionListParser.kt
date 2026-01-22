@@ -30,14 +30,15 @@ abstract class TransactionListParser {
         @JvmStatic
         @Throws(IOException::class)
         fun forApiVersion(apiVersion: API, input: InputStream): TransactionListParser = when (apiVersion) {
-            API.v1_14 -> net.ktnx.mobileledger.json.v1_14.TransactionListParser(input)
-            API.v1_15 -> net.ktnx.mobileledger.json.v1_15.TransactionListParser(input)
-            API.v1_19_1 -> net.ktnx.mobileledger.json.v1_19_1.TransactionListParser(input)
-            API.v1_23 -> net.ktnx.mobileledger.json.v1_23.TransactionListParser(input)
             API.v1_32 -> net.ktnx.mobileledger.json.v1_32.TransactionListParser(input)
+
             API.v1_40 -> net.ktnx.mobileledger.json.v1_40.TransactionListParser(input)
+
             API.v1_50 -> net.ktnx.mobileledger.json.v1_50.TransactionListParser(input)
-            else -> throw RuntimeException("Unsupported version $apiVersion")
+
+            API.auto -> throw RuntimeException(
+                "Cannot create TransactionListParser for auto API version - resolve to specific version first"
+            )
         }
     }
 }

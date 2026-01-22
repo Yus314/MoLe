@@ -18,7 +18,6 @@
 package net.ktnx.mobileledger.network
 
 import io.ktor.client.HttpClient
-import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.put
@@ -27,9 +26,6 @@ import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
-import io.ktor.http.Parameters
-import io.ktor.http.contentType
-import io.ktor.http.setCookie
 import java.io.ByteArrayInputStream
 import java.io.InputStream
 import java.nio.charset.StandardCharsets
@@ -102,42 +98,6 @@ class HledgerClientImpl @Inject constructor(
         }
     }.onFailure { e ->
         logcat(LogPriority.ERROR) { "PUT request failed: ${e.asLog()}" }
-    }
-
-    override suspend fun postForm(
-        profile: Profile,
-        path: String,
-        formData: List<Pair<String, String>>,
-        cookies: Map<String, String>,
-        temporaryAuth: TemporaryAuthData?
-    ): Result<FormPostResponse> = runCatching {
-        val url = buildUrl(profile, path, temporaryAuth)
-        logcat { "POST form to $url" }
-
-        val response: HttpResponse = httpClient.submitForm(
-            url = url,
-            formParameters = Parameters.build {
-                formData.forEach { (key, value) ->
-                    append(key, value)
-                }
-            }
-        ) {
-            configureAuth(profile, temporaryAuth)
-            if (cookies.isNotEmpty()) {
-                val cookieHeader = cookies.entries.joinToString("; ") { "${it.key}=${it.value}" }
-                header(HttpHeaders.Cookie, cookieHeader)
-            }
-        }
-
-        val responseCookies = response.setCookie().associate { it.name to it.value }
-
-        FormPostResponse(
-            statusCode = response.status.value,
-            body = response.bodyAsText(),
-            cookies = responseCookies
-        )
-    }.onFailure { e ->
-        logcat(LogPriority.ERROR) { "POST form request failed: ${e.asLog()}" }
     }
 
     override fun close() {

@@ -17,7 +17,6 @@
 
 package net.ktnx.mobileledger.domain.usecase.sync
 
-import java.io.ByteArrayInputStream
 import kotlinx.coroutines.test.runTest
 import net.ktnx.mobileledger.fake.FakeHledgerClient
 import net.ktnx.mobileledger.json.API
@@ -39,7 +38,7 @@ import org.robolectric.RobolectricTestRunner
  * Unit tests for [AccountListFetcherImpl].
  *
  * Tests verify:
- * - API version handling (auto, html, specific versions)
+ * - API version handling (auto, specific versions v1_32+)
  * - Account list fetching and parsing
  * - Parent account generation
  * - Error handling for various network exceptions
@@ -61,23 +60,10 @@ class AccountListFetcherImplTest {
     // ========================================
 
     @Test
-    fun `fetch with html API version returns null`() = runTest {
-        // Given
-        val profile = createTestDomainProfile(apiVersion = API.html.toInt())
-
-        // When
-        val result = fetcher.fetch(profile)
-
-        // Then
-        assertNull(result)
-        assertTrue(fakeClient.requestHistory.isEmpty())
-    }
-
-    @Test
     fun `fetch with specific API version uses that version`() = runTest {
         // Given
-        val profile = createTestDomainProfile(apiVersion = API.v1_14.toInt())
-        fakeClient.getResponses["accounts"] = createV114AccountsJson()
+        val profile = createTestDomainProfile(apiVersion = API.v1_32.toInt())
+        fakeClient.getResponses["accounts"] = createV132AccountsJson()
 
         // When
         val result = fetcher.fetch(profile)
@@ -92,7 +78,7 @@ class AccountListFetcherImplTest {
     fun `fetch with auto version tries versions until success`() = runTest {
         // Given - auto is apiVersion 0
         val profile = createTestDomainProfile(apiVersion = API.auto.toInt())
-        fakeClient.getResponses["accounts"] = createV114AccountsJson()
+        fakeClient.getResponses["accounts"] = createV132AccountsJson()
 
         // When
         val result = fetcher.fetch(profile)
@@ -121,8 +107,8 @@ class AccountListFetcherImplTest {
     @Test
     fun `fetch parses accounts correctly`() = runTest {
         // Given
-        val profile = createTestDomainProfile(apiVersion = API.v1_14.toInt())
-        fakeClient.getResponses["accounts"] = createV114AccountsJson()
+        val profile = createTestDomainProfile(apiVersion = API.v1_32.toInt())
+        fakeClient.getResponses["accounts"] = createV132AccountsJson()
 
         // When
         val result = fetcher.fetch(profile)
@@ -136,9 +122,9 @@ class AccountListFetcherImplTest {
     @Test
     fun `fetch generates parent accounts`() = runTest {
         // Given
-        val profile = createTestDomainProfile(apiVersion = API.v1_14.toInt())
+        val profile = createTestDomainProfile(apiVersion = API.v1_32.toInt())
         // Only child account exists in JSON, parent should be generated
-        fakeClient.getResponses["accounts"] = createV114AccountsJsonChildOnly()
+        fakeClient.getResponses["accounts"] = createV132AccountsJsonChildOnly()
 
         // When
         val result = fetcher.fetch(profile)
@@ -155,8 +141,8 @@ class AccountListFetcherImplTest {
     @Test
     fun `fetch calculates expectedPostingsCount`() = runTest {
         // Given
-        val profile = createTestDomainProfile(apiVersion = API.v1_14.toInt())
-        fakeClient.getResponses["accounts"] = createV114AccountsJsonWithAmounts()
+        val profile = createTestDomainProfile(apiVersion = API.v1_32.toInt())
+        fakeClient.getResponses["accounts"] = createV132AccountsJsonWithAmounts()
 
         // When
         val result = fetcher.fetch(profile)
@@ -170,7 +156,7 @@ class AccountListFetcherImplTest {
     @Test
     fun `fetch returns empty list for empty JSON array`() = runTest {
         // Given
-        val profile = createTestDomainProfile(apiVersion = API.v1_14.toInt())
+        val profile = createTestDomainProfile(apiVersion = API.v1_32.toInt())
         fakeClient.getResponses["accounts"] = "[]"
 
         // When
@@ -185,8 +171,8 @@ class AccountListFetcherImplTest {
     @Test
     fun `fetch skips root account`() = runTest {
         // Given
-        val profile = createTestDomainProfile(apiVersion = API.v1_14.toInt())
-        fakeClient.getResponses["accounts"] = createV114AccountsJsonWithRoot()
+        val profile = createTestDomainProfile(apiVersion = API.v1_32.toInt())
+        fakeClient.getResponses["accounts"] = createV132AccountsJsonWithRoot()
 
         // When
         val result = fetcher.fetch(profile)
@@ -204,7 +190,7 @@ class AccountListFetcherImplTest {
     @Test
     fun `fetch returns null when endpoint not found`() = runTest {
         // Given
-        val profile = createTestDomainProfile(apiVersion = API.v1_14.toInt())
+        val profile = createTestDomainProfile(apiVersion = API.v1_32.toInt())
         fakeClient.getResults["accounts"] = Result.failure(NetworkNotFoundException("Not found"))
 
         // When
@@ -217,7 +203,7 @@ class AccountListFetcherImplTest {
     @Test(expected = NetworkHttpException::class)
     fun `fetch throws NetworkHttpException for auth error`() = runTest {
         // Given
-        val profile = createTestDomainProfile(apiVersion = API.v1_14.toInt())
+        val profile = createTestDomainProfile(apiVersion = API.v1_32.toInt())
         fakeClient.getResults["accounts"] = Result.failure(
             NetworkAuthenticationException("Unauthorized")
         )
@@ -231,7 +217,7 @@ class AccountListFetcherImplTest {
     @Test(expected = NetworkHttpException::class)
     fun `fetch throws NetworkHttpException for server error`() = runTest {
         // Given
-        val profile = createTestDomainProfile(apiVersion = API.v1_14.toInt())
+        val profile = createTestDomainProfile(apiVersion = API.v1_32.toInt())
         fakeClient.getResults["accounts"] = Result.failure(
             NetworkHttpException(500, "Internal Server Error")
         )
@@ -245,7 +231,7 @@ class AccountListFetcherImplTest {
     @Test(expected = RuntimeException::class)
     fun `fetch rethrows unknown exceptions`() = runTest {
         // Given
-        val profile = createTestDomainProfile(apiVersion = API.v1_14.toInt())
+        val profile = createTestDomainProfile(apiVersion = API.v1_32.toInt())
         fakeClient.getResults["accounts"] = Result.failure(
             RuntimeException("Unknown error")
         )
@@ -263,9 +249,9 @@ class AccountListFetcherImplTest {
     @Test
     fun `fetch does not duplicate existing parent accounts`() = runTest {
         // Given
-        val profile = createTestDomainProfile(apiVersion = API.v1_14.toInt())
+        val profile = createTestDomainProfile(apiVersion = API.v1_32.toInt())
         // JSON includes both parent and child
-        fakeClient.getResponses["accounts"] = createV114AccountsJsonWithParent()
+        fakeClient.getResponses["accounts"] = createV132AccountsJsonWithParent()
 
         // When
         val result = fetcher.fetch(profile)
@@ -280,8 +266,8 @@ class AccountListFetcherImplTest {
     @Test
     fun `fetch generates deeply nested parent accounts`() = runTest {
         // Given
-        val profile = createTestDomainProfile(apiVersion = API.v1_14.toInt())
-        fakeClient.getResponses["accounts"] = createV114AccountsJsonDeeplyNested()
+        val profile = createTestDomainProfile(apiVersion = API.v1_32.toInt())
+        fakeClient.getResponses["accounts"] = createV132AccountsJsonDeeplyNested()
 
         // When
         val result = fetcher.fetch(profile)
@@ -300,27 +286,27 @@ class AccountListFetcherImplTest {
     // ========================================
 
     /**
-     * Creates a basic v1.14 accounts JSON response.
+     * Creates a basic v1.32 accounts JSON response.
      */
-    private fun createV114AccountsJson(): String = """
+    private fun createV132AccountsJson(): String = """
         [
             {"aname": "Assets:Bank", "aibalance": [], "anumpostings": 0}
         ]
     """.trimIndent()
 
     /**
-     * Creates v1.14 accounts JSON with only child account (no parent).
+     * Creates v1.32 accounts JSON with only child account (no parent).
      */
-    private fun createV114AccountsJsonChildOnly(): String = """
+    private fun createV132AccountsJsonChildOnly(): String = """
         [
             {"aname": "Assets:Bank:Checking", "aibalance": [], "anumpostings": 0}
         ]
     """.trimIndent()
 
     /**
-     * Creates v1.14 accounts JSON with amounts.
+     * Creates v1.32 accounts JSON with amounts.
      */
-    private fun createV114AccountsJsonWithAmounts(): String = """
+    private fun createV132AccountsJsonWithAmounts(): String = """
         [
             {
                 "aname": "Assets:Bank",
@@ -333,9 +319,9 @@ class AccountListFetcherImplTest {
     """.trimIndent()
 
     /**
-     * Creates v1.14 accounts JSON with root account (should be skipped).
+     * Creates v1.32 accounts JSON with root account (should be skipped).
      */
-    private fun createV114AccountsJsonWithRoot(): String = """
+    private fun createV132AccountsJsonWithRoot(): String = """
         [
             {"aname": "root", "aibalance": [], "anumpostings": 0},
             {"aname": "Assets:Bank", "aibalance": [], "anumpostings": 0}
@@ -343,9 +329,9 @@ class AccountListFetcherImplTest {
     """.trimIndent()
 
     /**
-     * Creates v1.14 accounts JSON with both parent and child.
+     * Creates v1.32 accounts JSON with both parent and child.
      */
-    private fun createV114AccountsJsonWithParent(): String = """
+    private fun createV132AccountsJsonWithParent(): String = """
         [
             {"aname": "Assets", "aibalance": [], "anumpostings": 0},
             {"aname": "Assets:Bank", "aibalance": [], "anumpostings": 0}
@@ -353,9 +339,9 @@ class AccountListFetcherImplTest {
     """.trimIndent()
 
     /**
-     * Creates v1.14 accounts JSON with deeply nested account.
+     * Creates v1.32 accounts JSON with deeply nested account.
      */
-    private fun createV114AccountsJsonDeeplyNested(): String = """
+    private fun createV132AccountsJsonDeeplyNested(): String = """
         [
             {"aname": "Assets:Bank:Checking:USD", "aibalance": [], "anumpostings": 0}
         ]

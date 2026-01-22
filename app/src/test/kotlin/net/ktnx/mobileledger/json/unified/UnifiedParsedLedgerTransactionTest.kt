@@ -35,7 +35,7 @@ import org.junit.Test
  * - Default values
  * - Property accessors
  * - Domain model conversion
- * - tsourcepos handling for different API versions
+ * - tsourcepos handling for different API versions (v1_32+)
  */
 class UnifiedParsedLedgerTransactionTest {
 
@@ -467,19 +467,9 @@ class UnifiedParsedLedgerTransactionTest {
     // ========================================
 
     @Test
-    fun `getTransactionIdForPostingSerialization returns Int for IntType`() {
+    fun `getTransactionIdForPostingSerialization returns String converter`() {
         val tx = UnifiedParsedLedgerTransaction()
-        val converter = tx.getTransactionIdForPostingSerialization(ApiVersionConfig.V1_14_15)
-
-        val result = converter(42)
-
-        assertEquals(42, result)
-    }
-
-    @Test
-    fun `getTransactionIdForPostingSerialization returns String for StringType`() {
-        val tx = UnifiedParsedLedgerTransaction()
-        val converter = tx.getTransactionIdForPostingSerialization(ApiVersionConfig.V1_32_40)
+        val converter = tx.getTransactionIdForPostingSerialization()
 
         val result = converter(42)
 

@@ -22,19 +22,10 @@ import net.ktnx.mobileledger.TemporaryAuthData
 import net.ktnx.mobileledger.domain.model.Profile
 
 /**
- * Response from a form POST request.
- */
-data class FormPostResponse(
-    val statusCode: Int,
-    val body: String,
-    val cookies: Map<String, String>
-)
-
-/**
  * HTTP client interface for hledger-web communication.
  *
- * This interface abstracts all HTTP operations needed to interact with hledger-web servers,
- * supporting both JSON API and legacy HTML form modes.
+ * This interface abstracts all HTTP operations needed to interact with hledger-web servers
+ * using the JSON API (v1_32+).
  *
  * Authentication is handled explicitly per-request, allowing for:
  * - Profile-based authentication (normal operation)
@@ -70,28 +61,6 @@ interface HledgerClient {
         body: String,
         temporaryAuth: TemporaryAuthData? = null
     ): Result<Unit>
-
-    /**
-     * Perform a POST request with form-encoded data.
-     *
-     * Used for legacy HTML form submission to hledger-web servers
-     * that don't support the JSON API.
-     *
-     * @param profile The profile containing server URL and authentication settings
-     * @param path The endpoint path (typically "add")
-     * @param formData List of key-value pairs for form fields. Uses List to support
-     *                 multiple values for the same key (e.g., multiple "account" fields)
-     * @param cookies Optional cookies to send (e.g., session cookie)
-     * @param temporaryAuth Optional temporary authentication for connection testing
-     * @return Result containing the response with status code, body, and cookies
-     */
-    suspend fun postForm(
-        profile: Profile,
-        path: String,
-        formData: List<Pair<String, String>>,
-        cookies: Map<String, String> = emptyMap(),
-        temporaryAuth: TemporaryAuthData? = null
-    ): Result<FormPostResponse>
 
     /**
      * Close the HTTP client and release resources.

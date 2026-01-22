@@ -48,15 +48,9 @@ class TransactionListFetcherImpl @Inject constructor(
         onProgress: suspend (Int, Int) -> Unit
     ): List<Transaction>? {
         val apiVersion = API.valueOf(profile.apiVersion)
-        return when {
-            apiVersion == API.auto -> fetchAnyVersion(profile, expectedPostingsCount, onProgress)
-
-            apiVersion == API.html -> {
-                logcat { "Declining using JSON API for /transactions with configured legacy API version" }
-                null
-            }
-
-            else -> fetchForVersion(profile, apiVersion, expectedPostingsCount, onProgress)
+        return when (apiVersion) {
+            API.auto -> fetchAnyVersion(profile, expectedPostingsCount, onProgress)
+            API.v1_32, API.v1_40, API.v1_50 -> fetchForVersion(profile, apiVersion, expectedPostingsCount, onProgress)
         }
     }
 

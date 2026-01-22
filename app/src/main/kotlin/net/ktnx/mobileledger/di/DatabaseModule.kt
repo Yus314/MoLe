@@ -145,7 +145,8 @@ object DatabaseModule {
                         "ALTER TABLE account_values ADD COLUMN amount_style TEXT"
                     )
                 }
-            }
+            },
+            singleVersionMigration(69, resources, packageName, preferencesRepository)
         )
     }
 

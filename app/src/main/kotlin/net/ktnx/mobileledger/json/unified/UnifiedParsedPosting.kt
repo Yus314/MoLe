@@ -24,17 +24,11 @@ import net.ktnx.mobileledger.di.CurrencyFormatterEntryPoint
 import net.ktnx.mobileledger.domain.model.CurrencyPosition
 import net.ktnx.mobileledger.domain.model.TransactionLine
 import net.ktnx.mobileledger.json.config.ApiVersionConfig
-import net.ktnx.mobileledger.json.config.StyleFieldConfig
-import net.ktnx.mobileledger.json.config.TransactionIdType
 
 /**
- * 統合 ParsedPosting - 全 API バージョンの差分を吸収
+ * 統合 ParsedPosting - API バージョン v1_32+ の差分を吸収
  *
- * バージョン間の差分:
- * - v1_14-v1_23: ptransaction_ は Int
- * - v1_32+: ptransaction_ は String
- *
- * 内部的には String として保持し、Int/String 両方の入力に対応する。
+ * v1_32+ では ptransaction_ は String 型を使用
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 class UnifiedParsedPosting {
@@ -58,8 +52,7 @@ class UnifiedParsedPosting {
     /**
      * トランザクションID（String として正規化）
      *
-     * v1_14-v1_23: Int → String に変換
-     * v1_32+: String → そのまま
+     * v1_32+ では常に String 型
      */
     @JsonProperty("ptransaction_")
     var ptransaction_: String = "0"
@@ -79,14 +72,7 @@ class UnifiedParsedPosting {
     }
 
     /**
-     * Int として ptransaction_ を設定（v1_14-v1_23 用）
-     */
-    fun setTransactionIdAsInt(value: Int) {
-        ptransaction_ = value.toString()
-    }
-
-    /**
-     * String として ptransaction_ を設定（v1_32+ 用）
+     * String として ptransaction_ を設定
      */
     fun setTransactionIdAsString(value: String) {
         ptransaction_ = value
@@ -114,6 +100,7 @@ class UnifiedParsedPosting {
          * @param config API バージョン設定
          * @return 生成した UnifiedParsedPosting
          */
+        @Suppress("UNUSED_PARAMETER")
         fun fromDomain(line: TransactionLine, config: ApiVersionConfig): UnifiedParsedPosting =
             UnifiedParsedPosting().apply {
                 paccount = line.accountName
@@ -129,29 +116,19 @@ class UnifiedParsedPosting {
                         astyle = UnifiedParsedStyle().apply {
                             ascommodityside = getCommoditySide()
                             isAscommodityspaced = getCommoditySpaced()
-                            configureStyleForVersion(this, config, 2)
+                            configureStyleForVersion(this, 2)
                         }
                     }
                 )
             }
 
         /**
-         * API バージョンに応じたスタイル設定
+         * API バージョン v1_32+ 用スタイル設定
          */
-        private fun configureStyleForVersion(style: UnifiedParsedStyle, config: ApiVersionConfig, precision: Int) {
+        private fun configureStyleForVersion(style: UnifiedParsedStyle, precision: Int) {
             style.asprecision = precision
-            when (config.styleConfig) {
-                StyleFieldConfig.DecimalPointChar,
-                StyleFieldConfig.DecimalPointCharWithParsedPrecision,
-                StyleFieldConfig.DecimalPointCharIntPrecision -> {
-                    style.asdecimalmark = "."
-                }
-
-                StyleFieldConfig.DecimalMarkString -> {
-                    style.asdecimalmark = "."
-                    style.asrounding = "NoRounding"
-                }
-            }
+            style.asdecimalmark = "."
+            style.asrounding = "NoRounding"
         }
 
         private fun getCommoditySpaced(): Boolean = CurrencyFormatterEntryPoint.getOrNull()?.currencyGap?.value ?: false
@@ -167,12 +144,9 @@ class UnifiedParsedPosting {
     }
 
     /**
-     * JSON シリアライズ用: ptransaction_ の型を API バージョンに応じて変換
+     * JSON シリアライズ用: ptransaction_ を取得
      *
-     * 注意: Jackson のカスタムシリアライザで使用
+     * v1_32+ では常に String 型を使用
      */
-    fun getTransactionIdForSerialization(config: ApiVersionConfig): Any = when (config.transactionIdType) {
-        TransactionIdType.IntType -> ptransaction_.toIntOrNull() ?: 0
-        TransactionIdType.StringType -> ptransaction_
-    }
+    fun getTransactionIdForSerialization(): String = ptransaction_
 }

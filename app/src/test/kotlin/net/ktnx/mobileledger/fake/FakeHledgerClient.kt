@@ -22,7 +22,6 @@ import java.io.InputStream
 import java.nio.charset.StandardCharsets
 import net.ktnx.mobileledger.TemporaryAuthData
 import net.ktnx.mobileledger.domain.model.Profile
-import net.ktnx.mobileledger.network.FormPostResponse
 import net.ktnx.mobileledger.network.HledgerClient
 
 /**
@@ -51,21 +50,9 @@ class FakeHledgerClient : HledgerClient {
     val putJsonResults: MutableMap<String, Result<Unit>> = mutableMapOf()
 
     /**
-     * Map of endpoint paths to Result for POST form requests.
-     */
-    val postFormResults: MutableMap<String, Result<FormPostResponse>> = mutableMapOf()
-
-    /**
      * Default response for PUT JSON requests if not in putJsonResults.
      */
     var defaultPutJsonResult: Result<Unit> = Result.success(Unit)
-
-    /**
-     * Default response for POST form requests if not in postFormResults.
-     */
-    var defaultPostFormResult: Result<FormPostResponse> = Result.success(
-        FormPostResponse(200, "", emptyMap())
-    )
 
     /**
      * If set, all requests will fail with this exception.
@@ -90,9 +77,7 @@ class FakeHledgerClient : HledgerClient {
         val path: String,
         val profile: Profile,
         val temporaryAuth: TemporaryAuthData?,
-        val body: String? = null,
-        val formData: List<Pair<String, String>>? = null,
-        val cookies: Map<String, String>? = null
+        val body: String? = null
     )
 
     override suspend fun get(profile: Profile, path: String, temporaryAuth: TemporaryAuthData?): Result<InputStream> {
@@ -133,33 +118,6 @@ class FakeHledgerClient : HledgerClient {
         return putJsonResults[path] ?: defaultPutJsonResult
     }
 
-    override suspend fun postForm(
-        profile: Profile,
-        path: String,
-        formData: List<Pair<String, String>>,
-        cookies: Map<String, String>,
-        temporaryAuth: TemporaryAuthData?
-    ): Result<FormPostResponse> {
-        if (networkDelay > 0) {
-            kotlinx.coroutines.delay(networkDelay)
-        }
-
-        requestHistory.add(
-            RequestRecord(
-                "POST",
-                path,
-                profile,
-                temporaryAuth,
-                formData = formData,
-                cookies = cookies
-            )
-        )
-
-        shouldFailWith?.let { return Result.failure(it) }
-
-        return postFormResults[path] ?: defaultPostFormResult
-    }
-
     override fun close() {
         // No-op for fake
     }
@@ -171,9 +129,7 @@ class FakeHledgerClient : HledgerClient {
         getResponses.clear()
         getResults.clear()
         putJsonResults.clear()
-        postFormResults.clear()
         defaultPutJsonResult = Result.success(Unit)
-        defaultPostFormResult = Result.success(FormPostResponse(200, "", emptyMap()))
         shouldFailWith = null
         networkDelay = 0
         requestHistory.clear()
@@ -193,11 +149,6 @@ class FakeHledgerClient : HledgerClient {
      * Get all PUT requests.
      */
     fun putRequests(): List<RequestRecord> = requestHistory.filter { it.method == "PUT" }
-
-    /**
-     * Get all POST requests.
-     */
-    fun postRequests(): List<RequestRecord> = requestHistory.filter { it.method == "POST" }
 
     /**
      * Check if authentication was used for a specific request.

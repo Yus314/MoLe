@@ -242,51 +242,6 @@ class HledgerClientImplTest {
         assertTrue(exception is NetworkApiNotSupportedException)
     }
 
-    @Test
-    fun `post form request sends form data correctly`() = runTest {
-        setupMockEngine { request ->
-            respond(
-                content = "OK",
-                status = HttpStatusCode.OK,
-                headers = headersOf("Set-Cookie", listOf("_SESSION=abc123; Path=/"))
-            )
-        }
-
-        val profile = createTestProfile()
-        val formData = listOf(
-            "date" to "2025-01-20",
-            "description" to "Test transaction"
-        )
-        val result = client!!.postForm(profile, "add", formData)
-
-        assertTrue(result.isSuccess)
-        val response = result.getOrNull()
-        assertNotNull(response)
-        assertEquals(200, response!!.statusCode)
-    }
-
-    @Test
-    fun `post form request includes cookies when provided`() = runTest {
-        setupMockEngine { request ->
-            respond(
-                content = "OK",
-                status = HttpStatusCode.OK,
-                headers = headersOf()
-            )
-        }
-
-        val profile = createTestProfile()
-        val formData = listOf("field" to "value")
-        val cookies = mapOf("_SESSION" to "abc123")
-        val result = client!!.postForm(profile, "add", formData, cookies)
-
-        assertTrue(result.isSuccess)
-        val lastRequest = mockEngine!!.requestHistory.last()
-        val cookieHeader = lastRequest.headers[HttpHeaders.Cookie]
-        assertNotNull(cookieHeader)
-        assertTrue(cookieHeader!!.contains("_SESSION=abc123"))
-    }
-
     private fun setupMockEngine(handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData) {
         mockEngine = MockEngine(handler)
         val httpClient = KtorClientFactory.createWithEngine(mockEngine!!, enableLogging = false)

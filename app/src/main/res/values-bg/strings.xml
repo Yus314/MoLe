@@ -93,9 +93,6 @@
     <string name="future_dates_none">Без въвеждане на бъдещи дати</string>
     <string name="profile_future_dates_label">Въвеждане на дати в бъдещето</string>
     <string name="api_auto">Автоматична</string>
-    <string name="api_html">Версия преди 1.14</string>
-    <string name="api_1_15">Версия 1.15</string>
-    <string name="api_1_14">Версия 1.14</string>
     <string name="profile_api_version_title">Версия на протокола</string>
     <string name="add_button">Добавяне…</string>
     <string name="close_button">Затваряне</string>
@@ -125,7 +122,6 @@
     <string name="server_version_unknown_label">Неизвестна</string>
     <string name="detected_server_pre_1_20_1">Преди 1.20.1</string>
     <string name="new_transaction_fab_description">Знак плюс</string>
-    <string name="api_1_19_1">Версия 1.19.1</string>
     <string name="profile_server_version_title">Версия на сървъра</string>
     <string name="err_json_parser_error">Грешка при разчитане на отговора от сървъра. Вероятно настроената врсия на протокола не се поддържа.</string>
     <string name="btn_profile_options">Настройка на профила</string>
@@ -201,7 +197,6 @@
     <string name="config_restored">Успешно възстановяване на настройките</string>
     <string name="no_profile_restore_hint">… а може и да възстановите настройките от резервно копие</string>
     <string name="profile_not_available">Недостъпен профил</string>
-    <string name="api_1_23">Версия 1.23</string>
     <string name="accounts_menu_show_zero">Сметки с нулев баланс</string>
     <string name="accounts_menu_show_zero_condensed">Нулеви сметки</string>
 </resources>

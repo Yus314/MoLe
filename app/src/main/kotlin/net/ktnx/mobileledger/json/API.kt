@@ -21,13 +21,15 @@ import android.content.res.Resources
 import android.util.SparseArray
 import net.ktnx.mobileledger.R
 
+/**
+ * Supported hledger-web API versions.
+ *
+ * As of this version, only API versions v1_32 and later are supported.
+ * Earlier versions (v1_14, v1_15, v1_19_1, v1_23) and HTML form fallback
+ * have been removed.
+ */
 enum class API(private val value: Int) {
     auto(0),
-    html(-1),
-    v1_14(-2),
-    v1_15(-3),
-    v1_19_1(-4),
-    v1_23(-5),
     v1_32(-6),
     v1_40(-7),
     v1_50(-8);
@@ -37,11 +39,6 @@ enum class API(private val value: Int) {
     val description: String
         get() = when (this) {
             auto -> "(automatic)"
-            html -> "(HTML)"
-            v1_14 -> "1.14"
-            v1_15 -> "1.15"
-            v1_19_1 -> "1.19.1"
-            v1_23 -> "1.23"
             v1_32 -> "1.32"
             v1_40 -> "1.40"
             v1_50 -> "1.50"
@@ -49,11 +46,6 @@ enum class API(private val value: Int) {
 
     fun getDescription(resources: Resources): String = when (this) {
         auto -> resources.getString(R.string.api_auto)
-        html -> resources.getString(R.string.api_html)
-        v1_14 -> resources.getString(R.string.api_1_14)
-        v1_15 -> resources.getString(R.string.api_1_15)
-        v1_19_1 -> resources.getString(R.string.api_1_19_1)
-        v1_23 -> resources.getString(R.string.api_1_23)
         v1_32 -> resources.getString(R.string.api_1_32)
         v1_40 -> resources.getString(R.string.api_1_40)
         v1_50 -> resources.getString(R.string.api_1_50)
@@ -63,7 +55,7 @@ enum class API(private val value: Int) {
         private val map = SparseArray<API>()
 
         @JvmField
-        val allVersions = arrayOf(v1_50, v1_40, v1_32, v1_23, v1_19_1, v1_15, v1_14)
+        val allVersions = arrayOf(v1_50, v1_40, v1_32)
 
         init {
             for (item in entries) {
@@ -71,6 +63,12 @@ enum class API(private val value: Int) {
             }
         }
 
+        /**
+         * Convert integer value to API enum.
+         *
+         * Legacy values (html, v1_14, v1_15, v1_19_1, v1_23) are mapped to auto
+         * for backward compatibility after database migration.
+         */
         @JvmStatic
         fun valueOf(i: Int): API = map.get(i, auto)
     }
