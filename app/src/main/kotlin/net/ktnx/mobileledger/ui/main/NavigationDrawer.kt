@@ -63,7 +63,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import net.ktnx.mobileledger.BuildConfig
 import net.ktnx.mobileledger.R
-import net.ktnx.mobileledger.utils.Colors
+import net.ktnx.mobileledger.di.ThemeServiceEntryPoint
+import net.ktnx.mobileledger.service.ThemeService
 import org.burnoutcrew.reorderable.ReorderableItem
 import org.burnoutcrew.reorderable.detectReorderAfterLongPress
 import org.burnoutcrew.reorderable.rememberReorderableLazyListState
@@ -221,11 +222,9 @@ private fun ProfileRow(
     }
 
     val themeColor = remember(profile.theme) {
-        if (profile.theme == -1) {
-            Color(Colors.getPrimaryColorForHue(Colors.DEFAULT_HUE_DEG))
-        } else {
-            Color(Colors.getPrimaryColorForHue(profile.theme))
-        }
+        val themeService = ThemeServiceEntryPoint.get()
+        val hue = if (profile.theme == -1) ThemeService.DEFAULT_HUE_DEG else profile.theme
+        Color(themeService.getPrimaryColorForHue(hue))
     }
 
     Row(

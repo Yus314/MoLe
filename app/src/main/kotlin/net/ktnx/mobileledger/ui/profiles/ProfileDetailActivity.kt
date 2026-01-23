@@ -23,12 +23,13 @@ import android.os.Bundle
 import androidx.activity.compose.setContent
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.Locale
+import javax.inject.Inject
 import logcat.logcat
+import net.ktnx.mobileledger.service.ThemeService
 import net.ktnx.mobileledger.ui.activity.CrashReportingActivity
 import net.ktnx.mobileledger.ui.components.CrashReportDialog
 import net.ktnx.mobileledger.ui.profile.ProfileDetailScreen
 import net.ktnx.mobileledger.ui.theme.MoLeTheme
-import net.ktnx.mobileledger.utils.Colors
 
 /**
  * An activity representing a single Profile detail screen.
@@ -36,6 +37,9 @@ import net.ktnx.mobileledger.utils.Colors
  */
 @AndroidEntryPoint
 class ProfileDetailActivity : CrashReportingActivity() {
+
+    @Inject
+    lateinit var themeService: ThemeService
 
     private var profileId: Long = -1L
     private var themeHue: Int = -1
@@ -50,7 +54,7 @@ class ProfileDetailActivity : CrashReportingActivity() {
         }
 
         // Set up the theme for the activity
-        Colors.setupTheme(this, themeHue)
+        themeService.setupTheme(this, themeHue)
 
         super.onCreate(savedInstanceState)
 

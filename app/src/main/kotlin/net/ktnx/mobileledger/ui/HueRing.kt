@@ -34,10 +34,13 @@ import kotlin.math.hypot
 import kotlin.math.min
 import kotlin.math.sin
 import logcat.logcat
-import net.ktnx.mobileledger.utils.Colors
+import net.ktnx.mobileledger.di.ThemeServiceEntryPoint
+import net.ktnx.mobileledger.service.ThemeService
 import net.ktnx.mobileledger.utils.dp2px
 
 class HueRing : View {
+    private val themeService: ThemeService by lazy { ThemeServiceEntryPoint.get() }
+
     private lateinit var ringPaint: Paint
     private lateinit var initialPaint: Paint
     private lateinit var currentPaint: Paint
@@ -65,20 +68,20 @@ class HueRing : View {
         get() = _hueDegrees
 
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs) {
-        init(Colors.DEFAULT_HUE_DEG)
+        init(ThemeService.DEFAULT_HUE_DEG)
     }
 
     constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int) : super(context, attrs, defStyleAttr) {
-        init(Colors.DEFAULT_HUE_DEG)
+        init(ThemeService.DEFAULT_HUE_DEG)
     }
 
     constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int, defStyleRes: Int) :
         super(context, attrs, defStyleAttr, defStyleRes) {
-        init(Colors.DEFAULT_HUE_DEG)
+        init(ThemeService.DEFAULT_HUE_DEG)
     }
 
     constructor(context: Context) : super(context) {
-        init(Colors.DEFAULT_HUE_DEG)
+        init(ThemeService.DEFAULT_HUE_DEG)
     }
 
     constructor(context: Context, initialHueDegrees: Int) : super(context) {
@@ -87,13 +90,13 @@ class HueRing : View {
 
     private fun init(initialHueDegrees: Int) {
         val steps = intArrayOf(
-            Colors.getPrimaryColorForHue(0), // red
-            Colors.getPrimaryColorForHue(60), // yellow
-            Colors.getPrimaryColorForHue(120), // green
-            Colors.getPrimaryColorForHue(180), // cyan
-            Colors.getPrimaryColorForHue(240), // blue
-            Colors.getPrimaryColorForHue(300), // magenta
-            Colors.getPrimaryColorForHue(360) // red, again
+            themeService.getPrimaryColorForHue(0), // red
+            themeService.getPrimaryColorForHue(60), // yellow
+            themeService.getPrimaryColorForHue(120), // green
+            themeService.getPrimaryColorForHue(180), // cyan
+            themeService.getPrimaryColorForHue(240), // blue
+            themeService.getPrimaryColorForHue(300), // magenta
+            themeService.getPrimaryColorForHue(360) // red, again
         )
         val rainbow = SweepGradient(0f, 0f, steps, null)
 
@@ -127,10 +130,10 @@ class HueRing : View {
     fun setHue(hueDegrees: Int) {
         var adjustedHue = hueDegrees
         if (adjustedHue == -1) {
-            adjustedHue = Colors.DEFAULT_HUE_DEG
+            adjustedHue = ThemeService.DEFAULT_HUE_DEG
         }
 
-        if (adjustedHue != Colors.DEFAULT_HUE_DEG) {
+        if (adjustedHue != ThemeService.DEFAULT_HUE_DEG) {
             // round to hueStepDegrees
             val rem = adjustedHue % hueStepDegrees
             adjustedHue = if (rem < hueStepDegrees / 2) {
@@ -141,7 +144,7 @@ class HueRing : View {
         }
 
         this._hueDegrees = adjustedHue
-        this._color = Colors.getPrimaryColorForHue(adjustedHue)
+        this._color = themeService.getPrimaryColorForHue(adjustedHue)
         currentPaint.color = this._color
         invalidate()
     }
@@ -276,10 +279,10 @@ class HueRing : View {
     fun setInitialHue(initialHue: Int) {
         var hue = initialHue
         if (hue == -1) {
-            hue = Colors.DEFAULT_HUE_DEG
+            hue = ThemeService.DEFAULT_HUE_DEG
         }
         this.initialHueDegrees = hue
-        this.initialPaint.color = Colors.getPrimaryColorForHue(hue)
+        this.initialPaint.color = themeService.getPrimaryColorForHue(hue)
         invalidate()
     }
 

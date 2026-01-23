@@ -44,6 +44,7 @@ import net.ktnx.mobileledger.R
 import net.ktnx.mobileledger.data.repository.OptionRepository
 import net.ktnx.mobileledger.domain.model.Profile
 import net.ktnx.mobileledger.service.AppStateService
+import net.ktnx.mobileledger.service.ThemeService
 import net.ktnx.mobileledger.ui.components.CrashReportDialog
 import net.ktnx.mobileledger.ui.main.AccountSummaryEffect
 import net.ktnx.mobileledger.ui.main.AccountSummaryViewModel
@@ -59,7 +60,6 @@ import net.ktnx.mobileledger.ui.main.TransactionListViewModel
 import net.ktnx.mobileledger.ui.profiles.ProfileDetailActivity
 import net.ktnx.mobileledger.ui.templates.TemplatesActivity
 import net.ktnx.mobileledger.ui.theme.MoLeTheme
-import net.ktnx.mobileledger.utils.Colors
 
 /**
  * Main activity using Jetpack Compose for the UI.
@@ -256,10 +256,10 @@ class MainActivityCompose : ProfileThemedActivity() {
     }
 
     private fun onProfileChanged(newProfile: Profile?) {
-        val newProfileTheme = newProfile?.theme ?: Colors.DEFAULT_HUE_DEG
-        if (newProfileTheme != Colors.profileThemeId) {
-            logcat { "profile theme ${Colors.profileThemeId} → $newProfileTheme" }
-            Colors.profileThemeId = newProfileTheme
+        val newProfileTheme = newProfile?.theme ?: ThemeService.DEFAULT_HUE_DEG
+        if (newProfileTheme != themeService.currentThemeHue.value) {
+            logcat { "profile theme ${themeService.currentThemeHue.value} → $newProfileTheme" }
+            themeService.setCurrentThemeHue(newProfileTheme)
             profileThemeChanged()
             return
         }

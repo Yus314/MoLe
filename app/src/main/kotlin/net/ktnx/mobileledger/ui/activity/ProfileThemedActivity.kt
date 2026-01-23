@@ -31,7 +31,7 @@ import net.ktnx.mobileledger.data.repository.PreferencesRepository
 import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.di.BackupEntryPoint
 import net.ktnx.mobileledger.domain.model.Profile
-import net.ktnx.mobileledger.utils.Colors
+import net.ktnx.mobileledger.service.ThemeService
 
 @SuppressLint("Registered")
 open class ProfileThemedActivity : CrashReportingActivity() {
@@ -53,6 +53,10 @@ open class ProfileThemedActivity : CrashReportingActivity() {
         BackupEntryPoint.get(this).ioDispatcher()
     }
 
+    protected val themeService: ThemeService by lazy {
+        BackupEntryPoint.get(this).themeService()
+    }
+
     protected fun setupProfileColors(newHue: Int) {
         if (themeSetUp && newHue == mThemeHue) {
             logcat { "Ignore request to set theme to the same value ($newHue)" }
@@ -62,7 +66,7 @@ open class ProfileThemedActivity : CrashReportingActivity() {
         logcat { "Changing theme from $mThemeHue to $newHue" }
 
         mThemeHue = newHue
-        Colors.setupTheme(this, mThemeHue)
+        themeService.setupTheme(this, mThemeHue)
 
         if (themeSetUp) {
             logcat { "setupProfileColors(): theme already set up, supposedly the activity will be recreated" }
@@ -70,12 +74,12 @@ open class ProfileThemedActivity : CrashReportingActivity() {
         }
         themeSetUp = true
 
-        Colors.profileThemeId = mThemeHue
+        themeService.setCurrentThemeHue(mThemeHue)
     }
 
     override fun onStart() {
         super.onStart()
-        Colors.refreshColors(theme)
+        themeService.refreshColors(theme)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -114,7 +118,7 @@ open class ProfileThemedActivity : CrashReportingActivity() {
         val profileId = preferencesRepository.getStartupProfileId()
         val hue = preferencesRepository.getStartupTheme()
         if (profileId == -1L) {
-            mThemeHue = Colors.DEFAULT_HUE_DEG
+            mThemeHue = ThemeService.DEFAULT_HUE_DEG
         }
 
         logcat { "initProfile() calling setupProfileColors($hue)" }
