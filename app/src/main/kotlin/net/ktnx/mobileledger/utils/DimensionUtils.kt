@@ -38,15 +38,3 @@ fun Context.sp2px(sp: Float): Int = TypedValue.applyDimension(
     sp,
     resources.displayMetrics
 ).roundToInt()
-
-// Legacy object for backward compatibility - will be removed in future
-@Deprecated("Use Context.dp2px() and Context.sp2px() extension functions instead")
-object DimensionUtils {
-    @JvmStatic
-    @Deprecated("Use Context.dp2px() instead", ReplaceWith("context.dp2px(dp)"))
-    fun dp2px(context: Context, dp: Float): Int = context.dp2px(dp)
-
-    @JvmStatic
-    @Deprecated("Use Context.sp2px() instead", ReplaceWith("context.sp2px(sp)"))
-    fun sp2px(context: Context, sp: Float): Int = context.sp2px(sp)
-}

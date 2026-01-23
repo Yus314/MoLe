@@ -191,7 +191,8 @@ class MainActivityCompose : ProfileThemedActivity() {
                         }
 
                         is MainCoordinatorEffect.ShowError -> {
-                            // TODO: Show snackbar
+                            // TODO: Add SnackbarHostState to MainScreen and show error message
+                            // effect.message contains the error text to display
                         }
                     }
                 }

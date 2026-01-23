@@ -22,7 +22,7 @@ import kotlin.math.abs
 import kotlin.math.round
 import logcat.logcat
 import net.ktnx.mobileledger.di.CurrencyFormatterEntryPoint
-import net.ktnx.mobileledger.utils.Misc
+import net.ktnx.mobileledger.utils.emptyToNull
 
 /**
  * Represents the display style for currency amounts.
@@ -52,7 +52,7 @@ data class AmountStyle(
             Position.AFTER -> "AFTER"
             Position.NONE -> "NONE"
         }
-        val mark = if (Misc.emptyIsNull(decimalMark) == null) "." else decimalMark
+        val mark = if (decimalMark.emptyToNull() == null) "." else decimalMark
         return String.format("%s:%b:%d:%s", posStr, isCommoditySpaced, precision, mark)
     }
 

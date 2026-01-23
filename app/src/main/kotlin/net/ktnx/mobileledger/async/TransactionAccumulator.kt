@@ -24,8 +24,8 @@ import net.ktnx.mobileledger.domain.model.Transaction
 import net.ktnx.mobileledger.service.CurrencyFormatter
 import net.ktnx.mobileledger.ui.main.TransactionAccountDisplayItem
 import net.ktnx.mobileledger.ui.main.TransactionListDisplayItem
-import net.ktnx.mobileledger.utils.Misc
 import net.ktnx.mobileledger.utils.SimpleDate
+import net.ktnx.mobileledger.utils.emptyToNull
 
 class TransactionAccumulator(
     private val boldAccountName: String?,
@@ -110,7 +110,7 @@ class TransactionAccumulator(
             if (b.isNotEmpty()) {
                 b.append('\n')
             }
-            if (Misc.emptyIsNull(currency) != null) {
+            if (currency.emptyToNull() != null) {
                 b.append(currency).append(' ')
             }
             val value = runningTotal[currency]

@@ -115,7 +115,10 @@ internal fun ProfilePostingOptionsSection(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable {
-                            // TODO: Open currency selector dialog
+                            // TODO: Integrate CurrencyPickerDialog - requires:
+                            // 1. Add showCurrencyPickerDialog state to ProfileDetailUiState
+                            // 2. Add ShowCurrencyPickerDialog/DismissCurrencyPickerDialog events
+                            // 3. Load currencies from CurrencyRepository via ViewModel
                         },
                     verticalAlignment = Alignment.CenterVertically
                 ) {
