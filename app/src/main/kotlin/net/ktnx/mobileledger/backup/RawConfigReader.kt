@@ -17,15 +17,14 @@
 
 package net.ktnx.mobileledger.backup
 
-import android.util.JsonReader
-import android.util.JsonToken
-import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStream
-import java.io.InputStreamReader
 import kotlin.coroutines.coroutineContext
 import kotlinx.coroutines.ensureActive
+import kotlinx.serialization.json.Json
 import logcat.logcat
+import net.ktnx.mobileledger.backup.model.BackupMapper.toDbEntity
+import net.ktnx.mobileledger.backup.model.BackupModel
 import net.ktnx.mobileledger.data.repository.CurrencyRepository
 import net.ktnx.mobileledger.data.repository.PreferencesRepository
 import net.ktnx.mobileledger.data.repository.ProfileRepository
@@ -38,16 +37,17 @@ import net.ktnx.mobileledger.db.Profile
 import net.ktnx.mobileledger.db.TemplateWithAccounts
 
 /**
- * Reads and restores backup configuration from JSON input.
+ * Reads and restores backup configuration from JSON input using kotlinx-serialization.
  *
- * Coordinates the parsing of currencies, profiles, and templates using
- * dedicated parser classes, then restores them to their respective repositories.
+ * Coordinates the parsing of currencies, profiles, and templates,
+ * then restores them to their respective repositories.
  */
-class RawConfigReader(inputStream: InputStream) {
-    private val reader: JsonReader = JsonReader(BufferedReader(InputStreamReader(inputStream)))
-    private val currencyParser = CurrencyBackupParser()
-    private val profileParser = ProfileBackupParser()
-    private val templateParser = TemplateBackupParser()
+class RawConfigReader(private val inputStream: InputStream) {
+    private val backupJson = Json {
+        ignoreUnknownKeys = true
+        isLenient = true
+        coerceInputValues = true
+    }
 
     var commodities: List<Currency>? = null
         private set
@@ -65,22 +65,13 @@ class RawConfigReader(inputStream: InputStream) {
         templates = null
         currentProfile = null
 
-        reader.beginObject()
-        while (reader.hasNext()) {
-            val item = reader.nextName()
-            if (reader.peek() == JsonToken.NULL) {
-                reader.nextNull()
-                continue
-            }
-            when (item) {
-                BackupKeys.COMMODITIES -> commodities = currencyParser.parse(reader)
-                BackupKeys.PROFILES -> profiles = profileParser.parse(reader)
-                BackupKeys.TEMPLATES -> templates = templateParser.parse(reader)
-                BackupKeys.CURRENT_PROFILE -> currentProfile = reader.nextString()
-                else -> throw RuntimeException("unexpected top-level item $item")
-            }
-        }
-        reader.endObject()
+        val json = inputStream.bufferedReader().use { it.readText() }
+        val backup = backupJson.decodeFromString(BackupModel.serializer(), json)
+
+        commodities = backup.commodities?.map { it.toDbEntity() }
+        profiles = backup.profiles?.map { it.toDbEntity() }
+        templates = backup.templates?.map { it.toDbEntity() }
+        currentProfile = backup.currentProfile
     }
 
     suspend fun restoreAll(

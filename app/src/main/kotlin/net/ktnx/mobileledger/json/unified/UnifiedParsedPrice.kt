@@ -17,15 +17,15 @@
 
 package net.ktnx.mobileledger.json.unified
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import kotlinx.serialization.Serializable
 
 /**
  * 統合 ParsedPrice - hledger API v1_32+ 用
  *
  * 価格/為替レート情報を表す。
  */
-@JsonIgnoreProperties(ignoreUnknown = true)
-class UnifiedParsedPrice {
+@Serializable
+data class UnifiedParsedPrice(
     /** 価格タグ（"NoPrice", "UnitPrice", "TotalPrice"） */
-    var tag: String = "NoPrice"
-}
+    val tag: String = "NoPrice"
+)

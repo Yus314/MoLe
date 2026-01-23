@@ -20,10 +20,10 @@ package net.ktnx.mobileledger.json.unified
 import java.text.ParseException
 import net.ktnx.mobileledger.domain.model.Transaction
 import net.ktnx.mobileledger.domain.model.TransactionLine
+import net.ktnx.mobileledger.json.MoLeJson
 import net.ktnx.mobileledger.json.config.ApiVersionConfig
 import net.ktnx.mobileledger.utils.SimpleDate
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -33,7 +33,7 @@ import org.junit.Test
  *
  * Tests verify:
  * - Default values
- * - Property accessors
+ * - Constructor initialization
  * - Domain model conversion
  * - tsourcepos handling for different API versions (v1_32+)
  */
@@ -92,96 +92,61 @@ class UnifiedParsedLedgerTransactionTest {
     }
 
     // ========================================
-    // Property setter tests
+    // Constructor initialization tests
     // ========================================
 
     @Test
-    fun `tdate can be set`() {
-        val tx = UnifiedParsedLedgerTransaction()
-        tx.tdate = "2024-06-15"
+    fun `can create tx with tdate`() {
+        val tx = UnifiedParsedLedgerTransaction(tdate = "2024-06-15")
         assertEquals("2024-06-15", tx.tdate)
     }
 
     @Test
-    fun `tdescription can be set`() {
-        val tx = UnifiedParsedLedgerTransaction()
-        tx.tdescription = "Test transaction"
+    fun `can create tx with tdescription`() {
+        val tx = UnifiedParsedLedgerTransaction(tdescription = "Test transaction")
         assertEquals("Test transaction", tx.tdescription)
     }
 
     @Test
-    fun `tcomment can be set`() {
-        val tx = UnifiedParsedLedgerTransaction()
-        tx.tcomment = "A comment"
+    fun `can create tx with tcomment`() {
+        val tx = UnifiedParsedLedgerTransaction(tcomment = "A comment")
         assertEquals("A comment", tx.tcomment)
     }
 
     @Test
-    fun `tstatus can be set`() {
-        val tx = UnifiedParsedLedgerTransaction()
-        tx.tstatus = "Cleared"
+    fun `can create tx with tstatus`() {
+        val tx = UnifiedParsedLedgerTransaction(tstatus = "Cleared")
         assertEquals("Cleared", tx.tstatus)
     }
 
-    // ========================================
-    // tindex setter tests
-    // ========================================
-
     @Test
-    fun `tindex setter updates postings ptransaction_`() {
-        val tx = UnifiedParsedLedgerTransaction()
-        val posting = UnifiedParsedPosting()
-        tx.tpostings = mutableListOf(posting)
-
-        tx.tindex = 42
-
-        assertEquals("42", posting.ptransaction_)
-    }
-
-    @Test
-    fun `tindex setter handles null postings`() {
-        val tx = UnifiedParsedLedgerTransaction()
-        tx.tpostings = null
-
-        // Should not throw exception
-        tx.tindex = 42
+    fun `can create tx with tindex`() {
+        val tx = UnifiedParsedLedgerTransaction(tindex = 42)
         assertEquals(42, tx.tindex)
     }
 
-    // ========================================
-    // addPosting tests
-    // ========================================
-
     @Test
-    fun `addPosting creates list if null`() {
-        val tx = UnifiedParsedLedgerTransaction()
-        assertNull(tx.tpostings)
-
-        tx.addPosting(UnifiedParsedPosting())
-
-        assertNotNull(tx.tpostings)
-        assertEquals(1, tx.tpostings!!.size)
-    }
-
-    @Test
-    fun `addPosting appends to existing list`() {
-        val tx = UnifiedParsedLedgerTransaction()
-        tx.tpostings = mutableListOf(UnifiedParsedPosting())
-
-        tx.addPosting(UnifiedParsedPosting())
+    fun `can create tx with tpostings`() {
+        val tx = UnifiedParsedLedgerTransaction(
+            tpostings = listOf(
+                UnifiedParsedPosting(paccount = "Assets:Bank"),
+                UnifiedParsedPosting(paccount = "Expenses:Food")
+            )
+        )
 
         assertEquals(2, tx.tpostings!!.size)
     }
 
     @Test
-    fun `addPosting sets ptransaction_ to tindex`() {
-        val tx = UnifiedParsedLedgerTransaction()
-        tx.tindex = 99
-        val posting = UnifiedParsedPosting()
+    fun `can create tx with tsourcepos`() {
+        val tx = UnifiedParsedLedgerTransaction(
+            tsourcepos = listOf(
+                UnifiedParsedSourcePos(sourceName = "test.journal", sourceLine = 10)
+            )
+        )
 
-        tx.addPosting(posting)
-
-        assertEquals("99", posting.ptransaction_)
+        assertEquals(1, tx.tsourcepos.size)
+        assertEquals("test.journal", tx.tsourcepos[0].sourceName)
     }
 
     // ========================================
@@ -190,11 +155,11 @@ class UnifiedParsedLedgerTransactionTest {
 
     @Test
     fun `toDomain converts basic transaction`() {
-        val tx = UnifiedParsedLedgerTransaction().apply {
-            tdate = "2024-06-15"
-            tdescription = "Test description"
+        val tx = UnifiedParsedLedgerTransaction(
+            tdate = "2024-06-15",
+            tdescription = "Test description",
             tindex = 1
-        }
+        )
 
         val domain = tx.toDomain()
 
@@ -204,10 +169,10 @@ class UnifiedParsedLedgerTransactionTest {
 
     @Test
     fun `toDomain converts date correctly`() {
-        val tx = UnifiedParsedLedgerTransaction().apply {
-            tdate = "2024-06-15"
+        val tx = UnifiedParsedLedgerTransaction(
+            tdate = "2024-06-15",
             tindex = 1
-        }
+        )
 
         val domain = tx.toDomain()
 
@@ -218,28 +183,24 @@ class UnifiedParsedLedgerTransactionTest {
 
     @Test(expected = ParseException::class)
     fun `toDomain throws for null date`() {
-        val tx = UnifiedParsedLedgerTransaction().apply {
-            tdate = null
+        val tx = UnifiedParsedLedgerTransaction(
+            tdate = null,
             tdescription = "Test"
-        }
+        )
 
         tx.toDomain()
     }
 
     @Test
     fun `toDomain converts postings`() {
-        val tx = UnifiedParsedLedgerTransaction().apply {
-            tdate = "2024-06-15"
-            tindex = 1
-            tpostings = mutableListOf(
-                UnifiedParsedPosting().apply {
-                    paccount = "Assets:Bank"
-                },
-                UnifiedParsedPosting().apply {
-                    paccount = "Expenses:Food"
-                }
+        val tx = UnifiedParsedLedgerTransaction(
+            tdate = "2024-06-15",
+            tindex = 1,
+            tpostings = listOf(
+                UnifiedParsedPosting(paccount = "Assets:Bank"),
+                UnifiedParsedPosting(paccount = "Expenses:Food")
             )
-        }
+        )
 
         val domain = tx.toDomain()
 
@@ -250,10 +211,10 @@ class UnifiedParsedLedgerTransactionTest {
 
     @Test
     fun `toDomain handles null postings`() {
-        val tx = UnifiedParsedLedgerTransaction().apply {
-            tdate = "2024-06-15"
+        val tx = UnifiedParsedLedgerTransaction(
+            tdate = "2024-06-15",
             tpostings = null
-        }
+        )
 
         val domain = tx.toDomain()
 
@@ -262,10 +223,10 @@ class UnifiedParsedLedgerTransactionTest {
 
     @Test
     fun `toDomain trims comment`() {
-        val tx = UnifiedParsedLedgerTransaction().apply {
-            tdate = "2024-06-15"
+        val tx = UnifiedParsedLedgerTransaction(
+            tdate = "2024-06-15",
             tcomment = "  trimmed comment  "
-        }
+        )
 
         val domain = tx.toDomain()
 
@@ -274,10 +235,10 @@ class UnifiedParsedLedgerTransactionTest {
 
     @Test
     fun `toDomain returns null for empty comment`() {
-        val tx = UnifiedParsedLedgerTransaction().apply {
-            tdate = "2024-06-15"
+        val tx = UnifiedParsedLedgerTransaction(
+            tdate = "2024-06-15",
             tcomment = "   "
-        }
+        )
 
         val domain = tx.toDomain()
 
@@ -396,8 +357,9 @@ class UnifiedParsedLedgerTransactionTest {
 
     @Test
     fun `getSourcePosForSerialization returns list for v1_50`() {
-        val tx = UnifiedParsedLedgerTransaction()
-        tx.tsourcepos.add(UnifiedParsedSourcePos())
+        val tx = UnifiedParsedLedgerTransaction(
+            tsourcepos = listOf(UnifiedParsedSourcePos())
+        )
 
         val result = UnifiedParsedLedgerTransaction.getSourcePosForSerialization(tx, ApiVersionConfig.V1_50)
 
@@ -406,61 +368,13 @@ class UnifiedParsedLedgerTransactionTest {
 
     @Test
     fun `getSourcePosForSerialization returns single object for v1_32_40`() {
-        val tx = UnifiedParsedLedgerTransaction()
-        tx.tsourcepos.add(UnifiedParsedSourcePos())
+        val tx = UnifiedParsedLedgerTransaction(
+            tsourcepos = listOf(UnifiedParsedSourcePos())
+        )
 
         val result = UnifiedParsedLedgerTransaction.getSourcePosForSerialization(tx, ApiVersionConfig.V1_32_40)
 
         assertTrue(result is UnifiedParsedSourcePos)
-    }
-
-    // ========================================
-    // setTsourceposFromJson tests
-    // ========================================
-
-    @Test
-    fun `setTsourceposFromJson handles Map input`() {
-        val tx = UnifiedParsedLedgerTransaction()
-        val map = mapOf("sourceName" to "test.journal", "sourceLine" to 10, "sourceColumn" to 1)
-
-        tx.setTsourceposFromJson(map)
-
-        assertEquals(1, tx.tsourcepos.size)
-        assertEquals("test.journal", tx.tsourcepos[0].sourceName)
-        assertEquals(10, tx.tsourcepos[0].sourceLine)
-    }
-
-    @Test
-    fun `setTsourceposFromJson handles List input`() {
-        val tx = UnifiedParsedLedgerTransaction()
-        val list = listOf(
-            mapOf("sourceName" to "a.journal", "sourceLine" to 1),
-            mapOf("sourceName" to "b.journal", "sourceLine" to 2)
-        )
-
-        tx.setTsourceposFromJson(list)
-
-        assertEquals(2, tx.tsourcepos.size)
-    }
-
-    @Test
-    fun `setTsourceposFromJson adds default for null`() {
-        val tx = UnifiedParsedLedgerTransaction()
-
-        tx.setTsourceposFromJson(null)
-
-        assertEquals(1, tx.tsourcepos.size)
-    }
-
-    @Test
-    fun `setTsourceposFromJson clears previous values`() {
-        val tx = UnifiedParsedLedgerTransaction()
-        tx.tsourcepos.add(UnifiedParsedSourcePos())
-        tx.tsourcepos.add(UnifiedParsedSourcePos())
-
-        tx.setTsourceposFromJson(mapOf("tag" to "New"))
-
-        assertEquals(1, tx.tsourcepos.size)
     }
 
     // ========================================
@@ -475,5 +389,52 @@ class UnifiedParsedLedgerTransactionTest {
         val result = converter(42)
 
         assertEquals("42", result)
+    }
+
+    // ========================================
+    // JSON serialization tests
+    // ========================================
+
+    @Test
+    fun `deserialize transaction from JSON`() {
+        val json = """
+            {
+                "tdate": "2024-06-15",
+                "tdescription": "Test transaction",
+                "tindex": 1,
+                "tpostings": [
+                    {"paccount": "Assets:Bank"}
+                ],
+                "tsourcepos": {"sourceName": "test.journal", "sourceLine": 10}
+            }
+        """.trimIndent()
+
+        val tx = MoLeJson.decodeFromString<UnifiedParsedLedgerTransaction>(json)
+
+        assertEquals("2024-06-15", tx.tdate)
+        assertEquals("Test transaction", tx.tdescription)
+        assertEquals(1, tx.tindex)
+        assertEquals(1, tx.tpostings?.size)
+        assertEquals("Assets:Bank", tx.tpostings?.get(0)?.paccount)
+    }
+
+    @Test
+    fun `deserialize transaction with tsourcepos array (v1_50)`() {
+        val json = """
+            {
+                "tdate": "2024-06-15",
+                "tdescription": "Test",
+                "tsourcepos": [
+                    {"sourceName": "a.journal", "sourceLine": 1},
+                    {"sourceName": "b.journal", "sourceLine": 2}
+                ]
+            }
+        """.trimIndent()
+
+        val tx = MoLeJson.decodeFromString<UnifiedParsedLedgerTransaction>(json)
+
+        assertEquals(2, tx.tsourcepos.size)
+        assertEquals("a.journal", tx.tsourcepos[0].sourceName)
+        assertEquals("b.journal", tx.tsourcepos[1].sourceName)
     }
 }

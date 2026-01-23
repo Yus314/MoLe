@@ -17,15 +17,12 @@
 
 package net.ktnx.mobileledger.json
 
-import com.fasterxml.jackson.databind.MappingIterator
 import java.io.IOException
 import java.io.InputStream
 import logcat.logcat
 import net.ktnx.mobileledger.domain.model.Account
 
 abstract class AccountListParser {
-    protected lateinit var iterator: MappingIterator<ParsedLedgerAccount>
-
     abstract val apiVersion: API
 
     /**
@@ -36,18 +33,10 @@ abstract class AccountListParser {
      *
      * @return The next Account or null if no more accounts
      */
-    open fun nextAccountDomain(): Account? {
-        if (!iterator.hasNext()) return null
+    abstract fun nextAccountDomain(): Account?
 
-        val parsed = iterator.next()
-
-        if (parsed.aname.equals("root", ignoreCase = true)) {
-            return nextAccountDomain()
-        }
-
-        val account = parsed.toDomain()
+    protected fun logAccount(account: Account) {
         logcat { "Got account '${account.name}' [${apiVersion.description}]" }
-        return account
     }
 
     companion object {

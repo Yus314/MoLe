@@ -18,12 +18,12 @@
 package net.ktnx.mobileledger.domain.usecase.sync
 
 import android.os.OperationCanceledException
-import com.fasterxml.jackson.databind.RuntimeJsonMappingException
 import java.io.IOException
 import java.net.MalformedURLException
 import java.net.SocketTimeoutException
 import java.text.ParseException
 import kotlinx.coroutines.CancellationException
+import kotlinx.serialization.SerializationException
 import net.ktnx.mobileledger.domain.model.SyncError
 import net.ktnx.mobileledger.domain.model.SyncException
 import net.ktnx.mobileledger.json.ApiNotSupportedException
@@ -127,9 +127,9 @@ class SyncExceptionMapperTest {
     }
 
     @Test
-    fun `mapToSyncException maps RuntimeJsonMappingException to ParseError`() {
+    fun `mapToSyncException maps SerializationException to ParseError`() {
         // Given
-        val exception = RuntimeJsonMappingException("Invalid JSON")
+        val exception = SerializationException("Invalid JSON")
 
         // When
         val result = mapper.mapToSyncException(exception)

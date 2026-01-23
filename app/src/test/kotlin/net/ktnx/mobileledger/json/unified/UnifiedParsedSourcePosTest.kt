@@ -17,7 +17,7 @@
 
 package net.ktnx.mobileledger.json.unified
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import net.ktnx.mobileledger.json.MoLeJson
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -26,7 +26,7 @@ import org.junit.Test
  *
  * Tests verify:
  * - Default values
- * - Property accessors
+ * - Constructor initialization
  * - JSON deserialization for v1_32+ format
  */
 class UnifiedParsedSourcePosTest {
@@ -54,28 +54,38 @@ class UnifiedParsedSourcePosTest {
     }
 
     // ========================================
-    // Property setter tests
+    // Constructor initialization tests
     // ========================================
 
     @Test
-    fun `sourceName can be set`() {
-        val sourcePos = UnifiedParsedSourcePos()
-        sourcePos.sourceName = "myfile.journal"
+    fun `can create sourcePos with sourceName`() {
+        val sourcePos = UnifiedParsedSourcePos(sourceName = "myfile.journal")
         assertEquals("myfile.journal", sourcePos.sourceName)
     }
 
     @Test
-    fun `sourceLine can be set`() {
-        val sourcePos = UnifiedParsedSourcePos()
-        sourcePos.sourceLine = 42
+    fun `can create sourcePos with sourceLine`() {
+        val sourcePos = UnifiedParsedSourcePos(sourceLine = 42)
         assertEquals(42, sourcePos.sourceLine)
     }
 
     @Test
-    fun `sourceColumn can be set`() {
-        val sourcePos = UnifiedParsedSourcePos()
-        sourcePos.sourceColumn = 15
+    fun `can create sourcePos with sourceColumn`() {
+        val sourcePos = UnifiedParsedSourcePos(sourceColumn = 15)
         assertEquals(15, sourcePos.sourceColumn)
+    }
+
+    @Test
+    fun `can create complete sourcePos`() {
+        val sourcePos = UnifiedParsedSourcePos(
+            sourceName = "accounts.journal",
+            sourceLine = 100,
+            sourceColumn = 5
+        )
+
+        assertEquals("accounts.journal", sourcePos.sourceName)
+        assertEquals(100, sourcePos.sourceLine)
+        assertEquals(5, sourcePos.sourceColumn)
     }
 
     // ========================================
@@ -84,7 +94,6 @@ class UnifiedParsedSourcePosTest {
 
     @Test
     fun `deserialize with sourceName and sourceLine`() {
-        val mapper = ObjectMapper()
         val json = """
             {
                 "sourceName": "accounts.journal",
@@ -93,7 +102,7 @@ class UnifiedParsedSourcePosTest {
             }
         """.trimIndent()
 
-        val sourcePos = mapper.readValue(json, UnifiedParsedSourcePos::class.java)
+        val sourcePos = MoLeJson.decodeFromString<UnifiedParsedSourcePos>(json)
 
         assertEquals("accounts.journal", sourcePos.sourceName)
         assertEquals(100, sourcePos.sourceLine)
@@ -102,7 +111,6 @@ class UnifiedParsedSourcePosTest {
 
     @Test
     fun `deserialize ignores unknown properties`() {
-        val mapper = ObjectMapper()
         val json = """
             {
                 "sourceName": "test.journal",
@@ -113,7 +121,7 @@ class UnifiedParsedSourcePosTest {
         """.trimIndent()
 
         // Should not throw exception
-        val sourcePos = mapper.readValue(json, UnifiedParsedSourcePos::class.java)
+        val sourcePos = MoLeJson.decodeFromString<UnifiedParsedSourcePos>(json)
         assertEquals("test.journal", sourcePos.sourceName)
     }
 }

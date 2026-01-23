@@ -17,17 +17,36 @@
 
 package net.ktnx.mobileledger.json.v1_40
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import java.io.InputStream
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.json.decodeToSequence
+import net.ktnx.mobileledger.domain.model.Account
 import net.ktnx.mobileledger.json.API
 import net.ktnx.mobileledger.json.AccountListParser as BaseParser
+import net.ktnx.mobileledger.json.MoLeJson
+import net.ktnx.mobileledger.json.unified.UnifiedParsedLedgerAccount
 
+@OptIn(ExperimentalSerializationApi::class)
 class AccountListParser(input: InputStream) : BaseParser() {
     override val apiVersion: API = API.v1_40
 
+    private val iterator: Iterator<UnifiedParsedLedgerAccount>
+
     init {
-        val mapper = ObjectMapper()
-        val reader = mapper.readerFor(ParsedLedgerAccount::class.java)
-        iterator = reader.readValues(input)
+        iterator = MoLeJson.decodeToSequence<UnifiedParsedLedgerAccount>(input).iterator()
+    }
+
+    override fun nextAccountDomain(): Account? {
+        if (!iterator.hasNext()) return null
+
+        val parsed = iterator.next()
+
+        if (parsed.aname.equals("root", ignoreCase = true)) {
+            return nextAccountDomain()
+        }
+
+        val account = parsed.toDomain()
+        logAccount(account)
+        return account
     }
 }

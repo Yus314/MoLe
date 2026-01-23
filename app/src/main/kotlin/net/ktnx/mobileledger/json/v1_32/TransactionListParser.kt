@@ -17,20 +17,21 @@
 
 package net.ktnx.mobileledger.json.v1_32
 
-import com.fasterxml.jackson.databind.MappingIterator
-import com.fasterxml.jackson.databind.ObjectMapper
 import java.io.InputStream
 import java.text.ParseException
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.json.decodeToSequence
 import net.ktnx.mobileledger.domain.model.Transaction
+import net.ktnx.mobileledger.json.MoLeJson
 import net.ktnx.mobileledger.json.TransactionListParser as BaseParser
+import net.ktnx.mobileledger.json.unified.UnifiedParsedLedgerTransaction
 
+@OptIn(ExperimentalSerializationApi::class)
 class TransactionListParser(input: InputStream) : BaseParser() {
-    private val iterator: MappingIterator<ParsedLedgerTransaction>
+    private val iterator: Iterator<UnifiedParsedLedgerTransaction>
 
     init {
-        val mapper = ObjectMapper()
-        val reader = mapper.readerFor(ParsedLedgerTransaction::class.java)
-        iterator = reader.readValues(input)
+        iterator = MoLeJson.decodeToSequence<UnifiedParsedLedgerTransaction>(input).iterator()
     }
 
     @Throws(ParseException::class)

@@ -17,7 +17,7 @@
 
 package net.ktnx.mobileledger.json.unified
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import net.ktnx.mobileledger.json.MoLeJson
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -29,7 +29,7 @@ import org.junit.Test
  *
  * Tests verify:
  * - Default values
- * - Property accessors
+ * - Constructor initialization
  * - JSON deserialization with aliases
  */
 class UnifiedParsedAmountTest {
@@ -69,40 +69,38 @@ class UnifiedParsedAmountTest {
     }
 
     // ========================================
-    // Property setter tests
+    // Constructor initialization tests
     // ========================================
 
     @Test
-    fun `acommodity can be set`() {
-        val amount = UnifiedParsedAmount()
-        amount.acommodity = "USD"
+    fun `can create amount with acommodity`() {
+        val amount = UnifiedParsedAmount(acommodity = "USD")
         assertEquals("USD", amount.acommodity)
     }
 
     @Test
-    fun `aquantity can be set`() {
-        val amount = UnifiedParsedAmount()
-        amount.aquantity = UnifiedParsedQuantity().apply {
-            decimalMantissa = 10000L
-            decimalPlaces = 2
-        }
+    fun `can create amount with aquantity`() {
+        val amount = UnifiedParsedAmount(
+            aquantity = UnifiedParsedQuantity(
+                decimalMantissa = 10000L,
+                decimalPlaces = 2
+            )
+        )
         assertNotNull(amount.aquantity)
         assertEquals(100.0f, amount.aquantity!!.asFloat(), 0.01f)
     }
 
     @Test
-    fun `aismultiplier can be set to true`() {
-        val amount = UnifiedParsedAmount()
-        amount.aismultiplier = true
+    fun `can create amount with aismultiplier true`() {
+        val amount = UnifiedParsedAmount(aismultiplier = true)
         assertEquals(true, amount.aismultiplier)
     }
 
     @Test
-    fun `astyle can be set`() {
-        val amount = UnifiedParsedAmount()
-        amount.astyle = UnifiedParsedStyle().apply {
-            ascommodityside = 'L'
-        }
+    fun `can create amount with astyle`() {
+        val amount = UnifiedParsedAmount(
+            astyle = UnifiedParsedStyle(ascommodityside = 'L')
+        )
         assertNotNull(amount.astyle)
     }
 
@@ -112,19 +110,19 @@ class UnifiedParsedAmountTest {
 
     @Test
     fun `can create complete amount object`() {
-        val amount = UnifiedParsedAmount().apply {
-            acommodity = "EUR"
-            aquantity = UnifiedParsedQuantity().apply {
-                decimalMantissa = 5025L
+        val amount = UnifiedParsedAmount(
+            acommodity = "EUR",
+            aquantity = UnifiedParsedQuantity(
+                decimalMantissa = 5025L,
                 decimalPlaces = 2
-            }
-            aismultiplier = false
-            astyle = UnifiedParsedStyle().apply {
-                ascommodityside = 'R'
-                isAscommodityspaced = true
+            ),
+            aismultiplier = false,
+            astyle = UnifiedParsedStyle(
+                ascommodityside = 'R',
+                isAscommodityspaced = true,
                 asprecision = 2
-            }
-        }
+            )
+        )
 
         assertEquals("EUR", amount.acommodity)
         assertEquals(50.25f, amount.aquantity!!.asFloat(), 0.01f)
@@ -138,7 +136,6 @@ class UnifiedParsedAmountTest {
 
     @Test
     fun `deserialize amount from JSON`() {
-        val mapper = ObjectMapper()
         val json = """
             {
                 "acommodity": "USD",
@@ -150,7 +147,7 @@ class UnifiedParsedAmountTest {
             }
         """.trimIndent()
 
-        val amount = mapper.readValue(json, UnifiedParsedAmount::class.java)
+        val amount = MoLeJson.decodeFromString<UnifiedParsedAmount>(json)
 
         assertEquals("USD", amount.acommodity)
         assertEquals(100.50f, amount.aquantity!!.asFloat(), 0.01f)
@@ -159,7 +156,6 @@ class UnifiedParsedAmountTest {
 
     @Test
     fun `deserialize amount with aprice field`() {
-        val mapper = ObjectMapper()
         val json = """
             {
                 "acommodity": "BTC",
@@ -171,7 +167,7 @@ class UnifiedParsedAmountTest {
             }
         """.trimIndent()
 
-        val amount = mapper.readValue(json, UnifiedParsedAmount::class.java)
+        val amount = MoLeJson.decodeFromString<UnifiedParsedAmount>(json)
 
         assertEquals("BTC", amount.acommodity)
         assertNull(amount.aprice)
@@ -179,7 +175,6 @@ class UnifiedParsedAmountTest {
 
     @Test
     fun `deserialize amount with acost alias for aprice`() {
-        val mapper = ObjectMapper()
         val json = """
             {
                 "acommodity": "EUR",
@@ -191,7 +186,7 @@ class UnifiedParsedAmountTest {
             }
         """.trimIndent()
 
-        val amount = mapper.readValue(json, UnifiedParsedAmount::class.java)
+        val amount = MoLeJson.decodeFromString<UnifiedParsedAmount>(json)
 
         assertEquals("EUR", amount.acommodity)
         // acost should be aliased to aprice
@@ -200,7 +195,6 @@ class UnifiedParsedAmountTest {
 
     @Test
     fun `deserialize amount ignores unknown properties`() {
-        val mapper = ObjectMapper()
         val json = """
             {
                 "acommodity": "GBP",
@@ -210,13 +204,12 @@ class UnifiedParsedAmountTest {
         """.trimIndent()
 
         // Should not throw exception
-        val amount = mapper.readValue(json, UnifiedParsedAmount::class.java)
+        val amount = MoLeJson.decodeFromString<UnifiedParsedAmount>(json)
         assertEquals("GBP", amount.acommodity)
     }
 
     @Test
     fun `deserialize amount with style`() {
-        val mapper = ObjectMapper()
         val json = """
             {
                 "acommodity": "JPY",
@@ -233,7 +226,7 @@ class UnifiedParsedAmountTest {
             }
         """.trimIndent()
 
-        val amount = mapper.readValue(json, UnifiedParsedAmount::class.java)
+        val amount = MoLeJson.decodeFromString<UnifiedParsedAmount>(json)
 
         assertEquals("JPY", amount.acommodity)
         assertNotNull(amount.astyle)
@@ -243,7 +236,6 @@ class UnifiedParsedAmountTest {
 
     @Test
     fun `deserialize amount with aismultiplier true`() {
-        val mapper = ObjectMapper()
         val json = """
             {
                 "acommodity": "USD",
@@ -251,7 +243,7 @@ class UnifiedParsedAmountTest {
             }
         """.trimIndent()
 
-        val amount = mapper.readValue(json, UnifiedParsedAmount::class.java)
+        val amount = MoLeJson.decodeFromString<UnifiedParsedAmount>(json)
 
         assertEquals(true, amount.aismultiplier)
     }

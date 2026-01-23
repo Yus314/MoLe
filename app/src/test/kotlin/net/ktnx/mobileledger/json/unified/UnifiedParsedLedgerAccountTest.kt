@@ -17,8 +17,10 @@
 
 package net.ktnx.mobileledger.json.unified
 
+import net.ktnx.mobileledger.domain.model.AmountStyle
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -36,16 +38,16 @@ class UnifiedParsedLedgerAccountTest {
     // Helper methods
     // ========================================
 
-    private fun createQuantity(mantissa: Long, places: Int): UnifiedParsedQuantity = UnifiedParsedQuantity().apply {
-        decimalMantissa = mantissa
+    private fun createQuantity(mantissa: Long, places: Int): UnifiedParsedQuantity = UnifiedParsedQuantity(
+        decimalMantissa = mantissa,
         decimalPlaces = places
-    }
+    )
 
     private fun createBalance(commodity: String, mantissa: Long, places: Int): UnifiedParsedBalance =
-        UnifiedParsedBalance().apply {
-            acommodity = commodity
+        UnifiedParsedBalance(
+            acommodity = commodity,
             aquantity = createQuantity(mantissa, places)
-        }
+        )
 
     // ========================================
     // getSimpleBalance tests - aibalance format (v1_14-v1_40)
@@ -53,10 +55,10 @@ class UnifiedParsedLedgerAccountTest {
 
     @Test
     fun `getSimpleBalance returns balances from aibalance`() {
-        val account = UnifiedParsedLedgerAccount().apply {
-            aname = "Assets:Bank"
+        val account = UnifiedParsedLedgerAccount(
+            aname = "Assets:Bank",
             aibalance = listOf(createBalance("USD", 100000, 2))
-        }
+        )
 
         val balances = account.getSimpleBalance()
 
@@ -67,13 +69,13 @@ class UnifiedParsedLedgerAccountTest {
 
     @Test
     fun `getSimpleBalance returns multiple balances from aibalance`() {
-        val account = UnifiedParsedLedgerAccount().apply {
-            aname = "Assets:Bank"
+        val account = UnifiedParsedLedgerAccount(
+            aname = "Assets:Bank",
             aibalance = listOf(
                 createBalance("USD", 100000, 2),
                 createBalance("EUR", 50000, 2)
             )
-        }
+        )
 
         val balances = account.getSimpleBalance()
 
@@ -84,10 +86,10 @@ class UnifiedParsedLedgerAccountTest {
 
     @Test
     fun `getSimpleBalance returns empty list when no balances`() {
-        val account = UnifiedParsedLedgerAccount().apply {
-            aname = "Assets:Bank"
+        val account = UnifiedParsedLedgerAccount(
+            aname = "Assets:Bank",
             aibalance = null
-        }
+        )
 
         val balances = account.getSimpleBalance()
 
@@ -100,10 +102,10 @@ class UnifiedParsedLedgerAccountTest {
 
     @Test
     fun `toDomain creates account with correct name`() {
-        val account = UnifiedParsedLedgerAccount().apply {
-            aname = "Assets:Bank:Checking"
+        val account = UnifiedParsedLedgerAccount(
+            aname = "Assets:Bank:Checking",
             aibalance = listOf(createBalance("USD", 100000, 2))
-        }
+        )
 
         val domain = account.toDomain()
 
@@ -112,10 +114,10 @@ class UnifiedParsedLedgerAccountTest {
 
     @Test
     fun `toDomain calculates level correctly for top level account`() {
-        val account = UnifiedParsedLedgerAccount().apply {
-            aname = "Assets"
+        val account = UnifiedParsedLedgerAccount(
+            aname = "Assets",
             aibalance = emptyList()
-        }
+        )
 
         val domain = account.toDomain()
 
@@ -124,10 +126,10 @@ class UnifiedParsedLedgerAccountTest {
 
     @Test
     fun `toDomain calculates level correctly for nested account`() {
-        val account = UnifiedParsedLedgerAccount().apply {
-            aname = "Assets:Bank:Checking"
+        val account = UnifiedParsedLedgerAccount(
+            aname = "Assets:Bank:Checking",
             aibalance = emptyList()
-        }
+        )
 
         val domain = account.toDomain()
 
@@ -136,10 +138,10 @@ class UnifiedParsedLedgerAccountTest {
 
     @Test
     fun `toDomain sets isExpanded to false`() {
-        val account = UnifiedParsedLedgerAccount().apply {
-            aname = "Assets"
+        val account = UnifiedParsedLedgerAccount(
+            aname = "Assets",
             aibalance = emptyList()
-        }
+        )
 
         val domain = account.toDomain()
 
@@ -148,10 +150,10 @@ class UnifiedParsedLedgerAccountTest {
 
     @Test
     fun `toDomain sets isVisible to true`() {
-        val account = UnifiedParsedLedgerAccount().apply {
-            aname = "Assets"
+        val account = UnifiedParsedLedgerAccount(
+            aname = "Assets",
             aibalance = emptyList()
-        }
+        )
 
         val domain = account.toDomain()
 
@@ -160,13 +162,13 @@ class UnifiedParsedLedgerAccountTest {
 
     @Test
     fun `toDomain converts balances to amounts`() {
-        val account = UnifiedParsedLedgerAccount().apply {
-            aname = "Assets:Bank"
+        val account = UnifiedParsedLedgerAccount(
+            aname = "Assets:Bank",
             aibalance = listOf(
                 createBalance("USD", 100000, 2),
                 createBalance("EUR", 50000, 2)
             )
-        }
+        )
 
         val domain = account.toDomain()
 
@@ -177,13 +179,13 @@ class UnifiedParsedLedgerAccountTest {
 
     @Test
     fun `toDomain aggregates same currency amounts`() {
-        val account = UnifiedParsedLedgerAccount().apply {
-            aname = "Assets:Bank"
+        val account = UnifiedParsedLedgerAccount(
+            aname = "Assets:Bank",
             aibalance = listOf(
                 createBalance("USD", 50000, 2),
                 createBalance("USD", 50000, 2)
             )
-        }
+        )
 
         val domain = account.toDomain()
 
@@ -194,10 +196,10 @@ class UnifiedParsedLedgerAccountTest {
 
     @Test
     fun `toDomain sets id to null for new account`() {
-        val account = UnifiedParsedLedgerAccount().apply {
-            aname = "Assets"
+        val account = UnifiedParsedLedgerAccount(
+            aname = "Assets",
             aibalance = emptyList()
-        }
+        )
 
         val domain = account.toDomain()
 
@@ -210,10 +212,10 @@ class UnifiedParsedLedgerAccountTest {
 
     @Test
     fun `anumpostings returns set value when no adata`() {
-        val account = UnifiedParsedLedgerAccount().apply {
-            aname = "Assets"
+        val account = UnifiedParsedLedgerAccount(
+            aname = "Assets",
             anumpostings = 5
-        }
+        )
 
         assertEquals(5, account.anumpostings)
     }
@@ -224,10 +226,25 @@ class UnifiedParsedLedgerAccountTest {
 
     @Test
     fun `SimpleBalance constructor with two args sets null amountStyle`() {
-        val balance = UnifiedParsedLedgerAccount.SimpleBalance("USD", 100.0f)
+        val balance = SimpleBalance("USD", 100.0f)
 
         assertEquals("USD", balance.commodity)
         assertEquals(100.0f, balance.amount, 0.01f)
-        assertEquals(null, balance.amountStyle)
+        assertNull(balance.amountStyle)
+    }
+
+    @Test
+    fun `SimpleBalance constructor with three args sets amountStyle`() {
+        val style = AmountStyle(
+            commodityPosition = AmountStyle.Position.NONE,
+            isCommoditySpaced = false,
+            precision = 2,
+            decimalMark = "."
+        )
+        val balance = SimpleBalance("USD", 100.0f, style)
+
+        assertEquals("USD", balance.commodity)
+        assertEquals(100.0f, balance.amount, 0.01f)
+        assertEquals(style, balance.amountStyle)
     }
 }

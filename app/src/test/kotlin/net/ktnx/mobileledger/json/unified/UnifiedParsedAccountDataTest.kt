@@ -17,7 +17,7 @@
 
 package net.ktnx.mobileledger.json.unified
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import net.ktnx.mobileledger.json.MoLeJson
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -83,7 +83,7 @@ class UnifiedParsedAccountDataTest {
 
     @Test
     fun `PeriodEntry can be created with defaults`() {
-        val entry = UnifiedParsedAccountData.PeriodEntry()
+        val entry = PeriodEntry()
         assertNull(entry.date)
         assertNull(entry.balanceData)
     }
@@ -91,7 +91,7 @@ class UnifiedParsedAccountDataTest {
     @Test
     fun `PeriodEntry can store date and balance`() {
         val balanceData = UnifiedParsedBalanceData()
-        val entry = UnifiedParsedAccountData.PeriodEntry("2024-01-01", balanceData)
+        val entry = PeriodEntry("2024-01-01", balanceData)
         assertEquals("2024-01-01", entry.date)
         assertNotNull(entry.balanceData)
     }
@@ -102,10 +102,9 @@ class UnifiedParsedAccountDataTest {
 
     @Test
     fun `deserialize empty account data`() {
-        val mapper = ObjectMapper()
         val json = """{}"""
 
-        val accountData = mapper.readValue(json, UnifiedParsedAccountData::class.java)
+        val accountData = MoLeJson.decodeFromString<UnifiedParsedAccountData>(json)
 
         assertNull(accountData.pdperiods)
         assertNull(accountData.pdpre)
@@ -113,14 +112,13 @@ class UnifiedParsedAccountDataTest {
 
     @Test
     fun `deserialize with empty pdperiods array`() {
-        val mapper = ObjectMapper()
         val json = """
             {
                 "pdperiods": []
             }
         """.trimIndent()
 
-        val accountData = mapper.readValue(json, UnifiedParsedAccountData::class.java)
+        val accountData = MoLeJson.decodeFromString<UnifiedParsedAccountData>(json)
 
         assertNotNull(accountData.pdperiods)
         assertEquals(0, accountData.pdperiods!!.size)
@@ -128,7 +126,6 @@ class UnifiedParsedAccountDataTest {
 
     @Test
     fun `deserialize with pdpre`() {
-        val mapper = ObjectMapper()
         val json = """
             {
                 "pdpre": {
@@ -139,7 +136,7 @@ class UnifiedParsedAccountDataTest {
             }
         """.trimIndent()
 
-        val accountData = mapper.readValue(json, UnifiedParsedAccountData::class.java)
+        val accountData = MoLeJson.decodeFromString<UnifiedParsedAccountData>(json)
 
         assertNotNull(accountData.pdpre)
         assertEquals(5, accountData.pdpre!!.bdnumpostings)
@@ -151,7 +148,6 @@ class UnifiedParsedAccountDataTest {
 
     @Test
     fun `deserialize pdperiods with single entry`() {
-        val mapper = ObjectMapper()
         val json = """
             {
                 "pdperiods": [
@@ -160,7 +156,7 @@ class UnifiedParsedAccountDataTest {
             }
         """.trimIndent()
 
-        val accountData = mapper.readValue(json, UnifiedParsedAccountData::class.java)
+        val accountData = MoLeJson.decodeFromString<UnifiedParsedAccountData>(json)
 
         assertNotNull(accountData.pdperiods)
         assertEquals(1, accountData.pdperiods!!.size)
@@ -170,7 +166,6 @@ class UnifiedParsedAccountDataTest {
 
     @Test
     fun `deserialize pdperiods with multiple entries`() {
-        val mapper = ObjectMapper()
         val json = """
             {
                 "pdperiods": [
@@ -180,7 +175,7 @@ class UnifiedParsedAccountDataTest {
             }
         """.trimIndent()
 
-        val accountData = mapper.readValue(json, UnifiedParsedAccountData::class.java)
+        val accountData = MoLeJson.decodeFromString<UnifiedParsedAccountData>(json)
 
         assertNotNull(accountData.pdperiods)
         assertEquals(2, accountData.pdperiods!!.size)
@@ -192,7 +187,6 @@ class UnifiedParsedAccountDataTest {
 
     @Test
     fun `getFirstPeriodBalance returns first entry balance`() {
-        val mapper = ObjectMapper()
         val json = """
             {
                 "pdperiods": [
@@ -201,7 +195,7 @@ class UnifiedParsedAccountDataTest {
             }
         """.trimIndent()
 
-        val accountData = mapper.readValue(json, UnifiedParsedAccountData::class.java)
+        val accountData = MoLeJson.decodeFromString<UnifiedParsedAccountData>(json)
 
         val balance = accountData.getFirstPeriodBalance()
         assertNotNull(balance)
@@ -214,7 +208,6 @@ class UnifiedParsedAccountDataTest {
 
     @Test
     fun `deserialize balance data with amounts`() {
-        val mapper = ObjectMapper()
         val json = """
             {
                 "pdpre": {
@@ -227,7 +220,7 @@ class UnifiedParsedAccountDataTest {
             }
         """.trimIndent()
 
-        val accountData = mapper.readValue(json, UnifiedParsedAccountData::class.java)
+        val accountData = MoLeJson.decodeFromString<UnifiedParsedAccountData>(json)
 
         assertNotNull(accountData.pdpre)
         assertNotNull(accountData.pdpre!!.bdincludingsubs)
@@ -237,7 +230,6 @@ class UnifiedParsedAccountDataTest {
 
     @Test
     fun `deserialize ignores unknown properties`() {
-        val mapper = ObjectMapper()
         val json = """
             {
                 "pdpre": {
@@ -249,7 +241,7 @@ class UnifiedParsedAccountDataTest {
         """.trimIndent()
 
         // Should not throw exception
-        val accountData = mapper.readValue(json, UnifiedParsedAccountData::class.java)
+        val accountData = MoLeJson.decodeFromString<UnifiedParsedAccountData>(json)
         assertEquals(1, accountData.pdpre!!.bdnumpostings)
     }
 }

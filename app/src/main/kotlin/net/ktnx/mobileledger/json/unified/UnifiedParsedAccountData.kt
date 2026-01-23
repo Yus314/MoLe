@@ -17,13 +17,78 @@
 
 package net.ktnx.mobileledger.json.unified
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.core.JsonParser
-import com.fasterxml.jackson.databind.DeserializationContext
-import com.fasterxml.jackson.databind.JsonDeserializer
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonDecoder
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonEncoder
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonPrimitive
+import net.ktnx.mobileledger.json.MoLeJson
+
+/**
+ * 単一の期間エントリ: [date, balanceData]
+ */
+@Serializable
+data class PeriodEntry(
+    val date: String? = null,
+    val balanceData: UnifiedParsedBalanceData? = null
+)
+
+/**
+ * pdperiods のカスタムシリアライザ
+ * 異種配列 [["0000-01-01", { balanceData }], ...] を処理する
+ */
+object PdPeriodsSerializer : KSerializer<List<PeriodEntry>> {
+    override val descriptor: SerialDescriptor =
+        ListSerializer(JsonElement.serializer()).descriptor
+
+    override fun serialize(encoder: Encoder, value: List<PeriodEntry>) {
+        val jsonEncoder = encoder as JsonEncoder
+        val jsonArray = buildJsonArray {
+            value.forEach { entry ->
+                add(
+                    buildJsonArray {
+                        add(kotlinx.serialization.json.JsonPrimitive(entry.date ?: ""))
+                        add(
+                            MoLeJson.encodeToJsonElement(
+                                UnifiedParsedBalanceData.serializer(),
+                                entry.balanceData ?: UnifiedParsedBalanceData()
+                            )
+                        )
+                    }
+                )
+            }
+        }
+        jsonEncoder.encodeJsonElement(jsonArray)
+    }
+
+    override fun deserialize(decoder: Decoder): List<PeriodEntry> {
+        val jsonDecoder = decoder as JsonDecoder
+        val jsonArray = jsonDecoder.decodeJsonElement().jsonArray
+        val result = mutableListOf<PeriodEntry>()
+
+        for (entryElement in jsonArray) {
+            val entryArray = entryElement.jsonArray
+            if (entryArray.size >= 2) {
+                val date = entryArray[0].jsonPrimitive.content
+                val balanceData = MoLeJson.decodeFromJsonElement(
+                    UnifiedParsedBalanceData.serializer(),
+                    entryArray[1]
+                )
+                result.add(PeriodEntry(date, balanceData))
+            }
+        }
+
+        return result
+    }
+}
 
 /**
  * v1_50 専用: アカウントデータ構造
@@ -36,52 +101,17 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize
  *   "pdpre": { "bdincludingsubs": [], "bdexcludingsubs": [], "bdnumpostings": 0 }
  * }
  */
-@JsonIgnoreProperties(ignoreUnknown = true)
-class UnifiedParsedAccountData {
-    @JsonDeserialize(using = PdPeriodsDeserializer::class)
-    var pdperiods: List<PeriodEntry>? = null
-    var pdpre: UnifiedParsedBalanceData? = null
-
+@Serializable
+data class UnifiedParsedAccountData(
+    @Serializable(with = PdPeriodsSerializer::class)
+    val pdperiods: List<PeriodEntry>? = null,
+    val pdpre: UnifiedParsedBalanceData? = null
+) {
     /**
      * 最初の期間エントリから残高データを取得
      * 通常、日付 "0000-01-01" の単一エントリが存在する
      */
     fun getFirstPeriodBalance(): UnifiedParsedBalanceData? = pdperiods?.firstOrNull()?.balanceData
-
-    /**
-     * 単一の期間エントリ: [date, balanceData]
-     */
-    data class PeriodEntry(
-        var date: String? = null,
-        var balanceData: UnifiedParsedBalanceData? = null
-    )
-
-    /**
-     * pdperiods のカスタムデシリアライザ
-     * 異種配列 [["0000-01-01", { balanceData }], ...] を処理する
-     */
-    class PdPeriodsDeserializer : JsonDeserializer<List<PeriodEntry>>() {
-        override fun deserialize(p: JsonParser, ctxt: DeserializationContext): List<PeriodEntry> {
-            val result = mutableListOf<PeriodEntry>()
-            val mapper = p.codec as ObjectMapper
-            val arrayNode: JsonNode = mapper.readTree(p)
-
-            if (arrayNode.isArray) {
-                for (entryNode in arrayNode) {
-                    if (entryNode.isArray && entryNode.size() >= 2) {
-                        val date = entryNode.get(0).asText()
-                        val balanceData = mapper.treeToValue(
-                            entryNode.get(1),
-                            UnifiedParsedBalanceData::class.java
-                        )
-                        result.add(PeriodEntry(date, balanceData))
-                    }
-                }
-            }
-
-            return result
-        }
-    }
 }
 
 /**
@@ -96,9 +126,9 @@ class UnifiedParsedAccountData {
  *   "bdnumpostings": 1
  * }
  */
-@JsonIgnoreProperties(ignoreUnknown = true)
-class UnifiedParsedBalanceData {
-    var bdincludingsubs: List<UnifiedParsedBalance>? = null
-    var bdexcludingsubs: List<UnifiedParsedBalance>? = null
-    var bdnumpostings: Int = 0
-}
+@Serializable
+data class UnifiedParsedBalanceData(
+    val bdincludingsubs: List<UnifiedParsedBalance>? = null,
+    val bdexcludingsubs: List<UnifiedParsedBalance>? = null,
+    val bdnumpostings: Int = 0
+)

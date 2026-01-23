@@ -17,9 +17,57 @@
 
 package net.ktnx.mobileledger.json.unified
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.annotation.JsonSetter
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.JsonDecoder
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.int
+import kotlinx.serialization.json.intOrNull
+import kotlinx.serialization.json.jsonPrimitive
+
+/**
+ * Char 用のカスタムシリアライザ
+ */
+object CharSerializer : KSerializer<Char> {
+    override val descriptor: SerialDescriptor =
+        PrimitiveSerialDescriptor("Char", PrimitiveKind.STRING)
+
+    override fun serialize(encoder: Encoder, value: Char) {
+        encoder.encodeString(value.toString())
+    }
+
+    override fun deserialize(decoder: Decoder): Char {
+        val str = decoder.decodeString()
+        return if (str.isNotEmpty()) str[0] else '\u0000'
+    }
+}
+
+/**
+ * asprecision 用のカスタムシリアライザ（Int/Number どちらも受け入れる）
+ */
+object AsprecisionSerializer : KSerializer<Int> {
+    override val descriptor: SerialDescriptor =
+        PrimitiveSerialDescriptor("Asprecision", PrimitiveKind.INT)
+
+    override fun serialize(encoder: Encoder, value: Int) {
+        encoder.encodeInt(value)
+    }
+
+    override fun deserialize(decoder: Decoder): Int = when (decoder) {
+        is JsonDecoder -> {
+            val element = decoder.decodeJsonElement().jsonPrimitive
+            element.intOrNull ?: 0
+        }
+
+        else -> decoder.decodeInt()
+    }
+}
 
 /**
  * 統合 ParsedStyle - hledger API v1_32+ 用
@@ -28,43 +76,26 @@ import com.fasterxml.jackson.annotation.JsonSetter
  * - asdecimalmark (String): 小数点記号
  * - asrounding: 丸めモード
  */
-@JsonIgnoreProperties(ignoreUnknown = true)
-class UnifiedParsedStyle {
+@Serializable
+data class UnifiedParsedStyle(
     /** 通貨記号の位置（'L'=左, 'R'=右） */
-    var ascommodityside: Char = '\u0000'
+    @Serializable(with = CharSerializer::class)
+    val ascommodityside: Char = '\u0000',
 
     /** 通貨記号と数値の間にスペースを入れるか */
-    @get:JvmName("isAscommodityspaced")
-    @JsonProperty("ascommodityspaced")
-    var isAscommodityspaced: Boolean = false
+    @SerialName("ascommodityspaced")
+    val isAscommodityspaced: Boolean = false,
 
     /** 桁グループ */
-    var digitgroups: Int = 0
+    val digitgroups: Int = 0,
 
-    /**
-     * 小数点記号（v1_32+）
-     */
-    var asdecimalmark: String = "."
+    /** 小数点記号（v1_32+） */
+    val asdecimalmark: String = ".",
 
-    /**
-     * 小数点精度
-     */
-    var asprecision: Int = 0
+    /** 小数点精度 */
+    @Serializable(with = AsprecisionSerializer::class)
+    val asprecision: Int = 0,
 
-    /**
-     * 丸めモード（v1_32+）
-     */
-    var asrounding: String? = null
-
-    /**
-     * asprecision を JSON から設定
-     */
-    @JsonSetter("asprecision")
-    fun setAsprecisionFromJson(value: Any?) {
-        asprecision = when (value) {
-            is Int -> value
-            is Number -> value.toInt()
-            else -> 0
-        }
-    }
-}
+    /** 丸めモード（v1_32+） */
+    val asrounding: String? = null
+)

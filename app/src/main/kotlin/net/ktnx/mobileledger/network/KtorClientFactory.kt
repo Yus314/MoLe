@@ -17,7 +17,6 @@
 
 package net.ktnx.mobileledger.network
 
-import com.fasterxml.jackson.module.kotlin.KotlinModule
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.okhttp.OkHttp
@@ -26,10 +25,11 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
-import io.ktor.serialization.jackson.jackson
+import io.ktor.serialization.kotlinx.json.json
 import java.util.concurrent.TimeUnit
 import logcat.logcat
 import net.ktnx.mobileledger.BuildConfig
+import net.ktnx.mobileledger.json.MoLeJson
 
 /**
  * Factory for creating configured Ktor HttpClient instances.
@@ -59,9 +59,7 @@ object KtorClientFactory {
         }
 
         install(ContentNegotiation) {
-            jackson {
-                registerModule(KotlinModule.Builder().build())
-            }
+            json(MoLeJson)
         }
 
         if (enableLogging) {
@@ -95,9 +93,7 @@ object KtorClientFactory {
      */
     fun createWithEngine(engine: HttpClientEngine, enableLogging: Boolean = false): HttpClient = HttpClient(engine) {
         install(ContentNegotiation) {
-            jackson {
-                registerModule(KotlinModule.Builder().build())
-            }
+            json(MoLeJson)
         }
 
         if (enableLogging) {

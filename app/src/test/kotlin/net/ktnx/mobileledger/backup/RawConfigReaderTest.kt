@@ -597,8 +597,8 @@ class RawConfigReaderTest {
     // Error handling tests
     // ========================================
 
-    @Test(expected = RuntimeException::class)
-    fun `readConfig throws on unexpected top-level item`() {
+    @Test
+    fun `readConfig ignores unexpected top-level item`() {
         // Given
         val json = """{"unknownField": "value"}"""
 
@@ -606,7 +606,11 @@ class RawConfigReaderTest {
         val reader = createReader(json)
         reader.readConfig()
 
-        // Then - exception is thrown
+        // Then - with kotlinx-serialization ignoreUnknownKeys=true, unknown fields are ignored
+        assertNull(reader.commodities)
+        assertNull(reader.profiles)
+        assertNull(reader.templates)
+        assertNull(reader.currentProfile)
     }
 
     @Test

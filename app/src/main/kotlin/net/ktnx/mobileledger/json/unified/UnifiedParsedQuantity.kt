@@ -17,8 +17,8 @@
 
 package net.ktnx.mobileledger.json.unified
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import kotlin.math.pow
+import kotlinx.serialization.Serializable
 
 /**
  * 統合 ParsedQuantity - 全 API バージョンで同一構造
@@ -26,38 +26,36 @@ import kotlin.math.pow
  * hledger の金額数値を表現する。整数の仮数部と小数点以下桁数で構成される。
  * 例: 1234.56 → decimalMantissa=123456, decimalPlaces=2
  */
-@JsonIgnoreProperties(ignoreUnknown = true)
-class UnifiedParsedQuantity() {
+@Serializable
+data class UnifiedParsedQuantity(
     /** 仮数部（整数表現） */
-    var decimalMantissa: Long = 0
-
+    val decimalMantissa: Long = 0,
     /** 小数点以下の桁数 */
-    var decimalPlaces: Int = 0
-
-    /**
-     * 文字列から初期化
-     */
-    constructor(input: String) : this() {
-        parseString(input)
-    }
-
+    val decimalPlaces: Int = 0
+) {
     /**
      * Float 値に変換
      */
     fun asFloat(): Float = (decimalMantissa * 10.0.pow(-decimalPlaces.toDouble())).toFloat()
 
-    /**
-     * 文字列をパースして値を設定
-     */
-    fun parseString(input: String) {
-        val pointPos = input.indexOf('.')
-        if (pointPos >= 0) {
-            val integral = input.replace(".", "")
-            decimalMantissa = integral.toLong()
-            decimalPlaces = input.length - pointPos - 1
-        } else {
-            decimalMantissa = input.toLong()
-            decimalPlaces = 0
+    companion object {
+        /**
+         * 文字列から UnifiedParsedQuantity を生成
+         */
+        fun fromString(input: String): UnifiedParsedQuantity {
+            val pointPos = input.indexOf('.')
+            return if (pointPos >= 0) {
+                val integral = input.replace(".", "")
+                UnifiedParsedQuantity(
+                    decimalMantissa = integral.toLong(),
+                    decimalPlaces = input.length - pointPos - 1
+                )
+            } else {
+                UnifiedParsedQuantity(
+                    decimalMantissa = input.toLong(),
+                    decimalPlaces = 0
+                )
+            }
         }
     }
 }

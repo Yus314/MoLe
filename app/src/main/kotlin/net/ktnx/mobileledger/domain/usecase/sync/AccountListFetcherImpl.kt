@@ -17,12 +17,11 @@
 
 package net.ktnx.mobileledger.domain.usecase.sync
 
-import com.fasterxml.jackson.core.JsonParseException
-import com.fasterxml.jackson.databind.RuntimeJsonMappingException
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.coroutineContext
 import kotlinx.coroutines.ensureActive
+import kotlinx.serialization.SerializationException
 import logcat.LogPriority
 import logcat.asLog
 import logcat.logcat
@@ -56,9 +55,7 @@ class AccountListFetcherImpl @Inject constructor(
         for (ver in API.allVersions) {
             try {
                 return fetchForVersion(profile, ver)
-            } catch (e: JsonParseException) {
-                logcat { "Error during account list retrieval using API ${ver.description}: ${e.asLog()}" }
-            } catch (e: RuntimeJsonMappingException) {
+            } catch (e: SerializationException) {
                 logcat { "Error during account list retrieval using API ${ver.description}: ${e.asLog()}" }
             }
         }

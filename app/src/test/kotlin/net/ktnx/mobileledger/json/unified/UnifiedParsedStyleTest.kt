@@ -17,7 +17,7 @@
 
 package net.ktnx.mobileledger.json.unified
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import net.ktnx.mobileledger.json.MoLeJson
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -28,8 +28,7 @@ import org.junit.Test
  *
  * Tests verify:
  * - Default values
- * - Property accessors
- * - JSON deserialization for v1_32+ format
+ * - JSON deserialization for v1_32+ format using kotlinx.serialization
  */
 class UnifiedParsedStyleTest {
 
@@ -74,83 +73,64 @@ class UnifiedParsedStyleTest {
     }
 
     // ========================================
-    // setAsprecisionFromJson tests
+    // Constructor tests
     // ========================================
 
     @Test
-    fun `setAsprecisionFromJson handles Int input`() {
-        val style = UnifiedParsedStyle()
-        style.setAsprecisionFromJson(2)
-        assertEquals(2, style.asprecision)
-    }
-
-    @Test
-    fun `setAsprecisionFromJson handles Number input`() {
-        val style = UnifiedParsedStyle()
-        style.setAsprecisionFromJson(3L)
-        assertEquals(3, style.asprecision)
-    }
-
-    @Test
-    fun `setAsprecisionFromJson handles null input`() {
-        val style = UnifiedParsedStyle()
-        style.setAsprecisionFromJson(null)
-        assertEquals(0, style.asprecision)
-    }
-
-    @Test
-    fun `setAsprecisionFromJson handles unknown type`() {
-        val style = UnifiedParsedStyle()
-        style.setAsprecisionFromJson("invalid")
-        assertEquals(0, style.asprecision)
-    }
-
-    // ========================================
-    // Property setter tests
-    // ========================================
-
-    @Test
-    fun `ascommodityside can be set to L`() {
-        val style = UnifiedParsedStyle()
-        style.ascommodityside = 'L'
+    fun `constructor with ascommodityside L`() {
+        val style = UnifiedParsedStyle(ascommodityside = 'L')
         assertEquals('L', style.ascommodityside)
     }
 
     @Test
-    fun `ascommodityside can be set to R`() {
-        val style = UnifiedParsedStyle()
-        style.ascommodityside = 'R'
+    fun `constructor with ascommodityside R`() {
+        val style = UnifiedParsedStyle(ascommodityside = 'R')
         assertEquals('R', style.ascommodityside)
     }
 
     @Test
-    fun `isAscommodityspaced can be set to true`() {
-        val style = UnifiedParsedStyle()
-        style.isAscommodityspaced = true
+    fun `constructor with isAscommodityspaced true`() {
+        val style = UnifiedParsedStyle(isAscommodityspaced = true)
         assertEquals(true, style.isAscommodityspaced)
     }
 
     @Test
-    fun `digitgroups can be set`() {
-        val style = UnifiedParsedStyle()
-        style.digitgroups = 3
+    fun `constructor with digitgroups`() {
+        val style = UnifiedParsedStyle(digitgroups = 3)
         assertEquals(3, style.digitgroups)
     }
 
     @Test
-    fun `asrounding can be set`() {
-        val style = UnifiedParsedStyle()
-        style.asrounding = "HalfUp"
+    fun `constructor with asrounding`() {
+        val style = UnifiedParsedStyle(asrounding = "HalfUp")
         assertEquals("HalfUp", style.asrounding)
     }
 
+    @Test
+    fun `constructor with all fields`() {
+        val style = UnifiedParsedStyle(
+            ascommodityside = 'L',
+            isAscommodityspaced = true,
+            digitgroups = 3,
+            asdecimalmark = ",",
+            asprecision = 2,
+            asrounding = "NoRounding"
+        )
+
+        assertEquals('L', style.ascommodityside)
+        assertEquals(true, style.isAscommodityspaced)
+        assertEquals(3, style.digitgroups)
+        assertEquals(",", style.asdecimalmark)
+        assertEquals(2, style.asprecision)
+        assertEquals("NoRounding", style.asrounding)
+    }
+
     // ========================================
-    // Jackson deserialization tests
+    // Kotlin Serialization deserialization tests
     // ========================================
 
     @Test
     fun `deserialize simple style JSON`() {
-        val mapper = ObjectMapper()
         val json = """
             {
                 "ascommodityside": "L",
@@ -160,7 +140,7 @@ class UnifiedParsedStyleTest {
             }
         """.trimIndent()
 
-        val style = mapper.readValue(json, UnifiedParsedStyle::class.java)
+        val style = MoLeJson.decodeFromString<UnifiedParsedStyle>(json)
 
         assertEquals('L', style.ascommodityside)
         assertEquals(true, style.isAscommodityspaced)
@@ -170,7 +150,6 @@ class UnifiedParsedStyleTest {
 
     @Test
     fun `deserialize ignores unknown properties`() {
-        val mapper = ObjectMapper()
         val json = """
             {
                 "ascommodityside": "L",
@@ -180,13 +159,12 @@ class UnifiedParsedStyleTest {
         """.trimIndent()
 
         // Should not throw exception
-        val style = mapper.readValue(json, UnifiedParsedStyle::class.java)
+        val style = MoLeJson.decodeFromString<UnifiedParsedStyle>(json)
         assertEquals('L', style.ascommodityside)
     }
 
     @Test
     fun `deserialize style with asrounding`() {
-        val mapper = ObjectMapper()
         val json = """
             {
                 "ascommodityside": "R",
@@ -196,8 +174,45 @@ class UnifiedParsedStyleTest {
             }
         """.trimIndent()
 
-        val style = mapper.readValue(json, UnifiedParsedStyle::class.java)
+        val style = MoLeJson.decodeFromString<UnifiedParsedStyle>(json)
 
         assertEquals("NoRounding", style.asrounding)
+    }
+
+    @Test
+    fun `deserialize handles asprecision as number`() {
+        val json = """
+            {
+                "asprecision": 4
+            }
+        """.trimIndent()
+
+        val style = MoLeJson.decodeFromString<UnifiedParsedStyle>(json)
+
+        assertEquals(4, style.asprecision)
+    }
+
+    // ========================================
+    // Serialization round-trip tests
+    // ========================================
+
+    @Test
+    fun `serialize and deserialize round-trip`() {
+        val original = UnifiedParsedStyle(
+            ascommodityside = 'L',
+            isAscommodityspaced = true,
+            asprecision = 2,
+            asdecimalmark = ".",
+            asrounding = "NoRounding"
+        )
+
+        val json = MoLeJson.encodeToString(UnifiedParsedStyle.serializer(), original)
+        val deserialized = MoLeJson.decodeFromString<UnifiedParsedStyle>(json)
+
+        assertEquals(original.ascommodityside, deserialized.ascommodityside)
+        assertEquals(original.isAscommodityspaced, deserialized.isAscommodityspaced)
+        assertEquals(original.asprecision, deserialized.asprecision)
+        assertEquals(original.asdecimalmark, deserialized.asdecimalmark)
+        assertEquals(original.asrounding, deserialized.asrounding)
     }
 }

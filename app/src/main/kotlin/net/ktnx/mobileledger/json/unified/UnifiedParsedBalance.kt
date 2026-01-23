@@ -17,26 +17,19 @@
 
 package net.ktnx.mobileledger.json.unified
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import kotlinx.serialization.Serializable
 
 /**
  * 統合 ParsedBalance - 全 API バージョンで同一構造
  *
  * 勘定科目の残高を表す基本構造。
  */
-@JsonIgnoreProperties(ignoreUnknown = true)
-class UnifiedParsedBalance {
+@Serializable
+data class UnifiedParsedBalance(
     /** 金額数値 */
-    var aquantity: UnifiedParsedQuantity? = null
-
+    val aquantity: UnifiedParsedQuantity? = null,
     /** 通貨/商品コード */
-    private var _acommodity: String? = null
-    var acommodity: String
-        get() = _acommodity ?: ""
-        set(value) {
-            _acommodity = value
-        }
-
+    val acommodity: String = "",
     /** 金額スタイル */
-    var astyle: UnifiedParsedStyle? = null
-}
+    val astyle: UnifiedParsedStyle? = null
+)

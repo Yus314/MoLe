@@ -22,6 +22,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
     alias(libs.plugins.kover)
@@ -136,6 +137,7 @@ dependencies {
     implementation(libs.kotlin.stdlib)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.collections.immutable)
+    implementation(libs.kotlinx.serialization.json)
 
     // AndroidX Lifecycle
     implementation(libs.bundles.lifecycle)
@@ -146,9 +148,6 @@ dependencies {
 
     // Navigation
     implementation(libs.bundles.navigation)
-
-    // Jackson with Kotlin module
-    implementation(libs.bundles.jackson)
 
     // AndroidX
     implementation(fileTree(mapOf("include" to listOf("*.jar"), "dir" to "libs")))

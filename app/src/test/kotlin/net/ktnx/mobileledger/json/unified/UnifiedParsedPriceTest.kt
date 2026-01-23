@@ -17,9 +17,8 @@
 
 package net.ktnx.mobileledger.json.unified
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import net.ktnx.mobileledger.json.MoLeJson
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
 import org.junit.Test
 
 /**
@@ -27,7 +26,7 @@ import org.junit.Test
  *
  * Tests verify:
  * - Default values
- * - Property accessors
+ * - Constructor initialization
  * - JSON deserialization
  */
 class UnifiedParsedPriceTest {
@@ -43,20 +42,18 @@ class UnifiedParsedPriceTest {
     }
 
     // ========================================
-    // Property setter tests
+    // Constructor initialization tests
     // ========================================
 
     @Test
-    fun `tag can be set to UnitPrice`() {
-        val price = UnifiedParsedPrice()
-        price.tag = "UnitPrice"
+    fun `can create price with UnitPrice tag`() {
+        val price = UnifiedParsedPrice(tag = "UnitPrice")
         assertEquals("UnitPrice", price.tag)
     }
 
     @Test
-    fun `tag can be set to TotalPrice`() {
-        val price = UnifiedParsedPrice()
-        price.tag = "TotalPrice"
+    fun `can create price with TotalPrice tag`() {
+        val price = UnifiedParsedPrice(tag = "TotalPrice")
         assertEquals("TotalPrice", price.tag)
     }
 
@@ -66,49 +63,45 @@ class UnifiedParsedPriceTest {
 
     @Test
     fun `deserialize NoPrice tag`() {
-        val mapper = ObjectMapper()
         val json = """
             {
                 "tag": "NoPrice"
             }
         """.trimIndent()
 
-        val price = mapper.readValue(json, UnifiedParsedPrice::class.java)
+        val price = MoLeJson.decodeFromString<UnifiedParsedPrice>(json)
 
         assertEquals("NoPrice", price.tag)
     }
 
     @Test
     fun `deserialize UnitPrice tag`() {
-        val mapper = ObjectMapper()
         val json = """
             {
                 "tag": "UnitPrice"
             }
         """.trimIndent()
 
-        val price = mapper.readValue(json, UnifiedParsedPrice::class.java)
+        val price = MoLeJson.decodeFromString<UnifiedParsedPrice>(json)
 
         assertEquals("UnitPrice", price.tag)
     }
 
     @Test
     fun `deserialize TotalPrice tag`() {
-        val mapper = ObjectMapper()
         val json = """
             {
                 "tag": "TotalPrice"
             }
         """.trimIndent()
 
-        val price = mapper.readValue(json, UnifiedParsedPrice::class.java)
+        val price = MoLeJson.decodeFromString<UnifiedParsedPrice>(json)
 
         assertEquals("TotalPrice", price.tag)
     }
 
     @Test
     fun `deserialize ignores unknown properties`() {
-        val mapper = ObjectMapper()
         val json = """
             {
                 "tag": "NoPrice",
@@ -117,7 +110,7 @@ class UnifiedParsedPriceTest {
         """.trimIndent()
 
         // Should not throw exception
-        val price = mapper.readValue(json, UnifiedParsedPrice::class.java)
+        val price = MoLeJson.decodeFromString<UnifiedParsedPrice>(json)
         assertEquals("NoPrice", price.tag)
     }
 }

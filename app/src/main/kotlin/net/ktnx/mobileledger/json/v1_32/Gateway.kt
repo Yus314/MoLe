@@ -17,17 +17,17 @@
 
 package net.ktnx.mobileledger.json.v1_32
 
-import com.fasterxml.jackson.core.JsonProcessingException
-import com.fasterxml.jackson.databind.ObjectMapper
+import kotlinx.serialization.SerializationException
 import net.ktnx.mobileledger.domain.model.Transaction
 import net.ktnx.mobileledger.json.Gateway as BaseGateway
+import net.ktnx.mobileledger.json.MoLeJson
+import net.ktnx.mobileledger.json.config.ApiVersionConfig
+import net.ktnx.mobileledger.json.unified.UnifiedParsedLedgerTransaction
 
 class Gateway : BaseGateway() {
-    @Throws(JsonProcessingException::class)
+    @Throws(SerializationException::class)
     override fun transactionSaveRequest(transaction: Transaction): String {
-        val jsonTransaction = ParsedLedgerTransaction.fromDomain(transaction)
-        val mapper = ObjectMapper()
-        val writer = mapper.writerFor(ParsedLedgerTransaction::class.java)
-        return writer.writeValueAsString(jsonTransaction)
+        val jsonTransaction = UnifiedParsedLedgerTransaction.fromDomain(transaction, ApiVersionConfig.V1_32_40)
+        return MoLeJson.encodeToString(UnifiedParsedLedgerTransaction.serializer(), jsonTransaction)
     }
 }

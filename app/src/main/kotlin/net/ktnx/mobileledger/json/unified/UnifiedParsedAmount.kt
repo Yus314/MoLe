@@ -17,8 +17,56 @@
 
 package net.ktnx.mobileledger.json.unified
 
-import com.fasterxml.jackson.annotation.JsonAlias
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+
+/**
+ * サロゲートクラス - aprice/acost 両方のフィールド名をサポート
+ */
+@Serializable
+private data class UnifiedParsedAmountSurrogate(
+    val acommodity: String? = null,
+    val aquantity: UnifiedParsedQuantity? = null,
+    val aismultiplier: Boolean = false,
+    val astyle: UnifiedParsedStyle? = null,
+    val aprice: UnifiedParsedPrice? = null,
+    val acost: UnifiedParsedPrice? = null
+)
+
+/**
+ * UnifiedParsedAmount 用のカスタムシリアライザ
+ *
+ * aprice/acost のエイリアス対応（v1_50 では acost、それ以前は aprice）
+ */
+object UnifiedParsedAmountSerializer : KSerializer<UnifiedParsedAmount> {
+    override val descriptor: SerialDescriptor =
+        UnifiedParsedAmountSurrogate.serializer().descriptor
+
+    override fun serialize(encoder: Encoder, value: UnifiedParsedAmount) {
+        val surrogate = UnifiedParsedAmountSurrogate(
+            acommodity = value.acommodity,
+            aquantity = value.aquantity,
+            aismultiplier = value.aismultiplier,
+            astyle = value.astyle,
+            aprice = value.aprice
+        )
+        encoder.encodeSerializableValue(UnifiedParsedAmountSurrogate.serializer(), surrogate)
+    }
+
+    override fun deserialize(decoder: Decoder): UnifiedParsedAmount {
+        val surrogate = decoder.decodeSerializableValue(UnifiedParsedAmountSurrogate.serializer())
+        return UnifiedParsedAmount(
+            acommodity = surrogate.acommodity,
+            aquantity = surrogate.aquantity,
+            aismultiplier = surrogate.aismultiplier,
+            astyle = surrogate.astyle,
+            aprice = surrogate.aprice ?: surrogate.acost
+        )
+    }
+}
 
 /**
  * 統合 ParsedAmount - 全 API バージョンの差分を吸収
@@ -27,28 +75,23 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
  * - v1_14-v1_40: aprice フィールド
  * - v1_50: acost フィールド（同じ意味）
  *
- * @JsonAlias で両方のフィールド名に対応する。
+ * カスタムシリアライザで両方のフィールド名に対応する。
  */
-@JsonIgnoreProperties(ignoreUnknown = true)
-class UnifiedParsedAmount {
+@Serializable(with = UnifiedParsedAmountSerializer::class)
+data class UnifiedParsedAmount(
     /** 通貨/商品コード */
-    var acommodity: String? = null
-
+    val acommodity: String? = null,
     /** 金額数値 */
-    var aquantity: UnifiedParsedQuantity? = null
-
+    val aquantity: UnifiedParsedQuantity? = null,
     /** 乗数かどうか */
-    var aismultiplier: Boolean = false
-
+    val aismultiplier: Boolean = false,
     /** 金額スタイル */
-    var astyle: UnifiedParsedStyle? = null
-
+    val astyle: UnifiedParsedStyle? = null,
     /**
      * 価格情報
      *
      * v1_14-v1_40: aprice
-     * v1_50: acost
+     * v1_50: acost（デシリアライズ時にマージ）
      */
-    @JsonAlias("acost")
-    var aprice: UnifiedParsedPrice? = null
-}
+    val aprice: UnifiedParsedPrice? = null
+)

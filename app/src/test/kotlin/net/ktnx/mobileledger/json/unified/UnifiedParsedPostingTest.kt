@@ -17,8 +17,8 @@
 
 package net.ktnx.mobileledger.json.unified
 
+import net.ktnx.mobileledger.json.MoLeJson
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -28,9 +28,8 @@ import org.junit.Test
  *
  * Tests verify:
  * - Default values
- * - Transaction ID parsing from different formats
  * - Domain model conversion
- * - Comment trimming
+ * - JSON deserialization (including ptransaction_ Int/String handling)
  */
 class UnifiedParsedPostingTest {
 
@@ -81,85 +80,53 @@ class UnifiedParsedPostingTest {
     }
 
     // ========================================
-    // pcomment setter tests
+    // Constructor initialization tests
     // ========================================
 
     @Test
-    fun `pcomment setter trims leading whitespace`() {
-        val posting = UnifiedParsedPosting()
-        posting.pcomment = "  trimmed"
+    fun `can create posting with paccount`() {
+        val posting = UnifiedParsedPosting(paccount = "Assets:Bank")
+        assertEquals("Assets:Bank", posting.paccount)
+    }
+
+    @Test
+    fun `can create posting with pcomment`() {
+        val posting = UnifiedParsedPosting(pcomment = "Test comment")
+        assertEquals("Test comment", posting.pcomment)
+    }
+
+    @Test
+    fun `deserialized pcomment trims leading whitespace`() {
+        val json = """{"pcomment": "  trimmed"}"""
+        val posting = MoLeJson.decodeFromString<UnifiedParsedPosting>(json)
         assertEquals("trimmed", posting.pcomment)
     }
 
     @Test
-    fun `pcomment setter trims trailing whitespace`() {
-        val posting = UnifiedParsedPosting()
-        posting.pcomment = "trimmed  "
+    fun `deserialized pcomment trims trailing whitespace`() {
+        val json = """{"pcomment": "trimmed  "}"""
+        val posting = MoLeJson.decodeFromString<UnifiedParsedPosting>(json)
         assertEquals("trimmed", posting.pcomment)
     }
 
     @Test
-    fun `pcomment setter trims both sides`() {
-        val posting = UnifiedParsedPosting()
-        posting.pcomment = "  trimmed  "
+    fun `deserialized pcomment trims both sides`() {
+        val json = """{"pcomment": "  trimmed  "}"""
+        val posting = MoLeJson.decodeFromString<UnifiedParsedPosting>(json)
         assertEquals("trimmed", posting.pcomment)
     }
 
     @Test
-    fun `pcomment setter preserves internal whitespace`() {
-        val posting = UnifiedParsedPosting()
-        posting.pcomment = "hello world"
+    fun `deserialized pcomment preserves internal whitespace`() {
+        val json = """{"pcomment": "hello world"}"""
+        val posting = MoLeJson.decodeFromString<UnifiedParsedPosting>(json)
         assertEquals("hello world", posting.pcomment)
     }
 
-    // ========================================
-    // setPtransactionFromJson tests
-    // ========================================
-
     @Test
-    fun `setPtransactionFromJson handles Int input`() {
-        val posting = UnifiedParsedPosting()
-        posting.setPtransactionFromJson(42)
+    fun `can create posting with ptransaction_`() {
+        val posting = UnifiedParsedPosting(ptransaction_ = "42")
         assertEquals("42", posting.ptransaction_)
-    }
-
-    @Test
-    fun `setPtransactionFromJson handles Long input`() {
-        val posting = UnifiedParsedPosting()
-        posting.setPtransactionFromJson(100L)
-        assertEquals("100", posting.ptransaction_)
-    }
-
-    @Test
-    fun `setPtransactionFromJson handles String input`() {
-        val posting = UnifiedParsedPosting()
-        posting.setPtransactionFromJson("123")
-        assertEquals("123", posting.ptransaction_)
-    }
-
-    @Test
-    fun `setPtransactionFromJson handles null input`() {
-        val posting = UnifiedParsedPosting()
-        posting.setPtransactionFromJson(null)
-        assertEquals("0", posting.ptransaction_)
-    }
-
-    @Test
-    fun `setPtransactionFromJson handles unknown type`() {
-        val posting = UnifiedParsedPosting()
-        posting.setPtransactionFromJson(listOf(1, 2, 3))
-        assertEquals("0", posting.ptransaction_)
-    }
-
-    // ========================================
-    // setTransactionIdAsString tests
-    // ========================================
-
-    @Test
-    fun `setTransactionIdAsString stores string directly`() {
-        val posting = UnifiedParsedPosting()
-        posting.setTransactionIdAsString("abc-123")
-        assertEquals("abc-123", posting.ptransaction_)
     }
 
     // ========================================
@@ -168,9 +135,7 @@ class UnifiedParsedPostingTest {
 
     @Test
     fun `toDomain converts basic posting`() {
-        val posting = UnifiedParsedPosting().apply {
-            paccount = "Assets:Bank"
-        }
+        val posting = UnifiedParsedPosting(paccount = "Assets:Bank")
 
         val domain = posting.toDomain()
 
@@ -188,18 +153,18 @@ class UnifiedParsedPostingTest {
 
     @Test
     fun `toDomain converts amount`() {
-        val posting = UnifiedParsedPosting().apply {
-            paccount = "Assets:Bank"
+        val posting = UnifiedParsedPosting(
+            paccount = "Assets:Bank",
             pamount = mutableListOf(
-                UnifiedParsedAmount().apply {
-                    acommodity = "USD"
-                    aquantity = UnifiedParsedQuantity().apply {
-                        decimalMantissa = 10050L
+                UnifiedParsedAmount(
+                    acommodity = "USD",
+                    aquantity = UnifiedParsedQuantity(
+                        decimalMantissa = 10050L,
                         decimalPlaces = 2
-                    }
-                }
+                    )
+                )
             )
-        }
+        )
 
         val domain = posting.toDomain()
 
@@ -209,10 +174,10 @@ class UnifiedParsedPostingTest {
 
     @Test
     fun `toDomain handles empty pamount`() {
-        val posting = UnifiedParsedPosting().apply {
-            paccount = "Assets:Bank"
+        val posting = UnifiedParsedPosting(
+            paccount = "Assets:Bank",
             pamount = mutableListOf()
-        }
+        )
 
         val domain = posting.toDomain()
 
@@ -221,10 +186,10 @@ class UnifiedParsedPostingTest {
 
     @Test
     fun `toDomain converts comment`() {
-        val posting = UnifiedParsedPosting().apply {
-            paccount = "Assets:Bank"
+        val posting = UnifiedParsedPosting(
+            paccount = "Assets:Bank",
             pcomment = "Test comment"
-        }
+        )
 
         val domain = posting.toDomain()
 
@@ -233,10 +198,10 @@ class UnifiedParsedPostingTest {
 
     @Test
     fun `toDomain returns null comment for empty pcomment`() {
-        val posting = UnifiedParsedPosting().apply {
-            paccount = "Assets:Bank"
+        val posting = UnifiedParsedPosting(
+            paccount = "Assets:Bank",
             pcomment = ""
-        }
+        )
 
         val domain = posting.toDomain()
 
@@ -249,9 +214,7 @@ class UnifiedParsedPostingTest {
 
     @Test
     fun `getTransactionIdForSerialization returns String`() {
-        val posting = UnifiedParsedPosting().apply {
-            setTransactionIdAsString("42")
-        }
+        val posting = UnifiedParsedPosting(ptransaction_ = "42")
 
         val result = posting.getTransactionIdForSerialization()
 
@@ -260,9 +223,7 @@ class UnifiedParsedPostingTest {
 
     @Test
     fun `getTransactionIdForSerialization preserves string value`() {
-        val posting = UnifiedParsedPosting().apply {
-            setTransactionIdAsString("abc-123")
-        }
+        val posting = UnifiedParsedPosting(ptransaction_ = "abc-123")
 
         val result = posting.getTransactionIdForSerialization()
 
@@ -279,56 +240,101 @@ class UnifiedParsedPostingTest {
     }
 
     // ========================================
-    // Property setter tests
+    // JSON deserialization tests
     // ========================================
 
     @Test
-    fun `paccount can be set`() {
-        val posting = UnifiedParsedPosting()
-        posting.paccount = "Expenses:Food"
+    fun `deserialize posting with ptransaction_ as Int`() {
+        val json = """
+            {
+                "paccount": "Assets:Bank",
+                "ptransaction_": 42,
+                "pstatus": "Unmarked",
+                "ptype": "RegularPosting"
+            }
+        """.trimIndent()
+
+        val posting = MoLeJson.decodeFromString<UnifiedParsedPosting>(json)
+
+        assertEquals("Assets:Bank", posting.paccount)
+        assertEquals("42", posting.ptransaction_)
+    }
+
+    @Test
+    fun `deserialize posting with ptransaction_ as String`() {
+        val json = """
+            {
+                "paccount": "Assets:Bank",
+                "ptransaction_": "123",
+                "pstatus": "Unmarked",
+                "ptype": "RegularPosting"
+            }
+        """.trimIndent()
+
+        val posting = MoLeJson.decodeFromString<UnifiedParsedPosting>(json)
+
+        assertEquals("123", posting.ptransaction_)
+    }
+
+    @Test
+    fun `deserialize posting with pamount`() {
+        val json = """
+            {
+                "paccount": "Expenses:Food",
+                "pamount": [{
+                    "acommodity": "USD",
+                    "aquantity": {
+                        "decimalMantissa": 1050,
+                        "decimalPlaces": 2
+                    }
+                }],
+                "pstatus": "Unmarked",
+                "ptype": "RegularPosting"
+            }
+        """.trimIndent()
+
+        val posting = MoLeJson.decodeFromString<UnifiedParsedPosting>(json)
+
         assertEquals("Expenses:Food", posting.paccount)
+        assertEquals(1, posting.pamount?.size)
+        assertEquals("USD", posting.pamount?.get(0)?.acommodity)
     }
 
     @Test
-    fun `pstatus can be set`() {
-        val posting = UnifiedParsedPosting()
-        posting.pstatus = "Cleared"
-        assertEquals("Cleared", posting.pstatus)
-    }
+    fun `deserialize posting ignores unknown properties`() {
+        val json = """
+            {
+                "paccount": "Assets:Cash",
+                "unknownField": "value"
+            }
+        """.trimIndent()
 
-    @Test
-    fun `ptype can be set`() {
-        val posting = UnifiedParsedPosting()
-        posting.ptype = "VirtualPosting"
-        assertEquals("VirtualPosting", posting.ptype)
-    }
+        val posting = MoLeJson.decodeFromString<UnifiedParsedPosting>(json)
 
-    @Test
-    fun `pdate can be set`() {
-        val posting = UnifiedParsedPosting()
-        posting.pdate = "2024-06-15"
-        assertEquals("2024-06-15", posting.pdate)
-    }
-
-    @Test
-    fun `ptags can be modified`() {
-        val posting = UnifiedParsedPosting()
-        posting.ptags.add(listOf("tag", "value"))
-        assertEquals(1, posting.ptags.size)
+        assertEquals("Assets:Cash", posting.paccount)
     }
 
     // ========================================
-    // pamount tests
+    // Full object tests
     // ========================================
 
     @Test
-    fun `pamount can hold multiple amounts`() {
-        val posting = UnifiedParsedPosting()
-        posting.pamount = mutableListOf(
-            UnifiedParsedAmount().apply { acommodity = "USD" },
-            UnifiedParsedAmount().apply { acommodity = "EUR" }
+    fun `can create complete posting object`() {
+        val posting = UnifiedParsedPosting(
+            paccount = "Expenses:Food",
+            pstatus = "Cleared",
+            ptype = "RegularPosting",
+            pcomment = "Groceries",
+            ptransaction_ = "99",
+            pamount = mutableListOf(
+                UnifiedParsedAmount(acommodity = "USD")
+            )
         )
 
-        assertEquals(2, posting.pamount!!.size)
+        assertEquals("Expenses:Food", posting.paccount)
+        assertEquals("Cleared", posting.pstatus)
+        assertEquals("Groceries", posting.pcomment)
+        assertEquals("99", posting.ptransaction_)
+        assertEquals(1, posting.pamount?.size)
     }
 }

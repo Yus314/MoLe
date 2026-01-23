@@ -49,12 +49,12 @@ class AmountStyleMapperTest {
 
     @Test
     fun `toDomain with side L returns BEFORE position`() {
-        val parsedStyle = UnifiedParsedStyle().apply {
-            ascommodityside = 'L'
-            isAscommodityspaced = false
-            asprecision = 2
+        val parsedStyle = UnifiedParsedStyle(
+            ascommodityside = 'L',
+            isAscommodityspaced = false,
+            asprecision = 2,
             asdecimalmark = "."
-        }
+        )
 
         val result = AmountStyleMapper.toDomain(parsedStyle, "USD")
 
@@ -63,12 +63,12 @@ class AmountStyleMapperTest {
 
     @Test
     fun `toDomain with side R returns AFTER position`() {
-        val parsedStyle = UnifiedParsedStyle().apply {
-            ascommodityside = 'R'
-            isAscommodityspaced = true
-            asprecision = 2
+        val parsedStyle = UnifiedParsedStyle(
+            ascommodityside = 'R',
+            isAscommodityspaced = true,
+            asprecision = 2,
             asdecimalmark = "."
-        }
+        )
 
         val result = AmountStyleMapper.toDomain(parsedStyle, "EUR")
 
@@ -77,10 +77,10 @@ class AmountStyleMapperTest {
 
     @Test
     fun `toDomain with null currency returns NONE position`() {
-        val parsedStyle = UnifiedParsedStyle().apply {
-            ascommodityside = 'L'
+        val parsedStyle = UnifiedParsedStyle(
+            ascommodityside = 'L',
             asprecision = 2
-        }
+        )
 
         val result = AmountStyleMapper.toDomain(parsedStyle, null)
 
@@ -89,10 +89,10 @@ class AmountStyleMapperTest {
 
     @Test
     fun `toDomain with empty currency returns NONE position`() {
-        val parsedStyle = UnifiedParsedStyle().apply {
-            ascommodityside = 'L'
+        val parsedStyle = UnifiedParsedStyle(
+            ascommodityside = 'L',
             asprecision = 2
-        }
+        )
 
         val result = AmountStyleMapper.toDomain(parsedStyle, "")
 
@@ -101,10 +101,10 @@ class AmountStyleMapperTest {
 
     @Test
     fun `toDomain with unknown side returns NONE position`() {
-        val parsedStyle = UnifiedParsedStyle().apply {
-            ascommodityside = 'X'
+        val parsedStyle = UnifiedParsedStyle(
+            ascommodityside = 'X',
             asprecision = 2
-        }
+        )
 
         val result = AmountStyleMapper.toDomain(parsedStyle, "USD")
 
@@ -117,11 +117,11 @@ class AmountStyleMapperTest {
 
     @Test
     fun `toDomain preserves spaced true`() {
-        val parsedStyle = UnifiedParsedStyle().apply {
-            ascommodityside = 'L'
-            isAscommodityspaced = true
+        val parsedStyle = UnifiedParsedStyle(
+            ascommodityside = 'L',
+            isAscommodityspaced = true,
             asprecision = 2
-        }
+        )
 
         val result = AmountStyleMapper.toDomain(parsedStyle, "USD")
 
@@ -130,11 +130,11 @@ class AmountStyleMapperTest {
 
     @Test
     fun `toDomain preserves spaced false`() {
-        val parsedStyle = UnifiedParsedStyle().apply {
-            ascommodityside = 'R'
-            isAscommodityspaced = false
+        val parsedStyle = UnifiedParsedStyle(
+            ascommodityside = 'R',
+            isAscommodityspaced = false,
             asprecision = 2
-        }
+        )
 
         val result = AmountStyleMapper.toDomain(parsedStyle, "USD")
 
@@ -147,10 +147,10 @@ class AmountStyleMapperTest {
 
     @Test
     fun `toDomain preserves precision 0`() {
-        val parsedStyle = UnifiedParsedStyle().apply {
-            ascommodityside = 'L'
+        val parsedStyle = UnifiedParsedStyle(
+            ascommodityside = 'L',
             asprecision = 0
-        }
+        )
 
         val result = AmountStyleMapper.toDomain(parsedStyle, "JPY")
 
@@ -159,10 +159,10 @@ class AmountStyleMapperTest {
 
     @Test
     fun `toDomain preserves precision 2`() {
-        val parsedStyle = UnifiedParsedStyle().apply {
-            ascommodityside = 'L'
+        val parsedStyle = UnifiedParsedStyle(
+            ascommodityside = 'L',
             asprecision = 2
-        }
+        )
 
         val result = AmountStyleMapper.toDomain(parsedStyle, "USD")
 
@@ -171,10 +171,10 @@ class AmountStyleMapperTest {
 
     @Test
     fun `toDomain preserves precision 8`() {
-        val parsedStyle = UnifiedParsedStyle().apply {
-            ascommodityside = 'L'
+        val parsedStyle = UnifiedParsedStyle(
+            ascommodityside = 'L',
             asprecision = 8
-        }
+        )
 
         val result = AmountStyleMapper.toDomain(parsedStyle, "BTC")
 
@@ -187,11 +187,11 @@ class AmountStyleMapperTest {
 
     @Test
     fun `toDomain preserves decimal mark dot`() {
-        val parsedStyle = UnifiedParsedStyle().apply {
-            ascommodityside = 'L'
-            asprecision = 2
+        val parsedStyle = UnifiedParsedStyle(
+            ascommodityside = 'L',
+            asprecision = 2,
             asdecimalmark = "."
-        }
+        )
 
         val result = AmountStyleMapper.toDomain(parsedStyle, "USD")
 
@@ -200,11 +200,11 @@ class AmountStyleMapperTest {
 
     @Test
     fun `toDomain preserves decimal mark comma`() {
-        val parsedStyle = UnifiedParsedStyle().apply {
-            ascommodityside = 'R'
-            asprecision = 2
+        val parsedStyle = UnifiedParsedStyle(
+            ascommodityside = 'R',
+            asprecision = 2,
             asdecimalmark = ","
-        }
+        )
 
         val result = AmountStyleMapper.toDomain(parsedStyle, "EUR")
 
@@ -217,12 +217,12 @@ class AmountStyleMapperTest {
 
     @Test
     fun `toDomain converts all properties`() {
-        val parsedStyle = UnifiedParsedStyle().apply {
-            ascommodityside = 'R'
-            isAscommodityspaced = true
-            asprecision = 3
+        val parsedStyle = UnifiedParsedStyle(
+            ascommodityside = 'R',
+            isAscommodityspaced = true,
+            asprecision = 3,
             asdecimalmark = ","
-        }
+        )
 
         val result = AmountStyleMapper.toDomain(parsedStyle, "CHF")
 

@@ -17,176 +17,179 @@
 
 package net.ktnx.mobileledger.backup
 
-import android.util.JsonWriter
-import java.io.BufferedWriter
 import java.io.IOException
 import java.io.OutputStream
-import java.io.OutputStreamWriter
 import kotlin.coroutines.coroutineContext
 import kotlinx.coroutines.ensureActive
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import net.ktnx.mobileledger.data.repository.CurrencyRepository
 import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.data.repository.TemplateRepository
+import net.ktnx.mobileledger.db.TemplateAccount
+import net.ktnx.mobileledger.db.TemplateWithAccounts
+import net.ktnx.mobileledger.domain.model.Currency
+import net.ktnx.mobileledger.domain.model.Profile
 import net.ktnx.mobileledger.json.API
 
+/**
+ * Writes MoLe configuration to a backup file using kotlinx-serialization.
+ *
+ * Uses explicit JSON construction to match the original backup format with
+ * conditional field writing.
+ */
 class RawConfigWriter(
-    outputStream: OutputStream,
+    private val outputStream: OutputStream,
     private val profileRepository: ProfileRepository,
     private val templateRepository: TemplateRepository,
     private val currencyRepository: CurrencyRepository
 ) {
-    private val w: JsonWriter = JsonWriter(BufferedWriter(OutputStreamWriter(outputStream))).apply {
-        setIndent("  ")
-    }
+    private val prettyJson = Json { prettyPrint = true }
 
     @Throws(IOException::class)
     suspend fun writeConfig() {
         coroutineContext.ensureActive()
-        w.beginObject()
-        writeCommodities()
-        coroutineContext.ensureActive()
-        writeProfiles()
-        coroutineContext.ensureActive()
-        writeCurrentProfile()
-        coroutineContext.ensureActive()
-        writeConfigTemplates()
-        w.endObject()
-        w.flush()
+
+        val jsonObject = buildJsonObject {
+            // Write commodities
+            val commodities = getCommodities()
+            if (commodities.isNotEmpty()) {
+                put(
+                    BackupKeys.COMMODITIES,
+                    buildJsonArray {
+                        commodities.forEach { add(buildCommodityJson(it)) }
+                    }
+                )
+            }
+
+            coroutineContext.ensureActive()
+
+            // Write profiles
+            val profiles = getProfiles()
+            if (profiles.isNotEmpty()) {
+                put(
+                    BackupKeys.PROFILES,
+                    buildJsonArray {
+                        profiles.forEach { add(buildProfileJson(it)) }
+                    }
+                )
+            }
+
+            coroutineContext.ensureActive()
+
+            // Write current profile
+            val currentProfile = profileRepository.currentProfile.value
+            if (currentProfile != null) {
+                put(BackupKeys.CURRENT_PROFILE, currentProfile.uuid)
+            }
+
+            coroutineContext.ensureActive()
+
+            // Write templates
+            val templates = getTemplates()
+            if (templates.isNotEmpty()) {
+                put(
+                    BackupKeys.TEMPLATES,
+                    buildJsonArray {
+                        templates.forEach { add(buildTemplateJson(it)) }
+                    }
+                )
+            }
+        }
+
+        val jsonString = prettyJson.encodeToString(JsonObject.serializer(), jsonObject)
+        val writer = outputStream.bufferedWriter()
+        writer.write(jsonString)
+        writer.flush()
     }
 
-    @Throws(IOException::class)
-    private fun writeKey(key: String, value: String?) {
-        value?.let { w.name(key).value(it) }
+    private fun buildCommodityJson(c: Currency): JsonObject = buildJsonObject {
+        put(BackupKeys.NAME, c.name)
+        put(BackupKeys.POSITION, c.position.toDbString())
+        put(BackupKeys.HAS_GAP, c.hasGap)
     }
 
-    @Throws(IOException::class)
-    private fun writeKey(key: String, value: Int?) {
-        value?.let { w.name(key).value(it.toLong()) }
+    private fun buildProfileJson(p: Profile): JsonObject = buildJsonObject {
+        put(BackupKeys.NAME, p.name)
+        put(BackupKeys.UUID, p.uuid)
+        put(BackupKeys.URL, p.url)
+        put(BackupKeys.USE_AUTH, p.isAuthEnabled)
+
+        if (p.isAuthEnabled) {
+            p.authentication?.user?.let { put(BackupKeys.AUTH_USER, it) }
+            p.authentication?.password?.let { put(BackupKeys.AUTH_PASS, it) }
+        }
+
+        if (p.apiVersion != API.auto.toInt()) {
+            put(BackupKeys.API_VER, p.apiVersion)
+        }
+
+        put(BackupKeys.CAN_POST, p.canPost)
+
+        if (p.canPost) {
+            val defaultCommodity = p.defaultCommodityOrEmpty
+            if (defaultCommodity.isNotEmpty()) {
+                put(BackupKeys.DEFAULT_COMMODITY, defaultCommodity)
+            }
+            put(BackupKeys.SHOW_COMMODITY, p.showCommodityByDefault)
+            put(BackupKeys.SHOW_COMMENTS, p.showCommentsByDefault)
+            put(BackupKeys.FUTURE_DATES, p.futureDates.toInt())
+            put(BackupKeys.PREF_ACCOUNT, p.preferredAccountsFilter)
+        }
+
+        put(BackupKeys.COLOUR, p.theme)
     }
 
-    @Throws(IOException::class)
-    private fun writeKey(key: String, value: Long?) {
-        value?.let { w.name(key).value(it) }
-    }
+    private fun buildTemplateJson(t: TemplateWithAccounts): JsonObject = buildJsonObject {
+        put(BackupKeys.UUID, t.header.uuid)
+        put(BackupKeys.NAME, t.header.name)
+        put(BackupKeys.REGEX, t.header.regularExpression)
 
-    @Throws(IOException::class)
-    private fun writeKey(key: String, value: Float?) {
-        value?.let { w.name(key).value(it.toDouble()) }
-    }
+        t.header.testText?.let { put(BackupKeys.TEST_TEXT, it) }
+        t.header.dateYear?.let { put(BackupKeys.DATE_YEAR, it) }
+        t.header.dateYearMatchGroup?.let { put(BackupKeys.DATE_YEAR_GROUP, it) }
+        t.header.dateMonth?.let { put(BackupKeys.DATE_MONTH, it) }
+        t.header.dateMonthMatchGroup?.let { put(BackupKeys.DATE_MONTH_GROUP, it) }
+        t.header.dateDay?.let { put(BackupKeys.DATE_DAY, it) }
+        t.header.dateDayMatchGroup?.let { put(BackupKeys.DATE_DAY_GROUP, it) }
+        t.header.transactionDescription?.let { put(BackupKeys.TRANSACTION, it) }
+        t.header.transactionDescriptionMatchGroup?.let { put(BackupKeys.TRANSACTION_GROUP, it) }
+        t.header.transactionComment?.let { put(BackupKeys.COMMENT, it) }
+        t.header.transactionCommentMatchGroup?.let { put(BackupKeys.COMMENT_GROUP, it) }
 
-    @Throws(IOException::class)
-    private fun writeKey(key: String, value: Boolean?) {
-        value?.let { w.name(key).value(it) }
-    }
+        put(BackupKeys.IS_FALLBACK, t.header.isFallback)
 
-    @Throws(IOException::class)
-    private suspend fun writeConfigTemplates() {
-        // Intentionally using DB entity method for backup - needs access to UUID and internal fields
-        @Suppress("DEPRECATION")
-        val templates = templateRepository.getAllTemplatesWithAccounts().getOrElse { return }
-
-        if (templates.isEmpty()) return
-
-        w.name("templates").beginArray()
-        for (t in templates) {
-            w.beginObject()
-
-            w.name(BackupKeys.UUID).value(t.header.uuid)
-            w.name(BackupKeys.NAME).value(t.header.name)
-            w.name(BackupKeys.REGEX).value(t.header.regularExpression)
-            writeKey(BackupKeys.TEST_TEXT, t.header.testText)
-            writeKey(BackupKeys.DATE_YEAR, t.header.dateYear)
-            writeKey(BackupKeys.DATE_YEAR_GROUP, t.header.dateYearMatchGroup)
-            writeKey(BackupKeys.DATE_MONTH, t.header.dateMonth)
-            writeKey(BackupKeys.DATE_MONTH_GROUP, t.header.dateMonthMatchGroup)
-            writeKey(BackupKeys.DATE_DAY, t.header.dateDay)
-            writeKey(BackupKeys.DATE_DAY_GROUP, t.header.dateDayMatchGroup)
-            writeKey(BackupKeys.TRANSACTION, t.header.transactionDescription)
-            writeKey(BackupKeys.TRANSACTION_GROUP, t.header.transactionDescriptionMatchGroup)
-            writeKey(BackupKeys.COMMENT, t.header.transactionComment)
-            writeKey(BackupKeys.COMMENT_GROUP, t.header.transactionCommentMatchGroup)
-            w.name(BackupKeys.IS_FALLBACK).value(t.header.isFallback)
-
-            if (t.accounts.isNotEmpty()) {
-                w.name(BackupKeys.ACCOUNTS).beginArray()
-                for (a in t.accounts) {
-                    w.beginObject()
-                    writeKey(BackupKeys.NAME, a.accountName)
-                    writeKey(BackupKeys.NAME_GROUP, a.accountNameMatchGroup)
-                    writeKey(BackupKeys.COMMENT, a.accountComment)
-                    writeKey(BackupKeys.COMMENT_GROUP, a.accountCommentMatchGroup)
-                    writeKey(BackupKeys.AMOUNT, a.amount)
-                    writeKey(BackupKeys.AMOUNT_GROUP, a.amountMatchGroup)
-                    writeKey(BackupKeys.NEGATE_AMOUNT, a.negateAmount)
-                    writeKey(BackupKeys.CURRENCY, a.currency)
-                    writeKey(BackupKeys.CURRENCY_GROUP, a.currencyMatchGroup)
-                    w.endObject()
+        if (t.accounts.isNotEmpty()) {
+            put(
+                BackupKeys.ACCOUNTS,
+                buildJsonArray {
+                    t.accounts.forEach { add(buildTemplateAccountJson(it)) }
                 }
-                w.endArray()
-            }
-            w.endObject()
+            )
         }
-        w.endArray()
     }
 
-    @Throws(IOException::class)
-    private suspend fun writeCommodities() {
-        val list = currencyRepository.getAllCurrenciesAsDomain().getOrElse { return }
-        if (list.isEmpty()) return
-
-        w.name(BackupKeys.COMMODITIES).beginArray()
-        for (c in list) {
-            w.beginObject()
-            writeKey(BackupKeys.NAME, c.name)
-            writeKey(BackupKeys.POSITION, c.position.toDbString())
-            writeKey(BackupKeys.HAS_GAP, c.hasGap)
-            w.endObject()
-        }
-        w.endArray()
+    private fun buildTemplateAccountJson(a: TemplateAccount): JsonObject = buildJsonObject {
+        a.accountName?.let { put(BackupKeys.NAME, it) }
+        a.accountNameMatchGroup?.let { put(BackupKeys.NAME_GROUP, it) }
+        a.accountComment?.let { put(BackupKeys.COMMENT, it) }
+        a.accountCommentMatchGroup?.let { put(BackupKeys.COMMENT_GROUP, it) }
+        a.amount?.let { put(BackupKeys.AMOUNT, it.toDouble()) }
+        a.amountMatchGroup?.let { put(BackupKeys.AMOUNT_GROUP, it) }
+        a.negateAmount?.let { put(BackupKeys.NEGATE_AMOUNT, it) }
+        a.currency?.let { put(BackupKeys.CURRENCY, it) }
+        a.currencyMatchGroup?.let { put(BackupKeys.CURRENCY_GROUP, it) }
     }
 
-    @Throws(IOException::class)
-    private suspend fun writeProfiles() {
-        val profiles = profileRepository.getAllProfiles().getOrElse { return }
+    private suspend fun getCommodities(): List<Currency> =
+        currencyRepository.getAllCurrenciesAsDomain().getOrElse { emptyList() }
 
-        if (profiles.isEmpty()) return
+    private suspend fun getProfiles(): List<Profile> = profileRepository.getAllProfiles().getOrElse { emptyList() }
 
-        w.name(BackupKeys.PROFILES).beginArray()
-        for (p in profiles) {
-            w.beginObject()
-
-            w.name(BackupKeys.NAME).value(p.name)
-            w.name(BackupKeys.UUID).value(p.uuid)
-            w.name(BackupKeys.URL).value(p.url)
-            w.name(BackupKeys.USE_AUTH).value(p.isAuthEnabled)
-            if (p.isAuthEnabled) {
-                w.name(BackupKeys.AUTH_USER).value(p.authentication?.user)
-                w.name(BackupKeys.AUTH_PASS).value(p.authentication?.password)
-            }
-            if (p.apiVersion != API.auto.toInt()) {
-                w.name(BackupKeys.API_VER).value(p.apiVersion.toLong())
-            }
-            w.name(BackupKeys.CAN_POST).value(p.canPost)
-            if (p.canPost) {
-                val defaultCommodity = p.defaultCommodityOrEmpty
-                if (defaultCommodity.isNotEmpty()) {
-                    w.name(BackupKeys.DEFAULT_COMMODITY).value(defaultCommodity)
-                }
-                w.name(BackupKeys.SHOW_COMMODITY).value(p.showCommodityByDefault)
-                w.name(BackupKeys.SHOW_COMMENTS).value(p.showCommentsByDefault)
-                w.name(BackupKeys.FUTURE_DATES).value(p.futureDates.toInt().toLong())
-                w.name(BackupKeys.PREF_ACCOUNT).value(p.preferredAccountsFilter)
-            }
-            w.name(BackupKeys.COLOUR).value(p.theme)
-
-            w.endObject()
-        }
-        w.endArray()
-    }
-
-    @Throws(IOException::class)
-    private fun writeCurrentProfile() {
-        val currentProfile = profileRepository.currentProfile.value ?: return
-        w.name(BackupKeys.CURRENT_PROFILE).value(currentProfile.uuid)
-    }
+    @Suppress("DEPRECATION")
+    private suspend fun getTemplates(): List<TemplateWithAccounts> =
+        templateRepository.getAllTemplatesWithAccounts().getOrElse { emptyList() }
 }

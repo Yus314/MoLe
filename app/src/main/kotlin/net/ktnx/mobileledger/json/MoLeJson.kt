@@ -1,5 +1,5 @@
 /*
- * Copyright © 2026 Damyan Ivanov.
+ * Copyright © 2024 Damyan Ivanov.
  * This file is part of MoLe.
  * MoLe is free software: you can distribute it and/or modify it
  * under the term of the GNU General Public License as published by
@@ -15,21 +15,22 @@
  * along with MoLe. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ktnx.mobileledger.json.unified
+package net.ktnx.mobileledger.json
 
-import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 
 /**
- * 統合 ParsedSourcePos - hledger API v1_32+ 用
+ * Global Json instance configured for MoLe's JSON serialization needs.
  *
- * v1_50 形式: sourceName + sourceLine + sourceColumn
+ * Configuration:
+ * - ignoreUnknownKeys: Allows forward compatibility with newer API versions
+ * - isLenient: Tolerates minor JSON format variations
+ * - coerceInputValues: Handles null values for non-nullable types with defaults
+ * - encodeDefaults: Only encodes non-default values for smaller output
  */
-@Serializable
-data class UnifiedParsedSourcePos(
-    /** ソースファイル名 */
-    val sourceName: String = "",
-    /** ソース行番号 */
-    val sourceLine: Int = 1,
-    /** ソース列番号 */
-    val sourceColumn: Int = 1
-)
+val MoLeJson = Json {
+    ignoreUnknownKeys = true
+    isLenient = true
+    coerceInputValues = true
+    encodeDefaults = false
+}

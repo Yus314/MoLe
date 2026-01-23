@@ -18,13 +18,13 @@
 package net.ktnx.mobileledger.domain.usecase.sync
 
 import android.os.OperationCanceledException
-import com.fasterxml.jackson.databind.RuntimeJsonMappingException
 import java.io.IOException
 import java.net.MalformedURLException
 import java.net.SocketTimeoutException
 import java.text.ParseException
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.serialization.SerializationException
 import net.ktnx.mobileledger.domain.model.SyncError
 import net.ktnx.mobileledger.domain.model.SyncException
 import net.ktnx.mobileledger.json.ApiNotSupportedException
@@ -59,7 +59,7 @@ class SyncExceptionMapper @Inject constructor() {
 
             is IOException -> SyncError.NetworkError(message = e.localizedMessage ?: "ネットワークエラー", cause = e)
 
-            is RuntimeJsonMappingException -> SyncError.ParseError(message = "JSONパースエラー", cause = e)
+            is SerializationException -> SyncError.ParseError(message = "JSONパースエラー", cause = e)
 
             is ParseException -> SyncError.ParseError(message = "データ解析エラー", cause = e)
 

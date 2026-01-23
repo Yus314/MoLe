@@ -17,7 +17,7 @@
 
 package net.ktnx.mobileledger.json.unified
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import net.ktnx.mobileledger.json.MoLeJson
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -28,7 +28,7 @@ import org.junit.Test
  *
  * Tests verify:
  * - Default values
- * - Property accessors
+ * - Constructor initialization
  * - JSON deserialization
  */
 class UnifiedParsedBalanceTest {
@@ -56,76 +56,36 @@ class UnifiedParsedBalanceTest {
     }
 
     // ========================================
-    // acommodity accessor tests
+    // Constructor initialization tests
     // ========================================
 
     @Test
-    fun `acommodity getter returns set value`() {
-        val balance = UnifiedParsedBalance()
-        balance.acommodity = "USD"
+    fun `can create balance with acommodity`() {
+        val balance = UnifiedParsedBalance(acommodity = "USD")
         assertEquals("USD", balance.acommodity)
     }
 
     @Test
-    fun `acommodity getter returns empty for null internal value`() {
-        val balance = UnifiedParsedBalance()
-        // Default state - internal _acommodity is null
-        assertEquals("", balance.acommodity)
-    }
-
-    @Test
-    fun `acommodity setter stores value`() {
-        val balance = UnifiedParsedBalance()
-        balance.acommodity = "EUR"
-        assertEquals("EUR", balance.acommodity)
-    }
-
-    @Test
-    fun `acommodity can be overwritten`() {
-        val balance = UnifiedParsedBalance()
-        balance.acommodity = "USD"
-        balance.acommodity = "EUR"
-        assertEquals("EUR", balance.acommodity)
-    }
-
-    // ========================================
-    // aquantity tests
-    // ========================================
-
-    @Test
-    fun `aquantity can be set`() {
-        val balance = UnifiedParsedBalance()
-        val quantity = UnifiedParsedQuantity().apply {
-            decimalMantissa = 10000L
-            decimalPlaces = 2
-        }
-        balance.aquantity = quantity
+    fun `can create balance with aquantity`() {
+        val balance = UnifiedParsedBalance(
+            aquantity = UnifiedParsedQuantity(
+                decimalMantissa = 10000L,
+                decimalPlaces = 2
+            )
+        )
 
         assertNotNull(balance.aquantity)
         assertEquals(100.0f, balance.aquantity!!.asFloat(), 0.01f)
     }
 
     @Test
-    fun `aquantity can be set to null`() {
-        val balance = UnifiedParsedBalance()
-        balance.aquantity = UnifiedParsedQuantity()
-        balance.aquantity = null
-
-        assertNull(balance.aquantity)
-    }
-
-    // ========================================
-    // astyle tests
-    // ========================================
-
-    @Test
-    fun `astyle can be set`() {
-        val balance = UnifiedParsedBalance()
-        val style = UnifiedParsedStyle().apply {
-            ascommodityside = 'R'
-            isAscommodityspaced = true
-        }
-        balance.astyle = style
+    fun `can create balance with astyle`() {
+        val balance = UnifiedParsedBalance(
+            astyle = UnifiedParsedStyle(
+                ascommodityside = 'R',
+                isAscommodityspaced = true
+            )
+        )
 
         assertNotNull(balance.astyle)
         assertEquals('R', balance.astyle!!.ascommodityside)
@@ -137,17 +97,17 @@ class UnifiedParsedBalanceTest {
 
     @Test
     fun `can create complete balance object`() {
-        val balance = UnifiedParsedBalance().apply {
-            acommodity = "JPY"
-            aquantity = UnifiedParsedQuantity().apply {
-                decimalMantissa = 1000L
+        val balance = UnifiedParsedBalance(
+            acommodity = "JPY",
+            aquantity = UnifiedParsedQuantity(
+                decimalMantissa = 1000L,
                 decimalPlaces = 0
-            }
-            astyle = UnifiedParsedStyle().apply {
-                ascommodityside = 'R'
+            ),
+            astyle = UnifiedParsedStyle(
+                ascommodityside = 'R',
                 isAscommodityspaced = true
-            }
-        }
+            )
+        )
 
         assertEquals("JPY", balance.acommodity)
         assertEquals(1000f, balance.aquantity!!.asFloat(), 0.01f)
@@ -160,7 +120,6 @@ class UnifiedParsedBalanceTest {
 
     @Test
     fun `deserialize balance from JSON`() {
-        val mapper = ObjectMapper()
         val json = """
             {
                 "acommodity": "USD",
@@ -171,7 +130,7 @@ class UnifiedParsedBalanceTest {
             }
         """.trimIndent()
 
-        val balance = mapper.readValue(json, UnifiedParsedBalance::class.java)
+        val balance = MoLeJson.decodeFromString<UnifiedParsedBalance>(json)
 
         assertEquals("USD", balance.acommodity)
         assertNotNull(balance.aquantity)
@@ -180,7 +139,6 @@ class UnifiedParsedBalanceTest {
 
     @Test
     fun `deserialize balance ignores unknown properties`() {
-        val mapper = ObjectMapper()
         val json = """
             {
                 "acommodity": "EUR",
@@ -189,13 +147,12 @@ class UnifiedParsedBalanceTest {
         """.trimIndent()
 
         // Should not throw exception
-        val balance = mapper.readValue(json, UnifiedParsedBalance::class.java)
+        val balance = MoLeJson.decodeFromString<UnifiedParsedBalance>(json)
         assertEquals("EUR", balance.acommodity)
     }
 
     @Test
     fun `deserialize balance with style`() {
-        val mapper = ObjectMapper()
         val json = """
             {
                 "acommodity": "GBP",
@@ -212,7 +169,7 @@ class UnifiedParsedBalanceTest {
             }
         """.trimIndent()
 
-        val balance = mapper.readValue(json, UnifiedParsedBalance::class.java)
+        val balance = MoLeJson.decodeFromString<UnifiedParsedBalance>(json)
 
         assertEquals("GBP", balance.acommodity)
         assertNotNull(balance.astyle)

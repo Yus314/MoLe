@@ -24,11 +24,11 @@ import org.junit.Test
 class ParsedQuantityTest {
     @Test
     fun fromString() {
-        var pq = UnifiedParsedQuantity("-22")
+        var pq = UnifiedParsedQuantity.fromString("-22")
         assertEquals(0, pq.decimalPlaces)
         assertEquals(-22L, pq.decimalMantissa)
 
-        pq = UnifiedParsedQuantity("-123.45")
+        pq = UnifiedParsedQuantity.fromString("-123.45")
         assertEquals(2, pq.decimalPlaces)
         assertEquals(-12345L, pq.decimalMantissa)
     }

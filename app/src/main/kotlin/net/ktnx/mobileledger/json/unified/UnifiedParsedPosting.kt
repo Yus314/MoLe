@@ -17,67 +17,117 @@
 
 package net.ktnx.mobileledger.json.unified
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.annotation.JsonSetter
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.JsonDecoder
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.intOrNull
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import net.ktnx.mobileledger.di.CurrencyFormatterEntryPoint
 import net.ktnx.mobileledger.domain.model.CurrencyPosition
 import net.ktnx.mobileledger.domain.model.TransactionLine
+import net.ktnx.mobileledger.json.MoLeJson
 import net.ktnx.mobileledger.json.config.ApiVersionConfig
+
+/**
+ * サロゲートクラス - ptransaction_ の型変換対応
+ */
+@Serializable
+private data class UnifiedParsedPostingSurrogate(
+    val pbalanceassertion: JsonElement? = null,
+    val pstatus: String = "Unmarked",
+    val paccount: String? = null,
+    val pamount: List<UnifiedParsedAmount>? = null,
+    val pdate: String? = null,
+    val pdate2: String? = null,
+    val ptype: String = "RegularPosting",
+    val ptags: List<List<String>> = emptyList(),
+    val poriginal: String? = null,
+    val pcomment: String = "",
+    @SerialName("ptransaction_")
+    val ptransaction: JsonPrimitive? = null
+)
+
+/**
+ * UnifiedParsedPosting 用のカスタムシリアライザ
+ *
+ * ptransaction_ の Int/String 両方に対応
+ */
+object UnifiedParsedPostingSerializer : KSerializer<UnifiedParsedPosting> {
+    override val descriptor: SerialDescriptor =
+        UnifiedParsedPostingSurrogate.serializer().descriptor
+
+    override fun serialize(encoder: Encoder, value: UnifiedParsedPosting) {
+        val surrogate = UnifiedParsedPostingSurrogate(
+            pbalanceassertion = null,
+            pstatus = value.pstatus,
+            paccount = value.paccount,
+            pamount = value.pamount,
+            pdate = value.pdate,
+            pdate2 = value.pdate2,
+            ptype = value.ptype,
+            ptags = value.ptags,
+            poriginal = value.poriginal,
+            pcomment = value.pcomment,
+            ptransaction = JsonPrimitive(value.ptransaction_)
+        )
+        encoder.encodeSerializableValue(UnifiedParsedPostingSurrogate.serializer(), surrogate)
+    }
+
+    override fun deserialize(decoder: Decoder): UnifiedParsedPosting {
+        val surrogate = decoder.decodeSerializableValue(UnifiedParsedPostingSurrogate.serializer())
+
+        // ptransaction_ を Int または String から String に変換
+        val transactionId = surrogate.ptransaction?.let { prim ->
+            prim.intOrNull?.toString() ?: prim.contentOrNull ?: "0"
+        } ?: "0"
+
+        return UnifiedParsedPosting(
+            pstatus = surrogate.pstatus,
+            paccount = surrogate.paccount,
+            pamount = surrogate.pamount,
+            pdate = surrogate.pdate,
+            pdate2 = surrogate.pdate2,
+            ptype = surrogate.ptype,
+            ptags = surrogate.ptags,
+            poriginal = surrogate.poriginal,
+            pcomment = surrogate.pcomment.trim(),
+            ptransaction_ = transactionId
+        )
+    }
+}
 
 /**
  * 統合 ParsedPosting - API バージョン v1_32+ の差分を吸収
  *
  * v1_32+ では ptransaction_ は String 型を使用
  */
-@JsonIgnoreProperties(ignoreUnknown = true)
-class UnifiedParsedPosting {
-    var pbalanceassertion: Void? = null
-    var pstatus: String = "Unmarked"
-    var paccount: String? = null
-    var pamount: MutableList<UnifiedParsedAmount>? = null
-    var pdate: String? = null
-    var pdate2: String? = null
-    var ptype: String = "RegularPosting"
-    var ptags: MutableList<List<String>> = mutableListOf()
-    var poriginal: String? = null
-
-    private var _pcomment: String = ""
-    var pcomment: String
-        get() = _pcomment
-        set(value) {
-            _pcomment = value.trim()
-        }
-
+@Serializable(with = UnifiedParsedPostingSerializer::class)
+data class UnifiedParsedPosting(
+    val pstatus: String = "Unmarked",
+    val paccount: String? = null,
+    val pamount: List<UnifiedParsedAmount>? = null,
+    val pdate: String? = null,
+    val pdate2: String? = null,
+    val ptype: String = "RegularPosting",
+    val ptags: List<List<String>> = emptyList(),
+    val poriginal: String? = null,
+    val pcomment: String = "",
     /**
      * トランザクションID（String として正規化）
      *
      * v1_32+ では常に String 型
      */
-    @JsonProperty("ptransaction_")
-    var ptransaction_: String = "0"
-        private set
-
-    /**
-     * ptransaction_ を JSON から設定（Int または String 対応）
-     */
-    @JsonSetter("ptransaction_")
-    fun setPtransactionFromJson(value: Any?) {
-        ptransaction_ = when (value) {
-            is Int -> value.toString()
-            is Number -> value.toInt().toString()
-            is String -> value
-            else -> "0"
-        }
-    }
-
-    /**
-     * String として ptransaction_ を設定
-     */
-    fun setTransactionIdAsString(value: String) {
-        ptransaction_ = value
-    }
-
+    @SerialName("ptransaction_")
+    val ptransaction_: String = "0"
+) {
     /**
      * ドメインモデルに変換
      */
@@ -92,6 +142,13 @@ class UnifiedParsedPosting {
         )
     }
 
+    /**
+     * JSON シリアライズ用: ptransaction_ を取得
+     *
+     * v1_32+ では常に String 型を使用
+     */
+    fun getTransactionIdForSerialization(): String = ptransaction_
+
     companion object {
         /**
          * ドメインモデルから Posting を生成
@@ -101,52 +158,43 @@ class UnifiedParsedPosting {
          * @return 生成した UnifiedParsedPosting
          */
         @Suppress("UNUSED_PARAMETER")
-        fun fromDomain(line: TransactionLine, config: ApiVersionConfig): UnifiedParsedPosting =
-            UnifiedParsedPosting().apply {
-                paccount = line.accountName
-                pcomment = line.comment ?: ""
-                pamount = mutableListOf(
-                    UnifiedParsedAmount().apply {
-                        acommodity = line.currency
-                        aismultiplier = false
-                        aquantity = UnifiedParsedQuantity().apply {
-                            decimalPlaces = 2
-                            decimalMantissa = Math.round((line.amount ?: 0f) * 100).toLong()
-                        }
-                        astyle = UnifiedParsedStyle().apply {
-                            ascommodityside = getCommoditySide()
-                            isAscommodityspaced = getCommoditySpaced()
-                            configureStyleForVersion(this, 2)
-                        }
-                    }
-                )
-            }
+        fun fromDomain(line: TransactionLine, config: ApiVersionConfig): UnifiedParsedPosting {
+            val (commoditySide, commoditySpaced) = getCommoditySettings()
+            val precision = 2
+            val mantissa = Math.round((line.amount ?: 0f) * 100).toLong()
 
-        /**
-         * API バージョン v1_32+ 用スタイル設定
-         */
-        private fun configureStyleForVersion(style: UnifiedParsedStyle, precision: Int) {
-            style.asprecision = precision
-            style.asdecimalmark = "."
-            style.asrounding = "NoRounding"
+            val amount = UnifiedParsedAmount(
+                acommodity = line.currency,
+                aismultiplier = false,
+                aquantity = UnifiedParsedQuantity(
+                    decimalPlaces = precision,
+                    decimalMantissa = mantissa
+                ),
+                astyle = UnifiedParsedStyle(
+                    ascommodityside = commoditySide,
+                    isAscommodityspaced = commoditySpaced,
+                    asprecision = precision,
+                    asdecimalmark = ".",
+                    asrounding = "NoRounding"
+                )
+            )
+
+            return UnifiedParsedPosting(
+                paccount = line.accountName,
+                pcomment = line.comment ?: "",
+                pamount = listOf(amount)
+            )
         }
 
-        private fun getCommoditySpaced(): Boolean = CurrencyFormatterEntryPoint.getOrNull()?.currencyGap?.value ?: false
-
-        private fun getCommoditySide(): Char {
-            val formatter = CurrencyFormatterEntryPoint.getOrNull() ?: return 'L'
-            return if (formatter.currencySymbolPosition.value == CurrencyPosition.AFTER) {
+        private fun getCommoditySettings(): Pair<Char, Boolean> {
+            val formatter = CurrencyFormatterEntryPoint.getOrNull()
+            val side = if (formatter?.currencySymbolPosition?.value == CurrencyPosition.AFTER) {
                 'R'
             } else {
                 'L'
             }
+            val spaced = formatter?.currencyGap?.value ?: false
+            return Pair(side, spaced)
         }
     }
-
-    /**
-     * JSON シリアライズ用: ptransaction_ を取得
-     *
-     * v1_32+ では常に String 型を使用
-     */
-    fun getTransactionIdForSerialization(): String = ptransaction_
 }
