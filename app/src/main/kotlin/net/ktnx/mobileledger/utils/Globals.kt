@@ -22,87 +22,128 @@ import android.content.Context
 import android.view.inputmethod.InputMethodManager
 import java.text.ParseException
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Locale
 import java.util.regex.Pattern
 
+// Thread-local date formatters for thread-safe parsing/formatting
+private val ledgerDateFormatter: ThreadLocal<SimpleDateFormat> = ThreadLocal.withInitial {
+    SimpleDateFormat("yyyy/MM/dd", Locale.US)
+}
+
+private val isoDateFormatter: ThreadLocal<SimpleDateFormat> = ThreadLocal.withInitial {
+    SimpleDateFormat("yyyy-MM-dd", Locale.US)
+}
+
+private val reLedgerDate = Pattern.compile("^(?:(?:(\\d+)/)??(\\d\\d?)/)?(\\d\\d?)$")
+
+/**
+ * Parse a ledger date string (yyyy/MM/dd format) to SimpleDate.
+ * Supports partial dates like "15" (day only) or "3/15" (month/day).
+ */
+@Throws(ParseException::class)
+fun String.parseLedgerDate(): SimpleDate {
+    val m = reLedgerDate.matcher(this)
+    if (!m.matches()) {
+        throw ParseException("'$this' does not match expected ledger date pattern", 0)
+    }
+
+    val yearStr = m.group(1)
+    val monthStr = m.group(2)
+    val dayStr = m.group(3)
+
+    val year: Int
+    val month: Int
+
+    if (yearStr == null) {
+        val today = SimpleDate.today()
+        year = today.year
+        month = if (monthStr == null) {
+            today.month
+        } else {
+            monthStr.toInt()
+        }
+    } else {
+        year = yearStr.toInt()
+        requireNotNull(monthStr)
+        month = monthStr.toInt()
+    }
+
+    requireNotNull(dayStr)
+    val day = dayStr.toInt()
+
+    return SimpleDate(year, month, day)
+}
+
+/**
+ * Parse a ledger date string to Calendar.
+ */
+@Throws(ParseException::class)
+fun String.parseLedgerDateAsCalendar(): Calendar = this.parseLedgerDate().toCalendar()
+
+/**
+ * Parse an ISO date string (yyyy-MM-dd format) to SimpleDate.
+ */
+@Throws(ParseException::class)
+fun String.parseIsoDate(): SimpleDate {
+    val date = isoDateFormatter.get()?.parse(this)
+        ?: throw ParseException("Failed to parse ISO date: $this", 0)
+    return SimpleDate.fromDate(date)
+}
+
+/**
+ * Format SimpleDate to ledger date string (yyyy/MM/dd).
+ */
+fun SimpleDate.formatLedgerDate(): String = ledgerDateFormatter.get()?.format(toDate()) ?: ""
+
+/**
+ * Format SimpleDate to ISO date string (yyyy-MM-dd).
+ */
+fun SimpleDate.formatIsoDate(): String = isoDateFormatter.get()?.format(toDate()) ?: ""
+
+/**
+ * Hide the soft keyboard for this activity.
+ */
+fun Activity.hideSoftKeyboard() {
+    val v = currentFocus
+    if (v != null) {
+        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.hideSoftInputFromWindow(v.windowToken, 0)
+    }
+}
+
+/**
+ * Global constants for the application.
+ * Deprecated legacy methods are provided for backward compatibility.
+ */
 object Globals {
-    private val dateFormatter: ThreadLocal<SimpleDateFormat> = ThreadLocal.withInitial {
-        SimpleDateFormat("yyyy/MM/dd", Locale.US)
-    }
-
-    private val isoDateFormatter: ThreadLocal<SimpleDateFormat> = ThreadLocal.withInitial {
-        SimpleDateFormat("yyyy-MM-dd", Locale.US)
-    }
-
-    @JvmField
-    var monthNames: Array<String>? = null
-
     const val developerEmail = "dam+mole-crash@ktnx.net"
 
-    private val reLedgerDate = Pattern.compile("^(?:(?:(\\d+)/)??(\\d\\d?)/)?(\\d\\d?)$")
+    // Legacy methods for backward compatibility - will be removed in future
+    @JvmStatic
+    @Deprecated("Use Activity.hideSoftKeyboard() instead", ReplaceWith("act.hideSoftKeyboard()"))
+    fun hideSoftKeyboard(act: Activity) = act.hideSoftKeyboard()
 
     @JvmStatic
-    fun hideSoftKeyboard(act: Activity) {
-        val v = act.currentFocus
-        if (v != null) {
-            val imm = act.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-            imm.hideSoftInputFromWindow(v.windowToken, 0)
-        }
-    }
-
-    @JvmStatic
+    @Deprecated("Use String.parseLedgerDate() instead", ReplaceWith("dateString.parseLedgerDate()"))
     @Throws(ParseException::class)
-    fun parseLedgerDate(dateString: String): SimpleDate {
-        val m = reLedgerDate.matcher(dateString)
-        if (!m.matches()) {
-            throw ParseException(
-                "'$dateString' does not match expected pattern '$reLedgerDate'",
-                0
-            )
-        }
-
-        val yearStr = m.group(1)
-        val monthStr = m.group(2)
-        val dayStr = m.group(3)
-
-        val year: Int
-        val month: Int
-
-        if (yearStr == null) {
-            val today = SimpleDate.today()
-            year = today.year
-            month = if (monthStr == null) {
-                today.month
-            } else {
-                monthStr.toInt()
-            }
-        } else {
-            year = yearStr.toInt()
-            requireNotNull(monthStr)
-            month = monthStr.toInt()
-        }
-
-        requireNotNull(dayStr)
-        val day = dayStr.toInt()
-
-        return SimpleDate(year, month, day)
-    }
+    fun parseLedgerDate(dateString: String): SimpleDate = dateString.parseLedgerDate()
 
     @JvmStatic
+    @Deprecated("Use String.parseLedgerDateAsCalendar() instead", ReplaceWith("dateString.parseLedgerDateAsCalendar()"))
     @Throws(ParseException::class)
-    fun parseLedgerDateAsCalendar(dateString: String) = parseLedgerDate(dateString).toCalendar()
+    fun parseLedgerDateAsCalendar(dateString: String) = dateString.parseLedgerDateAsCalendar()
 
     @JvmStatic
+    @Deprecated("Use String.parseIsoDate() instead", ReplaceWith("dateString.parseIsoDate()"))
     @Throws(ParseException::class)
-    fun parseIsoDate(dateString: String): SimpleDate {
-        val date = isoDateFormatter.get()?.parse(dateString)
-            ?: throw ParseException("Failed to parse ISO date: $dateString", 0)
-        return SimpleDate.fromDate(date)
-    }
+    fun parseIsoDate(dateString: String): SimpleDate = dateString.parseIsoDate()
 
     @JvmStatic
-    fun formatLedgerDate(date: SimpleDate): String = dateFormatter.get()?.format(date.toDate()) ?: ""
+    @Deprecated("Use SimpleDate.formatLedgerDate() instead", ReplaceWith("date.formatLedgerDate()"))
+    fun formatLedgerDate(date: SimpleDate): String = date.formatLedgerDate()
 
     @JvmStatic
-    fun formatIsoDate(date: SimpleDate): String = isoDateFormatter.get()?.format(date.toDate()) ?: ""
+    @Deprecated("Use SimpleDate.formatIsoDate() instead", ReplaceWith("date.formatIsoDate()"))
+    fun formatIsoDate(date: SimpleDate): String = date.formatIsoDate()
 }

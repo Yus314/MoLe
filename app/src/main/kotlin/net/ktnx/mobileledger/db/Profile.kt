@@ -22,7 +22,6 @@ import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import java.util.UUID
-import net.ktnx.mobileledger.utils.Misc
 
 @Entity(
     tableName = "profiles",
@@ -79,7 +78,7 @@ class Profile {
     fun getDefaultCommodityOrEmpty(): String = defaultCommodity ?: ""
 
     fun setDefaultCommodity(value: String?) {
-        defaultCommodity = Misc.nullIsEmpty(value)
+        defaultCommodity = value ?: ""
     }
 
     @ColumnInfo(name = "show_comments_by_default", defaultValue = "1")
@@ -105,20 +104,20 @@ class Profile {
     override fun equals(other: Any?): Boolean {
         if (other !is Profile) return false
         return id == other.id &&
-            Misc.equalStrings(name, other.name) &&
-            Misc.equalStrings(uuid, other.uuid) &&
-            Misc.equalStrings(url, other.url) &&
+            (name ?: "") == (other.name ?: "") &&
+            (uuid ?: "") == (other.uuid ?: "") &&
+            (url ?: "") == (other.url ?: "") &&
             useAuthentication == other.useAuthentication &&
-            Misc.equalStrings(authUser, other.authUser) &&
-            Misc.equalStrings(authPassword, other.authPassword) &&
+            (authUser ?: "") == (other.authUser ?: "") &&
+            (authPassword ?: "") == (other.authPassword ?: "") &&
             orderNo == other.orderNo &&
             permitPosting == other.permitPosting &&
             theme == other.theme &&
-            Misc.equalStrings(preferredAccountsFilter, other.preferredAccountsFilter) &&
+            (preferredAccountsFilter ?: "") == (other.preferredAccountsFilter ?: "") &&
             futureDates == other.futureDates &&
             apiVersion == other.apiVersion &&
             showCommentsByDefault == other.showCommentsByDefault &&
-            Misc.equalStrings(defaultCommodity, other.defaultCommodity) &&
+            (defaultCommodity ?: "") == (other.defaultCommodity ?: "") &&
             showCommentsByDefault == other.showCommentsByDefault &&
             detectedVersionPre_1_19 == other.detectedVersionPre_1_19 &&
             detectedVersionMajor == other.detectedVersionMajor &&

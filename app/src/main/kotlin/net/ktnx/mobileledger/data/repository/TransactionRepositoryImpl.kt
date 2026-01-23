@@ -35,8 +35,8 @@ import net.ktnx.mobileledger.db.TransactionWithAccounts
 import net.ktnx.mobileledger.di.IoDispatcher
 import net.ktnx.mobileledger.domain.model.Transaction
 import net.ktnx.mobileledger.domain.usecase.AppExceptionMapper
-import net.ktnx.mobileledger.utils.AccountNameUtils
-import net.ktnx.mobileledger.utils.Misc
+import net.ktnx.mobileledger.utils.accountLevel
+import net.ktnx.mobileledger.utils.extractParentAccountName
 
 /**
  * Implementation of [TransactionRepository] that wraps the existing [TransactionDAO].
@@ -155,8 +155,8 @@ class TransactionRepositoryImpl @Inject constructor(
                     acc.profileId = profileId
                     acc.name = accName
                     acc.nameUpper = accName.uppercase()
-                    acc.parentName = AccountNameUtils.extractParentName(accName)
-                    acc.level = AccountNameUtils.determineLevel(acc.name)
+                    acc.parentName = accName.extractParentAccountName()
+                    acc.level = acc.name.accountLevel()
                     acc.generation = trAcc.generation
 
                     acc.id = accountDAO.insertSync(acc)
@@ -175,7 +175,7 @@ class TransactionRepositoryImpl @Inject constructor(
                     accountValueDAO.updateSync(accVal)
                 }
 
-                accName = AccountNameUtils.extractParentName(accName)
+                accName = accName.extractParentAccountName()
             }
         }
     }
@@ -188,7 +188,7 @@ class TransactionRepositoryImpl @Inject constructor(
         var transaction = rec.transaction
         val existing = transactionDAO.getByLedgerId(transaction.profileId, transaction.ledgerId)
         if (existing != null) {
-            if (Misc.equalStrings(transaction.dataHash, existing.dataHash)) {
+            if ((transaction.dataHash ?: "") == (existing.dataHash ?: "")) {
                 transactionDAO.updateGenerationWithAccounts(existing.id, rec.transaction.generation)
                 return
             }

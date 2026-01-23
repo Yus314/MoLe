@@ -23,7 +23,6 @@ import net.ktnx.mobileledger.domain.model.TemplateLine
 import net.ktnx.mobileledger.ui.templates.MatchableValue
 import net.ktnx.mobileledger.ui.templates.TemplateAccountRow
 import net.ktnx.mobileledger.ui.templates.TemplateDetailUiState
-import net.ktnx.mobileledger.utils.Misc
 
 /**
  * Implementation of TemplateDataMapper.
@@ -43,7 +42,7 @@ class TemplateDataMapperImpl @Inject constructor() : TemplateDataMapper {
 
         return Template(
             id = state.templateId,
-            name = Misc.trim(state.name) ?: "",
+            name = state.name?.trim() ?: "",
             pattern = state.pattern,
             testText = state.testText.ifEmpty { null },
             transactionDescription = state.transactionDescription

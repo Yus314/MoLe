@@ -21,18 +21,32 @@ import android.content.Context
 import android.util.TypedValue
 import kotlin.math.roundToInt
 
+/**
+ * Convert dp (density-independent pixels) to px (actual pixels).
+ */
+fun Context.dp2px(dp: Float): Int = TypedValue.applyDimension(
+    TypedValue.COMPLEX_UNIT_DIP,
+    dp,
+    resources.displayMetrics
+).roundToInt()
+
+/**
+ * Convert sp (scale-independent pixels) to px (actual pixels).
+ */
+fun Context.sp2px(sp: Float): Int = TypedValue.applyDimension(
+    TypedValue.COMPLEX_UNIT_SP,
+    sp,
+    resources.displayMetrics
+).roundToInt()
+
+// Legacy object for backward compatibility - will be removed in future
+@Deprecated("Use Context.dp2px() and Context.sp2px() extension functions instead")
 object DimensionUtils {
     @JvmStatic
-    fun dp2px(context: Context, dp: Float): Int = TypedValue.applyDimension(
-        TypedValue.COMPLEX_UNIT_DIP,
-        dp,
-        context.resources.displayMetrics
-    ).roundToInt()
+    @Deprecated("Use Context.dp2px() instead", ReplaceWith("context.dp2px(dp)"))
+    fun dp2px(context: Context, dp: Float): Int = context.dp2px(dp)
 
     @JvmStatic
-    fun sp2px(context: Context, sp: Float): Int = TypedValue.applyDimension(
-        TypedValue.COMPLEX_UNIT_SP,
-        sp,
-        context.resources.displayMetrics
-    ).roundToInt()
+    @Deprecated("Use Context.sp2px() instead", ReplaceWith("context.sp2px(sp)"))
+    fun sp2px(context: Context, sp: Float): Int = context.sp2px(sp)
 }

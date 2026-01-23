@@ -22,7 +22,6 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import net.ktnx.mobileledger.utils.Misc
 
 @Entity(
     tableName = "transaction_accounts",
@@ -73,7 +72,7 @@ class TransactionAccount {
         transactionId = o.transactionId
         orderNo = o.orderNo
         accountName = o.accountName
-        currency = Misc.nullIsEmpty(o.currency)
+        currency = o.currency ?: ""
         amount = o.amount
         comment = o.comment
         amountStyle = o.amountStyle

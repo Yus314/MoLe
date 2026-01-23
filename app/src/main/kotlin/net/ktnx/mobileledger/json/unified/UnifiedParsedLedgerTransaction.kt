@@ -37,8 +37,8 @@ import kotlinx.serialization.json.jsonPrimitive
 import net.ktnx.mobileledger.domain.model.Transaction
 import net.ktnx.mobileledger.json.MoLeJson
 import net.ktnx.mobileledger.json.config.ApiVersionConfig
-import net.ktnx.mobileledger.utils.Globals
-import net.ktnx.mobileledger.utils.Misc
+import net.ktnx.mobileledger.utils.formatIsoDate
+import net.ktnx.mobileledger.utils.parseIsoDate
 
 /**
  * サロゲートクラス - tsourcepos の型変換対応
@@ -212,7 +212,7 @@ data class UnifiedParsedLedgerTransaction(
      */
     @Throws(ParseException::class)
     fun toDomain(): Transaction {
-        val date = tdate?.let { Globals.parseIsoDate(it) }
+        val date = tdate?.let { it.parseIsoDate() }
             ?: throw ParseException("Transaction date is required", 0)
 
         return Transaction(
@@ -253,10 +253,10 @@ data class UnifiedParsedLedgerTransaction(
             }
 
             return UnifiedParsedLedgerTransaction(
-                tcomment = Misc.nullIsEmpty(tr.comment),
+                tcomment = tr.comment ?: "",
                 tprecedingcomment = "",
                 tpostings = postings,
-                tdate = Globals.formatIsoDate(tr.date),
+                tdate = tr.date.formatIsoDate(),
                 tdate2 = null,
                 tindex = 1,
                 tdescription = tr.description,

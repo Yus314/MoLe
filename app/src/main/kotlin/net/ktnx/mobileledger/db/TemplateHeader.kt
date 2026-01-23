@@ -22,7 +22,6 @@ import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import java.util.UUID
-import net.ktnx.mobileledger.utils.Misc
 
 @Entity(
     tableName = "templates",
@@ -107,19 +106,19 @@ class TemplateHeader : TemplateBase {
         if (other == null) return false
         if (other !is TemplateHeader) return false
 
-        return Misc.equalLongs(id, other.id) &&
-            Misc.equalStrings(name, other.name) &&
-            Misc.equalStrings(regularExpression, other.regularExpression) &&
-            Misc.equalStrings(transactionDescription, other.transactionDescription) &&
-            Misc.equalStrings(transactionComment, other.transactionComment) &&
-            Misc.equalIntegers(transactionDescriptionMatchGroup, other.transactionDescriptionMatchGroup) &&
-            Misc.equalIntegers(transactionCommentMatchGroup, other.transactionCommentMatchGroup) &&
-            Misc.equalIntegers(dateDay, other.dateDay) &&
-            Misc.equalIntegers(dateDayMatchGroup, other.dateDayMatchGroup) &&
-            Misc.equalIntegers(dateMonth, other.dateMonth) &&
-            Misc.equalIntegers(dateMonthMatchGroup, other.dateMonthMatchGroup) &&
-            Misc.equalIntegers(dateYear, other.dateYear) &&
-            Misc.equalIntegers(dateYearMatchGroup, other.dateYearMatchGroup)
+        return id == other.id &&
+            name == other.name &&
+            regularExpression == other.regularExpression &&
+            (transactionDescription ?: "") == (other.transactionDescription ?: "") &&
+            (transactionComment ?: "") == (other.transactionComment ?: "") &&
+            transactionDescriptionMatchGroup == other.transactionDescriptionMatchGroup &&
+            transactionCommentMatchGroup == other.transactionCommentMatchGroup &&
+            dateDay == other.dateDay &&
+            dateDayMatchGroup == other.dateDayMatchGroup &&
+            dateMonth == other.dateMonth &&
+            dateMonthMatchGroup == other.dateMonthMatchGroup &&
+            dateYear == other.dateYear &&
+            dateYearMatchGroup == other.dateYearMatchGroup
     }
 
     override fun hashCode(): Int {

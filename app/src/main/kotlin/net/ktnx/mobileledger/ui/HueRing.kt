@@ -35,7 +35,7 @@ import kotlin.math.min
 import kotlin.math.sin
 import logcat.logcat
 import net.ktnx.mobileledger.utils.Colors
-import net.ktnx.mobileledger.utils.DimensionUtils
+import net.ktnx.mobileledger.utils.dp2px
 
 class HueRing : View {
     private lateinit var ringPaint: Paint
@@ -113,7 +113,7 @@ class HueRing : View {
         setInitialHue(initialHueDegrees)
         setHue(initialHueDegrees)
 
-        markerStrokeWidth = DimensionUtils.dp2px(context, 4f)
+        markerStrokeWidth = context.dp2px(4f)
 
         padding = markerStrokeWidth * 2 + 2
 

@@ -17,7 +17,11 @@
 
 package net.ktnx.mobileledger.utils
 
+import android.app.Activity
+import android.content.res.Configuration
+import android.text.Editable
 import android.view.View
+import android.view.WindowManager
 import android.widget.TextView
 import net.ktnx.mobileledger.domain.model.BalanceConstants
 
@@ -131,3 +135,36 @@ fun Float.isEffectivelyZero(): Boolean =
  * Equivalent to Misc.equalFloats()
  */
 fun Float.equalsWithTolerance(other: Float): Boolean = (this - other).isEffectivelyZero()
+
+// Activity Extensions
+
+/**
+ * Shows the soft keyboard for this activity if no hardware keyboard is present.
+ */
+fun Activity.showSoftKeyboard() {
+    val cf = resources.configuration
+    if (cf.keyboard == Configuration.KEYBOARD_NOKEYS ||
+        cf.keyboardHidden == Configuration.KEYBOARDHIDDEN_YES
+    ) {
+        window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
+    }
+}
+
+// Editable Extensions
+
+/**
+ * Returns the string representation of this Editable, or empty string if null.
+ */
+fun Editable?.toStringOrEmpty(): String = this?.toString() ?: ""
+
+// Additional String Extensions
+
+/**
+ * Trims the string and returns null if the result is empty.
+ */
+fun String?.trimOrNull(): String? = this?.trim()?.takeIf { it.isNotEmpty() }
+
+/**
+ * Compares this nullable String to a CharSequence, treating null as empty string.
+ */
+fun String?.equalsCharSequence(text: CharSequence): Boolean = (this ?: "") == text.toString()

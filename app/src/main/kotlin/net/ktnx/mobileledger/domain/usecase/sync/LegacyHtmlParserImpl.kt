@@ -35,8 +35,8 @@ import net.ktnx.mobileledger.domain.model.TransactionLine
 import net.ktnx.mobileledger.network.HledgerClient
 import net.ktnx.mobileledger.network.NetworkAuthenticationException
 import net.ktnx.mobileledger.network.NetworkHttpException
-import net.ktnx.mobileledger.utils.Globals
 import net.ktnx.mobileledger.utils.SimpleDate
+import net.ktnx.mobileledger.utils.parseIsoDate
 
 /**
  * Implementation of LegacyHtmlParser that parses HTML from hledger-web /journal endpoint.
@@ -158,7 +158,7 @@ class LegacyHtmlParserImpl @Inject constructor(
                                     if (equalsIndex >= 0) {
                                         date = date.substring(equalsIndex + 1)
                                     }
-                                    val parsedDate = Globals.parseIsoDate(date)
+                                    val parsedDate = date.parseIsoDate()
                                     transactionBuilder = TransactionBuilder(
                                         ledgerId = transactionId.toLong(),
                                         date = parsedDate,

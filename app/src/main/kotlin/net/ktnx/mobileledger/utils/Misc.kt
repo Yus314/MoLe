@@ -27,64 +27,106 @@ object Misc {
     const val ZERO_WIDTH_SPACE: Char = '\u200B'
 
     @JvmStatic
-    fun isZero(f: Float): Boolean = (f < BalanceConstants.BALANCE_EPSILON) && (f > -BalanceConstants.BALANCE_EPSILON)
+    @Deprecated(
+        "Use Float.isEffectivelyZero() extension function instead",
+        ReplaceWith("f.isEffectivelyZero()", "net.ktnx.mobileledger.utils.isEffectivelyZero")
+    )
+    fun isZero(f: Float): Boolean = f < BalanceConstants.BALANCE_EPSILON && f > -BalanceConstants.BALANCE_EPSILON
 
     @JvmStatic
+    @Deprecated(
+        "Use Float.equalsWithTolerance() extension function instead",
+        ReplaceWith("a.equalsWithTolerance(b)", "net.ktnx.mobileledger.utils.equalsWithTolerance")
+    )
     fun equalFloats(a: Float, b: Float): Boolean = isZero(a - b)
 
     @JvmStatic
+    @Deprecated(
+        "Use Activity.showSoftKeyboard() extension function instead",
+        ReplaceWith("activity.showSoftKeyboard()", "net.ktnx.mobileledger.utils.showSoftKeyboard")
+    )
     fun showSoftKeyboard(activity: Activity) {
         val cf = activity.resources.configuration
         if (cf.keyboard == Configuration.KEYBOARD_NOKEYS ||
             cf.keyboardHidden == Configuration.KEYBOARDHIDDEN_YES
         ) {
-            activity.window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
+            activity.window.setSoftInputMode(
+                WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE
+            )
         }
     }
 
     @JvmStatic
+    @Deprecated(
+        "Use Activity.hideSoftKeyboard() extension function instead",
+        ReplaceWith("activity.hideSoftKeyboard()", "net.ktnx.mobileledger.utils.hideSoftKeyboard")
+    )
     fun hideSoftKeyboard(activity: Activity) {
         val cf = activity.resources.configuration
         if (cf.keyboard == Configuration.KEYBOARD_NOKEYS ||
             cf.keyboardHidden == Configuration.KEYBOARDHIDDEN_NO
         ) {
-            activity.window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN)
+            activity.window.setSoftInputMode(
+                WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN
+            )
         }
     }
 
     @JvmStatic
+    @Deprecated(
+        "Use String?.emptyToNull() extension function instead",
+        ReplaceWith("str.emptyToNull()", "net.ktnx.mobileledger.utils.emptyToNull")
+    )
     fun emptyIsNull(str: String?): String? = if (str != null && str.isEmpty()) null else str
 
     @JvmStatic
+    @Deprecated("Use Kotlin stdlib `str ?: \"\"` instead")
     fun nullIsEmpty(str: String?): String = str ?: ""
 
     @JvmStatic
+    @Deprecated(
+        "Use Editable?.toStringOrEmpty() extension function instead",
+        ReplaceWith("e.toStringOrEmpty()", "net.ktnx.mobileledger.utils.toStringOrEmpty")
+    )
     fun nullIsEmpty(e: Editable?): String = e?.toString() ?: ""
 
     @JvmStatic
-    fun equalStrings(a: String?, b: String?): Boolean = nullIsEmpty(a) == nullIsEmpty(b)
+    @Deprecated(
+        "Use Kotlin's null coalescing: (a ?: \"\") == (b ?: \"\")",
+        ReplaceWith("(a ?: \"\") == (b ?: \"\")")
+    )
+    fun equalStrings(a: String?, b: String?): Boolean = (a ?: "") == (b ?: "")
 
     @JvmStatic
-    fun stringEqualToCharSequence(u: String?, text: CharSequence): Boolean = nullIsEmpty(u) == text.toString()
+    @Deprecated(
+        "Use String?.equalsCharSequence() extension function instead",
+        ReplaceWith("u.equalsCharSequence(text)", "net.ktnx.mobileledger.utils.equalsCharSequence")
+    )
+    fun stringEqualToCharSequence(u: String?, text: CharSequence): Boolean = (u ?: "") == text.toString()
 
     @JvmStatic
+    @Deprecated("Use Kotlin stdlib String?.trim() instead")
     fun trim(string: String?): String? = string?.trim()
 
     @JvmStatic
-    fun equalIntegers(a: Int?, b: Int?): Boolean {
-        if (a == null && b == null) return true
-        if (a == null || b == null) return false
-        return a == b
-    }
+    @Deprecated(
+        "Use Kotlin's == operator which handles nulls correctly: a == b",
+        ReplaceWith("a == b")
+    )
+    fun equalIntegers(a: Int?, b: Int?): Boolean = a == b
 
     @JvmStatic
-    fun equalLongs(a: Long?, b: Long?): Boolean {
-        if (a == null && b == null) return true
-        if (a == null || b == null) return false
-        return a == b
-    }
+    @Deprecated(
+        "Use Kotlin's == operator which handles nulls correctly: a == b",
+        ReplaceWith("a == b")
+    )
+    fun equalLongs(a: Long?, b: Long?): Boolean = a == b
 
     @JvmStatic
+    @Deprecated(
+        "Use String?.withWrapHints() extension function instead",
+        ReplaceWith("input.withWrapHints()", "net.ktnx.mobileledger.utils.withWrapHints")
+    )
     fun addWrapHints(input: String?): String? {
         if (input == null) return null
 

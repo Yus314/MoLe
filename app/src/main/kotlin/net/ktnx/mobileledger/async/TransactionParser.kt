@@ -21,8 +21,8 @@ import java.text.ParseException
 import java.util.regex.Pattern
 import net.ktnx.mobileledger.domain.model.Transaction
 import net.ktnx.mobileledger.domain.model.TransactionLine
-import net.ktnx.mobileledger.utils.Globals
 import net.ktnx.mobileledger.utils.SimpleDate
+import net.ktnx.mobileledger.utils.parseLedgerDate
 
 /**
  * Parses ledger transactions from legacy HTML format.
@@ -127,7 +127,7 @@ class TransactionParser {
                         if (equalsIndex >= 0) {
                             dateStr = dateStr.substring(equalsIndex + 1)
                         }
-                        val date = Globals.parseLedgerDate(dateStr)
+                        val date = dateStr.parseLedgerDate()
                         builder = TransactionBuilder(
                             ledgerId = transactionId.toLong(),
                             date = date,
