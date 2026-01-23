@@ -60,7 +60,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import net.ktnx.mobileledger.ui.components.WeakOverscrollContainer
-import net.ktnx.mobileledger.utils.Colors
 
 /**
  * Account Summary Tab displaying the list of accounts with their balances.

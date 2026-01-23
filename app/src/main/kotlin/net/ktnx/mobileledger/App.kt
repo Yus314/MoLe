@@ -63,7 +63,7 @@ class App : Application() {
         // Initialize CurrencyFormatterEntryPoint for static access in JSON parsers
         CurrencyFormatterEntryPoint.initialize(this)
 
-        // Initialize ThemeServiceEntryPoint for static access in Colors and Views
+        // Initialize ThemeServiceEntryPoint for static access in Views (HueRing)
         ThemeServiceEntryPoint.initialize(this)
     }
 
