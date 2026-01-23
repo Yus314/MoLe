@@ -133,3 +133,5 @@ Some icons taken from the Android open-source project are Copyright Google Inc
 and/or Android open-source project and licensed under the Apache License,
 version 2.0 (See Apache-2.0.txt or
 <https://www.apache.org/licenses/LICENSE-2.0>)
+
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/Yus314/MoLe)
