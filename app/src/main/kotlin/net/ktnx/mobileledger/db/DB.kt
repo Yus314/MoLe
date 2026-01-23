@@ -82,34 +82,6 @@ abstract class DB : RoomDatabase() {
         const val DB_NAME = "MoLe.db"
 
         /**
-         * Database instance for legacy code access.
-         * @deprecated Use Hilt dependency injection instead
-         */
-        @Volatile
-        private var instance: DB? = null
-
-        /**
-         * Initialize the database instance (called by DatabaseModule).
-         * @param db The database instance created by Hilt DI
-         */
-        @JvmStatic
-        fun setInstance(db: DB) {
-            instance = db
-        }
-
-        /**
-         * Get the database instance for legacy code access.
-         * @deprecated Use Hilt @Inject instead. This remains only for
-         * backward compatibility with DAO classes that need cross-DAO access.
-         */
-        @Deprecated("Use Hilt @Inject instead")
-        @JvmStatic
-        fun get(): DB = instance
-            ?: throw IllegalStateException(
-                "DB not initialized. Ensure DatabaseModule is loaded before accessing DB.get()"
-            )
-
-        /**
          * Apply a SQL revision file from raw resources.
          *
          * @param db The SQLite database to apply the revision to

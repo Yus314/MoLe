@@ -89,10 +89,7 @@ object DatabaseModule {
             }
         })
 
-        val db = builder.build()
-        // Set instance for legacy code that uses DB.get()
-        DB.setInstance(db)
-        return db
+        return builder.build()
     }
 
     private fun createMigrations(context: Context, preferencesRepository: PreferencesRepository): Array<Migration> {
