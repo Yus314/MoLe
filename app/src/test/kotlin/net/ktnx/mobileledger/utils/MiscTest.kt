@@ -24,338 +24,142 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * Unit tests for [Misc].
+ * Unit tests for [Misc] and extension functions.
  *
  * Tests verify:
- * - Float comparison utilities
- * - String utilities
- * - Null handling utilities
+ * - Float comparison utilities (extension functions)
+ * - String utilities (extension functions)
  */
 class MiscTest {
 
     // ========================================
-    // isZero tests
+    // isEffectivelyZero tests (Float extension)
     // ========================================
 
     @Test
-    fun `isZero returns true for exact zero`() {
-        assertTrue(Misc.isZero(0.0f))
+    fun `isEffectivelyZero returns true for exact zero`() {
+        assertTrue(0.0f.isEffectivelyZero())
     }
 
     @Test
-    fun `isZero returns true for very small positive`() {
-        assertTrue(Misc.isZero(0.000001f))
+    fun `isEffectivelyZero returns true for very small positive`() {
+        assertTrue(0.000001f.isEffectivelyZero())
     }
 
     @Test
-    fun `isZero returns true for very small negative`() {
-        assertTrue(Misc.isZero(-0.000001f))
+    fun `isEffectivelyZero returns true for very small negative`() {
+        assertTrue((-0.000001f).isEffectivelyZero())
     }
 
     @Test
-    fun `isZero returns false for non-zero positive`() {
-        assertFalse(Misc.isZero(0.01f))
+    fun `isEffectivelyZero returns false for non-zero positive`() {
+        assertFalse(0.01f.isEffectivelyZero())
     }
 
     @Test
-    fun `isZero returns false for non-zero negative`() {
-        assertFalse(Misc.isZero(-0.01f))
+    fun `isEffectivelyZero returns false for non-zero negative`() {
+        assertFalse((-0.01f).isEffectivelyZero())
     }
 
     @Test
-    fun `isZero returns false for large positive`() {
-        assertFalse(Misc.isZero(100.0f))
+    fun `isEffectivelyZero returns false for large positive`() {
+        assertFalse(100.0f.isEffectivelyZero())
     }
 
     @Test
-    fun `isZero returns false for large negative`() {
-        assertFalse(Misc.isZero(-100.0f))
-    }
-
-    // ========================================
-    // equalFloats tests
-    // ========================================
-
-    @Test
-    fun `equalFloats returns true for exact same values`() {
-        assertTrue(Misc.equalFloats(10.5f, 10.5f))
-    }
-
-    @Test
-    fun `equalFloats returns true for very close values`() {
-        assertTrue(Misc.equalFloats(10.0f, 10.0000001f))
-    }
-
-    @Test
-    fun `equalFloats returns false for different values`() {
-        assertFalse(Misc.equalFloats(10.0f, 10.1f))
-    }
-
-    @Test
-    fun `equalFloats returns true for both zero`() {
-        assertTrue(Misc.equalFloats(0.0f, 0.0f))
-    }
-
-    @Test
-    fun `equalFloats returns true for positive and negative zero`() {
-        assertTrue(Misc.equalFloats(0.0f, -0.0f))
-    }
-
-    @Test
-    fun `equalFloats returns false for large difference`() {
-        assertFalse(Misc.equalFloats(100.0f, 200.0f))
+    fun `isEffectivelyZero returns false for large negative`() {
+        assertFalse((-100.0f).isEffectivelyZero())
     }
 
     // ========================================
-    // emptyIsNull tests
+    // equalsWithTolerance tests (Float extension)
     // ========================================
 
     @Test
-    fun `emptyIsNull returns null for empty string`() {
-        assertNull(Misc.emptyIsNull(""))
+    fun `equalsWithTolerance returns true for exact same values`() {
+        assertTrue(10.5f.equalsWithTolerance(10.5f))
     }
 
     @Test
-    fun `emptyIsNull returns null for null input`() {
-        assertNull(Misc.emptyIsNull(null))
+    fun `equalsWithTolerance returns true for very close values`() {
+        assertTrue(10.0f.equalsWithTolerance(10.0000001f))
     }
 
     @Test
-    fun `emptyIsNull returns string for non-empty input`() {
-        assertEquals("hello", Misc.emptyIsNull("hello"))
+    fun `equalsWithTolerance returns false for different values`() {
+        assertFalse(10.0f.equalsWithTolerance(10.1f))
     }
 
     @Test
-    fun `emptyIsNull returns string with whitespace`() {
-        assertEquals(" ", Misc.emptyIsNull(" "))
-    }
-
-    // ========================================
-    // nullIsEmpty tests - String
-    // ========================================
-
-    @Test
-    fun `nullIsEmpty returns empty for null`() {
-        assertEquals("", Misc.nullIsEmpty(null as String?))
+    fun `equalsWithTolerance returns true for both zero`() {
+        assertTrue(0.0f.equalsWithTolerance(0.0f))
     }
 
     @Test
-    fun `nullIsEmpty returns string for non-null`() {
-        assertEquals("hello", Misc.nullIsEmpty("hello"))
+    fun `equalsWithTolerance returns true for positive and negative zero`() {
+        assertTrue(0.0f.equalsWithTolerance(-0.0f))
     }
 
     @Test
-    fun `nullIsEmpty returns empty for empty input`() {
-        assertEquals("", Misc.nullIsEmpty(""))
+    fun `equalsWithTolerance returns false for large difference`() {
+        assertFalse(100.0f.equalsWithTolerance(200.0f))
     }
 
     // ========================================
-    // equalStrings tests
+    // emptyToNull tests (String extension)
     // ========================================
 
     @Test
-    fun `equalStrings returns true for same strings`() {
-        assertTrue(Misc.equalStrings("hello", "hello"))
+    fun `emptyToNull returns null for empty string`() {
+        assertNull("".emptyToNull())
     }
 
     @Test
-    fun `equalStrings returns false for different strings`() {
-        assertFalse(Misc.equalStrings("hello", "world"))
+    fun `emptyToNull returns null for null input`() {
+        assertNull((null as String?).emptyToNull())
     }
 
     @Test
-    fun `equalStrings returns true for both null`() {
-        assertTrue(Misc.equalStrings(null, null))
+    fun `emptyToNull returns string for non-empty input`() {
+        assertEquals("hello", "hello".emptyToNull())
     }
 
     @Test
-    fun `equalStrings returns true for null and empty`() {
-        assertTrue(Misc.equalStrings(null, ""))
-    }
-
-    @Test
-    fun `equalStrings returns true for empty and null`() {
-        assertTrue(Misc.equalStrings("", null))
-    }
-
-    @Test
-    fun `equalStrings returns false for null and non-empty`() {
-        assertFalse(Misc.equalStrings(null, "hello"))
+    fun `emptyToNull returns string with whitespace`() {
+        assertEquals(" ", " ".emptyToNull())
     }
 
     // ========================================
-    // stringEqualToCharSequence tests
+    // withWrapHints tests (String extension)
     // ========================================
 
     @Test
-    fun `stringEqualToCharSequence returns true for equal strings`() {
-        assertTrue(Misc.stringEqualToCharSequence("hello", "hello"))
+    fun `withWrapHints returns null for null input`() {
+        assertNull((null as String?).withWrapHints())
     }
 
     @Test
-    fun `stringEqualToCharSequence returns false for different strings`() {
-        assertFalse(Misc.stringEqualToCharSequence("hello", "world"))
+    fun `withWrapHints returns empty for no colons`() {
+        assertEquals("", "hello".withWrapHints())
     }
 
     @Test
-    fun `stringEqualToCharSequence returns true for null and empty CharSequence`() {
-        assertTrue(Misc.stringEqualToCharSequence(null, ""))
-    }
-
-    @Test
-    fun `stringEqualToCharSequence returns true for empty string and empty CharSequence`() {
-        assertTrue(Misc.stringEqualToCharSequence("", ""))
-    }
-
-    @Test
-    fun `stringEqualToCharSequence returns false for null and non-empty CharSequence`() {
-        assertFalse(Misc.stringEqualToCharSequence(null, "hello"))
-    }
-
-    @Test
-    fun `stringEqualToCharSequence handles StringBuilder`() {
-        val sb = StringBuilder("test")
-        assertTrue(Misc.stringEqualToCharSequence("test", sb))
-    }
-
-    // ========================================
-    // trim tests
-    // ========================================
-
-    @Test
-    fun `trim returns null for null input`() {
-        assertNull(Misc.trim(null))
-    }
-
-    @Test
-    fun `trim removes leading whitespace`() {
-        assertEquals("hello", Misc.trim("  hello"))
-    }
-
-    @Test
-    fun `trim removes trailing whitespace`() {
-        assertEquals("hello", Misc.trim("hello  "))
-    }
-
-    @Test
-    fun `trim removes both leading and trailing whitespace`() {
-        assertEquals("hello", Misc.trim("  hello  "))
-    }
-
-    @Test
-    fun `trim returns empty for whitespace only`() {
-        assertEquals("", Misc.trim("   "))
-    }
-
-    @Test
-    fun `trim preserves internal whitespace`() {
-        assertEquals("hello world", Misc.trim("  hello world  "))
-    }
-
-    // ========================================
-    // equalIntegers tests
-    // ========================================
-
-    @Test
-    fun `equalIntegers returns true for same values`() {
-        assertTrue(Misc.equalIntegers(5, 5))
-    }
-
-    @Test
-    fun `equalIntegers returns false for different values`() {
-        assertFalse(Misc.equalIntegers(5, 10))
-    }
-
-    @Test
-    fun `equalIntegers returns true for both null`() {
-        assertTrue(Misc.equalIntegers(null, null))
-    }
-
-    @Test
-    fun `equalIntegers returns false for first null`() {
-        assertFalse(Misc.equalIntegers(null, 5))
-    }
-
-    @Test
-    fun `equalIntegers returns false for second null`() {
-        assertFalse(Misc.equalIntegers(5, null))
-    }
-
-    @Test
-    fun `equalIntegers handles zero`() {
-        assertTrue(Misc.equalIntegers(0, 0))
-    }
-
-    @Test
-    fun `equalIntegers handles negative values`() {
-        assertTrue(Misc.equalIntegers(-5, -5))
-    }
-
-    // ========================================
-    // equalLongs tests
-    // ========================================
-
-    @Test
-    fun `equalLongs returns true for same values`() {
-        assertTrue(Misc.equalLongs(5L, 5L))
-    }
-
-    @Test
-    fun `equalLongs returns false for different values`() {
-        assertFalse(Misc.equalLongs(5L, 10L))
-    }
-
-    @Test
-    fun `equalLongs returns true for both null`() {
-        assertTrue(Misc.equalLongs(null, null))
-    }
-
-    @Test
-    fun `equalLongs returns false for first null`() {
-        assertFalse(Misc.equalLongs(null, 5L))
-    }
-
-    @Test
-    fun `equalLongs returns false for second null`() {
-        assertFalse(Misc.equalLongs(5L, null))
-    }
-
-    @Test
-    fun `equalLongs handles large values`() {
-        assertTrue(Misc.equalLongs(Long.MAX_VALUE, Long.MAX_VALUE))
-    }
-
-    // ========================================
-    // addWrapHints tests
-    // ========================================
-
-    @Test
-    fun `addWrapHints returns null for null input`() {
-        assertNull(Misc.addWrapHints(null))
-    }
-
-    @Test
-    fun `addWrapHints returns empty for no colons`() {
-        assertEquals("", Misc.addWrapHints("hello"))
-    }
-
-    @Test
-    fun `addWrapHints adds hint after colon`() {
-        val result = Misc.addWrapHints("Assets:Bank")
+    fun `withWrapHints adds hint after colon`() {
+        val result = "Assets:Bank".withWrapHints()
         assertTrue(result!!.contains(Misc.ZERO_WIDTH_SPACE))
     }
 
     @Test
-    fun `addWrapHints handles multiple colons`() {
-        val result = Misc.addWrapHints("Assets:Bank:Checking")
+    fun `withWrapHints handles multiple colons`() {
+        val result = "Assets:Bank:Checking".withWrapHints()
         // Should have zero-width space after each colon except the last part
         val zwsCount = result!!.count { it == Misc.ZERO_WIDTH_SPACE }
         assertEquals(2, zwsCount)
     }
 
     @Test
-    fun `addWrapHints returns empty for string without colon`() {
-        assertEquals("", Misc.addWrapHints("NoColonHere"))
+    fun `withWrapHints returns empty for string without colon`() {
+        assertEquals("", "NoColonHere".withWrapHints())
     }
 
     // ========================================

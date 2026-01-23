@@ -114,36 +114,7 @@ fun Activity.hideSoftKeyboard() {
 
 /**
  * Global constants for the application.
- * Deprecated legacy methods are provided for backward compatibility.
  */
 object Globals {
     const val developerEmail = "dam+mole-crash@ktnx.net"
-
-    // Legacy methods for backward compatibility - will be removed in future
-    @JvmStatic
-    @Deprecated("Use Activity.hideSoftKeyboard() instead", ReplaceWith("act.hideSoftKeyboard()"))
-    fun hideSoftKeyboard(act: Activity) = act.hideSoftKeyboard()
-
-    @JvmStatic
-    @Deprecated("Use String.parseLedgerDate() instead", ReplaceWith("dateString.parseLedgerDate()"))
-    @Throws(ParseException::class)
-    fun parseLedgerDate(dateString: String): SimpleDate = dateString.parseLedgerDate()
-
-    @JvmStatic
-    @Deprecated("Use String.parseLedgerDateAsCalendar() instead", ReplaceWith("dateString.parseLedgerDateAsCalendar()"))
-    @Throws(ParseException::class)
-    fun parseLedgerDateAsCalendar(dateString: String) = dateString.parseLedgerDateAsCalendar()
-
-    @JvmStatic
-    @Deprecated("Use String.parseIsoDate() instead", ReplaceWith("dateString.parseIsoDate()"))
-    @Throws(ParseException::class)
-    fun parseIsoDate(dateString: String): SimpleDate = dateString.parseIsoDate()
-
-    @JvmStatic
-    @Deprecated("Use SimpleDate.formatLedgerDate() instead", ReplaceWith("date.formatLedgerDate()"))
-    fun formatLedgerDate(date: SimpleDate): String = date.formatLedgerDate()
-
-    @JvmStatic
-    @Deprecated("Use SimpleDate.formatIsoDate() instead", ReplaceWith("date.formatIsoDate()"))
-    fun formatIsoDate(date: SimpleDate): String = date.formatIsoDate()
 }

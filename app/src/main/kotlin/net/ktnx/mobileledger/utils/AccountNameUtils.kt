@@ -59,19 +59,3 @@ fun String.accountLevel(): Int {
  * @return true if this account is a direct or indirect parent of child
  */
 fun String.isParentAccountOf(child: String): Boolean = child.startsWith("$this:")
-
-// Legacy object for backward compatibility - will be removed in future
-@Deprecated("Use String extension functions instead")
-object AccountNameUtils {
-    @JvmStatic
-    @Deprecated("Use String.extractParentAccountName() instead", ReplaceWith("accountName.extractParentAccountName()"))
-    fun extractParentName(accountName: String): String? = accountName.extractParentAccountName()
-
-    @JvmStatic
-    @Deprecated("Use String.accountLevel() instead", ReplaceWith("accountName.accountLevel()"))
-    fun determineLevel(accountName: String): Int = accountName.accountLevel()
-
-    @JvmStatic
-    @Deprecated("Use String.isParentAccountOf() instead", ReplaceWith("possibleParent.isParentAccountOf(accountName)"))
-    fun isParentOf(possibleParent: String, accountName: String): Boolean = possibleParent.isParentAccountOf(accountName)
-}

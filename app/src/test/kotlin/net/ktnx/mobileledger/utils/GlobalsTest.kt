@@ -23,7 +23,7 @@ import org.junit.Assert.assertNotNull
 import org.junit.Test
 
 /**
- * Unit tests for [Globals].
+ * Unit tests for [Globals] and date extension functions.
  *
  * Tests verify:
  * - Date parsing (ledger format and ISO format)
@@ -32,12 +32,12 @@ import org.junit.Test
 class GlobalsTest {
 
     // ========================================
-    // parseLedgerDate tests
+    // parseLedgerDate tests (String extension)
     // ========================================
 
     @Test
     fun `parseLedgerDate parses full date with year`() {
-        val date = Globals.parseLedgerDate("2024/06/15")
+        val date = "2024/06/15".parseLedgerDate()
         assertEquals(2024, date.year)
         assertEquals(6, date.month)
         assertEquals(15, date.day)
@@ -45,7 +45,7 @@ class GlobalsTest {
 
     @Test
     fun `parseLedgerDate parses date with single digit month and day`() {
-        val date = Globals.parseLedgerDate("2024/1/5")
+        val date = "2024/1/5".parseLedgerDate()
         assertEquals(2024, date.year)
         assertEquals(1, date.month)
         assertEquals(5, date.day)
@@ -53,7 +53,7 @@ class GlobalsTest {
 
     @Test
     fun `parseLedgerDate parses date without year uses current year`() {
-        val date = Globals.parseLedgerDate("6/15")
+        val date = "6/15".parseLedgerDate()
         val today = SimpleDate.today()
         assertEquals(today.year, date.year)
         assertEquals(6, date.month)
@@ -62,7 +62,7 @@ class GlobalsTest {
 
     @Test
     fun `parseLedgerDate parses day only uses current year and month`() {
-        val date = Globals.parseLedgerDate("15")
+        val date = "15".parseLedgerDate()
         val today = SimpleDate.today()
         assertEquals(today.year, date.year)
         assertEquals(today.month, date.month)
@@ -71,21 +71,21 @@ class GlobalsTest {
 
     @Test(expected = ParseException::class)
     fun `parseLedgerDate throws for invalid format`() {
-        Globals.parseLedgerDate("invalid-date")
+        "invalid-date".parseLedgerDate()
     }
 
     @Test(expected = ParseException::class)
     fun `parseLedgerDate throws for empty string`() {
-        Globals.parseLedgerDate("")
+        "".parseLedgerDate()
     }
 
     // ========================================
-    // parseIsoDate tests
+    // parseIsoDate tests (String extension)
     // ========================================
 
     @Test
     fun `parseIsoDate parses standard ISO date`() {
-        val date = Globals.parseIsoDate("2024-06-15")
+        val date = "2024-06-15".parseIsoDate()
         assertEquals(2024, date.year)
         assertEquals(6, date.month)
         assertEquals(15, date.day)
@@ -93,7 +93,7 @@ class GlobalsTest {
 
     @Test
     fun `parseIsoDate parses date at beginning of year`() {
-        val date = Globals.parseIsoDate("2024-01-01")
+        val date = "2024-01-01".parseIsoDate()
         assertEquals(2024, date.year)
         assertEquals(1, date.month)
         assertEquals(1, date.day)
@@ -101,7 +101,7 @@ class GlobalsTest {
 
     @Test
     fun `parseIsoDate parses date at end of year`() {
-        val date = Globals.parseIsoDate("2024-12-31")
+        val date = "2024-12-31".parseIsoDate()
         assertEquals(2024, date.year)
         assertEquals(12, date.month)
         assertEquals(31, date.day)
@@ -109,42 +109,42 @@ class GlobalsTest {
 
     @Test(expected = ParseException::class)
     fun `parseIsoDate throws for invalid format`() {
-        Globals.parseIsoDate("2024/06/15")
+        "2024/06/15".parseIsoDate()
     }
 
     // ========================================
-    // formatLedgerDate tests
+    // formatLedgerDate tests (SimpleDate extension)
     // ========================================
 
     @Test
     fun `formatLedgerDate formats date correctly`() {
         val date = SimpleDate(2024, 6, 15)
-        val result = Globals.formatLedgerDate(date)
+        val result = date.formatLedgerDate()
         assertEquals("2024/06/15", result)
     }
 
     @Test
     fun `formatLedgerDate pads single digit values`() {
         val date = SimpleDate(2024, 1, 5)
-        val result = Globals.formatLedgerDate(date)
+        val result = date.formatLedgerDate()
         assertEquals("2024/01/05", result)
     }
 
     // ========================================
-    // formatIsoDate tests
+    // formatIsoDate tests (SimpleDate extension)
     // ========================================
 
     @Test
     fun `formatIsoDate formats date correctly`() {
         val date = SimpleDate(2024, 6, 15)
-        val result = Globals.formatIsoDate(date)
+        val result = date.formatIsoDate()
         assertEquals("2024-06-15", result)
     }
 
     @Test
     fun `formatIsoDate pads single digit values`() {
         val date = SimpleDate(2024, 1, 5)
-        val result = Globals.formatIsoDate(date)
+        val result = date.formatIsoDate()
         assertEquals("2024-01-05", result)
     }
 
@@ -155,26 +155,26 @@ class GlobalsTest {
     @Test
     fun `parseLedgerDate and formatLedgerDate round-trip`() {
         val original = "2024/06/15"
-        val date = Globals.parseLedgerDate(original)
-        val formatted = Globals.formatLedgerDate(date)
+        val date = original.parseLedgerDate()
+        val formatted = date.formatLedgerDate()
         assertEquals(original, formatted)
     }
 
     @Test
     fun `parseIsoDate and formatIsoDate round-trip`() {
         val original = "2024-06-15"
-        val date = Globals.parseIsoDate(original)
-        val formatted = Globals.formatIsoDate(date)
+        val date = original.parseIsoDate()
+        val formatted = date.formatIsoDate()
         assertEquals(original, formatted)
     }
 
     // ========================================
-    // parseLedgerDateAsCalendar tests
+    // parseLedgerDateAsCalendar tests (String extension)
     // ========================================
 
     @Test
     fun `parseLedgerDateAsCalendar returns Calendar`() {
-        val calendar = Globals.parseLedgerDateAsCalendar("2024/06/15")
+        val calendar = "2024/06/15".parseLedgerDateAsCalendar()
         assertNotNull(calendar)
         // Note: Calendar months are 0-indexed
         assertEquals(2024, calendar.get(java.util.Calendar.YEAR))

@@ -24,7 +24,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * Unit tests for [AccountNameUtils].
+ * Unit tests for account name extension functions.
  *
  * Tests verify:
  * - Parent name extraction from hierarchical account names
@@ -34,105 +34,105 @@ import org.junit.Test
 class AccountNameUtilsTest {
 
     // ========================================
-    // extractParentName tests
+    // extractParentAccountName tests (String extension)
     // ========================================
 
     @Test
-    fun `extractParentName returns parent for nested account`() {
-        assertEquals("Assets:Bank", AccountNameUtils.extractParentName("Assets:Bank:Checking"))
+    fun `extractParentAccountName returns parent for nested account`() {
+        assertEquals("Assets:Bank", "Assets:Bank:Checking".extractParentAccountName())
     }
 
     @Test
-    fun `extractParentName returns parent for two level account`() {
-        assertEquals("Assets", AccountNameUtils.extractParentName("Assets:Bank"))
+    fun `extractParentAccountName returns parent for two level account`() {
+        assertEquals("Assets", "Assets:Bank".extractParentAccountName())
     }
 
     @Test
-    fun `extractParentName returns null for top level account`() {
-        assertNull(AccountNameUtils.extractParentName("Assets"))
+    fun `extractParentAccountName returns null for top level account`() {
+        assertNull("Assets".extractParentAccountName())
     }
 
     @Test
-    fun `extractParentName returns null for empty string`() {
-        assertNull(AccountNameUtils.extractParentName(""))
+    fun `extractParentAccountName returns null for empty string`() {
+        assertNull("".extractParentAccountName())
     }
 
     @Test
-    fun `extractParentName handles deeply nested account`() {
+    fun `extractParentAccountName handles deeply nested account`() {
         assertEquals(
             "Assets:Bank:Savings:Emergency",
-            AccountNameUtils.extractParentName("Assets:Bank:Savings:Emergency:Fund")
+            "Assets:Bank:Savings:Emergency:Fund".extractParentAccountName()
         )
     }
 
     // ========================================
-    // determineLevel tests
+    // accountLevel tests (String extension)
     // ========================================
 
     @Test
-    fun `determineLevel returns 0 for top level account`() {
-        assertEquals(0, AccountNameUtils.determineLevel("Assets"))
+    fun `accountLevel returns 0 for top level account`() {
+        assertEquals(0, "Assets".accountLevel())
     }
 
     @Test
-    fun `determineLevel returns 1 for two level account`() {
-        assertEquals(1, AccountNameUtils.determineLevel("Assets:Bank"))
+    fun `accountLevel returns 1 for two level account`() {
+        assertEquals(1, "Assets:Bank".accountLevel())
     }
 
     @Test
-    fun `determineLevel returns 2 for three level account`() {
-        assertEquals(2, AccountNameUtils.determineLevel("Assets:Bank:Checking"))
+    fun `accountLevel returns 2 for three level account`() {
+        assertEquals(2, "Assets:Bank:Checking".accountLevel())
     }
 
     @Test
-    fun `determineLevel returns 0 for empty string`() {
-        assertEquals(0, AccountNameUtils.determineLevel(""))
+    fun `accountLevel returns 0 for empty string`() {
+        assertEquals(0, "".accountLevel())
     }
 
     @Test
-    fun `determineLevel handles deeply nested account`() {
-        assertEquals(4, AccountNameUtils.determineLevel("Assets:Bank:Savings:Emergency:Fund"))
+    fun `accountLevel handles deeply nested account`() {
+        assertEquals(4, "Assets:Bank:Savings:Emergency:Fund".accountLevel())
     }
 
     // ========================================
-    // isParentOf tests
+    // isParentAccountOf tests (String extension)
     // ========================================
 
     @Test
-    fun `isParentOf returns true for direct parent`() {
-        assertTrue(AccountNameUtils.isParentOf("Assets:Bank", "Assets:Bank:Checking"))
+    fun `isParentAccountOf returns true for direct parent`() {
+        assertTrue("Assets:Bank".isParentAccountOf("Assets:Bank:Checking"))
     }
 
     @Test
-    fun `isParentOf returns true for indirect parent`() {
-        assertTrue(AccountNameUtils.isParentOf("Assets", "Assets:Bank:Checking"))
+    fun `isParentAccountOf returns true for indirect parent`() {
+        assertTrue("Assets".isParentAccountOf("Assets:Bank:Checking"))
     }
 
     @Test
-    fun `isParentOf returns false for non parent`() {
-        assertFalse(AccountNameUtils.isParentOf("Expenses", "Assets:Bank:Checking"))
+    fun `isParentAccountOf returns false for non parent`() {
+        assertFalse("Expenses".isParentAccountOf("Assets:Bank:Checking"))
     }
 
     @Test
-    fun `isParentOf returns false for same account`() {
-        assertFalse(AccountNameUtils.isParentOf("Assets:Bank", "Assets:Bank"))
+    fun `isParentAccountOf returns false for same account`() {
+        assertFalse("Assets:Bank".isParentAccountOf("Assets:Bank"))
     }
 
     @Test
-    fun `isParentOf returns false for partial match`() {
+    fun `isParentAccountOf returns false for partial match`() {
         // "Assets:Ban" is not a parent of "Assets:Bank:Checking"
-        assertFalse(AccountNameUtils.isParentOf("Assets:Ban", "Assets:Bank:Checking"))
+        assertFalse("Assets:Ban".isParentAccountOf("Assets:Bank:Checking"))
     }
 
     @Test
-    fun `isParentOf returns false for child checking parent`() {
-        assertFalse(AccountNameUtils.isParentOf("Assets:Bank:Checking", "Assets:Bank"))
+    fun `isParentAccountOf returns false for child checking parent`() {
+        assertFalse("Assets:Bank:Checking".isParentAccountOf("Assets:Bank"))
     }
 
     @Test
-    fun `isParentOf handles empty strings`() {
-        assertFalse(AccountNameUtils.isParentOf("", "Assets"))
+    fun `isParentAccountOf handles empty strings`() {
+        assertFalse("".isParentAccountOf("Assets"))
         // Empty string with colon prefix shouldn't match real accounts
-        assertFalse(AccountNameUtils.isParentOf("", ""))
+        assertFalse("".isParentAccountOf(""))
     }
 }
