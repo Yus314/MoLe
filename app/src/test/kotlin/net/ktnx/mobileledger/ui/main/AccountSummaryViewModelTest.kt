@@ -629,6 +629,182 @@ class AccountSummaryViewModelTest {
         // Then - back to original
         assertTrue(viewModel.uiState.value.showZeroBalanceAccounts)
     }
+
+    // ========================================
+    // Phase A3: Additional coverage tests
+    // ========================================
+
+    @Test
+    fun `account with multiple currencies displays all amounts`() = runTest {
+        // Given
+        val profile = createTestProfile(id = 1L)
+        profileRepository.insertProfile(profile).getOrThrow()
+        profileRepository.setCurrentProfile(profile)
+
+        // Add account with multiple currency amounts
+        val multiCurrencyAccount = Account(
+            id = 1L,
+            name = "Assets:Bank",
+            level = 1,
+            isExpanded = true,
+            isVisible = true,
+            amounts = listOf(
+                DomainAccountAmount(currency = "USD", amount = 1000f),
+                DomainAccountAmount(currency = "EUR", amount = 500f),
+                DomainAccountAmount(currency = "JPY", amount = 10000f)
+            )
+        )
+        accountRepository.addAccount(1L, multiCurrencyAccount)
+
+        // When
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // Then - account should have all three amounts
+        val account = viewModel.uiState.value.accounts
+            .filterIsInstance<AccountSummaryListItem.Account>()
+            .find { it.name == "Assets:Bank" }
+        assertNotNull(account)
+        assertEquals(3, account!!.amounts.size)
+        assertTrue(account.amounts.any { it.formattedAmount.contains("USD") })
+        assertTrue(account.amounts.any { it.formattedAmount.contains("EUR") })
+        assertTrue(account.amounts.any { it.formattedAmount.contains("JPY") })
+    }
+
+    @Test
+    fun `deeply nested account hierarchy preserves levels`() = runTest {
+        // Given
+        val profile = createTestProfile(id = 1L)
+        profileRepository.insertProfile(profile).getOrThrow()
+        profileRepository.setCurrentProfile(profile)
+
+        // Create deeply nested account hierarchy (5 levels deep)
+        val accounts = listOf(
+            Account(
+                id = 1L,
+                name = "Assets",
+                level = 0,
+                isExpanded = true,
+                isVisible = true,
+                amounts = listOf(DomainAccountAmount("USD", 10000f))
+            ),
+            Account(
+                id = 2L,
+                name = "Assets:Bank",
+                level = 1,
+                isExpanded = true,
+                isVisible = true,
+                amounts = listOf(DomainAccountAmount("USD", 8000f))
+            ),
+            Account(
+                id = 3L,
+                name = "Assets:Bank:Checking",
+                level = 2,
+                isExpanded = true,
+                isVisible = true,
+                amounts = listOf(DomainAccountAmount("USD", 5000f))
+            ),
+            Account(
+                id = 4L,
+                name = "Assets:Bank:Checking:Primary",
+                level = 3,
+                isExpanded = true,
+                isVisible = true,
+                amounts = listOf(DomainAccountAmount("USD", 3000f))
+            ),
+            Account(
+                id = 5L,
+                name = "Assets:Bank:Checking:Primary:Active",
+                level = 4,
+                isExpanded = true,
+                isVisible = true,
+                amounts = listOf(DomainAccountAmount("USD", 1000f))
+            )
+        )
+        accounts.forEach { accountRepository.addAccount(1L, it) }
+
+        // When
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // Then - all 5 levels should be present with correct nesting
+        val loadedAccounts = viewModel.uiState.value.accounts
+            .filterIsInstance<AccountSummaryListItem.Account>()
+        assertEquals(5, loadedAccounts.size)
+
+        // Verify levels are preserved
+        val deepestAccount = loadedAccounts.find { it.name == "Assets:Bank:Checking:Primary:Active" }
+        assertNotNull(deepestAccount)
+        assertEquals(4, deepestAccount!!.level)
+    }
+
+    @Test
+    fun `zero balance filter correctly handles mixed positive and negative amounts`() = runTest {
+        // Given
+        preferencesRepository.setShowZeroBalanceAccounts(false)
+        val profile = createTestProfile(id = 1L)
+        profileRepository.insertProfile(profile).getOrThrow()
+        profileRepository.setCurrentProfile(profile)
+
+        // Add accounts with various balance states:
+        // 1. Positive balance (should show)
+        // 2. Negative balance (should show)
+        // 3. Zero balance single currency (should hide)
+        // 4. Multi-currency where one is zero but another is non-zero (should show)
+        val accounts = listOf(
+            Account(
+                id = 1L,
+                name = "Assets:Cash",
+                level = 1,
+                isExpanded = true,
+                isVisible = true,
+                amounts = listOf(DomainAccountAmount("USD", 100f))
+            ),
+            Account(
+                id = 2L,
+                name = "Liabilities:CreditCard",
+                level = 1,
+                isExpanded = true,
+                isVisible = true,
+                amounts = listOf(DomainAccountAmount("USD", -500f))
+            ),
+            Account(
+                id = 3L,
+                name = "Assets:Empty",
+                level = 1,
+                isExpanded = true,
+                isVisible = true,
+                amounts = listOf(DomainAccountAmount("USD", 0f))
+            ),
+            Account(
+                id = 4L,
+                name = "Assets:Mixed",
+                level = 1,
+                isExpanded = true,
+                isVisible = true,
+                amounts = listOf(
+                    DomainAccountAmount("USD", 0f),
+                    DomainAccountAmount("EUR", 50f)
+                )
+            )
+        )
+        accounts.forEach { accountRepository.addAccount(1L, it) }
+
+        // When
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // Then - zero balance filter should hide only the pure zero balance account
+        val visibleAccounts = viewModel.uiState.value.accounts
+            .filterIsInstance<AccountSummaryListItem.Account>()
+
+        // Should have 3 accounts: Cash (positive), CreditCard (negative), Mixed (has non-zero EUR)
+        assertEquals(3, visibleAccounts.size)
+        assertTrue(visibleAccounts.any { it.name == "Assets:Cash" })
+        assertTrue(visibleAccounts.any { it.name == "Liabilities:CreditCard" })
+        assertTrue(visibleAccounts.any { it.name == "Assets:Mixed" })
+        assertFalse(visibleAccounts.any { it.name == "Assets:Empty" })
+    }
 }
 
 /**

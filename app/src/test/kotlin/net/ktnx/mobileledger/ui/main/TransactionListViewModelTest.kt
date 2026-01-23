@@ -34,7 +34,7 @@ import net.ktnx.mobileledger.db.TransactionAccount
 import net.ktnx.mobileledger.db.TransactionWithAccounts
 import net.ktnx.mobileledger.domain.model.Profile
 import net.ktnx.mobileledger.domain.model.Transaction as DomainTransaction
-import net.ktnx.mobileledger.domain.model.TransactionLine
+import net.ktnx.mobileledger.domain.model.TransactionLine as TransactionLine
 import net.ktnx.mobileledger.domain.usecase.TransactionListConverterImpl
 import net.ktnx.mobileledger.fake.FakeCurrencyFormatter
 import net.ktnx.mobileledger.fake.FakeProfileRepository
@@ -969,6 +969,253 @@ class TransactionListViewModelTest {
 
         // Then - suggestions should be cleared
         assertTrue(viewModel.uiState.value.accountSuggestions.isEmpty())
+    }
+
+    // ========================================
+    // Phase A3: Additional coverage tests
+    // ========================================
+
+    @Test
+    fun `account filter debounce only processes final query`() = runTest {
+        // Given
+        val profile = createTestProfile(id = 1L)
+        profileRepository.insertProfile(profile).getOrThrow()
+        profileRepository.setCurrentProfile(profile)
+        accountRepository.addAccount(1L, "Assets:Cash")
+        accountRepository.addAccount(1L, "Assets:Bank")
+        accountRepository.addAccount(1L, "Expenses:Food")
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When - type quickly (within debounce window of 300ms)
+        viewModel.onEvent(TransactionListEvent.SetAccountFilter("A"))
+        advanceTimeBy(50)
+        viewModel.onEvent(TransactionListEvent.SetAccountFilter("As"))
+        advanceTimeBy(50)
+        viewModel.onEvent(TransactionListEvent.SetAccountFilter("Ass"))
+        advanceTimeBy(50)
+        viewModel.onEvent(TransactionListEvent.SetAccountFilter("Assets"))
+        advanceTimeBy(400) // Wait for debounce (300ms + buffer)
+        advanceUntilIdle()
+
+        // Then - should only have suggestions for final "Assets" query
+        val suggestions = viewModel.uiState.value.accountSuggestions
+        assertEquals(2, suggestions.size) // Assets:Cash and Assets:Bank
+        assertTrue(suggestions.contains("Assets:Cash"))
+        assertTrue(suggestions.contains("Assets:Bank"))
+        assertFalse(suggestions.contains("Expenses:Food"))
+    }
+
+    @Test
+    fun `rapid filter changes cancel previous search requests`() = runTest {
+        // Given
+        val profile = createTestProfile(id = 1L)
+        profileRepository.insertProfile(profile).getOrThrow()
+        profileRepository.setCurrentProfile(profile)
+        accountRepository.addAccount(1L, "Assets:Cash")
+        accountRepository.addAccount(1L, "Expenses:Food")
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When - set filter, then immediately change before debounce completes
+        viewModel.onEvent(TransactionListEvent.SetAccountFilter("Assets"))
+        advanceTimeBy(100) // Before debounce completes (300ms)
+
+        // Change to different filter
+        viewModel.onEvent(TransactionListEvent.SetAccountFilter("Expenses"))
+        advanceTimeBy(400) // Wait for debounce
+        advanceUntilIdle()
+
+        // Then - only final filter should be applied
+        assertEquals("Expenses", viewModel.uiState.value.accountFilter)
+        val suggestions = viewModel.uiState.value.accountSuggestions
+        assertEquals(1, suggestions.size)
+        assertTrue(suggestions.contains("Expenses:Food"))
+    }
+
+    @Test
+    fun `filter with hierarchical account names matches parent and children`() = runTest {
+        // Given
+        val profile = createTestProfile(id = 1L)
+        profileRepository.insertProfile(profile).getOrThrow()
+        profileRepository.setCurrentProfile(profile)
+
+        // Add transactions with hierarchical account names
+        transactionRepository.addTransaction(
+            createTestTransaction(
+                1L,
+                1L,
+                1L,
+                "ATM Withdrawal",
+                accounts = listOf(createTestAccount("Assets:Cash"))
+            )
+        )
+        transactionRepository.addTransaction(
+            createTestTransaction(
+                2L,
+                1L,
+                2L,
+                "Bank Transfer",
+                accounts = listOf(createTestAccount("Assets:Bank:Checking"))
+            )
+        )
+        transactionRepository.addTransaction(
+            createTestTransaction(
+                3L,
+                1L,
+                3L,
+                "Groceries",
+                accounts = listOf(createTestAccount("Expenses:Food"))
+            )
+        )
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When - filter by parent account "Assets"
+        viewModel.onEvent(TransactionListEvent.SetAccountFilter("Assets"))
+        advanceUntilIdle()
+
+        // Then - should include both Assets:Cash and Assets:Bank:Checking transactions
+        val transactions = viewModel.uiState.value.transactions
+            .filterIsInstance<TransactionListDisplayItem.Transaction>()
+        assertEquals(2, transactions.size)
+        assertTrue(transactions.any { it.description == "ATM Withdrawal" })
+        assertTrue(transactions.any { it.description == "Bank Transfer" })
+        assertFalse(transactions.any { it.description == "Groceries" })
+    }
+
+    @Test
+    fun `goToDate finds nearest date when exact date not found`() = runTest {
+        // Given
+        val profile = createTestProfile(id = 1L)
+        profileRepository.insertProfile(profile).getOrThrow()
+        profileRepository.setCurrentProfile(profile)
+
+        // Add transactions at month boundary
+        transactionRepository.addTransaction(
+            createTestTransaction(
+                1L,
+                1L,
+                1L,
+                "January End",
+                year = 2026,
+                month = 1,
+                day = 31,
+                accounts = listOf(createTestAccount("Assets:Cash"))
+            )
+        )
+        transactionRepository.addTransaction(
+            createTestTransaction(
+                2L,
+                1L,
+                2L,
+                "February Start",
+                year = 2026,
+                month = 2,
+                day = 1,
+                accounts = listOf(createTestAccount("Assets:Cash"))
+            )
+        )
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+        viewModel.loadTransactions()
+        advanceUntilIdle()
+
+        // When - go to date that exists
+        viewModel.onEvent(TransactionListEvent.GoToDate(SimpleDate(2026, 1, 31)))
+        advanceUntilIdle()
+
+        // Then - should find the transaction
+        val foundIndex = viewModel.uiState.value.foundTransactionIndex
+        assertNotNull(foundIndex)
+        assertTrue(foundIndex!! >= 0)
+    }
+
+    @Test
+    fun `updateDisplayedTransactionsFromWeb cancels previous job on rapid calls`() = runTest {
+        // Given
+        val profile = createTestProfile(id = 1L)
+        profileRepository.insertProfile(profile).getOrThrow()
+        profileRepository.setCurrentProfile(profile)
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // Create two batches of transactions
+        val batch1 = listOf(
+            DomainTransaction(
+                id = 1L,
+                ledgerId = 1L,
+                date = SimpleDate(2026, 1, 10),
+                description = "Batch 1 Transaction",
+                lines = listOf(TransactionLine(id = 1L, accountName = "Assets:Cash", amount = 100f, currency = "USD"))
+            )
+        )
+        val batch2 = listOf(
+            DomainTransaction(
+                id = 2L,
+                ledgerId = 2L,
+                date = SimpleDate(2026, 1, 11),
+                description = "Batch 2 Transaction",
+                lines = listOf(TransactionLine(id = 2L, accountName = "Expenses:Food", amount = -50f, currency = "USD"))
+            )
+        )
+
+        // When - call twice rapidly (second should cancel first)
+        viewModel.updateDisplayedTransactionsFromWeb(batch1)
+        // Don't advance - immediately call second
+        viewModel.updateDisplayedTransactionsFromWeb(batch2)
+        advanceUntilIdle()
+
+        // Then - should have second batch (first was cancelled)
+        val transactions = viewModel.uiState.value.transactions
+            .filterIsInstance<TransactionListDisplayItem.Transaction>()
+        assertEquals(1, transactions.size)
+        assertEquals("Batch 2 Transaction", transactions[0].description)
+    }
+
+    @Test
+    fun `updateDisplayedTransactionsFromWeb handles large dataset efficiently`() = runTest {
+        // Given
+        val profile = createTestProfile(id = 1L)
+        profileRepository.insertProfile(profile).getOrThrow()
+        profileRepository.setCurrentProfile(profile)
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // Create a large dataset (100 transactions)
+        val largeDataset = (1..100).map { i ->
+            DomainTransaction(
+                id = i.toLong(),
+                ledgerId = i.toLong(),
+                date = SimpleDate(2026, 1, (i % 28) + 1),
+                description = "Transaction $i",
+                lines = listOf(
+                    TransactionLine(
+                        id = i.toLong(),
+                        accountName = "Assets:Cash",
+                        amount = i * 10f,
+                        currency = "USD"
+                    )
+                )
+            )
+        }
+
+        // When
+        viewModel.updateDisplayedTransactionsFromWeb(largeDataset)
+        advanceUntilIdle()
+
+        // Then - all transactions should be loaded without error
+        val transactions = viewModel.uiState.value.transactions
+            .filterIsInstance<TransactionListDisplayItem.Transaction>()
+        assertEquals(100, transactions.size)
+        assertNull(viewModel.uiState.value.error)
+        assertFalse(viewModel.uiState.value.isLoading)
     }
 }
 

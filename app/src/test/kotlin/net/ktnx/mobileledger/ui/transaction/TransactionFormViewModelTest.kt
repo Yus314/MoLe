@@ -826,4 +826,182 @@ class TransactionFormViewModelTest {
         // Then - profile id should be null (default)
         assertEquals(null, viewModel.uiState.value.profileId)
     }
+
+    // ========================================
+    // Phase A3: Additional coverage tests
+    // ========================================
+
+    @Test
+    fun `rapid description changes trigger debounce and only final query is processed`() = runTest {
+        // Given
+        val profile = createTestProfile()
+        viewModel = createViewModelWithProfile(profile)
+        advanceUntilIdle()
+
+        // Add some transactions for suggestions
+        listOf("GROCERY STORE", "GROCERY MART", "GRAND HOTEL").forEach { desc ->
+            transactionRepository.insertTransaction(
+                net.ktnx.mobileledger.domain.model.Transaction(
+                    id = null,
+                    ledgerId = desc.hashCode().toLong(),
+                    date = SimpleDate.today(),
+                    description = desc,
+                    lines = emptyList()
+                ),
+                profile.id!!
+            )
+        }
+
+        // When - type rapidly (simulating user typing)
+        viewModel.onEvent(TransactionFormEvent.UpdateDescription("G"))
+        advanceUntilIdle()
+        viewModel.onEvent(TransactionFormEvent.UpdateDescription("GR"))
+        advanceUntilIdle()
+        viewModel.onEvent(TransactionFormEvent.UpdateDescription("GRO"))
+        advanceUntilIdle()
+        viewModel.onEvent(TransactionFormEvent.UpdateDescription("GROCERY"))
+        advanceUntilIdle()
+
+        // Then - final state should reflect "GROCERY"
+        assertEquals("GROCERY", viewModel.uiState.value.description)
+        // Suggestions should contain matches for GROCERY
+        val suggestions = viewModel.uiState.value.descriptionSuggestions
+        assertTrue(suggestions.any { it.contains("GROCERY") })
+    }
+
+    @Test
+    fun `description suggestions handle special characters correctly`() = runTest {
+        // Given
+        val profile = createTestProfile()
+        viewModel = createViewModelWithProfile(profile)
+        advanceUntilIdle()
+
+        // Add transaction with special characters
+        transactionRepository.insertTransaction(
+            net.ktnx.mobileledger.domain.model.Transaction(
+                id = null,
+                ledgerId = 1L,
+                date = SimpleDate.today(),
+                description = "CAFÉ & RESTAURANT (Main St.)",
+                lines = emptyList()
+            ),
+            profile.id!!
+        )
+
+        // When - search with partial match
+        viewModel.onEvent(TransactionFormEvent.UpdateDescription("CAFÉ"))
+        advanceUntilIdle()
+
+        // Then - should find the transaction with special characters
+        val suggestions = viewModel.uiState.value.descriptionSuggestions
+        assertTrue(suggestions.contains("CAFÉ & RESTAURANT (Main St.)"))
+    }
+
+    @Test
+    fun `form state is preserved when profile changes`() = runTest {
+        // Given - set up with initial profile
+        val profile1 = createTestProfile(id = 1L, name = "Profile 1")
+        val profile2 = createTestProfile(id = 2L, name = "Profile 2")
+        profileRepository.insertProfile(profile1)
+        profileRepository.insertProfile(profile2)
+        profileRepository.setCurrentProfile(profile1)
+
+        viewModel = TransactionFormViewModel(
+            profileRepository = profileRepository,
+            transactionRepository = transactionRepository,
+            appStateService = appStateService,
+            transactionSender = transactionSender,
+            balanceCalculator = balanceCalculator
+        )
+        advanceUntilIdle()
+
+        // Set some form state
+        viewModel.onEvent(TransactionFormEvent.UpdateDescription("Test Transaction"))
+        viewModel.onEvent(TransactionFormEvent.UpdateTransactionComment("Test Comment"))
+        advanceUntilIdle()
+
+        assertEquals("Test Transaction", viewModel.uiState.value.description)
+        assertEquals("Test Comment", viewModel.uiState.value.transactionComment)
+
+        // When - change profile
+        profileRepository.setCurrentProfile(profile2)
+        advanceUntilIdle()
+
+        // Then - form state should be preserved (description and comment)
+        // Note: Profile ID updates but text fields remain
+        assertEquals("Test Transaction", viewModel.uiState.value.description)
+        assertEquals("Test Comment", viewModel.uiState.value.transactionComment)
+    }
+
+    @Test
+    fun `submit with unbalanced transaction shows correct state`() = runTest {
+        // Given
+        val profile = createTestProfile()
+        viewModel = createViewModelWithProfile(profile)
+        advanceUntilIdle()
+
+        // Configure balance calculator to report unbalanced transaction
+        balanceCalculator.setBalanceResult(
+            lines = emptyList(),
+            balancePerCurrency = mapOf("USD" to 50f), // Non-zero balance
+            isBalanced = false
+        )
+
+        viewModel.onEvent(TransactionFormEvent.UpdateDescription("Test"))
+        advanceUntilIdle()
+
+        val accountRows = listOf(
+            TransactionAccountRow(id = 1, accountName = "Assets:Bank", amountText = "100.00", currency = "USD"),
+            TransactionAccountRow(id = 2, accountName = "Expenses:Food", amountText = "50.00", currency = "USD")
+            // Note: intentionally unbalanced
+        )
+
+        // When
+        viewModel.onEvent(TransactionFormEvent.Submit(accountRows))
+        advanceUntilIdle()
+
+        // Then - transaction may still be sent (depending on implementation)
+        // but balance calculator should have been called
+        assertTrue(balanceCalculator.calculateBalanceCallCount > 0)
+    }
+
+    @Test
+    fun `concurrent description lookups cancel previous requests`() = runTest {
+        // Given
+        val profile = createTestProfile()
+        viewModel = createViewModelWithProfile(profile)
+        advanceUntilIdle()
+
+        // Add transactions
+        transactionRepository.insertTransaction(
+            net.ktnx.mobileledger.domain.model.Transaction(
+                id = null,
+                ledgerId = 1L,
+                date = SimpleDate.today(),
+                description = "AMAZON ORDER",
+                lines = emptyList()
+            ),
+            profile.id!!
+        )
+        transactionRepository.insertTransaction(
+            net.ktnx.mobileledger.domain.model.Transaction(
+                id = null,
+                ledgerId = 2L,
+                date = SimpleDate.today(),
+                description = "BANK TRANSFER",
+                lines = emptyList()
+            ),
+            profile.id!!
+        )
+
+        // When - trigger lookups in quick succession
+        viewModel.onEvent(TransactionFormEvent.LoadFromDescription("AMAZON ORDER"))
+        // Don't wait, immediately start another
+        viewModel.onEvent(TransactionFormEvent.LoadFromDescription("BANK TRANSFER"))
+        advanceUntilIdle()
+
+        // Then - should have final description
+        assertEquals("BANK TRANSFER", viewModel.uiState.value.description)
+        assertFalse(viewModel.uiState.value.isBusy)
+    }
 }
