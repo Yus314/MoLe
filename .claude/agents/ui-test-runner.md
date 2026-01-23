@@ -61,7 +61,7 @@ nix run .#verify
 ```
 adb_activity_manager:
   amCommand: start
-  amArgs: -n net.ktnx.mobileledger.debug/net.ktnox.mobileledger.ui.activity.SplashActivity
+  amArgs: -n net.ktnx.mobileledger.debug/net.ktnx.mobileledger.ui.activity.SplashActivity
 ```
 
 ### Step 3: Capture Screenshot
@@ -180,6 +180,6 @@ assertTextContains("partial")
 | Build | Package | Activity |
 |-------|---------|----------|
 | Debug | `net.ktnx.mobileledger.debug` | `net.ktnx.mobileledger.ui.activity.*` |
-| Release | `net.ktnox.mobileledger` | `net.ktnx.mobileledger.ui.activity.*` |
+| Release | `net.ktnx.mobileledger` | `net.ktnx.mobileledger.ui.activity.*` |
 
 Note: Debug build uses different package name but same Activity class paths.

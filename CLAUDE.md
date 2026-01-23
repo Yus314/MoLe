@@ -27,7 +27,7 @@
 
 ```
 app/
-├── src/main/kotlin/net/ktnox/mobileledger/
+├── src/main/kotlin/net/ktnx/mobileledger/
 │   ├── di/                    # Hilt modules
 │   ├── domain/model/          # Domain models
 │   ├── data/repository/       # Repositories
@@ -102,14 +102,14 @@ Detailed guidelines are defined in `.claude/rules/`:
 
 | Build | Package |
 |-------|---------|
-| Debug | `net.ktnox.mobileledger.debug` |
-| Release | `net.ktnox.mobileledger` |
+| Debug | `net.ktnx.mobileledger.debug` |
+| Release | `net.ktnx.mobileledger` |
 
 ### Launch App
 ```
 adb_activity_manager:
   amCommand: start
-  amArgs: -n net.ktnox.mobileledger.debug/net.ktnox.mobileledger.ui.activity.SplashActivity
+  amArgs: -n net.ktnx.mobileledger.debug/net.ktnx.mobileledger.ui.activity.SplashActivity
 ```
 
 ## Hilt Modules

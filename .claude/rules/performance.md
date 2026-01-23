@@ -100,7 +100,7 @@ adb shell dumpsys meminfo net.ktnx.mobileledger.debug
 adb shell top -n 1 | grep mobileledger
 
 # Profile startup
-adb shell am start -W net.ktnox.mobileledger.debug/.ui.activity.SplashActivity
+adb shell am start -W net.ktnx.mobileledger.debug/.ui.activity.SplashActivity
 ```
 
 ## Performance Checklist

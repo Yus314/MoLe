@@ -45,7 +45,7 @@ Or manually: `nix run .#install`
 ```
 adb_activity_manager:
   amCommand: start
-  amArgs: -n net.ktnox.mobileledger.debug/net.ktnx.mobileledger.ui.activity.SplashActivity
+  amArgs: -n net.ktnx.mobileledger.debug/net.ktnx.mobileledger.ui.activity.SplashActivity
 ```
 
 **Check Logs**

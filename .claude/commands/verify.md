@@ -71,7 +71,7 @@ inspect_ui:
 
 | Build | Package |
 |-------|---------|
-| Debug | `net.ktnox.mobileledger.debug` |
+| Debug | `net.ktnx.mobileledger.debug` |
 | Release | `net.ktnx.mobileledger` |
 
 Note: Activity class paths use original package name even for debug builds.
