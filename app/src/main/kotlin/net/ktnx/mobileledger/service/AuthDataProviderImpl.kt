@@ -23,14 +23,15 @@ import javax.inject.Singleton
 import net.ktnx.mobileledger.BuildConfig
 import net.ktnx.mobileledger.TemporaryAuthData
 import net.ktnx.mobileledger.domain.model.Profile
-import net.ktnx.mobileledger.utils.Colors
 
 /**
  * Production implementation of AuthDataProvider.
  * Holds temporary authentication data internally instead of delegating to App singleton.
  */
 @Singleton
-class AuthDataProviderImpl @Inject constructor() : AuthDataProvider {
+class AuthDataProviderImpl @Inject constructor(
+    private val themeService: ThemeService
+) : AuthDataProvider {
     @Volatile
     private var temporaryAuthData: TemporaryAuthData? = null
 
@@ -48,8 +49,8 @@ class AuthDataProviderImpl @Inject constructor() : AuthDataProvider {
         BackupManager.dataChanged(BuildConfig.APPLICATION_ID)
     }
 
-    override fun getDefaultThemeHue(): Int = Colors.DEFAULT_HUE_DEG
+    override fun getDefaultThemeHue(): Int = ThemeService.DEFAULT_HUE_DEG
 
     override fun getNewProfileThemeHue(existingProfiles: List<Profile>?): Int =
-        Colors.getNewProfileThemeHue(existingProfiles)
+        themeService.getNewProfileThemeHue(existingProfiles)
 }

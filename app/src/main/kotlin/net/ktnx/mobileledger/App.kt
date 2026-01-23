@@ -27,8 +27,8 @@ import logcat.LogPriority
 import logcat.logcat
 import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.di.CurrencyFormatterEntryPoint
+import net.ktnx.mobileledger.di.ThemeServiceEntryPoint
 import net.ktnx.mobileledger.service.CurrencyFormatter
-import net.ktnx.mobileledger.utils.Globals
 
 /**
  * Simple data holder for temporary authentication credentials.
@@ -50,8 +50,6 @@ class App : Application() {
     @Inject
     lateinit var profileRepository: ProfileRepository
 
-    private var monthNamesPrepared = false
-
     override fun onCreate() {
         instance = this
         super.onCreate()
@@ -64,18 +62,13 @@ class App : Application() {
 
         // Initialize CurrencyFormatterEntryPoint for static access in JSON parsers
         CurrencyFormatterEntryPoint.initialize(this)
-    }
 
-    private fun prepareMonthNamesInternal(force: Boolean) {
-        if (!force && monthNamesPrepared) return
-        val rm = resources
-        Globals.monthNames = rm.getStringArray(R.array.month_names)
-        monthNamesPrepared = true
+        // Initialize ThemeServiceEntryPoint for static access in Colors and Views
+        ThemeServiceEntryPoint.initialize(this)
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
-        prepareMonthNamesInternal(true)
         currencyFormatter.refresh(Locale.getDefault())
     }
 
@@ -92,14 +85,5 @@ class App : Application() {
          */
         @JvmStatic
         lateinit var instance: App
-
-        /**
-         * Get the ProfileRepository instance for static access.
-         * @deprecated Use Hilt injection with @Inject instead. This remains only for
-         * LedgerTransaction compatibility which will be removed in a future refactor.
-         */
-        @Deprecated("Use Hilt @Inject instead")
-        @JvmStatic
-        fun profileRepository(): ProfileRepository = instance.profileRepository
     }
 }

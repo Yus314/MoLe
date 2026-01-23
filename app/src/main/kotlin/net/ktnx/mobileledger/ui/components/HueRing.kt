@@ -40,9 +40,9 @@ import kotlin.math.cos
 import kotlin.math.min
 import kotlin.math.sin
 import kotlin.math.sqrt
+import net.ktnx.mobileledger.service.ThemeService
 import net.ktnx.mobileledger.ui.theme.MoLeTheme
 import net.ktnx.mobileledger.ui.theme.hslToColor
-import net.ktnx.mobileledger.utils.Colors
 
 private const val HUE_STEP_DEGREES = 5
 
@@ -227,8 +227,8 @@ private fun normalizeHue(hueDegrees: Int): Int {
 private fun HueRingPreview() {
     MoLeTheme {
         HueRing(
-            selectedHue = Colors.DEFAULT_HUE_DEG,
-            initialHue = Colors.DEFAULT_HUE_DEG,
+            selectedHue = ThemeService.DEFAULT_HUE_DEG,
+            initialHue = ThemeService.DEFAULT_HUE_DEG,
             onHueSelected = {}
         )
     }
@@ -240,7 +240,7 @@ private fun HueRingSelectedPreview() {
     MoLeTheme {
         HueRing(
             selectedHue = 120,
-            initialHue = Colors.DEFAULT_HUE_DEG,
+            initialHue = ThemeService.DEFAULT_HUE_DEG,
             onHueSelected = {}
         )
     }

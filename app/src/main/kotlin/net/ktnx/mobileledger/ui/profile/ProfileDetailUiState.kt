@@ -21,7 +21,7 @@ import net.ktnx.mobileledger.domain.model.FutureDates
 import net.ktnx.mobileledger.domain.model.Profile
 import net.ktnx.mobileledger.domain.model.ServerVersion
 import net.ktnx.mobileledger.json.API
-import net.ktnx.mobileledger.utils.Colors
+import net.ktnx.mobileledger.service.ThemeService
 
 data class ProfileDetailUiState(
     val profileId: Long = Profile.NO_PROFILE_ID,
@@ -30,8 +30,8 @@ data class ProfileDetailUiState(
     val useAuthentication: Boolean = false,
     val authUser: String = "",
     val authPassword: String = "",
-    val themeHue: Int = Colors.DEFAULT_HUE_DEG,
-    val initialThemeHue: Int = Colors.DEFAULT_HUE_DEG,
+    val themeHue: Int = ThemeService.DEFAULT_HUE_DEG,
+    val initialThemeHue: Int = ThemeService.DEFAULT_HUE_DEG,
     val preferredAccountsFilter: String = "",
     val futureDates: FutureDates = FutureDates.None,
     val apiVersion: API = API.auto,

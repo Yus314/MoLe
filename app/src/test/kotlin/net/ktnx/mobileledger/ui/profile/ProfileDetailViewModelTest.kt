@@ -991,7 +991,7 @@ class FakeAuthDataProvider : AuthDataProvider {
         private set
     var backupNotifiedCount: Int = 0
         private set
-    var themeHueDefault: Int = 261 // Default matching Colors.DEFAULT_HUE_DEG
+    var themeHueDefault: Int = 261 // Default matching ThemeService.DEFAULT_HUE_DEG
 
     override fun setTemporaryAuthData(authData: TemporaryAuthData?) {
         currentAuthData = authData

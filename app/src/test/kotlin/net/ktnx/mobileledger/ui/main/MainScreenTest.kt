@@ -80,7 +80,7 @@ class MainScreenTest {
     @Before
     fun setup() {
         // Initialize Colors for testing (required for ProfileRow theme colors)
-        initializeColorsForTesting()
+        initializeThemeServiceForTesting()
 
         // Reset states
         coordinatorUiState = MainCoordinatorUiState(
@@ -126,17 +126,20 @@ class MainScreenTest {
     }
 
     /**
-     * Initialize the Colors theme map for testing.
-     * This is required because Colors.getPrimaryColorForHue depends on theme colors
+     * Initialize the ThemeService for testing.
+     * This is required because ThemeService.getPrimaryColorForHue depends on theme colors
      * that are normally populated by refreshColors() during app startup.
      */
-    private fun initializeColorsForTesting() {
+    private fun initializeThemeServiceForTesting() {
+        // Create a ThemeServiceImpl instance
+        val themeService = net.ktnx.mobileledger.service.ThemeServiceImpl()
+
         // Use reflection to populate the themePrimaryColor map
-        val themePrimaryColorField = net.ktnx.mobileledger.utils.Colors::class.java
+        val themePrimaryColorField = net.ktnx.mobileledger.service.ThemeServiceImpl::class.java
             .getDeclaredField("themePrimaryColor")
         themePrimaryColorField.isAccessible = true
         @Suppress("UNCHECKED_CAST")
-        val map = themePrimaryColorField.get(null) as HashMap<Int, Int>
+        val map = themePrimaryColorField.get(themeService) as HashMap<Int, Int>
         // Add a default color for testing - the default theme ID
         // R.style.AppTheme_default maps to DEFAULT_HUE_DEG (261)
         map[net.ktnx.mobileledger.R.style.AppTheme_default] = 0xFF6200EE.toInt()
@@ -145,6 +148,12 @@ class MainScreenTest {
         map[net.ktnx.mobileledger.R.style.AppTheme_090] = 0xFF00FF00.toInt()
         map[net.ktnx.mobileledger.R.style.AppTheme_180] = 0xFF0000FF.toInt()
         map[net.ktnx.mobileledger.R.style.AppTheme_270] = 0xFFFFFF00.toInt()
+
+        // Set the ThemeService in the EntryPoint via reflection
+        val cachedServiceField = net.ktnx.mobileledger.di.ThemeServiceEntryPoint.Companion::class.java
+            .getDeclaredField("cachedService")
+        cachedServiceField.isAccessible = true
+        cachedServiceField.set(net.ktnx.mobileledger.di.ThemeServiceEntryPoint.Companion, themeService)
     }
 
     private fun setContent() {

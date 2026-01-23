@@ -22,7 +22,7 @@ import android.content.SharedPreferences
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
-import net.ktnx.mobileledger.utils.Colors
+import net.ktnx.mobileledger.service.ThemeService
 
 /**
  * SharedPreferences-based implementation of PreferencesRepository.
@@ -54,7 +54,7 @@ class PreferencesRepositoryImpl @Inject constructor(
             .apply()
     }
 
-    override fun getStartupTheme(): Int = sharedPreferences.getInt(KEY_THEME_HUE, Colors.DEFAULT_HUE_DEG)
+    override fun getStartupTheme(): Int = sharedPreferences.getInt(KEY_THEME_HUE, ThemeService.DEFAULT_HUE_DEG)
 
     override fun setStartupTheme(theme: Int) {
         sharedPreferences.edit()

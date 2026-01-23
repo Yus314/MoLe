@@ -28,6 +28,7 @@ import net.ktnx.mobileledger.data.repository.PreferencesRepository
 import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.data.repository.TemplateRepository
 import net.ktnx.mobileledger.db.DB
+import net.ktnx.mobileledger.service.ThemeService
 
 /**
  * Hilt EntryPoint for accessing repositories from non-Hilt classes.
@@ -51,6 +52,7 @@ interface BackupEntryPoint {
     fun currencyRepository(): CurrencyRepository
     fun preferencesRepository(): PreferencesRepository
     fun db(): DB
+    fun themeService(): ThemeService
 
     @IoDispatcher
     fun ioDispatcher(): CoroutineDispatcher

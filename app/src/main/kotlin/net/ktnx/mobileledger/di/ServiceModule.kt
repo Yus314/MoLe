@@ -32,6 +32,8 @@ import net.ktnx.mobileledger.service.BackgroundTaskManagerImpl
 import net.ktnx.mobileledger.service.CurrencyFormatter
 import net.ktnx.mobileledger.service.CurrencyFormatterImpl
 import net.ktnx.mobileledger.service.RowIdGenerator
+import net.ktnx.mobileledger.service.ThemeService
+import net.ktnx.mobileledger.service.ThemeServiceImpl
 
 /**
  * Hilt module providing application-level services.
@@ -72,4 +74,8 @@ abstract class ServiceModule {
 
     @Binds
     abstract fun bindRowIdGenerator(impl: AtomicRowIdGenerator): RowIdGenerator
+
+    @Binds
+    @Singleton
+    abstract fun bindThemeService(impl: ThemeServiceImpl): ThemeService
 }

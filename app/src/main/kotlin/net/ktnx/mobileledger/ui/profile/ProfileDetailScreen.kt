@@ -68,11 +68,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import net.ktnx.mobileledger.R
+import net.ktnx.mobileledger.service.ThemeService
 import net.ktnx.mobileledger.ui.components.ConfirmDialog
 import net.ktnx.mobileledger.ui.components.LoadingIndicator
 import net.ktnx.mobileledger.ui.components.UnsavedChangesDialog
 import net.ktnx.mobileledger.ui.theme.MoLeTheme
-import net.ktnx.mobileledger.utils.Colors
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -353,8 +353,8 @@ private fun ProfileDetailScreenPreview() {
             uiState = ProfileDetailUiState(
                 name = "Test Profile",
                 url = "https://example.com",
-                themeHue = Colors.DEFAULT_HUE_DEG,
-                initialThemeHue = Colors.DEFAULT_HUE_DEG
+                themeHue = ThemeService.DEFAULT_HUE_DEG,
+                initialThemeHue = ThemeService.DEFAULT_HUE_DEG
             ),
             snackbarHostState = SnackbarHostState(),
             onEvent = {},

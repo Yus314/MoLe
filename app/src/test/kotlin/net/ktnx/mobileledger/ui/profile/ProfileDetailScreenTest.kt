@@ -33,8 +33,8 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.test.platform.app.InstrumentationRegistry
 import net.ktnx.mobileledger.robot.profile.profileDetailScreen
+import net.ktnx.mobileledger.service.ThemeService
 import net.ktnx.mobileledger.ui.theme.MoLeTheme
-import net.ktnx.mobileledger.utils.Colors
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -73,8 +73,8 @@ class ProfileDetailScreenTest {
     fun setup() {
         // Reset state
         uiState = ProfileDetailUiState(
-            themeHue = Colors.DEFAULT_HUE_DEG,
-            initialThemeHue = Colors.DEFAULT_HUE_DEG
+            themeHue = ThemeService.DEFAULT_HUE_DEG,
+            initialThemeHue = ThemeService.DEFAULT_HUE_DEG
         )
         capturedEvents.clear()
         resources = InstrumentationRegistry.getInstrumentation().targetContext.resources
