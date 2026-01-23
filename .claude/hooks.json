@@ -1,0 +1,63 @@
+{
+  "$schema": "https://raw.githubusercontent.com/anthropics/claude-code/main/schemas/hooks.json",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash(git push*)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '⚠️  Remember to run nix run .#test before pushing'"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash(git commit*)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '📝 Ensure pre-commit hooks pass: pre-commit run --all-files'"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit(*.kt)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '🔍 Consider running: pre-commit run ktlint --files $CLAUDE_TOOL_ARG_FILE_PATH'"
+          }
+        ]
+      },
+      {
+        "matcher": "Write(*.kt)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '🔍 Consider running: pre-commit run ktlint --files $CLAUDE_TOOL_ARG_FILE_PATH'"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash(nix run .#build)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '📱 Build complete. Consider installing: nix run .#install'"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash(nix run .#test)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '✅ Tests complete. Check coverage: nix run .#coverage'"
+          }
+        ]
+      }
+    ]
+  }
+}
