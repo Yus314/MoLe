@@ -17,9 +17,6 @@
 
 package net.ktnx.mobileledger.utils
 
-import android.app.Activity
-import android.content.Context
-import android.view.inputmethod.InputMethodManager
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -100,17 +97,6 @@ fun SimpleDate.formatLedgerDate(): String = ledgerDateFormatter.get()?.format(to
  * Format SimpleDate to ISO date string (yyyy-MM-dd).
  */
 fun SimpleDate.formatIsoDate(): String = isoDateFormatter.get()?.format(toDate()) ?: ""
-
-/**
- * Hide the soft keyboard for this activity.
- */
-fun Activity.hideSoftKeyboard() {
-    val v = currentFocus
-    if (v != null) {
-        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-        imm.hideSoftInputFromWindow(v.windowToken, 0)
-    }
-}
 
 /**
  * Global constants for the application.
