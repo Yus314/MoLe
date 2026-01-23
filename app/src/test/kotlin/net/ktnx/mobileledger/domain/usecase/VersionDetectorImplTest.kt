@@ -17,14 +17,16 @@
 
 package net.ktnx.mobileledger.domain.usecase
 
+import java.io.ByteArrayInputStream
+import java.io.IOException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
-import net.ktnx.mobileledger.domain.model.Profile
 import net.ktnx.mobileledger.domain.model.ProfileAuthentication
-import net.ktnx.mobileledger.fake.FakeVersionDetector
+import net.ktnx.mobileledger.fake.FakeHledgerClient
+import net.ktnx.mobileledger.network.NetworkNotFoundException
 import net.ktnx.mobileledger.util.createTestDomainProfile
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -32,30 +34,35 @@ import org.junit.Before
 import org.junit.Test
 
 /**
- * VersionDetector のテスト
+ * Tests for the real [VersionDetectorImpl] implementation.
  *
- * FakeVersionDetector を使用してバージョン検出ロジックをテストする。
- * T070-T072: バージョン検出成功/失敗のテストケース。
+ * These tests verify the actual version detection logic:
+ * - Version parsing from quoted and unquoted formats
+ * - 404 handling (pre-1.19 servers)
+ * - Network error propagation
+ * - Authentication data construction
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class VersionDetectorImplTest {
 
-    private lateinit var versionDetector: FakeVersionDetector
+    private val testDispatcher = StandardTestDispatcher()
+    private lateinit var fakeHledgerClient: FakeHledgerClient
+    private lateinit var versionDetector: VersionDetectorImpl
 
     @Before
     fun setup() {
-        versionDetector = FakeVersionDetector()
+        fakeHledgerClient = FakeHledgerClient()
+        versionDetector = VersionDetectorImpl(fakeHledgerClient, testDispatcher)
     }
 
-    // ==========================================
-    // T071: Version detection success test case
-    // ==========================================
+    // ========================================
+    // Success cases - version parsing
+    // ========================================
 
     @Test
-    fun `detect success returns Result success with version string`() = runTest {
-        // Given
-        versionDetector.shouldSucceed = true
-        versionDetector.versionToReturn = "1.32"
+    fun `detect returns version from quoted format`() = runTest(testDispatcher) {
+        // Given - quoted version like "1.32"
+        fakeHledgerClient.getResponses["version"] = "\"1.32\""
 
         // When
         val result = versionDetector.detect(
@@ -66,36 +73,259 @@ class VersionDetectorImplTest {
         )
 
         // Then
-        assertTrue("Detection should succeed", result.isSuccess)
+        assertTrue(result.isSuccess)
         assertEquals("1.32", result.getOrNull())
-        assertEquals(1, versionDetector.detectCallCount)
-        assertEquals("https://example.com", versionDetector.lastDetectedUrl)
     }
 
     @Test
-    fun `detect with authentication succeeds`() = runTest {
-        // Given
-        versionDetector.shouldSucceed = true
-        versionDetector.versionToReturn = "1.30"
+    fun `detect returns version from quoted format with patch version`() = runTest(testDispatcher) {
+        // Given - quoted version like "1.32.1"
+        fakeHledgerClient.getResponses["version"] = "\"1.32.1\""
 
         // When
         val result = versionDetector.detect(
-            url = "https://secure.example.com",
+            url = "https://example.com",
+            useAuth = false,
+            user = null,
+            password = null
+        )
+
+        // Then
+        assertTrue(result.isSuccess)
+        assertEquals("1.32", result.getOrNull()) // Only major.minor returned
+    }
+
+    @Test
+    fun `detect returns version from unquoted format`() = runTest(testDispatcher) {
+        // Given - unquoted version like 1.32
+        fakeHledgerClient.getResponses["version"] = "1.32"
+
+        // When
+        val result = versionDetector.detect(
+            url = "https://example.com",
+            useAuth = false,
+            user = null,
+            password = null
+        )
+
+        // Then
+        assertTrue(result.isSuccess)
+        assertEquals("1.32", result.getOrNull())
+    }
+
+    @Test
+    fun `detect returns version from unquoted format with patch version`() = runTest(testDispatcher) {
+        // Given - unquoted version like 1.40.2
+        fakeHledgerClient.getResponses["version"] = "1.40.2"
+
+        // When
+        val result = versionDetector.detect(
+            url = "https://example.com",
+            useAuth = false,
+            user = null,
+            password = null
+        )
+
+        // Then
+        assertTrue(result.isSuccess)
+        assertEquals("1.40", result.getOrNull())
+    }
+
+    // ========================================
+    // 404 handling (pre-1.19)
+    // ========================================
+
+    @Test
+    fun `detect returns pre-1_19 when 404 response`() = runTest(testDispatcher) {
+        // Given - 404 Not Found (old hledger-web without /version endpoint)
+        fakeHledgerClient.getResults["version"] = Result.failure(
+            NetworkNotFoundException("Not Found")
+        )
+
+        // When
+        val result = versionDetector.detect(
+            url = "https://example.com",
+            useAuth = false,
+            user = null,
+            password = null
+        )
+
+        // Then
+        assertTrue(result.isSuccess)
+        assertEquals("pre-1.19", result.getOrNull())
+    }
+
+    // ========================================
+    // Error handling
+    // ========================================
+
+    @Test
+    fun `detect returns failure on network error`() = runTest(testDispatcher) {
+        // Given - network error
+        val networkError = IOException("Connection refused")
+        fakeHledgerClient.shouldFailWith = networkError
+
+        // When
+        val result = versionDetector.detect(
+            url = "https://example.com",
+            useAuth = false,
+            user = null,
+            password = null
+        )
+
+        // Then
+        assertTrue(result.isFailure)
+        assertEquals(networkError, result.exceptionOrNull())
+    }
+
+    @Test
+    fun `detect returns failure on unparseable version`() = runTest(testDispatcher) {
+        // Given - garbage response
+        fakeHledgerClient.getResponses["version"] = "not a version"
+
+        // When
+        val result = versionDetector.detect(
+            url = "https://example.com",
+            useAuth = false,
+            user = null,
+            password = null
+        )
+
+        // Then
+        assertTrue(result.isFailure)
+        assertNotNull(result.exceptionOrNull())
+    }
+
+    @Test
+    fun `detect returns failure on empty response`() = runTest(testDispatcher) {
+        // Given - empty response
+        fakeHledgerClient.getResults["version"] = Result.success(
+            ByteArrayInputStream(ByteArray(0))
+        )
+
+        // When
+        val result = versionDetector.detect(
+            url = "https://example.com",
+            useAuth = false,
+            user = null,
+            password = null
+        )
+
+        // Then
+        assertTrue(result.isFailure)
+    }
+
+    // ========================================
+    // Authentication
+    // ========================================
+
+    @Test
+    fun `detect uses authentication when provided`() = runTest(testDispatcher) {
+        // Given
+        fakeHledgerClient.getResponses["version"] = "\"1.32\""
+
+        // When
+        versionDetector.detect(
+            url = "https://example.com",
             useAuth = true,
             user = "testuser",
             password = "testpass"
         )
 
-        // Then
-        assertTrue("Detection should succeed", result.isSuccess)
-        assertEquals("1.30", result.getOrNull())
+        // Then - verify auth was used
+        val request = fakeHledgerClient.requestHistory.first()
+        assertNotNull(request.temporaryAuth)
+        assertEquals(true, request.temporaryAuth?.useAuthentication)
+        assertEquals("testuser", request.temporaryAuth?.authUser)
+        assertEquals("testpass", request.temporaryAuth?.authPassword)
     }
 
     @Test
-    fun `detect from profile uses profile properties`() = runTest {
+    fun `detect does not use auth when useAuth is false`() = runTest(testDispatcher) {
         // Given
-        versionDetector.shouldSucceed = true
-        versionDetector.versionToReturn = "1.28"
+        fakeHledgerClient.getResponses["version"] = "\"1.32\""
+
+        // When
+        versionDetector.detect(
+            url = "https://example.com",
+            useAuth = false,
+            user = "ignored",
+            password = "ignored"
+        )
+
+        // Then - verify no auth
+        val request = fakeHledgerClient.requestHistory.first()
+        assertNull(request.temporaryAuth)
+    }
+
+    @Test
+    fun `detect does not use auth when user is empty`() = runTest(testDispatcher) {
+        // Given
+        fakeHledgerClient.getResponses["version"] = "\"1.32\""
+
+        // When
+        versionDetector.detect(
+            url = "https://example.com",
+            useAuth = true,
+            user = "",
+            password = "password"
+        )
+
+        // Then - verify no auth (empty user)
+        val request = fakeHledgerClient.requestHistory.first()
+        assertNull(request.temporaryAuth)
+    }
+
+    @Test
+    fun `detect uses empty password when password is null`() = runTest(testDispatcher) {
+        // Given
+        fakeHledgerClient.getResponses["version"] = "\"1.32\""
+
+        // When
+        versionDetector.detect(
+            url = "https://example.com",
+            useAuth = true,
+            user = "testuser",
+            password = null
+        )
+
+        // Then - verify auth with empty password
+        val request = fakeHledgerClient.requestHistory.first()
+        assertNotNull(request.temporaryAuth)
+        assertEquals("", request.temporaryAuth?.authPassword)
+    }
+
+    // ========================================
+    // Request verification
+    // ========================================
+
+    @Test
+    fun `detect calls version endpoint`() = runTest(testDispatcher) {
+        // Given
+        fakeHledgerClient.getResponses["version"] = "\"1.32\""
+
+        // When
+        versionDetector.detect(
+            url = "https://example.com",
+            useAuth = false,
+            user = null,
+            password = null
+        )
+
+        // Then
+        assertEquals(1, fakeHledgerClient.requestHistory.size)
+        assertEquals("version", fakeHledgerClient.requestHistory[0].path)
+        assertEquals("GET", fakeHledgerClient.requestHistory[0].method)
+    }
+
+    // ========================================
+    // Profile-based detection
+    // ========================================
+
+    @Test
+    fun `detect from profile uses profile properties`() = runTest(testDispatcher) {
+        // Given
+        fakeHledgerClient.getResponses["version"] = "\"1.28\""
 
         val profile = createTestDomainProfile(
             id = 1L,
@@ -110,143 +340,25 @@ class VersionDetectorImplTest {
         // Then
         assertTrue("Detection should succeed", result.isSuccess)
         assertEquals("1.28", result.getOrNull())
-        assertEquals(profile, versionDetector.lastDetectedProfile)
-        assertEquals("https://profile.example.com", versionDetector.lastDetectedUrl)
     }
 
-    // ==========================================
-    // T072: Version detection failure test cases
-    // ==========================================
-
     @Test
-    fun `detect failure returns Result failure`() = runTest {
+    fun `detect from profile without auth does not send auth`() = runTest(testDispatcher) {
         // Given
-        versionDetector.shouldSucceed = false
+        fakeHledgerClient.getResponses["version"] = "\"1.28\""
+
+        val profile = createTestDomainProfile(
+            id = 1L,
+            name = "Test Profile",
+            url = "https://profile.example.com",
+            authentication = null
+        )
 
         // When
-        val result = versionDetector.detect(
-            url = "https://example.com",
-            useAuth = false,
-            user = null,
-            password = null
-        )
+        versionDetector.detect(profile)
 
-        // Then
-        assertTrue("Detection should fail", result.isFailure)
-        assertNotNull(result.exceptionOrNull())
-        assertEquals(1, versionDetector.detectCallCount)
-    }
-
-    @Test
-    fun `detect with network error returns correct exception`() = runTest {
-        // Given
-        val expectedException = java.net.ConnectException("Connection refused")
-        versionDetector.errorToThrow = expectedException
-
-        // When
-        val result = versionDetector.detect(
-            url = "https://example.com",
-            useAuth = false,
-            user = null,
-            password = null
-        )
-
-        // Then
-        assertTrue("Detection should fail", result.isFailure)
-        val actualException = result.exceptionOrNull()
-        assertTrue(
-            "Should be ConnectException",
-            actualException is java.net.ConnectException
-        )
-        assertEquals("Connection refused", actualException?.message)
-    }
-
-    @Test
-    fun `detect with timeout error returns correct exception`() = runTest {
-        // Given
-        val expectedException = java.net.SocketTimeoutException("Connection timed out")
-        versionDetector.errorToThrow = expectedException
-
-        // When
-        val result = versionDetector.detect(
-            url = "https://example.com",
-            useAuth = false,
-            user = null,
-            password = null
-        )
-
-        // Then
-        assertTrue("Detection should fail", result.isFailure)
-        val actualException = result.exceptionOrNull()
-        assertTrue(
-            "Should be SocketTimeoutException",
-            actualException is java.net.SocketTimeoutException
-        )
-    }
-
-    @Test
-    fun `detect with authentication error returns correct exception`() = runTest {
-        // Given
-        val expectedException = java.io.IOException("HTTP 401 Unauthorized")
-        versionDetector.errorToThrow = expectedException
-
-        // When
-        val result = versionDetector.detect(
-            url = "https://example.com",
-            useAuth = true,
-            user = "wronguser",
-            password = "wrongpass"
-        )
-
-        // Then
-        assertTrue("Detection should fail", result.isFailure)
-        assertTrue(
-            "Should be IOException",
-            result.exceptionOrNull() is java.io.IOException
-        )
-    }
-
-    // ==========================================
-    // Multiple call tests
-    // ==========================================
-
-    @Test
-    fun `multiple detect calls track count correctly`() = runTest {
-        // Given
-        versionDetector.shouldSucceed = true
-
-        // When
-        versionDetector.detect("https://example1.com", false, null, null)
-        versionDetector.detect("https://example2.com", false, null, null)
-        versionDetector.detect("https://example3.com", false, null, null)
-
-        // Then
-        assertEquals(3, versionDetector.detectCallCount)
-        assertEquals("https://example3.com", versionDetector.lastDetectedUrl)
-    }
-
-    // ==========================================
-    // Reset tests
-    // ==========================================
-
-    @Test
-    fun `reset clears all state`() = runTest {
-        // Given - perform detection
-        versionDetector.versionToReturn = "2.0"
-        versionDetector.detect("https://example.com", false, null, null)
-
-        assertEquals(1, versionDetector.detectCallCount)
-        assertNotNull(versionDetector.lastDetectedUrl)
-        assertEquals("2.0", versionDetector.versionToReturn)
-
-        // When
-        versionDetector.reset()
-
-        // Then
-        assertEquals(0, versionDetector.detectCallCount)
-        assertNull(versionDetector.lastDetectedUrl)
-        assertNull(versionDetector.lastDetectedProfile)
-        assertEquals("1.32", versionDetector.versionToReturn)
-        assertTrue(versionDetector.shouldSucceed)
+        // Then - verify no auth was sent
+        val request = fakeHledgerClient.requestHistory.first()
+        assertNull(request.temporaryAuth)
     }
 }
