@@ -179,7 +179,7 @@ object DatabaseModule {
                     while (c.moveToNext()) {
                         db.execSQL(
                             "UPDATE templates SET uuid=? WHERE id=?",
-                            arrayOf(UUID.randomUUID().toString(), c.getLong(0))
+                            arrayOf<Any?>(UUID.randomUUID().toString(), c.getLong(0))
                         )
                     }
                 }
@@ -206,7 +206,7 @@ object DatabaseModule {
                 val description = c.getString(1)
                 database.execSQL(
                     "UPDATE transactions SET description_uc=? WHERE id=?",
-                    arrayOf(description.uppercase(), id)
+                    arrayOf<Any?>(description.uppercase(), id)
                 )
             }
         }

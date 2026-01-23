@@ -105,11 +105,6 @@ android {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
-    kotlinOptions {
-        jvmTarget = "1.8"
-        freeCompilerArgs = freeCompilerArgs + listOf("-Xjsr305=strict")
-        javaParameters = true
-    }
     @Suppress("UnstableApiUsage")
     productFlavors {
     }
@@ -123,6 +118,14 @@ android {
         unitTests {
             isIncludeAndroidResources = true
         }
+    }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_1_8)
+        freeCompilerArgs.addAll("-Xjsr305=strict")
+        javaParameters.set(true)
     }
 }
 

@@ -64,12 +64,9 @@ class Transaction {
     var day: Int = 0
 
     @ColumnInfo(name = "description", collate = ColumnInfo.NOCASE)
-    private var _description: String = ""
-
-    var description: String
-        get() = _description
+    var description: String = ""
         set(value) {
-            _description = value
+            field = value
             descriptionUpper = value.uppercase()
         }
 
@@ -89,8 +86,8 @@ class Transaction {
         year = o.year
         month = o.month
         day = o.day
-        description = o._description
-        descriptionUpper = o._description.uppercase()
+        description = o.description
+        descriptionUpper = o.description.uppercase()
         comment = o.comment
         generation = o.generation
     }
