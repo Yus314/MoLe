@@ -35,13 +35,11 @@ import androidx.lifecycle.repeatOnLifecycle
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.Date
 import java.util.Locale
-import javax.inject.Inject
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import logcat.logcat
 import net.ktnx.mobileledger.BackupsActivity
 import net.ktnx.mobileledger.R
-import net.ktnx.mobileledger.data.repository.OptionRepository
 import net.ktnx.mobileledger.domain.model.Profile
 import net.ktnx.mobileledger.service.AppStateService
 import net.ktnx.mobileledger.service.ThemeService
@@ -67,10 +65,15 @@ import net.ktnx.mobileledger.ui.theme.MoLeTheme
 @AndroidEntryPoint
 class MainActivityCompose : ProfileThemedActivity() {
 
-    @Inject
-    lateinit var optionRepository: OptionRepository
+    private val getLastSyncTimestampUseCase by lazy {
+        net.ktnx.mobileledger.di.BackupEntryPoint.get(this).getLastSyncTimestampUseCase()
+    }
 
-    @Inject
+    private val observeProfilesUseCase by lazy {
+        net.ktnx.mobileledger.di.BackupEntryPoint.get(this).observeProfilesUseCase()
+    }
+
+    @javax.inject.Inject
     lateinit var appStateService: AppStateService
 
     // profileRepository is inherited from ProfileThemedActivity
@@ -95,9 +98,7 @@ class MainActivityCompose : ProfileThemedActivity() {
                     }
                 }
                 launch {
-                    // Use full Profile objects from repository instead of
-                    // recreating incomplete ones from ProfileListItem
-                    profileRepository.observeAllProfiles().collect { profiles ->
+                    observeProfilesUseCase().collect { profiles ->
                         onProfileListChanged(profiles)
                     }
                 }
@@ -272,7 +273,7 @@ class MainActivityCompose : ProfileThemedActivity() {
         createShortcuts(newList)
         // ProfileSelectionViewModel handles profile list internally via observeProfiles()
 
-        val currentProfile = profileRepository.currentProfile.value
+        val currentProfile = observeCurrentProfileUseCase().value
         var replacementProfile: Profile? = null
         if (currentProfile != null) {
             for (p in newList) {
@@ -285,9 +286,9 @@ class MainActivityCompose : ProfileThemedActivity() {
 
         if (newList.isNotEmpty() && replacementProfile == null) {
             logcat { "Switching profile because the current is no longer available" }
-            profileRepository.setCurrentProfile(newList[0])
+            setCurrentProfileUseCase(newList[0])
         } else if (replacementProfile != null) {
-            profileRepository.setCurrentProfile(replacementProfile)
+            setCurrentProfileUseCase(replacementProfile)
         }
     }
 
@@ -362,11 +363,11 @@ class MainActivityCompose : ProfileThemedActivity() {
     }
 
     private fun updateLastUpdateTextFromDB() {
-        val currentProfile = profileRepository.currentProfile.value ?: return
+        val currentProfile = observeCurrentProfileUseCase().value ?: return
         val profileId = currentProfile.id ?: return
 
         lifecycleScope.launch {
-            val lastUpdate = optionRepository.getLastSyncTimestamp(profileId) ?: 0L
+            val lastUpdate = getLastSyncTimestampUseCase(profileId).getOrElse { null } ?: 0L
 
             val syncInfo = coordinatorViewModel.lastSyncInfo.value
             if (lastUpdate == 0L) {

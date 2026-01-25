@@ -30,10 +30,12 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import logcat.asLog
 import logcat.logcat
-import net.ktnx.mobileledger.data.repository.AccountRepository
-import net.ktnx.mobileledger.data.repository.PreferencesRepository
-import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.domain.usecase.AccountHierarchyResolver
+import net.ktnx.mobileledger.domain.usecase.GetAccountsWithAmountsUseCase
+import net.ktnx.mobileledger.domain.usecase.GetShowZeroBalanceUseCase
+import net.ktnx.mobileledger.domain.usecase.ObserveCurrentProfileUseCase
+import net.ktnx.mobileledger.domain.usecase.SetShowZeroBalanceUseCase
+import net.ktnx.mobileledger.domain.model.Profile
 
 /**
  * ViewModel for the Account Summary tab.
@@ -48,14 +50,17 @@ import net.ktnx.mobileledger.domain.usecase.AccountHierarchyResolver
  */
 @HiltViewModel
 class AccountSummaryViewModel @Inject constructor(
-    private val profileRepository: ProfileRepository,
-    private val accountRepository: AccountRepository,
-    private val preferencesRepository: PreferencesRepository,
+    private val observeCurrentProfileUseCase: ObserveCurrentProfileUseCase,
+    private val getAccountsWithAmountsUseCase: GetAccountsWithAmountsUseCase,
+    private val getShowZeroBalanceUseCase: GetShowZeroBalanceUseCase,
+    private val setShowZeroBalanceUseCase: SetShowZeroBalanceUseCase,
     private val accountHierarchyResolver: AccountHierarchyResolver
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AccountSummaryUiState())
     val uiState: StateFlow<AccountSummaryUiState> = _uiState.asStateFlow()
+
+    val currentProfile: StateFlow<Profile?> = observeCurrentProfileUseCase()
 
     private val _effects = Channel<AccountSummaryEffect>(Channel.BUFFERED)
     val effects = _effects.receiveAsFlow()
@@ -66,12 +71,12 @@ class AccountSummaryViewModel @Inject constructor(
     }
 
     private fun loadInitialPreferences() {
-        _uiState.update { it.copy(showZeroBalanceAccounts = preferencesRepository.getShowZeroBalanceAccounts()) }
+        _uiState.update { it.copy(showZeroBalanceAccounts = getShowZeroBalanceUseCase()) }
     }
 
     private fun observeProfileChanges() {
         viewModelScope.launch {
-            profileRepository.currentProfile.collect { profile ->
+            currentProfile.collect { profile ->
                 val profileId = profile?.id
                 if (profileId != null) {
                     loadAccounts(profileId)
@@ -111,7 +116,7 @@ class AccountSummaryViewModel @Inject constructor(
      * Can be called externally when data changes are detected.
      */
     fun reloadAccounts() {
-        val profileId = profileRepository.currentProfile.value?.id ?: return
+        val profileId = currentProfile.value?.id ?: return
         loadAccounts(profileId)
     }
 
@@ -122,7 +127,7 @@ class AccountSummaryViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                val result = accountRepository.getAllWithAmounts(profileId, showZeroBalances)
+                val result = getAccountsWithAmountsUseCase(profileId, showZeroBalances)
                 if (result.isFailure) {
                     _uiState.update {
                         it.copy(
@@ -192,7 +197,7 @@ class AccountSummaryViewModel @Inject constructor(
     private fun toggleZeroBalanceAccounts() {
         val newValue = !_uiState.value.showZeroBalanceAccounts
         _uiState.update { it.copy(showZeroBalanceAccounts = newValue) }
-        preferencesRepository.setShowZeroBalanceAccounts(newValue)
+        setShowZeroBalanceUseCase(newValue)
         reloadAccounts()
     }
 

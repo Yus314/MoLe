@@ -22,6 +22,11 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import net.ktnx.mobileledger.domain.model.Profile
+import net.ktnx.mobileledger.domain.usecase.ObserveCurrentProfileUseCaseImpl
+import net.ktnx.mobileledger.domain.usecase.SearchTransactionDescriptionsUseCaseImpl
+import net.ktnx.mobileledger.domain.usecase.StoreTransactionUseCaseImpl
+import net.ktnx.mobileledger.domain.usecase.GetTransactionByIdUseCaseImpl
+import net.ktnx.mobileledger.domain.usecase.GetFirstTransactionByDescriptionUseCaseImpl
 import net.ktnx.mobileledger.fake.FakeAppStateService
 import net.ktnx.mobileledger.fake.FakeProfileRepository
 import net.ktnx.mobileledger.fake.FakeTransactionBalanceCalculator
@@ -86,9 +91,20 @@ class TransactionFormViewModelTest {
             profileRepository.setCurrentProfile(profile)
         }
 
+        val observeCurrentProfileUseCase = ObserveCurrentProfileUseCaseImpl(profileRepository)
+        val searchTransactionDescriptionsUseCase =
+            SearchTransactionDescriptionsUseCaseImpl(transactionRepository)
+        val storeTransactionUseCase = StoreTransactionUseCaseImpl(transactionRepository)
+        val getTransactionByIdUseCase = GetTransactionByIdUseCaseImpl(transactionRepository)
+        val getFirstTransactionByDescriptionUseCase =
+            GetFirstTransactionByDescriptionUseCaseImpl(transactionRepository)
+
         return TransactionFormViewModel(
-            profileRepository = profileRepository,
-            transactionRepository = transactionRepository,
+            observeCurrentProfileUseCase = observeCurrentProfileUseCase,
+            searchTransactionDescriptionsUseCase = searchTransactionDescriptionsUseCase,
+            storeTransactionUseCase = storeTransactionUseCase,
+            getTransactionByIdUseCase = getTransactionByIdUseCase,
+            getFirstTransactionByDescriptionUseCase = getFirstTransactionByDescriptionUseCase,
             appStateService = appStateService,
             transactionSender = transactionSender,
             balanceCalculator = balanceCalculator
@@ -906,13 +922,7 @@ class TransactionFormViewModelTest {
         profileRepository.insertProfile(profile2)
         profileRepository.setCurrentProfile(profile1)
 
-        viewModel = TransactionFormViewModel(
-            profileRepository = profileRepository,
-            transactionRepository = transactionRepository,
-            appStateService = appStateService,
-            transactionSender = transactionSender,
-            balanceCalculator = balanceCalculator
-        )
+        viewModel = createViewModelWithProfile()
         advanceUntilIdle()
 
         // Set some form state

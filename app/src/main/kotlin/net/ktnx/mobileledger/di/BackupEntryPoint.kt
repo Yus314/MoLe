@@ -23,10 +23,20 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineDispatcher
-import net.ktnx.mobileledger.data.repository.CurrencyRepository
-import net.ktnx.mobileledger.data.repository.PreferencesRepository
-import net.ktnx.mobileledger.data.repository.ProfileRepository
-import net.ktnx.mobileledger.data.repository.TemplateRepository
+import net.ktnx.mobileledger.domain.repository.CurrencyRepository
+import net.ktnx.mobileledger.domain.repository.PreferencesRepository
+import net.ktnx.mobileledger.domain.repository.ProfileRepository
+import net.ktnx.mobileledger.domain.repository.TemplateRepository
+import net.ktnx.mobileledger.domain.usecase.GetAllProfilesUseCase
+import net.ktnx.mobileledger.domain.usecase.GetProfileByIdUseCase
+import net.ktnx.mobileledger.domain.usecase.GetStartupProfileIdUseCase
+import net.ktnx.mobileledger.domain.usecase.GetStartupThemeUseCase
+import net.ktnx.mobileledger.domain.usecase.ObserveCurrentProfileUseCase
+import net.ktnx.mobileledger.domain.usecase.ObserveProfilesUseCase
+import net.ktnx.mobileledger.domain.usecase.SetStartupProfileIdUseCase
+import net.ktnx.mobileledger.domain.usecase.SetStartupThemeUseCase
+import net.ktnx.mobileledger.domain.usecase.SetCurrentProfileUseCase
+import net.ktnx.mobileledger.domain.usecase.GetLastSyncTimestampUseCase
 import net.ktnx.mobileledger.db.DB
 import net.ktnx.mobileledger.service.ThemeService
 
@@ -53,6 +63,16 @@ interface BackupEntryPoint {
     fun preferencesRepository(): PreferencesRepository
     fun db(): DB
     fun themeService(): ThemeService
+    fun getStartupProfileIdUseCase(): GetStartupProfileIdUseCase
+    fun getStartupThemeUseCase(): GetStartupThemeUseCase
+    fun setStartupProfileIdUseCase(): SetStartupProfileIdUseCase
+    fun setStartupThemeUseCase(): SetStartupThemeUseCase
+    fun observeCurrentProfileUseCase(): ObserveCurrentProfileUseCase
+    fun observeProfilesUseCase(): ObserveProfilesUseCase
+    fun getLastSyncTimestampUseCase(): GetLastSyncTimestampUseCase
+    fun getProfileByIdUseCase(): GetProfileByIdUseCase
+    fun getAllProfilesUseCase(): GetAllProfilesUseCase
+    fun setCurrentProfileUseCase(): SetCurrentProfileUseCase
 
     @IoDispatcher
     fun ioDispatcher(): CoroutineDispatcher

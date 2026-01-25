@@ -26,8 +26,13 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.domain.model.Profile
+import net.ktnx.mobileledger.domain.usecase.GetAllProfilesUseCase
+import net.ktnx.mobileledger.domain.usecase.GetProfileByIdUseCase
+import net.ktnx.mobileledger.domain.usecase.ObserveCurrentProfileUseCase
+import net.ktnx.mobileledger.domain.usecase.ObserveProfilesUseCase
+import net.ktnx.mobileledger.domain.usecase.SetCurrentProfileUseCase
+import net.ktnx.mobileledger.domain.usecase.UpdateProfileOrderUseCase
 
 /**
  * ViewModel for profile selection in the navigation drawer.
@@ -45,7 +50,12 @@ import net.ktnx.mobileledger.domain.model.Profile
  */
 @HiltViewModel
 class ProfileSelectionViewModel @Inject constructor(
-    private val profileRepository: ProfileRepository
+    private val observeProfilesUseCase: ObserveProfilesUseCase,
+    private val observeCurrentProfileUseCase: ObserveCurrentProfileUseCase,
+    private val getProfileByIdUseCase: GetProfileByIdUseCase,
+    private val getAllProfilesUseCase: GetAllProfilesUseCase,
+    private val setCurrentProfileUseCase: SetCurrentProfileUseCase,
+    private val updateProfileOrderUseCase: UpdateProfileOrderUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProfileSelectionUiState())
@@ -54,7 +64,7 @@ class ProfileSelectionViewModel @Inject constructor(
     /**
      * Delegate to ProfileRepository.currentProfile for shared access.
      */
-    val currentProfile: StateFlow<Profile?> = profileRepository.currentProfile
+    val currentProfile: StateFlow<Profile?> = observeCurrentProfileUseCase()
 
     init {
         observeCurrentProfile()
@@ -77,9 +87,9 @@ class ProfileSelectionViewModel @Inject constructor(
 
     private fun selectProfile(profileId: Long) {
         viewModelScope.launch {
-            val profile = profileRepository.getProfileById(profileId).getOrNull()
+            val profile = getProfileByIdUseCase(profileId).getOrNull()
             if (profile != null) {
-                profileRepository.setCurrentProfile(profile)
+                setCurrentProfileUseCase(profile)
             }
         }
     }
@@ -90,11 +100,11 @@ class ProfileSelectionViewModel @Inject constructor(
 
     private fun reorderProfiles(orderedProfiles: List<ProfileListItem>) {
         viewModelScope.launch {
-            val allProfiles = profileRepository.getAllProfiles().getOrElse { return@launch }
+            val allProfiles = getAllProfilesUseCase().getOrElse { return@launch }
             val reorderedProfiles = orderedProfiles.mapNotNull { item ->
                 allProfiles.find { it.id == item.id }
             }
-            profileRepository.updateProfileOrder(reorderedProfiles)
+            updateProfileOrderUseCase(reorderedProfiles)
         }
     }
 
@@ -104,7 +114,7 @@ class ProfileSelectionViewModel @Inject constructor(
 
     private fun observeCurrentProfile() {
         viewModelScope.launch {
-            profileRepository.currentProfile.collect { profile ->
+            observeCurrentProfileUseCase().collect { profile ->
                 _uiState.update { state ->
                     state.copy(
                         currentProfileId = profile?.id,
@@ -119,7 +129,7 @@ class ProfileSelectionViewModel @Inject constructor(
 
     private fun observeProfiles() {
         viewModelScope.launch {
-            profileRepository.observeAllProfiles().collect { profiles ->
+            observeProfilesUseCase().collect { profiles ->
                 _uiState.update { state ->
                     state.copy(
                         profiles = profiles.mapNotNull { profile ->

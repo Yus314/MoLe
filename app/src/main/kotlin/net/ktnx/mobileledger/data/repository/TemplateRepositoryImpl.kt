@@ -32,6 +32,8 @@ import net.ktnx.mobileledger.db.TemplateHeader
 import net.ktnx.mobileledger.db.TemplateWithAccounts
 import net.ktnx.mobileledger.di.IoDispatcher
 import net.ktnx.mobileledger.domain.model.Template
+import net.ktnx.mobileledger.domain.repository.CurrencyRepository
+import net.ktnx.mobileledger.domain.repository.TemplateRepository
 import net.ktnx.mobileledger.domain.usecase.AppExceptionMapper
 
 /**

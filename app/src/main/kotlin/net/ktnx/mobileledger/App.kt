@@ -25,7 +25,7 @@ import javax.inject.Inject
 import logcat.AndroidLogcatLogger
 import logcat.LogPriority
 import logcat.logcat
-import net.ktnx.mobileledger.data.repository.ProfileRepository
+import net.ktnx.mobileledger.domain.repository.ProfileRepository
 import net.ktnx.mobileledger.di.CurrencyFormatterEntryPoint
 import net.ktnx.mobileledger.di.ThemeServiceEntryPoint
 import net.ktnx.mobileledger.service.CurrencyFormatter

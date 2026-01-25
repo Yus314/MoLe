@@ -27,6 +27,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import net.ktnx.mobileledger.domain.model.Profile
 import net.ktnx.mobileledger.domain.model.SyncState
+import net.ktnx.mobileledger.domain.usecase.ObserveCurrentProfileUseCaseImpl
 import net.ktnx.mobileledger.fake.FakeAppStateService
 import net.ktnx.mobileledger.fake.FakeBackgroundTaskManager
 import net.ktnx.mobileledger.fake.FakeProfileRepository
@@ -90,7 +91,7 @@ class MainCoordinatorViewModelTest {
     )
 
     private fun createViewModel() = MainCoordinatorViewModel(
-        profileRepository,
+        observeCurrentProfileUseCase = ObserveCurrentProfileUseCaseImpl(profileRepository),
         transactionSyncer,
         backgroundTaskManager,
         appStateService

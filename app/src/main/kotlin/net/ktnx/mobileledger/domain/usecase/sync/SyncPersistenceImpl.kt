@@ -23,9 +23,9 @@ import javax.inject.Singleton
 import kotlin.coroutines.coroutineContext
 import kotlinx.coroutines.ensureActive
 import logcat.logcat
-import net.ktnx.mobileledger.data.repository.AccountRepository
-import net.ktnx.mobileledger.data.repository.OptionRepository
-import net.ktnx.mobileledger.data.repository.TransactionRepository
+import net.ktnx.mobileledger.domain.repository.AccountRepository
+import net.ktnx.mobileledger.domain.repository.OptionRepository
+import net.ktnx.mobileledger.domain.repository.TransactionRepository
 import net.ktnx.mobileledger.data.repository.mapper.AccountMapper.withStateFrom
 import net.ktnx.mobileledger.domain.model.Account
 import net.ktnx.mobileledger.domain.model.Profile

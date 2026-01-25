@@ -32,9 +32,11 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import logcat.logcat
-import net.ktnx.mobileledger.data.repository.CurrencyRepository
-import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.domain.usecase.AccountSuggestionLookup
+import net.ktnx.mobileledger.domain.usecase.DeleteCurrencyUseCase
+import net.ktnx.mobileledger.domain.usecase.GetAllCurrenciesUseCase
+import net.ktnx.mobileledger.domain.usecase.ObserveCurrentProfileUseCase
+import net.ktnx.mobileledger.domain.usecase.SaveCurrencyUseCase
 import net.ktnx.mobileledger.domain.usecase.TransactionAccountRowManager
 import net.ktnx.mobileledger.domain.usecase.TransactionBalanceCalculator
 import net.ktnx.mobileledger.service.CurrencyFormatter
@@ -42,8 +44,10 @@ import net.ktnx.mobileledger.service.RowIdGenerator
 
 @HiltViewModel
 class AccountRowsViewModel @Inject constructor(
-    private val profileRepository: ProfileRepository,
-    private val currencyRepository: CurrencyRepository,
+    observeCurrentProfileUseCase: ObserveCurrentProfileUseCase,
+    private val getAllCurrenciesUseCase: GetAllCurrenciesUseCase,
+    private val saveCurrencyUseCase: SaveCurrencyUseCase,
+    private val deleteCurrencyUseCase: DeleteCurrencyUseCase,
     private val currencyFormatter: CurrencyFormatter,
     private val rowIdGenerator: RowIdGenerator,
     private val balanceCalculator: TransactionBalanceCalculator,
@@ -58,13 +62,14 @@ class AccountRowsViewModel @Inject constructor(
     val effects = _effects.receiveAsFlow()
 
     private var accountSuggestionJob: Job? = null
+    private val currentProfile = observeCurrentProfileUseCase()
 
     init {
         initializeFromProfile()
     }
 
     private fun initializeFromProfile() {
-        val profile = profileRepository.currentProfile.value
+        val profile = currentProfile.value
         if (profile != null) {
             val defaultCurrency = profile.defaultCommodityOrEmpty
             rowIdGenerator.reset()
@@ -85,7 +90,7 @@ class AccountRowsViewModel @Inject constructor(
 
     private fun loadCurrencies() {
         viewModelScope.launch {
-            currencyRepository.getAllCurrenciesAsDomain()
+            getAllCurrenciesUseCase()
                 .onSuccess { currencies ->
                     _uiState.update { it.copy(availableCurrencies = currencies.map { c -> c.name }) }
                 }
@@ -144,7 +149,7 @@ class AccountRowsViewModel @Inject constructor(
         accountSuggestionJob = viewModelScope.launch {
             delay(AccountSuggestionLookup.DEFAULT_DEBOUNCE_MS)
 
-            val profileId = profileRepository.currentProfile.value?.id ?: return@launch
+            val profileId = currentProfile.value?.id ?: return@launch
 
             val suggestions = suggestionLookup.search(profileId, term)
 
@@ -298,20 +303,20 @@ class AccountRowsViewModel @Inject constructor(
                 position = position,
                 hasGap = gap
             )
-            currencyRepository.saveCurrency(currency)
+            saveCurrencyUseCase(currency)
             loadCurrencies()
         }
     }
 
     private fun deleteCurrency(name: String) {
         viewModelScope.launch {
-            currencyRepository.deleteCurrencyByName(name)
+            deleteCurrencyUseCase(name)
             loadCurrencies()
         }
     }
 
     private fun toggleCurrency() {
-        val profile = profileRepository.currentProfile.value ?: return
+        val profile = currentProfile.value ?: return
         val newShowCurrency = !_uiState.value.showCurrency
         val defaultCurrency = if (newShowCurrency) profile.defaultCommodityOrEmpty else ""
 
@@ -347,7 +352,7 @@ class AccountRowsViewModel @Inject constructor(
     }
 
     private fun reset() {
-        val profile = profileRepository.currentProfile.value
+        val profile = currentProfile.value
         val defaultCurrency = profile?.defaultCommodityOrEmpty ?: ""
 
         rowIdGenerator.reset()

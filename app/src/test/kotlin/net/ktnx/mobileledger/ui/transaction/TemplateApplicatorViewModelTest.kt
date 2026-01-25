@@ -24,6 +24,9 @@ import net.ktnx.mobileledger.db.TemplateAccount
 import net.ktnx.mobileledger.db.TemplateHeader
 import net.ktnx.mobileledger.db.TemplateWithAccounts
 import net.ktnx.mobileledger.domain.model.Profile
+import net.ktnx.mobileledger.domain.usecase.GetAllTemplatesUseCaseImpl
+import net.ktnx.mobileledger.domain.usecase.GetTemplateUseCaseImpl
+import net.ktnx.mobileledger.domain.usecase.ObserveCurrentProfileUseCaseImpl
 import net.ktnx.mobileledger.domain.usecase.TemplateMatcher
 import net.ktnx.mobileledger.domain.usecase.TemplateMatcherImpl
 import net.ktnx.mobileledger.fake.FakeCurrencyFormatter
@@ -87,9 +90,14 @@ class TemplateApplicatorViewModelTest {
             profileRepository.setCurrentProfile(profile)
         }
 
+        val observeCurrentProfileUseCase = ObserveCurrentProfileUseCaseImpl(profileRepository)
+        val getAllTemplatesUseCase = GetAllTemplatesUseCaseImpl(templateRepository)
+        val getTemplateUseCase = GetTemplateUseCaseImpl(templateRepository)
+
         return TemplateApplicatorViewModel(
-            profileRepository = profileRepository,
-            templateRepository = templateRepository,
+            observeCurrentProfileUseCase = observeCurrentProfileUseCase,
+            getAllTemplatesUseCase = getAllTemplatesUseCase,
+            getTemplateUseCase = getTemplateUseCase,
             templateMatcher = templateMatcher,
             currencyFormatter = currencyFormatter,
             rowIdGenerator = rowIdGenerator

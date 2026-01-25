@@ -31,6 +31,7 @@ import net.ktnx.mobileledger.data.repository.mapper.ProfileMapper.toDomain
 import net.ktnx.mobileledger.data.repository.mapper.ProfileMapper.toEntity
 import net.ktnx.mobileledger.di.IoDispatcher
 import net.ktnx.mobileledger.domain.model.Profile
+import net.ktnx.mobileledger.domain.repository.ProfileRepository
 import net.ktnx.mobileledger.domain.usecase.AppExceptionMapper
 
 /**

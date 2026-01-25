@@ -19,7 +19,7 @@ package net.ktnx.mobileledger.fake
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import net.ktnx.mobileledger.data.repository.OptionRepository
+import net.ktnx.mobileledger.domain.repository.OptionRepository
 import net.ktnx.mobileledger.domain.model.AppOption
 
 /**

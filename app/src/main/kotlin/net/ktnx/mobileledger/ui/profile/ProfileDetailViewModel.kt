@@ -29,7 +29,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -38,12 +37,13 @@ import logcat.LogPriority
 import logcat.asLog
 import logcat.logcat
 import net.ktnx.mobileledger.TemporaryAuthData
-import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.di.IoDispatcher
 import net.ktnx.mobileledger.domain.model.FutureDates
 import net.ktnx.mobileledger.domain.model.Profile
 import net.ktnx.mobileledger.domain.model.ProfileAuthentication
 import net.ktnx.mobileledger.domain.model.ServerVersion
+import net.ktnx.mobileledger.domain.usecase.GetAllProfilesUseCase
+import net.ktnx.mobileledger.domain.usecase.GetProfileByIdUseCase
 import net.ktnx.mobileledger.domain.usecase.ProfilePersistence
 import net.ktnx.mobileledger.domain.usecase.ProfileValidator
 import net.ktnx.mobileledger.domain.usecase.VersionDetector
@@ -52,7 +52,8 @@ import net.ktnx.mobileledger.service.AuthDataProvider
 
 @HiltViewModel
 class ProfileDetailViewModel @Inject constructor(
-    private val profileRepository: ProfileRepository,
+    private val getProfileByIdUseCase: GetProfileByIdUseCase,
+    private val getAllProfilesUseCase: GetAllProfilesUseCase,
     private val authDataProvider: AuthDataProvider,
     private val versionDetector: VersionDetector,
     private val profileValidator: ProfileValidator,
@@ -86,12 +87,18 @@ class ProfileDetailViewModel @Inject constructor(
                 loadProfile(profileId)
             } else {
                 // New profile
-                val themeHue = if (initialThemeHue >= 0) {
-                    initialThemeHue
-                } else {
-                    val existingProfiles = profileRepository.observeAllProfiles().first()
-                    authDataProvider.getNewProfileThemeHue(existingProfiles)
-                }
+                val themeHue =
+                    if (initialThemeHue >= 0) {
+                        initialThemeHue
+                    } else {
+                        withContext(ioDispatcher) {
+                            val existingProfiles = getAllProfilesUseCase().getOrElse { error ->
+                                logcat { "Failed to load profiles for theme hue: ${error.asLog()}" }
+                                emptyList()
+                            }
+                            authDataProvider.getNewProfileThemeHue(existingProfiles)
+                        }
+                    }
 
                 _uiState.update {
                     it.copy(
@@ -108,42 +115,48 @@ class ProfileDetailViewModel @Inject constructor(
 
     private suspend fun loadProfile(profileId: Long) {
         withContext(ioDispatcher) {
-            val profile = profileRepository.getProfileById(profileId).getOrNull()
-            if (profile != null) {
-                orderNo = profile.orderNo
-                val detectedVersion = if (profile.isVersionPre_1_20_1) {
-                    ServerVersion.preLegacy()
-                } else if (profile.detectedVersionMajor > 0) {
-                    ServerVersion(profile.detectedVersionMajor, profile.detectedVersionMinor)
-                } else {
-                    null
-                }
+            getProfileByIdUseCase(profileId)
+                .onSuccess { profile ->
+                    if (profile != null) {
+                        orderNo = profile.orderNo
+                        val detectedVersion = if (profile.isVersionPre_1_20_1) {
+                            ServerVersion.preLegacy()
+                        } else if (profile.detectedVersionMajor > 0) {
+                            ServerVersion(profile.detectedVersionMajor, profile.detectedVersionMinor)
+                        } else {
+                            null
+                        }
 
-                val defaultHue = authDataProvider.getDefaultThemeHue()
-                _uiState.update {
-                    ProfileDetailUiState(
-                        profileId = profile.id ?: 0,
-                        name = profile.name,
-                        url = profile.url,
-                        useAuthentication = profile.isAuthEnabled,
-                        authUser = profile.authentication?.user ?: "",
-                        authPassword = profile.authentication?.password ?: "",
-                        themeHue = if (profile.theme == -1) defaultHue else profile.theme,
-                        initialThemeHue = if (profile.theme == -1) defaultHue else profile.theme,
-                        preferredAccountsFilter = profile.preferredAccountsFilter ?: "",
-                        futureDates = profile.futureDates,
-                        apiVersion = API.valueOf(profile.apiVersion),
-                        permitPosting = profile.permitPosting,
-                        showCommentsByDefault = profile.showCommentsByDefault,
-                        showCommodityByDefault = profile.showCommodityByDefault,
-                        defaultCommodity = profile.defaultCommodityOrEmpty.ifEmpty { null },
-                        detectedVersion = detectedVersion,
-                        isLoading = false
-                    )
+                        val defaultHue = authDataProvider.getDefaultThemeHue()
+                        _uiState.update {
+                            ProfileDetailUiState(
+                                profileId = profile.id ?: 0,
+                                name = profile.name,
+                                url = profile.url,
+                                useAuthentication = profile.isAuthEnabled,
+                                authUser = profile.authentication?.user ?: "",
+                                authPassword = profile.authentication?.password ?: "",
+                                themeHue = if (profile.theme == -1) defaultHue else profile.theme,
+                                initialThemeHue = if (profile.theme == -1) defaultHue else profile.theme,
+                                preferredAccountsFilter = profile.preferredAccountsFilter ?: "",
+                                futureDates = profile.futureDates,
+                                apiVersion = API.valueOf(profile.apiVersion),
+                                permitPosting = profile.permitPosting,
+                                showCommentsByDefault = profile.showCommentsByDefault,
+                                showCommodityByDefault = profile.showCommodityByDefault,
+                                defaultCommodity = profile.defaultCommodityOrEmpty.ifEmpty { null },
+                                detectedVersion = detectedVersion,
+                                isLoading = false
+                            )
+                        }
+                    } else {
+                        _uiState.update { it.copy(isLoading = false) }
+                    }
                 }
-            } else {
-                _uiState.update { it.copy(isLoading = false) }
-            }
+                .onFailure { e ->
+                    logcat { "Error loading profile: ${e.asLog()}" }
+                    _uiState.update { it.copy(isLoading = false) }
+                }
         }
     }
 
@@ -364,7 +377,7 @@ class ProfileDetailViewModel @Inject constructor(
 
         // Load existing profile to get uuid if updating
         val existingProfile = if (state.profileId > 0) {
-            profileRepository.getProfileById(state.profileId).getOrNull()
+            getProfileByIdUseCase(state.profileId).getOrNull()
         } else {
             null
         }

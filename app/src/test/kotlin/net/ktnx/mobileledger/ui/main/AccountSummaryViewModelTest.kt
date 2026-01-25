@@ -35,6 +35,10 @@ import net.ktnx.mobileledger.domain.model.Account
 import net.ktnx.mobileledger.domain.model.AccountAmount as DomainAccountAmount
 import net.ktnx.mobileledger.domain.model.Profile
 import net.ktnx.mobileledger.domain.usecase.AccountHierarchyResolverImpl
+import net.ktnx.mobileledger.domain.usecase.GetAccountsWithAmountsUseCaseImpl
+import net.ktnx.mobileledger.domain.usecase.GetShowZeroBalanceUseCaseImpl
+import net.ktnx.mobileledger.domain.usecase.ObserveCurrentProfileUseCaseImpl
+import net.ktnx.mobileledger.domain.usecase.SetShowZeroBalanceUseCaseImpl
 import net.ktnx.mobileledger.fake.FakeProfileRepository
 import net.ktnx.mobileledger.util.createTestDomainProfile
 import org.junit.After
@@ -138,10 +142,11 @@ class AccountSummaryViewModelTest {
     }
 
     private fun createViewModel() = AccountSummaryViewModel(
-        profileRepository,
-        accountRepository,
-        preferencesRepository,
-        AccountHierarchyResolverImpl()
+        observeCurrentProfileUseCase = ObserveCurrentProfileUseCaseImpl(profileRepository),
+        getAccountsWithAmountsUseCase = GetAccountsWithAmountsUseCaseImpl(accountRepository),
+        getShowZeroBalanceUseCase = GetShowZeroBalanceUseCaseImpl(preferencesRepository),
+        setShowZeroBalanceUseCase = SetShowZeroBalanceUseCaseImpl(preferencesRepository),
+        accountHierarchyResolver = AccountHierarchyResolverImpl()
     )
 
     // ========================================

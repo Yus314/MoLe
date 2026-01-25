@@ -25,10 +25,10 @@ import kotlinx.serialization.json.Json
 import logcat.logcat
 import net.ktnx.mobileledger.backup.model.BackupMapper.toDbEntity
 import net.ktnx.mobileledger.backup.model.BackupModel
-import net.ktnx.mobileledger.data.repository.CurrencyRepository
-import net.ktnx.mobileledger.data.repository.PreferencesRepository
-import net.ktnx.mobileledger.data.repository.ProfileRepository
-import net.ktnx.mobileledger.data.repository.TemplateRepository
+import net.ktnx.mobileledger.domain.repository.CurrencyRepository
+import net.ktnx.mobileledger.domain.repository.PreferencesRepository
+import net.ktnx.mobileledger.domain.repository.ProfileRepository
+import net.ktnx.mobileledger.domain.repository.TemplateRepository
 import net.ktnx.mobileledger.data.repository.mapper.CurrencyMapper.toDomain
 import net.ktnx.mobileledger.data.repository.mapper.ProfileMapper.toDomain
 import net.ktnx.mobileledger.data.repository.mapper.TemplateMapper.toDomain

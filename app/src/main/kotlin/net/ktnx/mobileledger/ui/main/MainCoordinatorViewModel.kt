@@ -30,12 +30,12 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.yield
-import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.domain.model.Profile
 import net.ktnx.mobileledger.domain.model.SyncException
 import net.ktnx.mobileledger.domain.model.SyncProgress
 import net.ktnx.mobileledger.domain.model.SyncState
 import net.ktnx.mobileledger.domain.usecase.TransactionSyncer
+import net.ktnx.mobileledger.domain.usecase.ObserveCurrentProfileUseCase
 import net.ktnx.mobileledger.service.AppStateService
 import net.ktnx.mobileledger.service.BackgroundTaskManager
 import net.ktnx.mobileledger.service.SyncInfo
@@ -57,7 +57,7 @@ import net.ktnx.mobileledger.service.TaskProgress
  */
 @HiltViewModel
 class MainCoordinatorViewModel @Inject constructor(
-    private val profileRepository: ProfileRepository,
+    private val observeCurrentProfileUseCase: ObserveCurrentProfileUseCase,
     private val transactionSyncer: TransactionSyncer,
     private val backgroundTaskManager: BackgroundTaskManager,
     private val appStateService: AppStateService
@@ -122,7 +122,7 @@ class MainCoordinatorViewModel @Inject constructor(
 
     private fun observeProfile() {
         viewModelScope.launch {
-            profileRepository.currentProfile.collect { profile ->
+            observeCurrentProfileUseCase().collect { profile ->
                 _uiState.update {
                     it.copy(
                         currentProfileId = profile?.id,
@@ -186,7 +186,7 @@ class MainCoordinatorViewModel @Inject constructor(
      * @param profile The profile to sync. If null, uses the current profile.
      */
     fun startSync(profile: Profile? = null) {
-        val syncProfile = profile ?: profileRepository.currentProfile.value
+        val syncProfile = profile ?: observeCurrentProfileUseCase().value
         if (syncProfile == null) {
             return
         }

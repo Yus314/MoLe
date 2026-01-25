@@ -29,10 +29,13 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import logcat.logcat
-import net.ktnx.mobileledger.data.repository.ProfileRepository
-import net.ktnx.mobileledger.data.repository.TransactionRepository
 import net.ktnx.mobileledger.domain.model.FutureDates
 import net.ktnx.mobileledger.domain.model.Transaction
+import net.ktnx.mobileledger.domain.usecase.GetFirstTransactionByDescriptionUseCase
+import net.ktnx.mobileledger.domain.usecase.GetTransactionByIdUseCase
+import net.ktnx.mobileledger.domain.usecase.ObserveCurrentProfileUseCase
+import net.ktnx.mobileledger.domain.usecase.SearchTransactionDescriptionsUseCase
+import net.ktnx.mobileledger.domain.usecase.StoreTransactionUseCase
 import net.ktnx.mobileledger.domain.usecase.TransactionBalanceCalculator
 import net.ktnx.mobileledger.domain.usecase.TransactionSender
 import net.ktnx.mobileledger.service.AppStateService
@@ -40,8 +43,11 @@ import net.ktnx.mobileledger.utils.SimpleDate
 
 @HiltViewModel
 class TransactionFormViewModel @Inject constructor(
-    private val profileRepository: ProfileRepository,
-    private val transactionRepository: TransactionRepository,
+    observeCurrentProfileUseCase: ObserveCurrentProfileUseCase,
+    private val searchTransactionDescriptionsUseCase: SearchTransactionDescriptionsUseCase,
+    private val storeTransactionUseCase: StoreTransactionUseCase,
+    private val getTransactionByIdUseCase: GetTransactionByIdUseCase,
+    private val getFirstTransactionByDescriptionUseCase: GetFirstTransactionByDescriptionUseCase,
     private val appStateService: AppStateService,
     private val transactionSender: TransactionSender,
     private val balanceCalculator: TransactionBalanceCalculator
@@ -53,12 +59,14 @@ class TransactionFormViewModel @Inject constructor(
     private val _effects = Channel<TransactionFormEffect>(Channel.BUFFERED)
     val effects = _effects.receiveAsFlow()
 
+    private val currentProfile = observeCurrentProfileUseCase()
+
     init {
         initializeFromProfile()
     }
 
     private fun initializeFromProfile() {
-        val profile = profileRepository.currentProfile.value
+        val profile = currentProfile.value
         if (profile != null) {
             _uiState.update {
                 it.copy(
@@ -110,9 +118,8 @@ class TransactionFormViewModel @Inject constructor(
 
         viewModelScope.launch {
             val termUpper = term.uppercase()
-            transactionRepository.searchByDescription(termUpper)
-                .onSuccess { containers ->
-                    val suggestions = containers.mapNotNull { it.description }
+            searchTransactionDescriptionsUseCase(termUpper)
+                .onSuccess { suggestions ->
                     _uiState.update { it.copy(descriptionSuggestions = suggestions) }
                 }
                 .onFailure { e ->
@@ -153,7 +160,7 @@ class TransactionFormViewModel @Inject constructor(
         val state = _uiState.value
         if (state.description.isBlank()) return
 
-        val profile = profileRepository.currentProfile.value ?: run {
+        val profile = currentProfile.value ?: run {
             viewModelScope.launch {
                 _effects.send(TransactionFormEffect.ShowError("プロファイルが選択されていません"))
             }
@@ -180,7 +187,7 @@ class TransactionFormViewModel @Inject constructor(
     }
 
     private suspend fun handleTransactionSendSuccess(transaction: Transaction, profileId: Long) {
-        transactionRepository.storeTransaction(transaction, profileId)
+        storeTransactionUseCase(transaction, profileId)
             .onSuccess {
                 logcat { "Transaction saved to DB" }
                 appStateService.signalDataChanged()
@@ -260,7 +267,7 @@ class TransactionFormViewModel @Inject constructor(
     private fun loadFromTransaction(transactionId: Long) {
         viewModelScope.launch {
             _uiState.update { it.copy(isBusy = true) }
-            transactionRepository.getTransactionById(transactionId)
+            getTransactionByIdUseCase(transactionId)
                 .onSuccess { transaction ->
                     if (transaction != null) {
                         _uiState.update { state ->
@@ -287,7 +294,7 @@ class TransactionFormViewModel @Inject constructor(
     private fun loadFromDescription(description: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isBusy = true, description = description) }
-            transactionRepository.getFirstByDescription(description)
+            getFirstTransactionByDescriptionUseCase(description)
                 .onSuccess {
                     _uiState.update { it.copy(isBusy = false) }
                     // Note: 見つからない場合はエラーではない（新規入力として扱う）

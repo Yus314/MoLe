@@ -31,16 +31,16 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import logcat.asLog
 import logcat.logcat
 import net.ktnx.mobileledger.async.TransactionAccumulator
-import net.ktnx.mobileledger.data.repository.AccountRepository
-import net.ktnx.mobileledger.data.repository.ProfileRepository
-import net.ktnx.mobileledger.data.repository.TransactionRepository
+import net.ktnx.mobileledger.domain.model.Profile
 import net.ktnx.mobileledger.domain.model.Transaction
+import net.ktnx.mobileledger.domain.usecase.GetTransactionsUseCase
+import net.ktnx.mobileledger.domain.usecase.ObserveCurrentProfileUseCase
+import net.ktnx.mobileledger.domain.usecase.SearchAccountNamesUseCase
 import net.ktnx.mobileledger.domain.usecase.TransactionListConverter
 import net.ktnx.mobileledger.service.CurrencyFormatter
 import net.ktnx.mobileledger.utils.SimpleDate
@@ -55,15 +55,17 @@ import net.ktnx.mobileledger.utils.SimpleDate
  */
 @HiltViewModel
 class TransactionListViewModel @Inject constructor(
-    private val profileRepository: ProfileRepository,
-    private val transactionRepository: TransactionRepository,
-    private val accountRepository: AccountRepository,
+    private val observeCurrentProfileUseCase: ObserveCurrentProfileUseCase,
+    private val getTransactionsUseCase: GetTransactionsUseCase,
+    private val searchAccountNamesUseCase: SearchAccountNamesUseCase,
     private val currencyFormatter: CurrencyFormatter,
     private val transactionListConverter: TransactionListConverter
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(TransactionListUiState())
     val uiState: StateFlow<TransactionListUiState> = _uiState.asStateFlow()
+
+    val currentProfile: StateFlow<Profile?> = observeCurrentProfileUseCase()
 
     private val _accountSearchQuery = MutableStateFlow("")
 
@@ -79,7 +81,7 @@ class TransactionListViewModel @Inject constructor(
 
     private fun observeProfileChanges() {
         viewModelScope.launch {
-            profileRepository.currentProfile.collect { profile ->
+            currentProfile.collect { profile ->
                 val profileId = profile?.id
                 // Clear filter and reload when profile changes
                 if (lastProfileId != profileId) {
@@ -144,7 +146,7 @@ class TransactionListViewModel @Inject constructor(
      * This is called when the Transactions tab is selected or externally.
      */
     fun loadTransactions() {
-        val profileId = profileRepository.currentProfile.value?.id ?: return
+        val profileId = currentProfile.value?.id ?: return
         val accountFilter = _uiState.value.accountFilter
         loadTransactionsInternal(profileId, accountFilter)
     }
@@ -157,10 +159,7 @@ class TransactionListViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                val dbTransactions = transactionRepository.observeTransactionsFiltered(
-                    profileId,
-                    accountFilter
-                ).first()
+                val dbTransactions = getTransactionsUseCase(profileId, accountFilter).getOrThrow()
 
                 // Convert directly to display items without TransactionAccumulator
                 // (which has dependency on App.instance)
@@ -324,14 +323,13 @@ class TransactionListViewModel @Inject constructor(
     }
 
     private fun searchAccountNames(query: String) {
-        val profileId = profileRepository.currentProfile.value?.id ?: return
+        val profileId = currentProfile.value?.id ?: return
         viewModelScope.launch {
-            accountRepository.searchAccountNames(profileId, query)
-                .onSuccess { names ->
-                    _uiState.update {
-                        it.copy(accountSuggestions = names.take(10).toImmutableList())
-                    }
+            searchAccountNamesUseCase(profileId, query).onSuccess { names ->
+                _uiState.update {
+                    it.copy(accountSuggestions = names.take(10).toImmutableList())
                 }
+            }
         }
     }
 

@@ -35,6 +35,10 @@ import net.ktnx.mobileledger.db.TransactionWithAccounts
 import net.ktnx.mobileledger.domain.model.Profile
 import net.ktnx.mobileledger.domain.model.Transaction as DomainTransaction
 import net.ktnx.mobileledger.domain.model.TransactionLine as TransactionLine
+import net.ktnx.mobileledger.domain.usecase.GetTransactionsUseCaseImpl
+import net.ktnx.mobileledger.domain.usecase.ObserveCurrentProfileUseCaseImpl
+import net.ktnx.mobileledger.domain.usecase.ObserveTransactionsUseCaseImpl
+import net.ktnx.mobileledger.domain.usecase.SearchAccountNamesUseCaseImpl
 import net.ktnx.mobileledger.domain.usecase.TransactionListConverterImpl
 import net.ktnx.mobileledger.fake.FakeCurrencyFormatter
 import net.ktnx.mobileledger.fake.FakeProfileRepository
@@ -141,11 +145,13 @@ class TransactionListViewModelTest {
     }
 
     private fun createViewModel() = TransactionListViewModel(
-        profileRepository,
-        transactionRepository,
-        accountRepository,
-        currencyFormatter,
-        TransactionListConverterImpl()
+        observeCurrentProfileUseCase = ObserveCurrentProfileUseCaseImpl(profileRepository),
+        getTransactionsUseCase = GetTransactionsUseCaseImpl(
+            observeTransactionsUseCase = ObserveTransactionsUseCaseImpl(transactionRepository)
+        ),
+        searchAccountNamesUseCase = SearchAccountNamesUseCaseImpl(accountRepository),
+        currencyFormatter = currencyFormatter,
+        transactionListConverter = TransactionListConverterImpl()
     )
 
     // ========================================

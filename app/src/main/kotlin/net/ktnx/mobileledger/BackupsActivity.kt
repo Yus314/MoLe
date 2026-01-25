@@ -38,7 +38,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import kotlinx.coroutines.launch
-import net.ktnx.mobileledger.data.repository.ProfileRepository
+import net.ktnx.mobileledger.domain.repository.ProfileRepository
 import net.ktnx.mobileledger.ui.backups.BackupsEffect
 import net.ktnx.mobileledger.ui.backups.BackupsMessage
 import net.ktnx.mobileledger.ui.backups.BackupsScreen

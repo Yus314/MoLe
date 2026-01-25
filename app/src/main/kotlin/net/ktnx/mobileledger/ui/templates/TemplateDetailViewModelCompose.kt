@@ -30,7 +30,9 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import logcat.logcat
-import net.ktnx.mobileledger.data.repository.TemplateRepository
+import net.ktnx.mobileledger.domain.usecase.DeleteTemplateUseCase
+import net.ktnx.mobileledger.domain.usecase.GetTemplateUseCase
+import net.ktnx.mobileledger.domain.usecase.SaveTemplateUseCase
 import net.ktnx.mobileledger.domain.usecase.TemplateAccountRowManager
 import net.ktnx.mobileledger.domain.usecase.TemplateDataMapper
 import net.ktnx.mobileledger.domain.usecase.TemplatePatternValidator
@@ -41,7 +43,9 @@ import net.ktnx.mobileledger.domain.usecase.TemplatePatternValidator
  */
 @HiltViewModel
 class TemplateDetailViewModelCompose @Inject constructor(
-    private val templateRepository: TemplateRepository,
+    private val getTemplateUseCase: GetTemplateUseCase,
+    private val saveTemplateUseCase: SaveTemplateUseCase,
+    private val deleteTemplateUseCase: DeleteTemplateUseCase,
     private val patternValidator: TemplatePatternValidator,
     private val rowManager: TemplateAccountRowManager,
     private val dataMapper: TemplateDataMapper
@@ -68,7 +72,7 @@ class TemplateDetailViewModelCompose @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
 
-            templateRepository.getTemplateAsDomain(templateId)
+            getTemplateUseCase(templateId)
                 .onSuccess { template ->
                     if (template != null) {
                         val accountRows = dataMapper.toAccountRows(template) {
@@ -305,7 +309,7 @@ class TemplateDetailViewModelCompose @Inject constructor(
             _uiState.update { it.copy(isSaving = true) }
 
             val template = dataMapper.toTemplate(state)
-            templateRepository.saveTemplate(template)
+            saveTemplateUseCase(template)
                 .onSuccess {
                     _uiState.update { it.copy(isSaving = false, hasUnsavedChanges = false) }
                     _effects.send(TemplateDetailEffect.TemplateSaved)
@@ -354,7 +358,7 @@ class TemplateDetailViewModelCompose @Inject constructor(
 
             val templateId = _uiState.value.templateId
             if (templateId != null && templateId > 0) {
-                templateRepository.deleteTemplateById(templateId)
+                deleteTemplateUseCase(templateId)
                     .onSuccess {
                         _uiState.update { it.copy(isLoading = false) }
                         _effects.send(TemplateDetailEffect.TemplateDeleted)

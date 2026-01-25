@@ -23,6 +23,10 @@ import kotlinx.coroutines.test.runTest
 import net.ktnx.mobileledger.domain.model.Profile
 import net.ktnx.mobileledger.domain.usecase.AccountSuggestionLookup
 import net.ktnx.mobileledger.domain.usecase.AccountSuggestionLookupImpl
+import net.ktnx.mobileledger.domain.usecase.DeleteCurrencyUseCaseImpl
+import net.ktnx.mobileledger.domain.usecase.GetAllCurrenciesUseCaseImpl
+import net.ktnx.mobileledger.domain.usecase.ObserveCurrentProfileUseCaseImpl
+import net.ktnx.mobileledger.domain.usecase.SaveCurrencyUseCaseImpl
 import net.ktnx.mobileledger.domain.usecase.TransactionAccountRowManager
 import net.ktnx.mobileledger.domain.usecase.TransactionAccountRowManagerImpl
 import net.ktnx.mobileledger.domain.usecase.TransactionBalanceCalculator
@@ -96,9 +100,16 @@ class AccountRowsViewModelTest {
             profileRepository.setCurrentProfile(profile)
         }
 
+        val observeCurrentProfileUseCase = ObserveCurrentProfileUseCaseImpl(profileRepository)
+        val getAllCurrenciesUseCase = GetAllCurrenciesUseCaseImpl(currencyRepository)
+        val saveCurrencyUseCase = SaveCurrencyUseCaseImpl(currencyRepository)
+        val deleteCurrencyUseCase = DeleteCurrencyUseCaseImpl(currencyRepository)
+
         return AccountRowsViewModel(
-            profileRepository = profileRepository,
-            currencyRepository = currencyRepository,
+            observeCurrentProfileUseCase = observeCurrentProfileUseCase,
+            getAllCurrenciesUseCase = getAllCurrenciesUseCase,
+            saveCurrencyUseCase = saveCurrencyUseCase,
+            deleteCurrencyUseCase = deleteCurrencyUseCase,
             currencyFormatter = currencyFormatter,
             rowIdGenerator = rowIdGenerator,
             balanceCalculator = balanceCalculator,

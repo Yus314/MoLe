@@ -39,7 +39,7 @@ import net.ktnx.mobileledger.dao.TemplateAccountDAO
 import net.ktnx.mobileledger.dao.TemplateHeaderDAO
 import net.ktnx.mobileledger.dao.TransactionAccountDAO
 import net.ktnx.mobileledger.dao.TransactionDAO
-import net.ktnx.mobileledger.data.repository.PreferencesRepository
+import net.ktnx.mobileledger.domain.repository.PreferencesRepository
 import net.ktnx.mobileledger.db.DB
 
 /**

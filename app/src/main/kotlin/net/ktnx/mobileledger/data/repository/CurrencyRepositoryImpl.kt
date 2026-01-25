@@ -28,6 +28,7 @@ import net.ktnx.mobileledger.data.repository.mapper.CurrencyMapper.toDomain
 import net.ktnx.mobileledger.data.repository.mapper.CurrencyMapper.toEntity
 import net.ktnx.mobileledger.di.IoDispatcher
 import net.ktnx.mobileledger.domain.model.Currency
+import net.ktnx.mobileledger.domain.repository.CurrencyRepository
 import net.ktnx.mobileledger.domain.usecase.AppExceptionMapper
 
 /**

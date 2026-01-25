@@ -35,6 +35,7 @@ import kotlinx.coroutines.test.setMain
 import net.ktnx.mobileledger.R
 import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.domain.model.Profile
+import net.ktnx.mobileledger.domain.usecase.ObserveCurrentProfileUseCaseImpl
 import net.ktnx.mobileledger.fake.FakeConfigBackup
 import net.ktnx.mobileledger.util.createTestDomainProfile
 import org.junit.After
@@ -69,7 +70,8 @@ class BackupsViewModelTest {
         Dispatchers.setMain(testDispatcher)
         profileRepository = FakeProfileRepositoryForBackups()
         fakeConfigBackup = FakeConfigBackup()
-        viewModel = BackupsViewModel(profileRepository, fakeConfigBackup)
+        val observeCurrentProfileUseCase = ObserveCurrentProfileUseCaseImpl(profileRepository)
+        viewModel = BackupsViewModel(observeCurrentProfileUseCase, fakeConfigBackup)
         testUri = mockk(relaxed = true)
     }
 
@@ -384,7 +386,8 @@ class BackupsViewModelTest {
         profileRepository.setCurrentProfile(profile)
 
         // When - create new ViewModel with profile already set
-        val newViewModel = BackupsViewModel(profileRepository, fakeConfigBackup)
+        val observeCurrentProfileUseCase = ObserveCurrentProfileUseCaseImpl(profileRepository)
+        val newViewModel = BackupsViewModel(observeCurrentProfileUseCase, fakeConfigBackup)
 
         // Then
         assertTrue("backupEnabled should be true", newViewModel.uiState.value.backupEnabled)

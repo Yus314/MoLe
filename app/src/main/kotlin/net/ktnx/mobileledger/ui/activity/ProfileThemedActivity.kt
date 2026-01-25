@@ -27,10 +27,16 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import logcat.logcat
-import net.ktnx.mobileledger.data.repository.PreferencesRepository
-import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.di.BackupEntryPoint
 import net.ktnx.mobileledger.domain.model.Profile
+import net.ktnx.mobileledger.domain.usecase.GetStartupProfileIdUseCase
+import net.ktnx.mobileledger.domain.usecase.GetStartupThemeUseCase
+import net.ktnx.mobileledger.domain.usecase.ObserveCurrentProfileUseCase
+import net.ktnx.mobileledger.domain.usecase.GetProfileByIdUseCase
+import net.ktnx.mobileledger.domain.usecase.GetAllProfilesUseCase
+import net.ktnx.mobileledger.domain.usecase.SetCurrentProfileUseCase
+import net.ktnx.mobileledger.domain.usecase.SetStartupProfileIdUseCase
+import net.ktnx.mobileledger.domain.usecase.SetStartupThemeUseCase
 import net.ktnx.mobileledger.service.ThemeService
 
 @SuppressLint("Registered")
@@ -41,12 +47,36 @@ open class ProfileThemedActivity : CrashReportingActivity() {
     private var mThemeHue = 0
 
     // Lazy access to Repositories via EntryPoint (cannot use @Inject in base class)
-    protected val profileRepository: ProfileRepository by lazy {
-        BackupEntryPoint.get(this).profileRepository()
+    protected val observeCurrentProfileUseCase: ObserveCurrentProfileUseCase by lazy {
+        BackupEntryPoint.get(this).observeCurrentProfileUseCase()
     }
 
-    protected val preferencesRepository: PreferencesRepository by lazy {
-        BackupEntryPoint.get(this).preferencesRepository()
+    protected val getStartupProfileIdUseCase: GetStartupProfileIdUseCase by lazy {
+        BackupEntryPoint.get(this).getStartupProfileIdUseCase()
+    }
+
+    protected val getStartupThemeUseCase: GetStartupThemeUseCase by lazy {
+        BackupEntryPoint.get(this).getStartupThemeUseCase()
+    }
+
+    protected val getProfileByIdUseCase: GetProfileByIdUseCase by lazy {
+        BackupEntryPoint.get(this).getProfileByIdUseCase()
+    }
+
+    protected val getAllProfilesUseCase: GetAllProfilesUseCase by lazy {
+        BackupEntryPoint.get(this).getAllProfilesUseCase()
+    }
+
+    protected val setCurrentProfileUseCase: SetCurrentProfileUseCase by lazy {
+        BackupEntryPoint.get(this).setCurrentProfileUseCase()
+    }
+
+    protected val setStartupProfileIdUseCase: SetStartupProfileIdUseCase by lazy {
+        BackupEntryPoint.get(this).setStartupProfileIdUseCase()
+    }
+
+    protected val setStartupThemeUseCase: SetStartupThemeUseCase by lazy {
+        BackupEntryPoint.get(this).setStartupThemeUseCase()
     }
 
     protected val ioDispatcher: CoroutineDispatcher by lazy {
@@ -88,7 +118,7 @@ open class ProfileThemedActivity : CrashReportingActivity() {
         // Observe profile changes from ProfileRepository
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                profileRepository.currentProfile.collect { profile ->
+                observeCurrentProfileUseCase().collect { profile ->
                     if (profile == null) {
                         logcat { "No current profile, leaving" }
                         return@collect
@@ -110,13 +140,13 @@ open class ProfileThemedActivity : CrashReportingActivity() {
     }
 
     fun storeProfilePref(profile: Profile) {
-        preferencesRepository.setStartupProfileId(profile.id ?: 0)
-        preferencesRepository.setStartupTheme(profile.theme)
+        setStartupProfileIdUseCase(profile.id ?: 0)
+        setStartupThemeUseCase(profile.theme)
     }
 
     protected open fun initProfile() {
-        val profileId = preferencesRepository.getStartupProfileId()
-        val hue = preferencesRepository.getStartupTheme()
+        val profileId = getStartupProfileIdUseCase()
+        val hue = getStartupThemeUseCase()
         if (profileId == -1L) {
             mThemeHue = ThemeService.DEFAULT_HUE_DEG
         }
@@ -143,24 +173,22 @@ open class ProfileThemedActivity : CrashReportingActivity() {
         val profile = withContext(ioDispatcher) {
             logcat { "Loading profile $profileId" }
 
-            var loadedProfile = profileRepository.getProfileById(profileId).getOrNull()
-
-            if (loadedProfile == null) {
-                logcat { "Profile $profileId not found. Trying any other" }
-                loadedProfile = profileRepository.getAnyProfile().getOrNull()
-            }
+            val loadedProfile = getProfileByIdUseCase(profileId).getOrNull()
+                ?: run {
+                    logcat { "Profile $profileId not found. Trying any other" }
+                    getAllProfilesUseCase().getOrDefault(emptyList()).firstOrNull()
+                }
 
             if (loadedProfile == null) {
                 logcat { "No profile could be loaded" }
             } else {
-                logcat { "Profile $profileId loaded. posting" }
+                logcat { "Profile ${loadedProfile.id} loaded. posting" }
             }
 
             loadedProfile
         }
 
-        // Use ProfileRepository.setCurrentProfile() to update both StateFlow and LiveData
-        profileRepository.setCurrentProfile(profile)
+        setCurrentProfileUseCase(profile)
     }
 
     companion object {

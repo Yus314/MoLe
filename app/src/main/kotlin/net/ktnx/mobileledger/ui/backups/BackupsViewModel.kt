@@ -33,12 +33,12 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import net.ktnx.mobileledger.R
-import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.domain.usecase.ConfigBackup
+import net.ktnx.mobileledger.domain.usecase.ObserveCurrentProfileUseCase
 
 @HiltViewModel
 class BackupsViewModel @Inject constructor(
-    private val profileRepository: ProfileRepository,
+    observeCurrentProfileUseCase: ObserveCurrentProfileUseCase,
     private val configBackup: ConfigBackup
 ) : ViewModel() {
 
@@ -48,9 +48,11 @@ class BackupsViewModel @Inject constructor(
     private val _effects = Channel<BackupsEffect>(Channel.BUFFERED)
     val effects = _effects.receiveAsFlow()
 
+    private val currentProfile = observeCurrentProfileUseCase()
+
     init {
         // Initial backup enabled state based on current profile
-        _uiState.update { it.copy(backupEnabled = profileRepository.currentProfile.value != null) }
+        _uiState.update { it.copy(backupEnabled = currentProfile.value != null) }
     }
 
     fun onEvent(event: BackupsEvent) {

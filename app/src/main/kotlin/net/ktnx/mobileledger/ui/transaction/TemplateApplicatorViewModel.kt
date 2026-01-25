@@ -28,10 +28,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import net.ktnx.mobileledger.data.repository.ProfileRepository
-import net.ktnx.mobileledger.data.repository.TemplateRepository
 import net.ktnx.mobileledger.domain.model.MatchedTemplate
 import net.ktnx.mobileledger.domain.model.Template
+import net.ktnx.mobileledger.domain.usecase.GetAllTemplatesUseCase
+import net.ktnx.mobileledger.domain.usecase.GetTemplateUseCase
+import net.ktnx.mobileledger.domain.usecase.ObserveCurrentProfileUseCase
 import net.ktnx.mobileledger.domain.usecase.TemplateMatcher
 import net.ktnx.mobileledger.service.CurrencyFormatter
 import net.ktnx.mobileledger.service.RowIdGenerator
@@ -45,8 +46,9 @@ private fun Template.toTemplateItem() = TemplateItem(
 
 @HiltViewModel
 class TemplateApplicatorViewModel @Inject constructor(
-    private val profileRepository: ProfileRepository,
-    private val templateRepository: TemplateRepository,
+    observeCurrentProfileUseCase: ObserveCurrentProfileUseCase,
+    private val getAllTemplatesUseCase: GetAllTemplatesUseCase,
+    private val getTemplateUseCase: GetTemplateUseCase,
     private val templateMatcher: TemplateMatcher,
     private val currencyFormatter: CurrencyFormatter,
     private val rowIdGenerator: RowIdGenerator
@@ -57,6 +59,8 @@ class TemplateApplicatorViewModel @Inject constructor(
 
     private val _effects = Channel<TemplateApplicatorEffect>(Channel.BUFFERED)
     val effects = _effects.receiveAsFlow()
+
+    private val currentProfile = observeCurrentProfileUseCase()
 
     fun onEvent(event: TemplateApplicatorEvent) {
         when (event) {
@@ -72,7 +76,7 @@ class TemplateApplicatorViewModel @Inject constructor(
     private fun showTemplateSelector() {
         viewModelScope.launch {
             _uiState.update { it.copy(isSearching = true) }
-            templateRepository.getAllTemplatesAsDomain()
+            getAllTemplatesUseCase()
                 .onSuccess { templates ->
                     _uiState.update {
                         it.copy(
@@ -94,7 +98,7 @@ class TemplateApplicatorViewModel @Inject constructor(
 
     private fun applyTemplate(templateId: Long) {
         viewModelScope.launch {
-            val template = templateRepository.getTemplateAsDomain(templateId).getOrNull()
+            val template = getTemplateUseCase(templateId).getOrNull()
             if (template != null) {
                 val effect = buildApplyTemplateEffect(template)
                 _effects.send(effect)
@@ -104,7 +108,7 @@ class TemplateApplicatorViewModel @Inject constructor(
     }
 
     private fun buildApplyTemplateEffect(template: Template): TemplateApplicatorEffect.ApplyTemplate {
-        val defaultCurrency = profileRepository.currentProfile.value?.defaultCommodityOrEmpty ?: ""
+        val defaultCurrency = currentProfile.value?.defaultCommodityOrEmpty ?: ""
 
         val newAccounts = template.lines.map { line ->
             val currencyName = line.currencyName ?: defaultCurrency
@@ -134,7 +138,7 @@ class TemplateApplicatorViewModel @Inject constructor(
      */
     private fun applyTemplateFromQr(qrText: String) {
         viewModelScope.launch {
-            templateRepository.getAllTemplatesAsDomain()
+            getAllTemplatesUseCase()
                 .onSuccess { templates ->
                     val matched = templateMatcher.findMatch(qrText, templates)
                     if (matched != null) {
@@ -151,7 +155,7 @@ class TemplateApplicatorViewModel @Inject constructor(
      */
     private fun applyMatchedTemplate(matched: MatchedTemplate) {
         viewModelScope.launch {
-            val defaultCurrency = profileRepository.currentProfile.value?.defaultCommodityOrEmpty ?: ""
+            val defaultCurrency = currentProfile.value?.defaultCommodityOrEmpty ?: ""
             val extracted = templateMatcher.extractTransaction(matched, defaultCurrency)
 
             val newAccounts = extracted.lines.map { line ->
@@ -178,7 +182,7 @@ class TemplateApplicatorViewModel @Inject constructor(
     private fun searchTemplates(query: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isSearching = true) }
-            templateRepository.getAllTemplatesAsDomain()
+            getAllTemplatesUseCase()
                 .onSuccess { allTemplates ->
                     val templates = if (query.isBlank()) {
                         allTemplates

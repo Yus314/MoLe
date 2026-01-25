@@ -19,7 +19,7 @@ package net.ktnx.mobileledger.fake
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import net.ktnx.mobileledger.data.repository.AccountRepository
+import net.ktnx.mobileledger.domain.repository.AccountRepository
 import net.ktnx.mobileledger.domain.model.Account
 
 /**

@@ -26,6 +26,11 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import net.ktnx.mobileledger.domain.model.Template
+import net.ktnx.mobileledger.domain.usecase.DeleteTemplateUseCaseImpl
+import net.ktnx.mobileledger.domain.usecase.DuplicateTemplateUseCaseImpl
+import net.ktnx.mobileledger.domain.usecase.GetTemplateUseCaseImpl
+import net.ktnx.mobileledger.domain.usecase.ObserveTemplatesUseCaseImpl
+import net.ktnx.mobileledger.domain.usecase.SaveTemplateUseCaseImpl
 import net.ktnx.mobileledger.fake.FakeTemplateRepository
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -80,7 +85,20 @@ class TemplateListViewModelComposeTest {
         lines = emptyList()
     )
 
-    private fun createViewModel() = TemplateListViewModelCompose(templateRepository)
+    private fun createViewModel(): TemplateListViewModelCompose {
+        val observeTemplatesUseCase = ObserveTemplatesUseCaseImpl(templateRepository)
+        val getTemplateUseCase = GetTemplateUseCaseImpl(templateRepository)
+        val saveTemplateUseCase = SaveTemplateUseCaseImpl(templateRepository)
+        val deleteTemplateUseCase = DeleteTemplateUseCaseImpl(templateRepository)
+        val duplicateTemplateUseCase = DuplicateTemplateUseCaseImpl(templateRepository)
+        return TemplateListViewModelCompose(
+            observeTemplatesUseCase = observeTemplatesUseCase,
+            getTemplateUseCase = getTemplateUseCase,
+            saveTemplateUseCase = saveTemplateUseCase,
+            deleteTemplateUseCase = deleteTemplateUseCase,
+            duplicateTemplateUseCase = duplicateTemplateUseCase
+        )
+    }
 
     // ========================================
     // Initialization tests

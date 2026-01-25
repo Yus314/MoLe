@@ -22,20 +22,20 @@ import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
-import net.ktnx.mobileledger.data.repository.AccountRepository
 import net.ktnx.mobileledger.data.repository.AccountRepositoryImpl
-import net.ktnx.mobileledger.data.repository.CurrencyRepository
 import net.ktnx.mobileledger.data.repository.CurrencyRepositoryImpl
-import net.ktnx.mobileledger.data.repository.OptionRepository
 import net.ktnx.mobileledger.data.repository.OptionRepositoryImpl
-import net.ktnx.mobileledger.data.repository.PreferencesRepository
 import net.ktnx.mobileledger.data.repository.PreferencesRepositoryImpl
-import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.data.repository.ProfileRepositoryImpl
-import net.ktnx.mobileledger.data.repository.TemplateRepository
 import net.ktnx.mobileledger.data.repository.TemplateRepositoryImpl
-import net.ktnx.mobileledger.data.repository.TransactionRepository
 import net.ktnx.mobileledger.data.repository.TransactionRepositoryImpl
+import net.ktnx.mobileledger.domain.repository.AccountRepository
+import net.ktnx.mobileledger.domain.repository.CurrencyRepository
+import net.ktnx.mobileledger.domain.repository.OptionRepository
+import net.ktnx.mobileledger.domain.repository.PreferencesRepository
+import net.ktnx.mobileledger.domain.repository.ProfileRepository
+import net.ktnx.mobileledger.domain.repository.TemplateRepository
+import net.ktnx.mobileledger.domain.repository.TransactionRepository
 
 /**
  * Hilt module providing Repository implementations.

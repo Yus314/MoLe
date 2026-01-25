@@ -26,6 +26,9 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import net.ktnx.mobileledger.domain.model.Template
+import net.ktnx.mobileledger.domain.usecase.DeleteTemplateUseCaseImpl
+import net.ktnx.mobileledger.domain.usecase.GetTemplateUseCaseImpl
+import net.ktnx.mobileledger.domain.usecase.SaveTemplateUseCaseImpl
 import net.ktnx.mobileledger.fake.FakeTemplateAccountRowManager
 import net.ktnx.mobileledger.fake.FakeTemplateDataMapper
 import net.ktnx.mobileledger.fake.FakeTemplatePatternValidator
@@ -92,7 +95,9 @@ class TemplateDetailViewModelComposeTest {
     )
 
     private fun createViewModel() = TemplateDetailViewModelCompose(
-        templateRepository = templateRepository,
+        getTemplateUseCase = GetTemplateUseCaseImpl(templateRepository),
+        saveTemplateUseCase = SaveTemplateUseCaseImpl(templateRepository),
+        deleteTemplateUseCase = DeleteTemplateUseCaseImpl(templateRepository),
         patternValidator = patternValidator,
         rowManager = rowManager,
         dataMapper = dataMapper

@@ -17,7 +17,7 @@
 
 package net.ktnx.mobileledger.fake
 
-import net.ktnx.mobileledger.data.repository.PreferencesRepository
+import net.ktnx.mobileledger.domain.repository.PreferencesRepository
 
 /**
  * Fake implementation of [PreferencesRepository] for testing.

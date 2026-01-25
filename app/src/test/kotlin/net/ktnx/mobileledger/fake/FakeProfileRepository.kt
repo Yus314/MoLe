@@ -21,7 +21,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import net.ktnx.mobileledger.data.repository.ProfileRepository
+import net.ktnx.mobileledger.domain.repository.ProfileRepository
 import net.ktnx.mobileledger.domain.model.Profile
 
 /**

@@ -31,8 +31,12 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import logcat.asLog
 import logcat.logcat
-import net.ktnx.mobileledger.data.repository.TemplateRepository
 import net.ktnx.mobileledger.domain.model.Template
+import net.ktnx.mobileledger.domain.usecase.DeleteTemplateUseCase
+import net.ktnx.mobileledger.domain.usecase.DuplicateTemplateUseCase
+import net.ktnx.mobileledger.domain.usecase.GetTemplateUseCase
+import net.ktnx.mobileledger.domain.usecase.ObserveTemplatesUseCase
+import net.ktnx.mobileledger.domain.usecase.SaveTemplateUseCase
 
 /**
  * ViewModel for the template list screen using Compose.
@@ -40,7 +44,11 @@ import net.ktnx.mobileledger.domain.model.Template
  */
 @HiltViewModel
 class TemplateListViewModelCompose @Inject constructor(
-    private val templateRepository: TemplateRepository
+    private val observeTemplatesUseCase: ObserveTemplatesUseCase,
+    private val getTemplateUseCase: GetTemplateUseCase,
+    private val saveTemplateUseCase: SaveTemplateUseCase,
+    private val deleteTemplateUseCase: DeleteTemplateUseCase,
+    private val duplicateTemplateUseCase: DuplicateTemplateUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(TemplateListUiState(isLoading = true))
@@ -60,7 +68,7 @@ class TemplateListViewModelCompose @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
 
-            templateRepository.observeAllTemplatesAsDomain()
+            observeTemplatesUseCase()
                 .catch { e ->
                     logcat { "Error loading templates: ${e.message}" }
                     _uiState.update {
@@ -106,11 +114,11 @@ class TemplateListViewModelCompose @Inject constructor(
 
     private fun deleteTemplate(templateId: Long) {
         viewModelScope.launch {
-            templateRepository.getTemplateAsDomain(templateId)
+            getTemplateUseCase(templateId)
                 .onSuccess { template ->
                     if (template != null) {
                         deletedTemplate = template
-                        templateRepository.deleteTemplateById(templateId)
+                        deleteTemplateUseCase(templateId)
                         _effects.send(TemplateListEffect.ShowUndoSnackbar(template.name, templateId))
                     }
                 }
@@ -124,7 +132,7 @@ class TemplateListViewModelCompose @Inject constructor(
     private fun undoDelete() {
         val template = deletedTemplate ?: return
         viewModelScope.launch {
-            templateRepository.saveTemplate(template)
+            saveTemplateUseCase(template)
                 .onSuccess {
                     deletedTemplate = null
                 }
@@ -137,8 +145,7 @@ class TemplateListViewModelCompose @Inject constructor(
 
     private fun duplicateTemplate(templateId: Long) {
         viewModelScope.launch {
-            @Suppress("DEPRECATION")
-            templateRepository.duplicateTemplate(templateId)
+            duplicateTemplateUseCase(templateId)
                 .onFailure { e ->
                     logcat { "Error duplicating template: ${e.message}" }
                     _effects.send(TemplateListEffect.ShowError("テンプレートの複製に失敗しました"))

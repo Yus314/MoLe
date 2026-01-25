@@ -24,7 +24,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -34,6 +33,8 @@ import net.ktnx.mobileledger.TemporaryAuthData
 import net.ktnx.mobileledger.data.repository.ProfileRepository
 import net.ktnx.mobileledger.domain.model.FutureDates
 import net.ktnx.mobileledger.domain.model.Profile
+import net.ktnx.mobileledger.domain.usecase.GetAllProfilesUseCaseImpl
+import net.ktnx.mobileledger.domain.usecase.GetProfileByIdUseCaseImpl
 import net.ktnx.mobileledger.domain.usecase.ProfilePersistence
 import net.ktnx.mobileledger.domain.usecase.ProfilePersistenceImpl
 import net.ktnx.mobileledger.domain.usecase.ProfileValidator
@@ -94,15 +95,20 @@ class ProfileDetailViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun createViewModel(): ProfileDetailViewModel = ProfileDetailViewModel(
-        profileRepository = profileRepository,
-        authDataProvider = authDataProvider,
-        versionDetector = versionDetector,
-        profileValidator = profileValidator,
-        profilePersistence = profilePersistence,
-        ioDispatcher = testDispatcher,
-        savedStateHandle = savedStateHandle
-    )
+    private fun createViewModel(): ProfileDetailViewModel {
+        val getProfileByIdUseCase = GetProfileByIdUseCaseImpl(profileRepository)
+        val getAllProfilesUseCase = GetAllProfilesUseCaseImpl(profileRepository)
+        return ProfileDetailViewModel(
+            getProfileByIdUseCase = getProfileByIdUseCase,
+            getAllProfilesUseCase = getAllProfilesUseCase,
+            authDataProvider = authDataProvider,
+            versionDetector = versionDetector,
+            profileValidator = profileValidator,
+            profilePersistence = profilePersistence,
+            ioDispatcher = testDispatcher,
+            savedStateHandle = savedStateHandle
+        )
+    }
 
     private fun createTestProfile(
         id: Long? = null,

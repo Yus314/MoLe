@@ -29,6 +29,7 @@ import net.ktnx.mobileledger.data.repository.mapper.OptionMapper.toEntity
 import net.ktnx.mobileledger.db.Option
 import net.ktnx.mobileledger.di.IoDispatcher
 import net.ktnx.mobileledger.domain.model.AppOption
+import net.ktnx.mobileledger.domain.repository.OptionRepository
 
 /**
  * Implementation of [OptionRepository] that wraps the existing OptionDAO.

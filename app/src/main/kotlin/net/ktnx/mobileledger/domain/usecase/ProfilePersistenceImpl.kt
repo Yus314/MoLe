@@ -19,7 +19,7 @@ package net.ktnx.mobileledger.domain.usecase
 
 import javax.inject.Inject
 import logcat.logcat
-import net.ktnx.mobileledger.data.repository.ProfileRepository
+import net.ktnx.mobileledger.domain.repository.ProfileRepository
 import net.ktnx.mobileledger.domain.model.Profile
 import net.ktnx.mobileledger.service.AuthDataProvider
 

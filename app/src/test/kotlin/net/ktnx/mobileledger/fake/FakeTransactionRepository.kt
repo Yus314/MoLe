@@ -20,7 +20,7 @@ package net.ktnx.mobileledger.fake
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import net.ktnx.mobileledger.dao.TransactionDAO
-import net.ktnx.mobileledger.data.repository.TransactionRepository
+import net.ktnx.mobileledger.domain.repository.TransactionRepository
 import net.ktnx.mobileledger.domain.model.Transaction
 
 /**

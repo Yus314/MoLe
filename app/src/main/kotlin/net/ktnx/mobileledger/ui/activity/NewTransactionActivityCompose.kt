@@ -80,7 +80,7 @@ class NewTransactionActivityCompose :
         // Observe profile changes (プロファイル変更時の対応)
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                profileRepository.currentProfile.collect { profile ->
+                observeCurrentProfileUseCase().collect { profile ->
                     if (profile == null) {
                         logcat { "No active profile. Redirecting to SplashActivity" }
                         val intent = Intent(this@NewTransactionActivityCompose, SplashActivity::class.java)
