@@ -17,6 +17,7 @@
 
 package net.ktnx.mobileledger.data.repository
 
+import net.ktnx.mobileledger.domain.repository.PreferencesRepository
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue

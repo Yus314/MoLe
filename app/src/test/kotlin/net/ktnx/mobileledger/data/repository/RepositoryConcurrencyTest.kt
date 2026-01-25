@@ -36,6 +36,8 @@ import net.ktnx.mobileledger.dao.TransactionDAO
 import net.ktnx.mobileledger.domain.model.Profile
 import net.ktnx.mobileledger.domain.model.Transaction
 import net.ktnx.mobileledger.domain.model.TransactionLine
+import net.ktnx.mobileledger.domain.repository.ProfileRepository
+import net.ktnx.mobileledger.domain.repository.TransactionRepository
 import net.ktnx.mobileledger.util.createTestDomainProfile
 import net.ktnx.mobileledger.utils.SimpleDate
 import org.junit.After

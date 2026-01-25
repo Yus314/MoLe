@@ -36,11 +36,11 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    compileSdk = 34
+    compileSdk = 35
     defaultConfig {
         applicationId = "net.ktnx.mobileledger"
         minSdk = 22
-        targetSdk = 34
+        targetSdk = 35
         vectorDrawables.useSupportLibrary = true
         versionCode = 59
         versionName = "0.22.1"
@@ -112,7 +112,7 @@ android {
         viewBinding = false
         compose = true
     }
-    buildToolsVersion = "34.0.0"
+    buildToolsVersion = "35.0.0"
     namespace = "net.ktnx.mobileledger"
     testOptions {
         unitTests {

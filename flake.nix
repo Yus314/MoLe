@@ -32,10 +32,10 @@
 
         # Android SDKバージョン (メタデータ用)
         androidVersions = {
-          buildTools = "34.0.0";    # Android SDK Build Tools 34.0.0
-          platform = "34";          # Android 14 (API Level 34)
-          compileSdk = "34";
-          targetSdk = "34";
+          buildTools = "35.0.0";    # Android SDK Build Tools 35.0.0
+          platform = "35";          # Android 15 (API Level 35)
+          compileSdk = "35";
+          targetSdk = "35";
         };
 
         # Android SDK setup using android-nixpkgs

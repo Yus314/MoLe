@@ -1228,7 +1228,7 @@ class TransactionListViewModelTest {
 /**
  * Fake TransactionRepository specialized for TransactionListViewModel tests.
  */
-class FakeTransactionRepositoryForTransactionList : net.ktnx.mobileledger.data.repository.TransactionRepository {
+class FakeTransactionRepositoryForTransactionList : net.ktnx.mobileledger.domain.repository.TransactionRepository {
     private val transactions = mutableListOf<TransactionWithAccounts>()
     var simulateError = false
 
@@ -1402,7 +1402,7 @@ class FakeTransactionRepositoryForTransactionList : net.ktnx.mobileledger.data.r
  * Fake AccountRepository specialized for TransactionListViewModel tests.
  * Now uses domain models (Account) for query operations.
  */
-class FakeAccountRepositoryForTransactionList : net.ktnx.mobileledger.data.repository.AccountRepository {
+class FakeAccountRepositoryForTransactionList : net.ktnx.mobileledger.domain.repository.AccountRepository {
     private val accountNames = mutableMapOf<Long, MutableList<String>>()
 
     fun addAccount(profileId: Long, name: String) {

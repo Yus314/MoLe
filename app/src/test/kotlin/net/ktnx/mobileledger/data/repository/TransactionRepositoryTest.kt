@@ -28,6 +28,7 @@ import net.ktnx.mobileledger.db.TransactionAccount
 import net.ktnx.mobileledger.db.TransactionWithAccounts
 import net.ktnx.mobileledger.domain.model.Transaction
 import net.ktnx.mobileledger.domain.model.TransactionLine
+import net.ktnx.mobileledger.domain.repository.TransactionRepository
 import net.ktnx.mobileledger.utils.SimpleDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull

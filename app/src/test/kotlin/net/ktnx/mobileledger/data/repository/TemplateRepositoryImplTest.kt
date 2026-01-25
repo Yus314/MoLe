@@ -38,6 +38,7 @@ import net.ktnx.mobileledger.db.TemplateWithAccounts
 import net.ktnx.mobileledger.domain.model.AppException
 import net.ktnx.mobileledger.domain.model.Template
 import net.ktnx.mobileledger.domain.model.TemplateLine
+import net.ktnx.mobileledger.domain.repository.CurrencyRepository
 import net.ktnx.mobileledger.domain.usecase.AppExceptionMapper
 import net.ktnx.mobileledger.domain.usecase.sync.SyncExceptionMapper
 import org.junit.Assert.assertEquals

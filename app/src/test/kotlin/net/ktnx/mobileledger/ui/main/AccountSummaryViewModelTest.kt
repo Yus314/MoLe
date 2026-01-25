@@ -26,8 +26,8 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import net.ktnx.mobileledger.data.repository.AccountRepository
-import net.ktnx.mobileledger.data.repository.PreferencesRepository
+import net.ktnx.mobileledger.domain.repository.AccountRepository
+import net.ktnx.mobileledger.domain.repository.PreferencesRepository
 import net.ktnx.mobileledger.db.Account as DbAccount
 import net.ktnx.mobileledger.db.AccountValue
 import net.ktnx.mobileledger.db.AccountWithAmounts

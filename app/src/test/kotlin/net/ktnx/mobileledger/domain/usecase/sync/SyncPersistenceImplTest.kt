@@ -24,9 +24,9 @@ import io.mockk.just
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
-import net.ktnx.mobileledger.data.repository.AccountRepository
-import net.ktnx.mobileledger.data.repository.OptionRepository
-import net.ktnx.mobileledger.data.repository.TransactionRepository
+import net.ktnx.mobileledger.domain.repository.AccountRepository
+import net.ktnx.mobileledger.domain.repository.OptionRepository
+import net.ktnx.mobileledger.domain.repository.TransactionRepository
 import net.ktnx.mobileledger.domain.model.Account
 import net.ktnx.mobileledger.domain.model.AccountAmount
 import net.ktnx.mobileledger.domain.model.Transaction
