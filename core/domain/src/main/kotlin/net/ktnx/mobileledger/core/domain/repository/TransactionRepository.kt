@@ -15,10 +15,9 @@
  * along with MoLe. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ktnx.mobileledger.domain.repository
+package net.ktnx.mobileledger.core.domain.repository
 
 import kotlinx.coroutines.flow.Flow
-import net.ktnx.mobileledger.core.database.dao.TransactionDAO
 import net.ktnx.mobileledger.core.domain.model.Transaction
 
 /**
@@ -93,9 +92,9 @@ interface TransactionRepository {
      * Search transaction descriptions matching a term.
      *
      * @param term The search term.
-     * @return Result containing list of matching description containers.
+     * @return Result containing list of matching description strings.
      */
-    suspend fun searchByDescription(term: String): Result<List<TransactionDAO.DescriptionContainer>>
+    suspend fun searchByDescription(term: String): Result<List<String>>
 
     /**
      * Get the first transaction matching a description.

@@ -204,6 +204,7 @@ class AppErrorTest {
         errors.forEach { error ->
             val description = when (error) {
                 is AppError.Sync -> "sync: ${error.error::class.simpleName}"
+                is AppError.Unknown -> "unknown: ${error.message}"
                 is DatabaseError -> "database: ${error::class.simpleName}"
                 is FileError -> "file: ${error::class.simpleName}"
             }

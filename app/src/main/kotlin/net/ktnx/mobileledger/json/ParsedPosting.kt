@@ -18,22 +18,28 @@
 package net.ktnx.mobileledger.json
 
 import net.ktnx.mobileledger.core.domain.model.CurrencyPosition
-import net.ktnx.mobileledger.di.CurrencyFormatterEntryPoint
+import net.ktnx.mobileledger.core.domain.model.CurrencySettings
 
 open class ParsedPosting {
     companion object {
+        /**
+         * Get whether currency symbol has a gap from the amount.
+         *
+         * @param settings Currency settings (defaults to [CurrencySettings.DEFAULT])
+         * @return true if there should be a gap between currency and amount
+         */
         @JvmStatic
-        protected fun getCommoditySpaced(): Boolean =
-            CurrencyFormatterEntryPoint.getOrNull()?.currencyGap?.value ?: false
+        protected fun getCommoditySpaced(settings: CurrencySettings = CurrencySettings.DEFAULT): Boolean =
+            settings.hasGap
 
+        /**
+         * Get the currency symbol side ('L' for left/before, 'R' for right/after).
+         *
+         * @param settings Currency settings (defaults to [CurrencySettings.DEFAULT])
+         * @return 'L' for before, 'R' for after
+         */
         @JvmStatic
-        protected fun getCommoditySide(): Char {
-            val formatter = CurrencyFormatterEntryPoint.getOrNull() ?: return 'L'
-            return if (formatter.currencySymbolPosition.value == CurrencyPosition.AFTER) {
-                'R'
-            } else {
-                'L'
-            }
-        }
+        protected fun getCommoditySide(settings: CurrencySettings = CurrencySettings.DEFAULT): Char =
+            if (settings.symbolPosition == CurrencyPosition.AFTER) 'R' else 'L'
     }
 }

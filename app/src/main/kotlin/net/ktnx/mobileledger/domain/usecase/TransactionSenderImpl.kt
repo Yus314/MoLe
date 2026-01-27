@@ -35,6 +35,7 @@ import net.ktnx.mobileledger.core.network.NetworkApiNotSupportedException
 import net.ktnx.mobileledger.json.API
 import net.ktnx.mobileledger.json.ApiNotSupportedException
 import net.ktnx.mobileledger.json.Gateway
+import net.ktnx.mobileledger.service.CurrencyFormatter
 
 /**
  * Pure Coroutines implementation of [TransactionSender].
@@ -51,6 +52,7 @@ import net.ktnx.mobileledger.json.Gateway
 @Singleton
 class TransactionSenderImpl @Inject constructor(
     private val hledgerClient: HledgerClient,
+    private val currencyFormatter: CurrencyFormatter,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : TransactionSender {
 
@@ -119,7 +121,7 @@ class TransactionSenderImpl @Inject constructor(
         coroutineContext.ensureActive()
 
         val gateway = Gateway.forApiVersion(apiVersion)
-        val body = gateway.transactionSaveRequest(transaction)
+        val body = gateway.transactionSaveRequest(transaction, currencyFormatter)
 
         logcat { "Sending using API $apiVersion" }
 

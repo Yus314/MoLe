@@ -15,7 +15,7 @@
  * along with MoLe. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ktnx.mobileledger.data.repository
+package net.ktnx.mobileledger.core.data.repository.impl
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -23,7 +23,6 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
 import net.ktnx.mobileledger.core.domain.repository.PreferencesRepository
-import net.ktnx.mobileledger.service.ThemeService
 
 /**
  * SharedPreferences-based implementation of PreferencesRepository.
@@ -55,7 +54,7 @@ class PreferencesRepositoryImpl @Inject constructor(
             .apply()
     }
 
-    override fun getStartupTheme(): Int = sharedPreferences.getInt(KEY_THEME_HUE, ThemeService.DEFAULT_HUE_DEG)
+    override fun getStartupTheme(): Int = sharedPreferences.getInt(KEY_THEME_HUE, PreferencesRepository.DEFAULT_HUE_DEG)
 
     override fun setStartupTheme(theme: Int) {
         sharedPreferences.edit()

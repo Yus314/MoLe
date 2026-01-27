@@ -1228,7 +1228,7 @@ class TransactionListViewModelTest {
 /**
  * Fake TransactionRepository specialized for TransactionListViewModel tests.
  */
-class FakeTransactionRepositoryForTransactionList : net.ktnx.mobileledger.domain.repository.TransactionRepository {
+class FakeTransactionRepositoryForTransactionList : net.ktnx.mobileledger.core.domain.repository.TransactionRepository {
     private val transactions = mutableListOf<TransactionWithAccounts>()
     var simulateError = false
 
@@ -1298,17 +1298,11 @@ class FakeTransactionRepositoryForTransactionList : net.ktnx.mobileledger.domain
         Result.success(transactions.find { it.transaction.id == transactionId }?.toDomainModel())
     }
 
-    override suspend fun searchByDescription(
-        term: String
-    ): Result<List<net.ktnx.mobileledger.core.database.dao.TransactionDAO.DescriptionContainer>> = Result.success(
+    override suspend fun searchByDescription(term: String): Result<List<String>> = Result.success(
         transactions
             .filter { it.transaction.description.contains(term, ignoreCase = true) }
-            .distinctBy { it.transaction.description }
-            .map {
-                net.ktnx.mobileledger.core.database.dao.TransactionDAO.DescriptionContainer(
-                    it.transaction.description
-                )
-            }
+            .mapNotNull { it.transaction.description }
+            .distinct()
     )
 
     override suspend fun getFirstByDescription(description: String): Result<DomainTransaction?> =

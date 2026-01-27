@@ -30,6 +30,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
+import net.ktnx.mobileledger.core.data.exception.CoreExceptionMapper
+import net.ktnx.mobileledger.core.data.repository.impl.TemplateRepositoryImpl
 import net.ktnx.mobileledger.core.database.dao.TemplateAccountDAO
 import net.ktnx.mobileledger.core.database.dao.TemplateHeaderDAO
 import net.ktnx.mobileledger.core.database.entity.TemplateAccount
@@ -39,8 +41,6 @@ import net.ktnx.mobileledger.core.domain.model.AppException
 import net.ktnx.mobileledger.core.domain.model.Template
 import net.ktnx.mobileledger.core.domain.model.TemplateLine
 import net.ktnx.mobileledger.core.domain.repository.CurrencyRepository
-import net.ktnx.mobileledger.domain.usecase.AppExceptionMapper
-import net.ktnx.mobileledger.domain.usecase.sync.SyncExceptionMapper
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -65,7 +65,7 @@ class TemplateRepositoryImplTest {
     private lateinit var mockTemplateHeaderDAO: TemplateHeaderDAO
     private lateinit var mockTemplateAccountDAO: TemplateAccountDAO
     private lateinit var mockCurrencyRepository: CurrencyRepository
-    private lateinit var appExceptionMapper: AppExceptionMapper
+    private lateinit var exceptionMapper: CoreExceptionMapper
     private lateinit var repository: TemplateRepositoryImpl
 
     @Before
@@ -73,13 +73,13 @@ class TemplateRepositoryImplTest {
         mockTemplateHeaderDAO = mockk(relaxed = true)
         mockTemplateAccountDAO = mockk(relaxed = true)
         mockCurrencyRepository = mockk(relaxed = true)
-        appExceptionMapper = AppExceptionMapper(SyncExceptionMapper())
+        exceptionMapper = CoreExceptionMapper()
 
         repository = TemplateRepositoryImpl(
             templateHeaderDAO = mockTemplateHeaderDAO,
             templateAccountDAO = mockTemplateAccountDAO,
             currencyRepository = mockCurrencyRepository,
-            appExceptionMapper = appExceptionMapper,
+            exceptionMapper = exceptionMapper,
             ioDispatcher = testDispatcher
         )
     }

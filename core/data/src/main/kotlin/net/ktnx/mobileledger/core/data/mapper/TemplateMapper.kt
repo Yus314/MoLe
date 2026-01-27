@@ -37,6 +37,7 @@ object TemplateMapper {
      */
     fun TemplateWithAccounts.toDomain(currencyMap: Map<Long, String> = emptyMap()): Template = Template(
         id = header.id,
+        uuid = header.uuid,
         name = header.name,
         pattern = header.regularExpression,
         testText = header.testText,
@@ -86,6 +87,7 @@ object TemplateMapper {
         val templateId = id ?: 0L
 
         val header = TemplateHeader(templateId, name, pattern).apply {
+            uuid = this@toEntity.uuid
             testText = this@toEntity.testText
             transactionDescription = this@toEntity.transactionDescription
             transactionDescriptionMatchGroup = this@toEntity.transactionDescriptionMatchGroup

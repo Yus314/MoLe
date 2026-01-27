@@ -28,6 +28,8 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import net.ktnx.mobileledger.core.common.utils.SimpleDate
+import net.ktnx.mobileledger.core.data.exception.CoreExceptionMapper
+import net.ktnx.mobileledger.core.data.repository.impl.TransactionRepositoryImpl
 import net.ktnx.mobileledger.core.database.dao.AccountDAO
 import net.ktnx.mobileledger.core.database.dao.AccountValueDAO
 import net.ktnx.mobileledger.core.database.dao.TransactionAccountDAO
@@ -40,8 +42,6 @@ import net.ktnx.mobileledger.core.database.entity.TransactionWithAccounts
 import net.ktnx.mobileledger.core.domain.model.AppException
 import net.ktnx.mobileledger.core.domain.model.Transaction as DomainTransaction
 import net.ktnx.mobileledger.core.domain.model.TransactionLine
-import net.ktnx.mobileledger.domain.usecase.AppExceptionMapper
-import net.ktnx.mobileledger.domain.usecase.sync.SyncExceptionMapper
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -66,7 +66,7 @@ class TransactionRepositoryImplTest {
     private lateinit var mockTransactionAccountDAO: TransactionAccountDAO
     private lateinit var mockAccountDAO: AccountDAO
     private lateinit var mockAccountValueDAO: AccountValueDAO
-    private lateinit var appExceptionMapper: AppExceptionMapper
+    private lateinit var exceptionMapper: CoreExceptionMapper
     private lateinit var repository: TransactionRepositoryImpl
 
     private val testProfileId = 1L
@@ -77,14 +77,14 @@ class TransactionRepositoryImplTest {
         mockTransactionAccountDAO = mockk(relaxed = true)
         mockAccountDAO = mockk(relaxed = true)
         mockAccountValueDAO = mockk(relaxed = true)
-        appExceptionMapper = AppExceptionMapper(SyncExceptionMapper())
+        exceptionMapper = CoreExceptionMapper()
 
         repository = TransactionRepositoryImpl(
             transactionDAO = mockTransactionDAO,
             transactionAccountDAO = mockTransactionAccountDAO,
             accountDAO = mockAccountDAO,
             accountValueDAO = mockAccountValueDAO,
-            appExceptionMapper = appExceptionMapper,
+            exceptionMapper = exceptionMapper,
             ioDispatcher = testDispatcher
         )
     }

@@ -18,15 +18,23 @@
 package net.ktnx.mobileledger.json
 
 import kotlinx.serialization.SerializationException
+import net.ktnx.mobileledger.core.domain.model.CurrencySettings
 import net.ktnx.mobileledger.core.domain.model.Transaction
 
 abstract class Gateway {
     /**
      * Create JSON save request from domain Transaction model.
      * Subclasses should override this to provide version-specific serialization.
+     *
+     * @param transaction Transaction to serialize
+     * @param settings Currency formatting settings (optional, defaults to [CurrencySettings.DEFAULT])
+     * @return JSON string for the API request
      */
     @Throws(SerializationException::class)
-    abstract fun transactionSaveRequest(transaction: Transaction): String
+    abstract fun transactionSaveRequest(
+        transaction: Transaction,
+        settings: CurrencySettings = CurrencySettings.DEFAULT
+    ): String
 
     companion object {
         @JvmStatic

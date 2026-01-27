@@ -293,7 +293,6 @@ class TemplateRepositoryTest {
 
     @Test
     fun `duplicateTemplate returns null for non-existent id`() = runTest {
-        @Suppress("DEPRECATION")
         val result = repository.duplicateTemplate(999L).getOrNull()
         assertNull(result)
     }
@@ -303,13 +302,12 @@ class TemplateRepositoryTest {
         val template = createTestTemplate(name = "Original")
         val id = repository.saveTemplate(template).getOrThrow()
 
-        @Suppress("DEPRECATION")
         val duplicate = repository.duplicateTemplate(id).getOrNull()
 
         assertNotNull(duplicate)
-        assertNotEquals(id, duplicate?.header?.id)
+        assertNotEquals(id, duplicate?.id)
         // Fake implementation adds " (copy)" suffix
-        assertEquals("Original (copy)", duplicate?.header?.name)
+        assertEquals("Original (copy)", duplicate?.name)
     }
 
     @Test
@@ -323,15 +321,14 @@ class TemplateRepositoryTest {
         )
         val id = repository.saveTemplate(template).getOrThrow()
 
-        @Suppress("DEPRECATION")
         val duplicate = repository.duplicateTemplate(id).getOrNull()
 
         assertNotNull(duplicate)
-        assertEquals(2, duplicate?.accounts?.size)
-        // Accounts should reference the new template ID
-        duplicate?.accounts?.forEach { account ->
-            assertEquals(duplicate.header.id, account.templateId)
-        }
+        assertEquals(2, duplicate?.lines?.size)
+        // Verify lines were copied with the expected account names
+        val accountNames = duplicate?.lines?.map { it.accountName }
+        assertTrue(accountNames?.contains("A:B") == true)
+        assertTrue(accountNames?.contains("C:D") == true)
     }
 
     // ========================================

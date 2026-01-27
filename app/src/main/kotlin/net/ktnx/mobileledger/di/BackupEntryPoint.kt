@@ -28,7 +28,7 @@ import net.ktnx.mobileledger.core.database.MoLeDatabase
 import net.ktnx.mobileledger.core.domain.repository.CurrencyRepository
 import net.ktnx.mobileledger.core.domain.repository.PreferencesRepository
 import net.ktnx.mobileledger.core.domain.repository.ProfileRepository
-import net.ktnx.mobileledger.domain.repository.TemplateRepository
+import net.ktnx.mobileledger.core.domain.repository.TemplateRepository
 import net.ktnx.mobileledger.domain.usecase.GetAllProfilesUseCase
 import net.ktnx.mobileledger.domain.usecase.GetLastSyncTimestampUseCase
 import net.ktnx.mobileledger.domain.usecase.GetProfileByIdUseCase

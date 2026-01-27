@@ -19,6 +19,8 @@ package net.ktnx.mobileledger.data.repository
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import net.ktnx.mobileledger.core.data.repository.impl.PreferencesRepositoryImpl
+import net.ktnx.mobileledger.core.domain.repository.PreferencesRepository
 import net.ktnx.mobileledger.service.ThemeService
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse

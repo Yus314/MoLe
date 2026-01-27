@@ -15,7 +15,7 @@
  * along with MoLe. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ktnx.mobileledger.data.repository
+package net.ktnx.mobileledger.core.data.repository.impl
 
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -27,12 +27,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import net.ktnx.mobileledger.core.common.di.IoDispatcher
+import net.ktnx.mobileledger.core.data.exception.CoreExceptionMapper
 import net.ktnx.mobileledger.core.data.mapper.ProfileMapper.toDomain
 import net.ktnx.mobileledger.core.data.mapper.ProfileMapper.toEntity
+import net.ktnx.mobileledger.core.data.repository.safeCall
 import net.ktnx.mobileledger.core.database.dao.ProfileDAO
 import net.ktnx.mobileledger.core.domain.model.Profile
 import net.ktnx.mobileledger.core.domain.repository.ProfileRepository
-import net.ktnx.mobileledger.domain.usecase.AppExceptionMapper
 
 /**
  * Implementation of [ProfileRepository] that wraps the existing [ProfileDAO].
@@ -50,7 +51,7 @@ import net.ktnx.mobileledger.domain.usecase.AppExceptionMapper
 @Singleton
 class ProfileRepositoryImpl @Inject constructor(
     private val profileDAO: ProfileDAO,
-    private val appExceptionMapper: AppExceptionMapper,
+    private val exceptionMapper: CoreExceptionMapper,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : ProfileRepository {
 
@@ -73,7 +74,7 @@ class ProfileRepositoryImpl @Inject constructor(
     override fun observeAllProfiles(): Flow<List<Profile>> =
         profileDAO.getAllOrdered().map { list -> list.map { it.toDomain() } }
 
-    override suspend fun getAllProfiles(): Result<List<Profile>> = safeCall(appExceptionMapper) {
+    override suspend fun getAllProfiles(): Result<List<Profile>> = safeCall(exceptionMapper) {
         withContext(ioDispatcher) {
             profileDAO.getAllOrderedSync().map { it.toDomain() }
         }
@@ -82,7 +83,7 @@ class ProfileRepositoryImpl @Inject constructor(
     override fun observeProfileById(profileId: Long): Flow<Profile?> =
         profileDAO.getById(profileId).map { it?.toDomain() }
 
-    override suspend fun getProfileById(profileId: Long): Result<Profile?> = safeCall(appExceptionMapper) {
+    override suspend fun getProfileById(profileId: Long): Result<Profile?> = safeCall(exceptionMapper) {
         withContext(ioDispatcher) {
             profileDAO.getByIdSync(profileId)?.toDomain()
         }
@@ -90,19 +91,19 @@ class ProfileRepositoryImpl @Inject constructor(
 
     override fun observeProfileByUuid(uuid: String): Flow<Profile?> = profileDAO.getByUuid(uuid).map { it?.toDomain() }
 
-    override suspend fun getProfileByUuid(uuid: String): Result<Profile?> = safeCall(appExceptionMapper) {
+    override suspend fun getProfileByUuid(uuid: String): Result<Profile?> = safeCall(exceptionMapper) {
         withContext(ioDispatcher) {
             profileDAO.getByUuidSync(uuid)?.toDomain()
         }
     }
 
-    override suspend fun getAnyProfile(): Result<Profile?> = safeCall(appExceptionMapper) {
+    override suspend fun getAnyProfile(): Result<Profile?> = safeCall(exceptionMapper) {
         withContext(ioDispatcher) {
             profileDAO.getAnySync()?.toDomain()
         }
     }
 
-    override suspend fun getProfileCount(): Result<Int> = safeCall(appExceptionMapper) {
+    override suspend fun getProfileCount(): Result<Int> = safeCall(exceptionMapper) {
         withContext(ioDispatcher) {
             profileDAO.getProfileCountSync()
         }
@@ -112,13 +113,13 @@ class ProfileRepositoryImpl @Inject constructor(
     // Mutation Operations
     // ========================================
 
-    override suspend fun insertProfile(profile: Profile): Result<Long> = safeCall(appExceptionMapper) {
+    override suspend fun insertProfile(profile: Profile): Result<Long> = safeCall(exceptionMapper) {
         withContext(ioDispatcher) {
             profileDAO.insertLastSync(profile.toEntity())
         }
     }
 
-    override suspend fun updateProfile(profile: Profile): Result<Unit> = safeCall(appExceptionMapper) {
+    override suspend fun updateProfile(profile: Profile): Result<Unit> = safeCall(exceptionMapper) {
         withContext(ioDispatcher) {
             profileDAO.updateSync(profile.toEntity())
         }
@@ -130,7 +131,7 @@ class ProfileRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun deleteProfile(profile: Profile): Result<Unit> = safeCall(appExceptionMapper) {
+    override suspend fun deleteProfile(profile: Profile): Result<Unit> = safeCall(exceptionMapper) {
         withContext(ioDispatcher) {
             profileDAO.deleteSync(profile.toEntity())
         }
@@ -145,13 +146,13 @@ class ProfileRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun updateProfileOrder(profiles: List<Profile>): Result<Unit> = safeCall(appExceptionMapper) {
+    override suspend fun updateProfileOrder(profiles: List<Profile>): Result<Unit> = safeCall(exceptionMapper) {
         withContext(ioDispatcher) {
             profileDAO.updateOrderSync(profiles.map { it.toEntity() })
         }
     }
 
-    override suspend fun deleteAllProfiles(): Result<Unit> = safeCall(appExceptionMapper) {
+    override suspend fun deleteAllProfiles(): Result<Unit> = safeCall(exceptionMapper) {
         withContext(ioDispatcher) {
             profileDAO.deleteAllSync()
         }

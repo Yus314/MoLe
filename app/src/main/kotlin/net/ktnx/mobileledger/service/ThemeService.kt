@@ -23,6 +23,7 @@ import android.content.res.Resources
 import androidx.annotation.ColorInt
 import kotlinx.coroutines.flow.StateFlow
 import net.ktnx.mobileledger.core.domain.model.Profile
+import net.ktnx.mobileledger.core.domain.repository.PreferencesRepository
 
 /**
  * Theme management service interface.
@@ -137,7 +138,8 @@ interface ThemeService {
     companion object {
         /**
          * Default theme hue (purple).
+         * Delegates to PreferencesRepository to ensure consistency.
          */
-        const val DEFAULT_HUE_DEG = 261
+        const val DEFAULT_HUE_DEG = PreferencesRepository.DEFAULT_HUE_DEG
     }
 }

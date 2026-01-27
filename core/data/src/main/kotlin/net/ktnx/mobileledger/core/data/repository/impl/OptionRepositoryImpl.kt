@@ -15,7 +15,7 @@
  * along with MoLe. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ktnx.mobileledger.data.repository
+package net.ktnx.mobileledger.core.data.repository.impl
 
 import javax.inject.Inject
 import javax.inject.Singleton

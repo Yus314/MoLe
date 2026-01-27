@@ -28,6 +28,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
+import net.ktnx.mobileledger.core.data.repository.impl.OptionRepositoryImpl
 import net.ktnx.mobileledger.core.database.dao.OptionDAO
 import net.ktnx.mobileledger.core.database.entity.Option
 import net.ktnx.mobileledger.core.domain.model.AppOption

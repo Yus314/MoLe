@@ -56,6 +56,19 @@ sealed class AppError {
             else -> null
         }
     }
+
+    /**
+     * 不明なエラー
+     *
+     * 予期しない例外が発生した場合に使用する。
+     * 主にリポジトリ層で、分類できない例外をラップする。
+     */
+    data class Unknown(
+        override val message: String = "予期しないエラーが発生しました",
+        override val cause: Throwable? = null
+    ) : AppError() {
+        override val isRetryable: Boolean = false
+    }
 }
 
 /**

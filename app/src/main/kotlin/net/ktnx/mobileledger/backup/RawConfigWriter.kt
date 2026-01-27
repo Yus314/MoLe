@@ -26,13 +26,13 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
-import net.ktnx.mobileledger.core.database.entity.TemplateAccount
-import net.ktnx.mobileledger.core.database.entity.TemplateWithAccounts
 import net.ktnx.mobileledger.core.domain.model.Currency
 import net.ktnx.mobileledger.core.domain.model.Profile
+import net.ktnx.mobileledger.core.domain.model.Template
+import net.ktnx.mobileledger.core.domain.model.TemplateLine
 import net.ktnx.mobileledger.core.domain.repository.CurrencyRepository
 import net.ktnx.mobileledger.core.domain.repository.ProfileRepository
-import net.ktnx.mobileledger.domain.repository.TemplateRepository
+import net.ktnx.mobileledger.core.domain.repository.TemplateRepository
 import net.ktnx.mobileledger.json.API
 
 /**
@@ -143,45 +143,47 @@ class RawConfigWriter(
         put(BackupKeys.COLOUR, p.theme)
     }
 
-    private fun buildTemplateJson(t: TemplateWithAccounts): JsonObject = buildJsonObject {
-        put(BackupKeys.UUID, t.header.uuid)
-        put(BackupKeys.NAME, t.header.name)
-        put(BackupKeys.REGEX, t.header.regularExpression)
+    private fun buildTemplateJson(t: Template): JsonObject = buildJsonObject {
+        put(BackupKeys.UUID, t.uuid)
+        put(BackupKeys.NAME, t.name)
+        put(BackupKeys.REGEX, t.pattern)
 
-        t.header.testText?.let { put(BackupKeys.TEST_TEXT, it) }
-        t.header.dateYear?.let { put(BackupKeys.DATE_YEAR, it) }
-        t.header.dateYearMatchGroup?.let { put(BackupKeys.DATE_YEAR_GROUP, it) }
-        t.header.dateMonth?.let { put(BackupKeys.DATE_MONTH, it) }
-        t.header.dateMonthMatchGroup?.let { put(BackupKeys.DATE_MONTH_GROUP, it) }
-        t.header.dateDay?.let { put(BackupKeys.DATE_DAY, it) }
-        t.header.dateDayMatchGroup?.let { put(BackupKeys.DATE_DAY_GROUP, it) }
-        t.header.transactionDescription?.let { put(BackupKeys.TRANSACTION, it) }
-        t.header.transactionDescriptionMatchGroup?.let { put(BackupKeys.TRANSACTION_GROUP, it) }
-        t.header.transactionComment?.let { put(BackupKeys.COMMENT, it) }
-        t.header.transactionCommentMatchGroup?.let { put(BackupKeys.COMMENT_GROUP, it) }
+        t.testText?.let { put(BackupKeys.TEST_TEXT, it) }
+        t.dateYear?.let { put(BackupKeys.DATE_YEAR, it) }
+        t.dateYearMatchGroup?.let { put(BackupKeys.DATE_YEAR_GROUP, it) }
+        t.dateMonth?.let { put(BackupKeys.DATE_MONTH, it) }
+        t.dateMonthMatchGroup?.let { put(BackupKeys.DATE_MONTH_GROUP, it) }
+        t.dateDay?.let { put(BackupKeys.DATE_DAY, it) }
+        t.dateDayMatchGroup?.let { put(BackupKeys.DATE_DAY_GROUP, it) }
+        t.transactionDescription?.let { put(BackupKeys.TRANSACTION, it) }
+        t.transactionDescriptionMatchGroup?.let { put(BackupKeys.TRANSACTION_GROUP, it) }
+        t.transactionComment?.let { put(BackupKeys.COMMENT, it) }
+        t.transactionCommentMatchGroup?.let { put(BackupKeys.COMMENT_GROUP, it) }
 
-        put(BackupKeys.IS_FALLBACK, t.header.isFallback)
+        put(BackupKeys.IS_FALLBACK, t.isFallback)
 
-        if (t.accounts.isNotEmpty()) {
+        if (t.lines.isNotEmpty()) {
             put(
                 BackupKeys.ACCOUNTS,
                 buildJsonArray {
-                    t.accounts.forEach { add(buildTemplateAccountJson(it)) }
+                    t.lines.forEach { add(buildTemplateLineJson(it)) }
                 }
             )
         }
     }
 
-    private fun buildTemplateAccountJson(a: TemplateAccount): JsonObject = buildJsonObject {
-        a.accountName?.let { put(BackupKeys.NAME, it) }
-        a.accountNameMatchGroup?.let { put(BackupKeys.NAME_GROUP, it) }
-        a.accountComment?.let { put(BackupKeys.COMMENT, it) }
-        a.accountCommentMatchGroup?.let { put(BackupKeys.COMMENT_GROUP, it) }
-        a.amount?.let { put(BackupKeys.AMOUNT, it.toDouble()) }
-        a.amountMatchGroup?.let { put(BackupKeys.AMOUNT_GROUP, it) }
-        a.negateAmount?.let { put(BackupKeys.NEGATE_AMOUNT, it) }
-        a.currency?.let { put(BackupKeys.CURRENCY, it) }
-        a.currencyMatchGroup?.let { put(BackupKeys.CURRENCY_GROUP, it) }
+    private fun buildTemplateLineJson(line: TemplateLine): JsonObject = buildJsonObject {
+        line.accountName?.let { put(BackupKeys.NAME, it) }
+        line.accountNameGroup?.let { put(BackupKeys.NAME_GROUP, it) }
+        line.comment?.let { put(BackupKeys.COMMENT, it) }
+        line.commentGroup?.let { put(BackupKeys.COMMENT_GROUP, it) }
+        line.amount?.let { put(BackupKeys.AMOUNT, it.toDouble()) }
+        line.amountGroup?.let { put(BackupKeys.AMOUNT_GROUP, it) }
+        if (line.negateAmount) {
+            put(BackupKeys.NEGATE_AMOUNT, true)
+        }
+        line.currencyId?.let { put(BackupKeys.CURRENCY, it) }
+        line.currencyGroup?.let { put(BackupKeys.CURRENCY_GROUP, it) }
     }
 
     private suspend fun getCommodities(): List<Currency> =
@@ -189,7 +191,6 @@ class RawConfigWriter(
 
     private suspend fun getProfiles(): List<Profile> = profileRepository.getAllProfiles().getOrElse { emptyList() }
 
-    @Suppress("DEPRECATION")
-    private suspend fun getTemplates(): List<TemplateWithAccounts> =
-        templateRepository.getAllTemplatesWithAccounts().getOrElse { emptyList() }
+    private suspend fun getTemplates(): List<Template> =
+        templateRepository.getAllTemplatesAsDomain().getOrElse { emptyList() }
 }

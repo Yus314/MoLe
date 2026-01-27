@@ -21,6 +21,7 @@ import android.database.sqlite.SQLiteConstraintException
 import android.database.sqlite.SQLiteException
 import java.io.FileNotFoundException
 import java.io.IOException
+import net.ktnx.mobileledger.core.data.exception.CoreExceptionMapper
 import net.ktnx.mobileledger.core.domain.model.AppError
 import net.ktnx.mobileledger.core.domain.model.AppException
 import net.ktnx.mobileledger.core.domain.model.DatabaseError
@@ -46,12 +47,14 @@ import org.robolectric.RobolectricTestRunner
 class AppExceptionMapperTest {
 
     private lateinit var mapper: AppExceptionMapper
+    private lateinit var coreExceptionMapper: CoreExceptionMapper
     private lateinit var syncExceptionMapper: SyncExceptionMapper
 
     @Before
     fun setup() {
+        coreExceptionMapper = CoreExceptionMapper()
         syncExceptionMapper = SyncExceptionMapper()
-        mapper = AppExceptionMapper(syncExceptionMapper)
+        mapper = AppExceptionMapper(coreExceptionMapper, syncExceptionMapper)
     }
 
     // ========================================

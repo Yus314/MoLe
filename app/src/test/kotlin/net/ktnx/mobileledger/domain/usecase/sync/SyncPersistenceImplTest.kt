@@ -31,7 +31,7 @@ import net.ktnx.mobileledger.core.domain.model.Transaction
 import net.ktnx.mobileledger.core.domain.model.TransactionLine
 import net.ktnx.mobileledger.core.domain.repository.AccountRepository
 import net.ktnx.mobileledger.core.domain.repository.OptionRepository
-import net.ktnx.mobileledger.domain.repository.TransactionRepository
+import net.ktnx.mobileledger.core.domain.repository.TransactionRepository
 import net.ktnx.mobileledger.util.createTestDomainProfile
 import org.junit.Assert.assertThrows
 import org.junit.Before

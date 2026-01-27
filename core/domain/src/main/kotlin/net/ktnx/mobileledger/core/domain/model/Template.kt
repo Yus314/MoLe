@@ -27,6 +27,9 @@ data class Template(
     /** データベースID。新規テンプレートの場合はnull */
     val id: Long? = null,
 
+    /** UUID（バックアップ/リストア時の重複検出に使用） */
+    val uuid: String = java.util.UUID.randomUUID().toString(),
+
     /** テンプレート名 */
     val name: String,
 

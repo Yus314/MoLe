@@ -34,7 +34,7 @@ import net.ktnx.mobileledger.core.database.entity.TemplateWithAccounts
 import net.ktnx.mobileledger.core.domain.repository.CurrencyRepository
 import net.ktnx.mobileledger.core.domain.repository.PreferencesRepository
 import net.ktnx.mobileledger.core.domain.repository.ProfileRepository
-import net.ktnx.mobileledger.domain.repository.TemplateRepository
+import net.ktnx.mobileledger.core.domain.repository.TemplateRepository
 
 /**
  * Reads and restores backup configuration from JSON input using kotlinx-serialization.
@@ -95,7 +95,7 @@ class RawConfigReader(private val inputStream: InputStream) {
 
         for (t in templatesList) {
             coroutineContext.ensureActive()
-            val existing = templateRepository.getTemplateWithAccountsByUuid(t.header.uuid).getOrNull()
+            val existing = templateRepository.getTemplateByUuid(t.header.uuid).getOrNull()
             if (existing == null) {
                 templateRepository.saveTemplate(t.toDomain())
             }

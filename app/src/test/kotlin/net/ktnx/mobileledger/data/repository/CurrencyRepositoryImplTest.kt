@@ -28,12 +28,12 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
+import net.ktnx.mobileledger.core.data.exception.CoreExceptionMapper
+import net.ktnx.mobileledger.core.data.repository.impl.CurrencyRepositoryImpl
 import net.ktnx.mobileledger.core.database.dao.CurrencyDAO
 import net.ktnx.mobileledger.core.database.entity.Currency as DbCurrency
 import net.ktnx.mobileledger.core.domain.model.Currency as DomainCurrency
 import net.ktnx.mobileledger.core.domain.model.CurrencyPosition
-import net.ktnx.mobileledger.domain.usecase.AppExceptionMapper
-import net.ktnx.mobileledger.domain.usecase.sync.SyncExceptionMapper
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -56,17 +56,17 @@ class CurrencyRepositoryImplTest {
 
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var mockCurrencyDAO: CurrencyDAO
-    private lateinit var appExceptionMapper: AppExceptionMapper
+    private lateinit var exceptionMapper: CoreExceptionMapper
     private lateinit var repository: CurrencyRepositoryImpl
 
     @Before
     fun setup() {
         mockCurrencyDAO = mockk(relaxed = true)
-        appExceptionMapper = AppExceptionMapper(SyncExceptionMapper())
+        exceptionMapper = CoreExceptionMapper()
 
         repository = CurrencyRepositoryImpl(
             currencyDAO = mockCurrencyDAO,
-            appExceptionMapper = appExceptionMapper,
+            exceptionMapper = exceptionMapper,
             ioDispatcher = testDispatcher
         )
     }

@@ -25,9 +25,14 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
+import net.ktnx.mobileledger.core.data.repository.asResultFlow
+import net.ktnx.mobileledger.core.data.repository.mapErrorToAppError
+import net.ktnx.mobileledger.core.data.repository.safeCall
+import net.ktnx.mobileledger.core.data.repository.toAppError
 import net.ktnx.mobileledger.core.domain.model.AppError
 import net.ktnx.mobileledger.core.domain.model.AppException
 import net.ktnx.mobileledger.core.domain.model.DatabaseError
+import net.ktnx.mobileledger.core.domain.repository.ExceptionMapper
 import net.ktnx.mobileledger.domain.usecase.AppExceptionMapper
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull

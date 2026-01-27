@@ -15,10 +15,9 @@
  * along with MoLe. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ktnx.mobileledger.domain.repository
+package net.ktnx.mobileledger.core.domain.repository
 
 import kotlinx.coroutines.flow.Flow
-import net.ktnx.mobileledger.core.database.entity.TemplateWithAccounts
 import net.ktnx.mobileledger.core.domain.model.Template
 
 /**
@@ -41,7 +40,7 @@ import net.ktnx.mobileledger.core.domain.model.Template
  * class TemplateViewModel @Inject constructor(
  *     private val templateRepository: TemplateRepository
  * ) : ViewModel() {
- *     val templates = templateRepository.getAllTemplates()
+ *     val templates = templateRepository.observeAllTemplatesAsDomain()
  *         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
  * }
  * ```
@@ -82,46 +81,17 @@ interface TemplateRepository {
      */
     suspend fun getAllTemplatesAsDomain(): Result<List<Template>>
 
-    // ========================================
-    // Database Entity Query Operations (for internal use)
-    // Note: These methods are deprecated. Use domain model methods instead.
-    // ========================================
-
     /**
-     * Get a template with its accounts by UUID.
+     * Get a template by its UUID.
      *
      * @param uuid The template UUID
-     * @return Result containing the template with accounts or null if not found
+     * @return Result containing the template domain model or null if not found
      */
-    @Deprecated(message = "Internal use for backup/restore only")
-    suspend fun getTemplateWithAccountsByUuid(uuid: String): Result<TemplateWithAccounts?>
-
-    /**
-     * Get all templates with their accounts.
-     *
-     * @return Result containing list of all templates with accounts
-     */
-    @Deprecated(
-        message = "Use getAllTemplatesAsDomain() instead. Internal use for backup only.",
-        replaceWith = ReplaceWith("getAllTemplatesAsDomain()")
-    )
-    suspend fun getAllTemplatesWithAccounts(): Result<List<TemplateWithAccounts>>
+    suspend fun getTemplateByUuid(uuid: String): Result<Template?>
 
     // ========================================
     // Mutation Operations
     // ========================================
-
-    /**
-     * Insert a template with its accounts.
-     *
-     * @param templateWithAccounts The template with accounts to insert
-     * @return Result indicating success or failure
-     */
-    @Deprecated(
-        message = "Use saveTemplate() instead. Internal use for backup/restore only.",
-        replaceWith = ReplaceWith("saveTemplate(templateWithAccounts.toDomain())")
-    )
-    suspend fun insertTemplateWithAccounts(templateWithAccounts: TemplateWithAccounts): Result<Unit>
 
     /**
      * Delete a template by its ID.
@@ -135,10 +105,9 @@ interface TemplateRepository {
      * Duplicate a template with all its accounts.
      *
      * @param id The ID of the template to duplicate
-     * @return Result containing the duplicated template with accounts, or null if source not found
+     * @return Result containing the duplicated template domain model, or null if source not found
      */
-    @Deprecated(message = "Returns DB entity. Consider using domain model alternative in future.")
-    suspend fun duplicateTemplate(id: Long): Result<TemplateWithAccounts?>
+    suspend fun duplicateTemplate(id: Long): Result<Template?>
 
     /**
      * Delete all templates.

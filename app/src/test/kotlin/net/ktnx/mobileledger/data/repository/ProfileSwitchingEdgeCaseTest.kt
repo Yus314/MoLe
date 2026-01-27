@@ -30,12 +30,11 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import net.ktnx.mobileledger.core.common.utils.SimpleDate
-import net.ktnx.mobileledger.core.database.dao.TransactionDAO
 import net.ktnx.mobileledger.core.domain.model.Profile
 import net.ktnx.mobileledger.core.domain.model.Transaction
 import net.ktnx.mobileledger.core.domain.model.TransactionLine
 import net.ktnx.mobileledger.core.domain.repository.ProfileRepository
-import net.ktnx.mobileledger.domain.repository.TransactionRepository
+import net.ktnx.mobileledger.core.domain.repository.TransactionRepository
 import net.ktnx.mobileledger.util.createTestDomainProfile
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -416,8 +415,7 @@ class EdgeCaseFakeTransactionRepository : TransactionRepository {
     override suspend fun getTransactionById(transactionId: Long): Result<Transaction?> =
         Result.success(transactions[transactionId]?.transaction)
 
-    override suspend fun searchByDescription(term: String): Result<List<TransactionDAO.DescriptionContainer>> =
-        Result.success(emptyList())
+    override suspend fun searchByDescription(term: String): Result<List<String>> = Result.success(emptyList())
 
     override suspend fun getFirstByDescription(description: String): Result<Transaction?> = Result.success(null)
 

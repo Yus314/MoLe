@@ -20,10 +20,9 @@ package net.ktnx.mobileledger.ui.transaction
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import net.ktnx.mobileledger.core.database.entity.TemplateAccount
-import net.ktnx.mobileledger.core.database.entity.TemplateHeader
-import net.ktnx.mobileledger.core.database.entity.TemplateWithAccounts
 import net.ktnx.mobileledger.core.domain.model.Profile
+import net.ktnx.mobileledger.core.domain.model.Template
+import net.ktnx.mobileledger.core.domain.model.TemplateLine
 import net.ktnx.mobileledger.domain.usecase.GetAllTemplatesUseCaseImpl
 import net.ktnx.mobileledger.domain.usecase.GetTemplateUseCaseImpl
 import net.ktnx.mobileledger.domain.usecase.ObserveCurrentProfileUseCaseImpl
@@ -104,27 +103,27 @@ class TemplateApplicatorViewModelTest {
         )
     }
 
-    private fun createTemplateWithAccounts(
-        id: Long = 1L,
+    private fun createTestTemplate(
+        id: Long? = 1L,
         name: String = "Test Template",
         description: String = "Template Description",
         regex: String = "",
         accounts: List<Pair<String, Float?>> = listOf("Assets:Bank" to 100.0f, "Expenses:Food" to null)
-    ): TemplateWithAccounts {
-        val header = TemplateHeader(id, name, "").apply {
-            this.transactionDescription = description
-            this.regularExpression = regex
+    ): Template {
+        val templateLines = accounts.mapIndexed { index, (accountName, amount) ->
+            TemplateLine(
+                id = index.toLong() + 1,
+                accountName = accountName,
+                amount = amount
+            )
         }
-        val templateAccounts = accounts.mapIndexed { index, (accountName, amount) ->
-            TemplateAccount(0L, id, (index + 1).toLong()).apply {
-                this.accountName = accountName
-                this.amount = amount
-            }
-        }
-        return TemplateWithAccounts().apply {
-            this.header = header
-            this.accounts = templateAccounts
-        }
+        return Template(
+            id = id,
+            name = name,
+            pattern = regex,
+            transactionDescription = description,
+            lines = templateLines
+        )
     }
 
     // ========================================
@@ -138,10 +137,10 @@ class TemplateApplicatorViewModelTest {
         viewModel = createViewModelWithProfile(profile)
         advanceUntilIdle()
 
-        val template1 = createTemplateWithAccounts(id = 1, name = "Template 1")
-        val template2 = createTemplateWithAccounts(id = 2, name = "Template 2")
-        templateRepository.insertTemplateWithAccounts(template1)
-        templateRepository.insertTemplateWithAccounts(template2)
+        val template1 = createTestTemplate(id = 1, name = "Template 1")
+        val template2 = createTestTemplate(id = 2, name = "Template 2")
+        templateRepository.saveTemplate(template1)
+        templateRepository.saveTemplate(template2)
 
         // When
         viewModel.onEvent(TemplateApplicatorEvent.ShowTemplateSelector)
@@ -178,10 +177,10 @@ class TemplateApplicatorViewModelTest {
         viewModel = createViewModelWithProfile(profile)
         advanceUntilIdle()
 
-        val template1 = createTemplateWithAccounts(id = 1, name = "Groceries", description = "Weekly shopping")
-        val template2 = createTemplateWithAccounts(id = 2, name = "Gas Station", description = "Fuel")
-        templateRepository.insertTemplateWithAccounts(template1)
-        templateRepository.insertTemplateWithAccounts(template2)
+        val template1 = createTestTemplate(id = 1, name = "Groceries", description = "Weekly shopping")
+        val template2 = createTestTemplate(id = 2, name = "Gas Station", description = "Fuel")
+        templateRepository.saveTemplate(template1)
+        templateRepository.saveTemplate(template2)
 
         viewModel.onEvent(TemplateApplicatorEvent.ShowTemplateSelector)
         advanceUntilIdle()
@@ -203,10 +202,10 @@ class TemplateApplicatorViewModelTest {
         viewModel = createViewModelWithProfile(profile)
         advanceUntilIdle()
 
-        val template1 = createTemplateWithAccounts(id = 1, name = "Template 1")
-        val template2 = createTemplateWithAccounts(id = 2, name = "Template 2")
-        templateRepository.insertTemplateWithAccounts(template1)
-        templateRepository.insertTemplateWithAccounts(template2)
+        val template1 = createTestTemplate(id = 1, name = "Template 1")
+        val template2 = createTestTemplate(id = 2, name = "Template 2")
+        templateRepository.saveTemplate(template1)
+        templateRepository.saveTemplate(template2)
 
         viewModel.onEvent(TemplateApplicatorEvent.ShowTemplateSelector)
         advanceUntilIdle()
@@ -230,20 +229,20 @@ class TemplateApplicatorViewModelTest {
         viewModel = createViewModelWithProfile(profile)
         advanceUntilIdle()
 
-        val template = createTemplateWithAccounts(
+        val template = createTestTemplate(
             id = 1,
             name = "Lunch",
             description = "Lunch expense",
             accounts = listOf("Expenses:Food" to 15.0f, "Assets:Cash" to null)
         )
-        templateRepository.insertTemplateWithAccounts(template)
+        templateRepository.saveTemplate(template)
 
         viewModel.onEvent(TemplateApplicatorEvent.ShowTemplateSelector)
         advanceUntilIdle()
         assertTrue(viewModel.uiState.value.showTemplateSelector)
 
         // When
-        viewModel.onEvent(TemplateApplicatorEvent.ApplyTemplate(template.header.id))
+        viewModel.onEvent(TemplateApplicatorEvent.ApplyTemplate(template.id!!))
         advanceUntilIdle()
 
         // Then - Selector is dismissed
@@ -257,15 +256,15 @@ class TemplateApplicatorViewModelTest {
         viewModel = createViewModelWithProfile(profile)
         advanceUntilIdle()
 
-        val template = createTemplateWithAccounts(id = 1)
-        templateRepository.insertTemplateWithAccounts(template)
+        val template = createTestTemplate(id = 1)
+        templateRepository.saveTemplate(template)
 
         viewModel.onEvent(TemplateApplicatorEvent.ShowTemplateSelector)
         advanceUntilIdle()
         assertTrue(viewModel.uiState.value.showTemplateSelector)
 
         // When
-        viewModel.onEvent(TemplateApplicatorEvent.ApplyTemplate(template.header.id))
+        viewModel.onEvent(TemplateApplicatorEvent.ApplyTemplate(template.id!!))
         advanceUntilIdle()
 
         // Then
@@ -279,14 +278,14 @@ class TemplateApplicatorViewModelTest {
         viewModel = createViewModelWithProfile(profile)
         advanceUntilIdle()
 
-        val template = createTemplateWithAccounts(
+        val template = createTestTemplate(
             id = 1,
             name = "QR Template",
             description = "QR Payment",
             regex = "PAYMENT:(\\d+)",
             accounts = listOf("Expenses:Shopping" to 100.0f, "Assets:Bank" to null)
         )
-        templateRepository.insertTemplateWithAccounts(template)
+        templateRepository.saveTemplate(template)
 
         // When - QR text matches regex
         viewModel.onEvent(TemplateApplicatorEvent.ApplyTemplateFromQr("PAYMENT:500"))
@@ -303,13 +302,13 @@ class TemplateApplicatorViewModelTest {
         viewModel = createViewModelWithProfile(profile)
         advanceUntilIdle()
 
-        val template = createTemplateWithAccounts(
+        val template = createTestTemplate(
             id = 1,
             name = "QR Template",
             regex = "SPECIFIC_PATTERN:\\d+",
             accounts = listOf("Expenses:Shopping" to 100.0f)
         )
-        templateRepository.insertTemplateWithAccounts(template)
+        templateRepository.saveTemplate(template)
 
         // When - QR text doesn't match any template
         viewModel.onEvent(TemplateApplicatorEvent.ApplyTemplateFromQr("UNRELATED_TEXT"))
@@ -341,13 +340,13 @@ class TemplateApplicatorViewModelTest {
         viewModel = createViewModelWithProfile(profile)
         advanceUntilIdle()
 
-        val templateWithoutRegex = createTemplateWithAccounts(
+        val templateWithoutRegex = createTestTemplate(
             id = 1,
             name = "No Regex Template",
             regex = "", // Empty regex should be skipped
             accounts = listOf("Expenses:Shopping" to 100.0f)
         )
-        templateRepository.insertTemplateWithAccounts(templateWithoutRegex)
+        templateRepository.saveTemplate(templateWithoutRegex)
 
         // When
         viewModel.onEvent(TemplateApplicatorEvent.ApplyTemplateFromQr("ANY_TEXT"))
@@ -364,13 +363,13 @@ class TemplateApplicatorViewModelTest {
         viewModel = createViewModelWithProfile(profile)
         advanceUntilIdle()
 
-        val templateWithInvalidRegex = createTemplateWithAccounts(
+        val templateWithInvalidRegex = createTestTemplate(
             id = 1,
             name = "Bad Regex Template",
             regex = "[invalid(regex", // Invalid regex syntax
             accounts = listOf("Expenses:Shopping" to 100.0f)
         )
-        templateRepository.insertTemplateWithAccounts(templateWithInvalidRegex)
+        templateRepository.saveTemplate(templateWithInvalidRegex)
 
         // When - Should not crash
         viewModel.onEvent(TemplateApplicatorEvent.ApplyTemplateFromQr("TEST"))
@@ -387,18 +386,18 @@ class TemplateApplicatorViewModelTest {
         viewModel = createViewModelWithProfile(profile)
         advanceUntilIdle()
 
-        val template = createTemplateWithAccounts(
+        val template = createTestTemplate(
             id = 1,
             name = "Test",
             accounts = listOf("Expenses:Food" to 1000.0f, "Assets:Cash" to null)
         )
-        templateRepository.insertTemplateWithAccounts(template)
+        templateRepository.saveTemplate(template)
 
         viewModel.onEvent(TemplateApplicatorEvent.ShowTemplateSelector)
         advanceUntilIdle()
 
         // When
-        viewModel.onEvent(TemplateApplicatorEvent.ApplyTemplate(template.header.id))
+        viewModel.onEvent(TemplateApplicatorEvent.ApplyTemplate(template.id!!))
         advanceUntilIdle()
 
         // Then - Completes without error, selector is dismissed
@@ -436,10 +435,10 @@ class TemplateApplicatorViewModelTest {
         viewModel = createViewModelWithProfile(profile)
         advanceUntilIdle()
 
-        val template1 = createTemplateWithAccounts(id = 1, name = "A", description = "Weekly groceries")
-        val template2 = createTemplateWithAccounts(id = 2, name = "B", description = "Monthly rent")
-        templateRepository.insertTemplateWithAccounts(template1)
-        templateRepository.insertTemplateWithAccounts(template2)
+        val template1 = createTestTemplate(id = 1, name = "A", description = "Weekly groceries")
+        val template2 = createTestTemplate(id = 2, name = "B", description = "Monthly rent")
+        templateRepository.saveTemplate(template1)
+        templateRepository.saveTemplate(template2)
 
         viewModel.onEvent(TemplateApplicatorEvent.ShowTemplateSelector)
         advanceUntilIdle()
@@ -460,8 +459,8 @@ class TemplateApplicatorViewModelTest {
         viewModel = createViewModelWithProfile(profile)
         advanceUntilIdle()
 
-        val template = createTemplateWithAccounts(id = 1, name = "GROCERY TEMPLATE")
-        templateRepository.insertTemplateWithAccounts(template)
+        val template = createTestTemplate(id = 1, name = "GROCERY TEMPLATE")
+        templateRepository.saveTemplate(template)
 
         viewModel.onEvent(TemplateApplicatorEvent.ShowTemplateSelector)
         advanceUntilIdle()
@@ -525,20 +524,20 @@ class TemplateApplicatorViewModelTest {
         viewModel = createViewModelWithProfile(profile)
         advanceUntilIdle()
 
-        val template1 = createTemplateWithAccounts(
+        val template1 = createTestTemplate(
             id = 1,
             name = "First Match",
             regex = "PAYMENT.*",
             accounts = listOf("Expenses:Shopping" to 100.0f)
         )
-        val template2 = createTemplateWithAccounts(
+        val template2 = createTestTemplate(
             id = 2,
             name = "Second Match",
             regex = "PAYMENT:(\\d+)",
             accounts = listOf("Expenses:Food" to 200.0f)
         )
-        templateRepository.insertTemplateWithAccounts(template1)
-        templateRepository.insertTemplateWithAccounts(template2)
+        templateRepository.saveTemplate(template1)
+        templateRepository.saveTemplate(template2)
 
         // When
         viewModel.onEvent(TemplateApplicatorEvent.ApplyTemplateFromQr("PAYMENT:500"))

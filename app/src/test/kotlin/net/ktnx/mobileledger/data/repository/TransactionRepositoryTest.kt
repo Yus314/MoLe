@@ -23,13 +23,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import net.ktnx.mobileledger.core.common.utils.SimpleDate
-import net.ktnx.mobileledger.core.database.dao.TransactionDAO
 import net.ktnx.mobileledger.core.database.entity.Transaction as DbTransaction
 import net.ktnx.mobileledger.core.database.entity.TransactionAccount
 import net.ktnx.mobileledger.core.database.entity.TransactionWithAccounts
 import net.ktnx.mobileledger.core.domain.model.Transaction
 import net.ktnx.mobileledger.core.domain.model.TransactionLine
-import net.ktnx.mobileledger.domain.repository.TransactionRepository
+import net.ktnx.mobileledger.core.domain.repository.TransactionRepository
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -239,8 +238,8 @@ class TransactionRepositoryTest {
 
         val results = repository.searchByDescription("groc").getOrThrow()
         assertEquals(2, results.size)
-        assertTrue(results.any { it.description == "Grocery shopping" })
-        assertTrue(results.any { it.description == "Groceries" })
+        assertTrue(results.any { it == "Grocery shopping" })
+        assertTrue(results.any { it == "Groceries" })
     }
 
     @Test
@@ -476,7 +475,7 @@ class FakeTransactionRepository : TransactionRepository {
     override suspend fun getTransactionById(transactionId: Long): Result<Transaction?> =
         Result.success(storedTransactions[transactionId]?.transaction)
 
-    override suspend fun searchByDescription(term: String): Result<List<TransactionDAO.DescriptionContainer>> {
+    override suspend fun searchByDescription(term: String): Result<List<String>> {
         val termUpper = term.uppercase()
         return Result.success(
             storedTransactions.values
@@ -490,9 +489,10 @@ class FakeTransactionRepository : TransactionRepository {
                         descUpper.contains(" $termUpper") -> 3
                         else -> 9
                     }
-                    TransactionDAO.DescriptionContainer(stored.transaction.description, ordering)
+                    Pair(stored.transaction.description, ordering)
                 }
-                .sortedWith(compareBy({ it.ordering }, { it.description?.uppercase() }))
+                .sortedWith(compareBy({ it.second }, { it.first.uppercase() }))
+                .map { it.first }
         )
     }
 

@@ -36,6 +36,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import net.ktnx.mobileledger.core.common.utils.formatIsoDate
 import net.ktnx.mobileledger.core.common.utils.parseIsoDate
+import net.ktnx.mobileledger.core.domain.model.CurrencySettings
 import net.ktnx.mobileledger.core.domain.model.Transaction
 import net.ktnx.mobileledger.json.MoLeJson
 import net.ktnx.mobileledger.json.config.ApiVersionConfig
@@ -238,12 +239,17 @@ data class UnifiedParsedLedgerTransaction(
          *
          * @param tr 変換元のトランザクション
          * @param config API バージョン設定
+         * @param settings 通貨フォーマット設定（optional、defaults to [CurrencySettings.DEFAULT]）
          * @return 生成した UnifiedParsedLedgerTransaction
          */
-        fun fromDomain(tr: Transaction, config: ApiVersionConfig): UnifiedParsedLedgerTransaction {
+        fun fromDomain(
+            tr: Transaction,
+            config: ApiVersionConfig,
+            settings: CurrencySettings = CurrencySettings.DEFAULT
+        ): UnifiedParsedLedgerTransaction {
             val postings = tr.lines
                 .filter { it.accountName.isNotEmpty() }
-                .map { UnifiedParsedPosting.fromDomain(it, config) }
+                .map { UnifiedParsedPosting.fromDomain(it, config, settings) }
 
             // tsourcepos の初期化（v1_50 用に2要素）
             val sourcePosList = if (config == ApiVersionConfig.V1_50) {

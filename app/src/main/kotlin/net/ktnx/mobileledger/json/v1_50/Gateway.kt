@@ -18,6 +18,7 @@
 package net.ktnx.mobileledger.json.v1_50
 
 import kotlinx.serialization.SerializationException
+import net.ktnx.mobileledger.core.domain.model.CurrencySettings
 import net.ktnx.mobileledger.core.domain.model.Transaction
 import net.ktnx.mobileledger.json.Gateway as BaseGateway
 import net.ktnx.mobileledger.json.MoLeJson
@@ -26,8 +27,12 @@ import net.ktnx.mobileledger.json.unified.UnifiedParsedLedgerTransaction
 
 class Gateway : BaseGateway() {
     @Throws(SerializationException::class)
-    override fun transactionSaveRequest(transaction: Transaction): String {
-        val jsonTransaction = UnifiedParsedLedgerTransaction.fromDomain(transaction, ApiVersionConfig.V1_50)
+    override fun transactionSaveRequest(transaction: Transaction, settings: CurrencySettings): String {
+        val jsonTransaction = UnifiedParsedLedgerTransaction.fromDomain(
+            transaction,
+            ApiVersionConfig.V1_50,
+            settings
+        )
         return MoLeJson.encodeToString(UnifiedParsedLedgerTransaction.serializer(), jsonTransaction)
     }
 }

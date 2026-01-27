@@ -31,8 +31,8 @@ import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import net.ktnx.mobileledger.core.domain.model.CurrencyPosition
+import net.ktnx.mobileledger.core.domain.model.CurrencySettings
 import net.ktnx.mobileledger.core.domain.model.TransactionLine
-import net.ktnx.mobileledger.di.CurrencyFormatterEntryPoint
 import net.ktnx.mobileledger.json.MoLeJson
 import net.ktnx.mobileledger.json.config.ApiVersionConfig
 
@@ -155,11 +155,16 @@ data class UnifiedParsedPosting(
          *
          * @param line 変換元のトランザクション行
          * @param config API バージョン設定
+         * @param settings 通貨フォーマット設定（optional、defaults to [CurrencySettings.DEFAULT]）
          * @return 生成した UnifiedParsedPosting
          */
         @Suppress("UNUSED_PARAMETER")
-        fun fromDomain(line: TransactionLine, config: ApiVersionConfig): UnifiedParsedPosting {
-            val (commoditySide, commoditySpaced) = getCommoditySettings()
+        fun fromDomain(
+            line: TransactionLine,
+            config: ApiVersionConfig,
+            settings: CurrencySettings = CurrencySettings.DEFAULT
+        ): UnifiedParsedPosting {
+            val (commoditySide, commoditySpaced) = getCommoditySettings(settings)
             val precision = 2
             val mantissa = Math.round((line.amount ?: 0f) * 100).toLong()
 
@@ -186,14 +191,15 @@ data class UnifiedParsedPosting(
             )
         }
 
-        private fun getCommoditySettings(): Pair<Char, Boolean> {
-            val formatter = CurrencyFormatterEntryPoint.getOrNull()
-            val side = if (formatter?.currencySymbolPosition?.value == CurrencyPosition.AFTER) {
-                'R'
-            } else {
-                'L'
-            }
-            val spaced = formatter?.currencyGap?.value ?: false
+        /**
+         * 通貨設定から commodity side と spaced を取得
+         *
+         * @param settings 通貨設定
+         * @return Pair<Char, Boolean> - (side: 'L' or 'R', spaced: true or false)
+         */
+        private fun getCommoditySettings(settings: CurrencySettings): Pair<Char, Boolean> {
+            val side = if (settings.symbolPosition == CurrencyPosition.AFTER) 'R' else 'L'
+            val spaced = settings.hasGap
             return Pair(side, spaced)
         }
     }

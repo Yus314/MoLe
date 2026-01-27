@@ -23,10 +23,9 @@ import java.io.FileNotFoundException
 import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
+import net.ktnx.mobileledger.core.data.exception.CoreExceptionMapper
 import net.ktnx.mobileledger.core.domain.model.AppError
 import net.ktnx.mobileledger.core.domain.model.AppException
-import net.ktnx.mobileledger.core.domain.model.DatabaseError
-import net.ktnx.mobileledger.core.domain.model.FileError
 import net.ktnx.mobileledger.core.domain.model.SyncException
 import net.ktnx.mobileledger.core.domain.repository.ExceptionMapper
 import net.ktnx.mobileledger.domain.usecase.sync.SyncExceptionMapper
@@ -36,6 +35,11 @@ import net.ktnx.mobileledger.domain.usecase.sync.SyncExceptionMapper
  *
  * すべての例外を統一されたAppError型に変換する。
  * データベース例外、ファイル例外、ネットワーク例外を適切なエラー型にマッピングする。
+ *
+ * 責任分離:
+ * - CoreExceptionMapper: データベース、ファイルエラー
+ * - SyncExceptionMapper: ネットワーク、同期エラー
+ * - AppExceptionMapper: 上記を統合し、適切なマッパーに委譲
  *
  * 使用例:
  * ```kotlin
@@ -49,10 +53,18 @@ import net.ktnx.mobileledger.domain.usecase.sync.SyncExceptionMapper
  */
 @Singleton
 class AppExceptionMapper @Inject constructor(
+    private val coreExceptionMapper: CoreExceptionMapper,
     private val syncExceptionMapper: SyncExceptionMapper
 ) : ExceptionMapper {
     /**
      * 例外をAppErrorに変換する
+     *
+     * マッピング優先順位:
+     * 1. 既にマッピング済み (AppException, SyncException) → そのまま使用
+     * 2. データベースエラー (SQLite*Exception) → CoreExceptionMapper に委譲
+     * 3. ファイルエラー (FileNotFoundException, 権限エラー) → CoreExceptionMapper に委譲
+     * 4. ネットワーク/IOエラー → SyncExceptionMapper に委譲
+     * 5. その他 → SyncExceptionMapper に委譲
      *
      * @param e 変換する例外
      * @return 適切なAppErrorサブタイプ
@@ -63,51 +75,32 @@ class AppExceptionMapper @Inject constructor(
 
         is SyncException -> AppError.Sync(e.syncError)
 
-        // データベースエラー
-        is SQLiteConstraintException -> DatabaseError.ConstraintViolation(
-            cause = e,
-            constraintName = extractConstraintName(e)
-        )
+        // データベースエラー → CoreExceptionMapper に委譲
+        is SQLiteConstraintException,
+        is SQLiteException -> coreExceptionMapper.map(e)
 
-        is SQLiteException -> DatabaseError.QueryFailed(
-            message = e.localizedMessage ?: "データベースエラー",
-            cause = e
-        )
-
+        // IllegalStateException - データベース関連かどうかで分岐
         is IllegalStateException -> if (isDatabaseError(e)) {
-            DatabaseError.QueryFailed(
-                message = e.localizedMessage ?: "データベースエラー",
-                cause = e
-            )
+            coreExceptionMapper.map(e)
         } else {
             AppError.Sync(syncExceptionMapper.mapToSyncException(e).syncError)
         }
 
-        // ファイルエラー
-        is FileNotFoundException -> FileError.NotFound(
-            cause = e,
-            path = e.message
-        )
+        // ファイル関連エラー → CoreExceptionMapper に委譲
+        is FileNotFoundException -> coreExceptionMapper.map(e)
 
+        // SecurityException - ファイル権限関連かどうかで分岐
         is SecurityException -> if (isFilePermissionError(e)) {
-            FileError.PermissionDenied(cause = e)
+            coreExceptionMapper.map(e)
         } else {
             AppError.Sync(syncExceptionMapper.mapToSyncException(e).syncError)
         }
 
-        // ネットワーク/IO エラー - 既存のマッパーに委譲
+        // ネットワーク/IO エラー - SyncExceptionMapper に委譲
         is IOException -> AppError.Sync(syncExceptionMapper.mapToSyncException(e).syncError)
 
-        // その他 - 既存のマッパーに委譲
+        // その他 - SyncExceptionMapper に委譲
         else -> AppError.Sync(syncExceptionMapper.mapToSyncException(e).syncError)
-    }
-
-    /**
-     * 制約名を例外メッセージから抽出する
-     */
-    private fun extractConstraintName(e: SQLiteConstraintException): String? = e.message?.let { msg ->
-        // "UNIQUE constraint failed: table.column" のようなメッセージから抽出
-        Regex("constraint failed: (\\w+)").find(msg)?.groupValues?.getOrNull(1)
     }
 
     /**

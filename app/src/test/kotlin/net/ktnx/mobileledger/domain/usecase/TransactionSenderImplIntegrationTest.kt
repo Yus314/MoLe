@@ -31,6 +31,7 @@ import net.ktnx.mobileledger.core.domain.model.TransactionLine
 import net.ktnx.mobileledger.core.network.HledgerClient
 import net.ktnx.mobileledger.core.network.NetworkApiNotSupportedException
 import net.ktnx.mobileledger.core.network.NetworkAuthenticationException
+import net.ktnx.mobileledger.fake.FakeCurrencyFormatter
 import net.ktnx.mobileledger.json.API
 import net.ktnx.mobileledger.util.createTestDomainProfile
 import org.junit.Assert.assertEquals
@@ -58,13 +59,15 @@ class TransactionSenderImplIntegrationTest {
 
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var mockHledgerClient: HledgerClient
+    private lateinit var fakeCurrencyFormatter: FakeCurrencyFormatter
     private lateinit var sender: TransactionSenderImpl
     private lateinit var testTransaction: Transaction
 
     @Before
     fun setup() {
         mockHledgerClient = mockk(relaxed = true)
-        sender = TransactionSenderImpl(mockHledgerClient, testDispatcher)
+        fakeCurrencyFormatter = FakeCurrencyFormatter()
+        sender = TransactionSenderImpl(mockHledgerClient, fakeCurrencyFormatter, testDispatcher)
 
         testTransaction = Transaction(
             id = null,

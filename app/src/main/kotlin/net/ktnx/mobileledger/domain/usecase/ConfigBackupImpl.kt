@@ -37,7 +37,7 @@ import net.ktnx.mobileledger.core.common.di.IoDispatcher
 import net.ktnx.mobileledger.core.domain.repository.CurrencyRepository
 import net.ktnx.mobileledger.core.domain.repository.PreferencesRepository
 import net.ktnx.mobileledger.core.domain.repository.ProfileRepository
-import net.ktnx.mobileledger.domain.repository.TemplateRepository
+import net.ktnx.mobileledger.core.domain.repository.TemplateRepository
 
 /**
  * Pure Coroutines implementation of [ConfigBackup].

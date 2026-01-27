@@ -26,7 +26,6 @@ import logcat.AndroidLogcatLogger
 import logcat.LogPriority
 import logcat.logcat
 import net.ktnx.mobileledger.core.domain.repository.ProfileRepository
-import net.ktnx.mobileledger.di.CurrencyFormatterEntryPoint
 import net.ktnx.mobileledger.di.ThemeServiceEntryPoint
 import net.ktnx.mobileledger.service.CurrencyFormatter
 
@@ -48,9 +47,6 @@ class App : Application() {
 
         logcat { "App onCreate()" }
         currencyFormatter.refresh(Locale.getDefault())
-
-        // Initialize CurrencyFormatterEntryPoint for static access in JSON parsers
-        CurrencyFormatterEntryPoint.initialize(this)
 
         // Initialize ThemeServiceEntryPoint for static access in Views (HueRing)
         ThemeServiceEntryPoint.initialize(this)

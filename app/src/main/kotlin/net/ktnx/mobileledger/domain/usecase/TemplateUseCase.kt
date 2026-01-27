@@ -6,7 +6,7 @@ package net.ktnx.mobileledger.domain.usecase
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import net.ktnx.mobileledger.core.domain.model.Template
-import net.ktnx.mobileledger.domain.repository.TemplateRepository
+import net.ktnx.mobileledger.core.domain.repository.TemplateRepository
 
 interface ObserveTemplatesUseCase {
     operator fun invoke(): Flow<List<Template>>

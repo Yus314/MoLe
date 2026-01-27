@@ -15,7 +15,7 @@
  * along with MoLe. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ktnx.mobileledger.data.repository
+package net.ktnx.mobileledger.core.data.repository.impl
 
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -24,12 +24,13 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import net.ktnx.mobileledger.core.common.di.IoDispatcher
+import net.ktnx.mobileledger.core.data.exception.CoreExceptionMapper
 import net.ktnx.mobileledger.core.data.mapper.CurrencyMapper.toDomain
 import net.ktnx.mobileledger.core.data.mapper.CurrencyMapper.toEntity
+import net.ktnx.mobileledger.core.data.repository.safeCall
 import net.ktnx.mobileledger.core.database.dao.CurrencyDAO
 import net.ktnx.mobileledger.core.domain.model.Currency
 import net.ktnx.mobileledger.core.domain.repository.CurrencyRepository
-import net.ktnx.mobileledger.domain.usecase.AppExceptionMapper
 
 /**
  * Implementation of [CurrencyRepository] that wraps the existing [CurrencyDAO].
@@ -45,7 +46,7 @@ import net.ktnx.mobileledger.domain.usecase.AppExceptionMapper
 @Singleton
 class CurrencyRepositoryImpl @Inject constructor(
     private val currencyDAO: CurrencyDAO,
-    private val appExceptionMapper: AppExceptionMapper,
+    private val exceptionMapper: CoreExceptionMapper,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : CurrencyRepository {
 
@@ -56,7 +57,7 @@ class CurrencyRepositoryImpl @Inject constructor(
     override fun observeAllCurrenciesAsDomain(): Flow<List<Currency>> =
         currencyDAO.getAll().map { list -> list.map { it.toDomain() } }
 
-    override suspend fun getAllCurrenciesAsDomain(): Result<List<Currency>> = safeCall(appExceptionMapper) {
+    override suspend fun getAllCurrenciesAsDomain(): Result<List<Currency>> = safeCall(exceptionMapper) {
         withContext(ioDispatcher) {
             currencyDAO.getAllSync().map { it.toDomain() }
         }
@@ -64,13 +65,13 @@ class CurrencyRepositoryImpl @Inject constructor(
 
     override fun observeCurrencyAsDomain(id: Long): Flow<Currency?> = currencyDAO.getById(id).map { it?.toDomain() }
 
-    override suspend fun getCurrencyAsDomain(id: Long): Result<Currency?> = safeCall(appExceptionMapper) {
+    override suspend fun getCurrencyAsDomain(id: Long): Result<Currency?> = safeCall(exceptionMapper) {
         withContext(ioDispatcher) {
             currencyDAO.getByIdSync(id)?.toDomain()
         }
     }
 
-    override suspend fun getCurrencyAsDomainByName(name: String): Result<Currency?> = safeCall(appExceptionMapper) {
+    override suspend fun getCurrencyAsDomainByName(name: String): Result<Currency?> = safeCall(exceptionMapper) {
         withContext(ioDispatcher) {
             currencyDAO.getByNameSync(name)?.toDomain()
         }
@@ -83,13 +84,13 @@ class CurrencyRepositoryImpl @Inject constructor(
     // Mutation Operations
     // ========================================
 
-    override suspend fun deleteAllCurrencies(): Result<Unit> = safeCall(appExceptionMapper) {
+    override suspend fun deleteAllCurrencies(): Result<Unit> = safeCall(exceptionMapper) {
         withContext(ioDispatcher) {
             currencyDAO.deleteAllSync()
         }
     }
 
-    override suspend fun saveCurrency(currency: Currency): Result<Long> = safeCall(appExceptionMapper) {
+    override suspend fun saveCurrency(currency: Currency): Result<Long> = safeCall(exceptionMapper) {
         withContext(ioDispatcher) {
             val entity = currency.toEntity()
             if (entity.id == 0L) {
@@ -101,7 +102,7 @@ class CurrencyRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun deleteCurrencyByName(name: String): Result<Boolean> = safeCall(appExceptionMapper) {
+    override suspend fun deleteCurrencyByName(name: String): Result<Boolean> = safeCall(exceptionMapper) {
         withContext(ioDispatcher) {
             val currency = currencyDAO.getByNameSync(name)
             if (currency != null) {

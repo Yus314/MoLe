@@ -23,7 +23,7 @@ import kotlin.math.round
 import logcat.logcat
 import net.ktnx.mobileledger.core.common.utils.emptyToNull
 import net.ktnx.mobileledger.core.domain.model.CurrencyPosition
-import net.ktnx.mobileledger.di.CurrencyFormatterEntryPoint
+import net.ktnx.mobileledger.core.domain.model.CurrencySettings
 
 /**
  * Represents the display style for currency amounts.
@@ -90,22 +90,21 @@ data class AmountStyle(
         }
 
         /**
-         * Gets the default AmountStyle based on global settings
+         * Gets the default AmountStyle based on currency settings.
+         *
+         * @param currency Currency symbol (nullable)
+         * @param settings Currency formatting settings (optional, defaults to [CurrencySettings.DEFAULT])
          */
         @JvmStatic
-        fun getDefault(currency: String?): AmountStyle {
-            val currencyFormatter = CurrencyFormatterEntryPoint.getOrNull()
-            val globalPos = currencyFormatter?.currencySymbolPosition?.value
-
-            // Default to AFTER when globalPos is not set
+        fun getDefault(currency: String?, settings: CurrencySettings = CurrencySettings.DEFAULT): AmountStyle {
             val position = when {
                 currency.isNullOrEmpty() -> Position.NONE
-                globalPos == CurrencyPosition.BEFORE -> Position.BEFORE
-                globalPos == CurrencyPosition.AFTER -> Position.AFTER
+                settings.symbolPosition == CurrencyPosition.BEFORE -> Position.BEFORE
+                settings.symbolPosition == CurrencyPosition.AFTER -> Position.AFTER
                 else -> Position.NONE
             }
 
-            val spaced = currencyFormatter?.currencyGap?.value ?: false
+            val spaced = settings.hasGap
 
             // Default precision is 2 decimal places
             val precision = 2

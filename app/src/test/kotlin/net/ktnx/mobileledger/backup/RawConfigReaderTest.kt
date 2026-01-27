@@ -479,18 +479,16 @@ class RawConfigReaderTest {
 
     @Test
     fun `restoreAll skips existing templates by UUID`() = runTest {
-        // Given - existing template
+        // Given - existing template with specific UUID
         val existingUuid = UUID.randomUUID().toString()
         fakeTemplateRepository.saveTemplate(
             Template(
                 id = null,
+                uuid = existingUuid,
                 name = "Existing Template",
                 pattern = ".*existing.*"
             )
         )
-        // Get the saved template and update UUID manually via direct access
-        val savedTemplates = fakeTemplateRepository.getAllTemplatesWithAccounts().getOrThrow()
-        savedTemplates[0].header.uuid = existingUuid
 
         val json = """
             {

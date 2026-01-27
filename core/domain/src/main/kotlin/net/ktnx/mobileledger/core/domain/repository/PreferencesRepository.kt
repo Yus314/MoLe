@@ -23,6 +23,14 @@ package net.ktnx.mobileledger.core.domain.repository
  */
 interface PreferencesRepository {
 
+    companion object {
+        /**
+         * Default theme hue in degrees (0-360).
+         * This is the purple theme used by default.
+         */
+        const val DEFAULT_HUE_DEG = 261
+    }
+
     /**
      * Get whether to show zero balance accounts in the account list.
      * @return true if zero balance accounts should be shown, false otherwise

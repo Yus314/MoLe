@@ -30,13 +30,13 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
+import net.ktnx.mobileledger.core.data.exception.CoreExceptionMapper
+import net.ktnx.mobileledger.core.data.repository.impl.ProfileRepositoryImpl
 import net.ktnx.mobileledger.core.database.dao.ProfileDAO
 import net.ktnx.mobileledger.core.database.entity.Profile as DbProfile
 import net.ktnx.mobileledger.core.domain.model.AppException
 import net.ktnx.mobileledger.core.domain.model.FutureDates
 import net.ktnx.mobileledger.core.domain.model.Profile as DomainProfile
-import net.ktnx.mobileledger.domain.usecase.AppExceptionMapper
-import net.ktnx.mobileledger.domain.usecase.sync.SyncExceptionMapper
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -59,17 +59,17 @@ class ProfileRepositoryImplTest {
 
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var mockProfileDAO: ProfileDAO
-    private lateinit var appExceptionMapper: AppExceptionMapper
+    private lateinit var exceptionMapper: CoreExceptionMapper
     private lateinit var repository: ProfileRepositoryImpl
 
     @Before
     fun setup() {
         mockProfileDAO = mockk(relaxed = true)
-        appExceptionMapper = AppExceptionMapper(SyncExceptionMapper())
+        exceptionMapper = CoreExceptionMapper()
 
         repository = ProfileRepositoryImpl(
             profileDAO = mockProfileDAO,
-            appExceptionMapper = appExceptionMapper,
+            exceptionMapper = exceptionMapper,
             ioDispatcher = testDispatcher
         )
     }

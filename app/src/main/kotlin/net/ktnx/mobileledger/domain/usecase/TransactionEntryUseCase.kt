@@ -5,7 +5,7 @@ package net.ktnx.mobileledger.domain.usecase
 
 import javax.inject.Inject
 import net.ktnx.mobileledger.core.domain.model.Transaction
-import net.ktnx.mobileledger.domain.repository.TransactionRepository
+import net.ktnx.mobileledger.core.domain.repository.TransactionRepository
 
 /**
  * Search transaction descriptions for autocomplete suggestions.
@@ -32,10 +32,7 @@ interface GetFirstTransactionByDescriptionUseCase {
 class SearchTransactionDescriptionsUseCaseImpl @Inject constructor(
     private val transactionRepository: TransactionRepository
 ) : SearchTransactionDescriptionsUseCase {
-    override suspend fun invoke(term: String): Result<List<String>> =
-        transactionRepository.searchByDescription(term).map { containers ->
-            containers.mapNotNull { it.description }
-        }
+    override suspend fun invoke(term: String): Result<List<String>> = transactionRepository.searchByDescription(term)
 }
 
 class StoreTransactionUseCaseImpl @Inject constructor(
