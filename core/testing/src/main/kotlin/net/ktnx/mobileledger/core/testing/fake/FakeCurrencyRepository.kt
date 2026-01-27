@@ -20,14 +20,13 @@ package net.ktnx.mobileledger.core.testing.fake
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
-import net.ktnx.mobileledger.core.data.mapper.CurrencyMapper.toDomain
-import net.ktnx.mobileledger.core.data.mapper.CurrencyMapper.toEntity
-import net.ktnx.mobileledger.core.database.entity.Currency
-import net.ktnx.mobileledger.core.domain.model.Currency as DomainCurrency
+import net.ktnx.mobileledger.core.domain.model.Currency
 import net.ktnx.mobileledger.core.domain.repository.CurrencyRepository
 
 /**
  * Fake implementation of [CurrencyRepository] for testing.
+ *
+ * Uses domain models directly without depending on core:data mappers.
  */
 class FakeCurrencyRepository : CurrencyRepository {
 
@@ -39,23 +38,20 @@ class FakeCurrencyRepository : CurrencyRepository {
     // Domain Model Query Operations
     // ========================================
 
-    override fun observeAllCurrenciesAsDomain(): Flow<List<DomainCurrency>> =
-        currenciesFlow.map { list -> list.map { it.toDomain() } }
+    override fun observeAllCurrenciesAsDomain(): Flow<List<Currency>> = currenciesFlow
 
-    override suspend fun getAllCurrenciesAsDomain(): Result<List<DomainCurrency>> =
-        Result.success(currencies.values.map { it.toDomain() })
+    override suspend fun getAllCurrenciesAsDomain(): Result<List<Currency>> = Result.success(currencies.values.toList())
 
-    override fun observeCurrencyAsDomain(id: Long): Flow<DomainCurrency?> =
-        currenciesFlow.map { list -> list.find { it.id == id }?.toDomain() }
+    override fun observeCurrencyAsDomain(id: Long): Flow<Currency?> =
+        currenciesFlow.map { list -> list.find { it.id == id } }
 
-    override suspend fun getCurrencyAsDomain(id: Long): Result<DomainCurrency?> =
-        Result.success(currencies[id]?.toDomain())
+    override suspend fun getCurrencyAsDomain(id: Long): Result<Currency?> = Result.success(currencies[id])
 
-    override suspend fun getCurrencyAsDomainByName(name: String): Result<DomainCurrency?> =
-        Result.success(currencies.values.find { it.name == name }?.toDomain())
+    override suspend fun getCurrencyAsDomainByName(name: String): Result<Currency?> =
+        Result.success(currencies.values.find { it.name == name })
 
-    override fun observeCurrencyAsDomainByName(name: String): Flow<DomainCurrency?> =
-        currenciesFlow.map { list -> list.find { it.name == name }?.toDomain() }
+    override fun observeCurrencyAsDomainByName(name: String): Flow<Currency?> =
+        currenciesFlow.map { list -> list.find { it.name == name } }
 
     // ========================================
     // Mutation Operations
@@ -67,11 +63,10 @@ class FakeCurrencyRepository : CurrencyRepository {
         return Result.success(Unit)
     }
 
-    override suspend fun saveCurrency(currency: DomainCurrency): Result<Long> {
-        val entity = currency.toEntity()
-        val id = if (entity.id == 0L) nextId++ else entity.id
-        entity.id = id
-        currencies[id] = entity
+    override suspend fun saveCurrency(currency: Currency): Result<Long> {
+        val existingId = currency.id
+        val id: Long = if (existingId == null || existingId == 0L) nextId++ else existingId
+        currencies[id] = currency.copy(id = id)
         emitFlow()
         return Result.success(id)
     }

@@ -29,7 +29,6 @@ dependencies {
     implementation(project(":core:domain"))
     implementation(project(":core:database"))
     implementation(project(":core:network"))
-    implementation(project(":core:data")) // For Fake implementations using mappers
 
     // Test utilities exposed as main dependencies
     api(libs.junit)

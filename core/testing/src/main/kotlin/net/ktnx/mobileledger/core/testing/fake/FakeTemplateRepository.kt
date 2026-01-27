@@ -17,22 +17,22 @@
 
 package net.ktnx.mobileledger.core.testing.fake
 
+import java.util.UUID
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
-import net.ktnx.mobileledger.core.data.mapper.TemplateMapper.toDomain
-import net.ktnx.mobileledger.core.data.mapper.TemplateMapper.toEntity
-import net.ktnx.mobileledger.core.database.entity.TemplateWithAccounts
 import net.ktnx.mobileledger.core.domain.model.Template
 import net.ktnx.mobileledger.core.domain.repository.TemplateRepository
 
 /**
  * Fake implementation of [TemplateRepository] for testing.
+ *
+ * Uses domain models directly without depending on core:data mappers.
  */
 class FakeTemplateRepository : TemplateRepository {
 
-    private val templates = mutableMapOf<Long, TemplateWithAccounts>()
-    private val templatesFlow = MutableStateFlow<List<TemplateWithAccounts>>(emptyList())
+    private val templates = mutableMapOf<Long, Template>()
+    private val templatesFlow = MutableStateFlow<List<Template>>(emptyList())
     private var nextId = 1L
 
     // Error simulation properties
@@ -63,27 +63,26 @@ class FakeTemplateRepository : TemplateRepository {
     // ========================================
 
     override fun observeAllTemplatesAsDomain(): Flow<List<Template>> = templatesFlow.map { list ->
-        list.sortedWith(compareBy({ it.header.isFallback }, { it.header.name }))
-            .map { it.toDomain() }
+        list.sortedWith(compareBy({ it.isFallback }, { it.name }))
     }
 
     override fun observeTemplateAsDomain(id: Long): Flow<Template?> =
-        templatesFlow.map { list -> list.find { it.header.id == id }?.toDomain() }
+        templatesFlow.map { list -> list.find { it.id == id } }
 
     override suspend fun getTemplateAsDomain(id: Long): Result<Template?> = when {
         shouldFailGetTemplate -> Result.failure(errorToThrow)
         useCustomTemplate -> Result.success(templateToReturn)
-        else -> Result.success(templates[id]?.toDomain())
+        else -> Result.success(templates[id])
     }
 
     override suspend fun getAllTemplatesAsDomain(): Result<List<Template>> = if (shouldFailGetAll) {
         Result.failure(errorToThrow)
     } else {
-        Result.success(templates.values.map { it.toDomain() })
+        Result.success(templates.values.toList())
     }
 
     override suspend fun getTemplateByUuid(uuid: String): Result<Template?> =
-        Result.success(templates.values.find { it.header.uuid == uuid }?.toDomain())
+        Result.success(templates.values.find { it.uuid == uuid })
 
     // ========================================
     // Mutation Operations
@@ -100,14 +99,16 @@ class FakeTemplateRepository : TemplateRepository {
     override suspend fun duplicateTemplate(id: Long): Result<Template?> {
         if (shouldFailDuplicate) return Result.failure(errorToThrow)
         val source = templates[id] ?: return Result.success(null)
-        val duplicate = source.createDuplicate()
         val newId = nextId++
-        duplicate.header.id = newId
-        duplicate.header.name = "${source.header.name} (copy)"
-        duplicate.accounts.forEach { it.templateId = newId }
+        val duplicate = source.copy(
+            id = newId,
+            uuid = UUID.randomUUID().toString(),
+            name = "${source.name} (copy)",
+            lines = source.lines.map { it.copy(id = null) }
+        )
         templates[newId] = duplicate
         emitFlow()
-        return Result.success(duplicate.toDomain())
+        return Result.success(duplicate)
     }
 
     override suspend fun deleteAllTemplates(): Result<Unit> {
@@ -118,16 +119,15 @@ class FakeTemplateRepository : TemplateRepository {
 
     override suspend fun saveTemplate(template: Template): Result<Long> {
         if (shouldFailSave) return Result.failure(errorToThrow)
-        val entity = template.toEntity()
-        val header = entity.header
-        val accounts = entity.accounts
-        val id = if (header.id == 0L) nextId++ else header.id
-        header.id = id
-        accounts.forEach { it.templateId = id }
-        templates[id] = TemplateWithAccounts().apply {
-            this.header = header
-            this.accounts = accounts
-        }
+        val existingId = template.id
+        val id: Long = if (existingId == null || existingId == 0L) nextId++ else existingId
+        val templateWithId = template.copy(
+            id = id,
+            lines = template.lines.mapIndexed { index, line ->
+                if (line.id == null) line.copy(id = (id * 1000) + index) else line
+            }
+        )
+        templates[id] = templateWithId
         emitFlow()
         return Result.success(id)
     }
