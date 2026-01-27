@@ -24,6 +24,12 @@ pluginManagement {
     }
 }
 
+buildCache {
+    local {
+        directory = file(".gradle/build-cache")
+    }
+}
+
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
@@ -42,4 +48,5 @@ include(":core:domain")
 include(":core:database")
 include(":core:network")
 include(":core:data")
+include(":core:sync")
 include(":core:testing")
