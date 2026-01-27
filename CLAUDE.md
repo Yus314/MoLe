@@ -26,23 +26,57 @@
 ## Project Structure
 
 ```
-app/
-├── src/main/kotlin/net/ktnx/mobileledger/
-│   ├── di/                    # Hilt modules
-│   ├── domain/model/          # Domain models
-│   ├── data/repository/       # Repositories
-│   ├── db/                    # Room entities & DAOs
-│   └── ui/                    # Compose UI
-├── src/test/                  # Unit tests
-└── src/androidTest/           # Instrumentation tests
+MoLe/
+├── build-logic/                      # Convention plugins
+├── core/
+│   ├── common/                       # DI qualifiers, utils
+│   ├── domain/                       # Models, repository interfaces
+│   ├── database/                     # Room entities, DAOs
+│   ├── network/                      # Ktor client, HledgerClient
+│   ├── data/                         # Repository implementations, mappers
+│   └── testing/                      # MainDispatcherRule, Fakes
+└── app/
+    ├── src/main/kotlin/.../
+    │   ├── di/                       # Hilt modules
+    │   ├── domain/usecase/           # 52 UseCases
+    │   ├── backup/                   # Config backup/restore
+    │   ├── json/                     # hledger-web JSON parsers
+    │   ├── service/                  # App services
+    │   └── ui/                       # Compose UI
+    ├── src/test/                     # Unit tests
+    └── src/androidTest/              # Instrumentation tests
 ```
 
 ## Architecture
 
 ```
-UI (Compose) → ViewModel → Repository → DAO → Room
-                   ↓
-            Domain Models
+┌─────────────────────────────────────────────────────────────┐
+│                           app                                │
+│  ┌─────────┐    ┌──────────────┐    ┌─────────────────────┐ │
+│  │   UI    │ →  │  ViewModel   │ →  │      UseCase        │ │
+│  │(Compose)│    │              │    │                     │ │
+│  └─────────┘    └──────────────┘    └─────────────────────┘ │
+└─────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────┐
+│                         core:data                            │
+│             Repository Implementations + Mappers             │
+└─────────────────────────────────────────────────────────────┘
+                    ↓                    ↓
+┌────────────────────────┐    ┌────────────────────────────────┐
+│      core:database     │    │         core:network           │
+│    Room entities/DAOs  │    │      Ktor HledgerClient        │
+└────────────────────────┘    └────────────────────────────────┘
+                    ↓                    ↓
+┌─────────────────────────────────────────────────────────────┐
+│                        core:domain                           │
+│        Domain Models + Repository Interfaces                 │
+└─────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────┐
+│                        core:common                           │
+│              DI Qualifiers + Utility Extensions              │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ## Rules Reference
@@ -114,21 +148,23 @@ adb_activity_manager:
 
 ## Hilt Modules
 
-### RepositoryModule
+### CoreRepositoryModule (core:data)
 - `ProfileRepository`
-- `TransactionRepository`
 - `AccountRepository`
-- `TemplateRepository`
 - `CurrencyRepository`
+- `OptionRepository`
+- `PreferencesRepository`
+- `TransactionRepository`
+- `TemplateRepository`
 
-### UseCaseModule
+### UseCaseModule (app)
 - `TransactionSender`
 - `TransactionSyncer`
 - `ConfigBackup`
 - `DatabaseInitializer`
 - `VersionDetector`
 
-### ServiceModule
+### ServiceModule (app)
 - `BackgroundTaskManager`
 - `CurrencyFormatter`
 - `AppStateService`
@@ -140,8 +176,15 @@ adb_activity_manager:
 - `get*()`: Returns single value (suspend)
 - `save*()`, `delete*()`: Mutations (suspend)
 
+### Repository Interfaces (core:domain)
+- `ProfileRepository`, `AccountRepository`, `CurrencyRepository`
+- `OptionRepository`, `PreferencesRepository`
+- `TransactionRepository`, `TemplateRepository`
+
 ### Example
 ```kotlin
+import net.ktnx.mobileledger.core.domain.repository.ProfileRepository
+
 @HiltViewModel
 class MyViewModel @Inject constructor(
     private val profileRepository: ProfileRepository
@@ -151,24 +194,34 @@ class MyViewModel @Inject constructor(
 }
 ```
 
-## Domain Models
+## Domain Models (core:domain)
 
 | Model | Use Case |
 |-------|----------|
-| `Profile` | Profile settings |
+| `Profile`, `ProfileAuthentication` | Profile settings |
 | `Transaction`, `TransactionLine` | Transaction data |
-| `Account` | Account info |
+| `Account`, `AccountAmount` | Account info |
 | `Template`, `TemplateLine` | Templates |
-| `Currency` | Currency settings |
+| `Currency`, `CurrencyPosition`, `CurrencySettings` | Currency settings |
+| `SyncState`, `SyncProgress`, `SyncResult` | Sync status |
+| `AppError`, `ValidationResult` | Error handling |
 
 ## Testing
 
-### Available Fakes
+### Shared Fakes (core:testing)
 - `FakeProfileRepository`
+- `FakeAccountRepository`
+- `FakePreferencesRepository`
+- `FakeOptionRepository`
+- `FakeCurrencyRepository`
 - `FakeTransactionRepository`
-- `FakeTransactionSender`
-- `FakeConfigBackup`
-- `FakeCurrencyFormatter`
+- `FakeTemplateRepository`
+- `FakeHledgerClient`
+
+### App-Level Fakes (app/src/test)
+- `FakeTransactionSender`, `FakeTransactionSyncer`
+- `FakeConfigBackup`, `FakeCurrencyFormatter`
+- Various UseCase fakes
 
 ## Verification Checklist
 
@@ -181,8 +234,12 @@ class MyViewModel @Inject constructor(
 
 ## Recent Changes
 
+- **Multi-module architecture migration** (Phase 7-13 complete)
+  - Created 6 core modules: common, domain, database, network, data, testing
+  - Moved 7 Repository interfaces to core:domain
+  - Moved 7 Repository implementations to core:data
+  - Moved 8 Fakes to core:testing
+  - Refactored CurrencyFormatter with CurrencySettings interface
+  - Added 77 JSON parser unit tests
 - Migrated to everything-claude-code configuration
-- Added 9 specialized agents
-- Added 6 rules, 8 commands, 5 skills
-- Added hooks.json for workflow automation
-- Optimized CLAUDE.md to reference .claude/rules/ (reduced token duplication)
+- Added 9 specialized agents, 6 rules, 8 commands, 5 skills
