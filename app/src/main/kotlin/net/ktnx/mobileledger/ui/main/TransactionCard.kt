@@ -38,7 +38,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import net.ktnx.mobileledger.domain.model.AmountStyle
+import net.ktnx.mobileledger.core.domain.model.AmountStyle
 
 /**
  * Card displaying a single transaction with its accounts.

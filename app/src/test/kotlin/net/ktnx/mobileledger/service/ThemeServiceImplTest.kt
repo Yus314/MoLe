@@ -22,7 +22,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import net.ktnx.mobileledger.core.domain.model.FutureDates
 import net.ktnx.mobileledger.core.domain.model.Profile
-import net.ktnx.mobileledger.ui.HueRing
+import net.ktnx.mobileledger.service.ThemeService
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -250,7 +250,7 @@ class ThemeServiceImplTest {
         val hue = service.getNewProfileThemeHue(profiles)
 
         // Then - should be a multiple of 5
-        assertEquals(0, hue % HueRing.hueStepDegrees)
+        assertEquals(0, hue % ThemeService.HUE_STEP_DEGREES)
     }
 
     // ========================================

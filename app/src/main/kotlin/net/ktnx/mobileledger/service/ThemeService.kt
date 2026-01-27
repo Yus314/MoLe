@@ -141,5 +141,11 @@ interface ThemeService {
          * Delegates to PreferencesRepository to ensure consistency.
          */
         const val DEFAULT_HUE_DEG = PreferencesRepository.DEFAULT_HUE_DEG
+
+        /**
+         * Step size in degrees for hue quantization.
+         * Used for theme color selection and profile color picking.
+         */
+        const val HUE_STEP_DEGREES = 5
     }
 }

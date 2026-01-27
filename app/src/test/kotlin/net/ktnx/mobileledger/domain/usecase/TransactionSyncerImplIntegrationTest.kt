@@ -38,8 +38,6 @@ import net.ktnx.mobileledger.core.domain.model.Transaction
 import net.ktnx.mobileledger.core.domain.model.TransactionLine
 import net.ktnx.mobileledger.domain.usecase.sync.AccountFetchResult
 import net.ktnx.mobileledger.domain.usecase.sync.AccountListFetcher
-import net.ktnx.mobileledger.domain.usecase.sync.LegacyHtmlParser
-import net.ktnx.mobileledger.domain.usecase.sync.LegacyParseResult
 import net.ktnx.mobileledger.domain.usecase.sync.SyncExceptionMapper
 import net.ktnx.mobileledger.domain.usecase.sync.SyncPersistence
 import net.ktnx.mobileledger.domain.usecase.sync.TransactionListFetcher
@@ -57,7 +55,7 @@ import org.junit.Test
  *
  * Tests verify:
  * - JSON API success path
- * - HTML fallback when JSON not available
+ * - ApiNotSupportedException when JSON not available
  * - Progress emissions
  * - Error handling and exception mapping
  * - Persistence calls
@@ -69,7 +67,6 @@ class TransactionSyncerImplIntegrationTest {
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var mockAccountListFetcher: AccountListFetcher
     private lateinit var mockTransactionListFetcher: TransactionListFetcher
-    private lateinit var mockLegacyHtmlParser: LegacyHtmlParser
     private lateinit var mockSyncPersistence: SyncPersistence
     private lateinit var mockAppStateService: AppStateService
     private lateinit var syncExceptionMapper: SyncExceptionMapper
@@ -126,7 +123,6 @@ class TransactionSyncerImplIntegrationTest {
     fun setup() {
         mockAccountListFetcher = mockk(relaxed = true)
         mockTransactionListFetcher = mockk(relaxed = true)
-        mockLegacyHtmlParser = mockk(relaxed = true)
         mockSyncPersistence = mockk(relaxed = true)
         mockAppStateService = mockk(relaxed = true)
         syncExceptionMapper = SyncExceptionMapper()
@@ -134,7 +130,6 @@ class TransactionSyncerImplIntegrationTest {
         syncer = TransactionSyncerImpl(
             accountListFetcher = mockAccountListFetcher,
             transactionListFetcher = mockTransactionListFetcher,
-            legacyHtmlParser = mockLegacyHtmlParser,
             syncPersistence = mockSyncPersistence,
             syncExceptionMapper = syncExceptionMapper,
             appStateService = mockAppStateService,
@@ -215,66 +210,48 @@ class TransactionSyncerImplIntegrationTest {
     }
 
     // ========================================
-    // HTML fallback tests
+    // JSON API unavailable tests
     // ========================================
 
     @Test
-    fun `sync falls back to HTML when JSON account fetch returns null`() = runTest(testDispatcher) {
-        // Given
-        coEvery { mockAccountListFetcher.fetch(testProfile) } returns null
-        coEvery {
-            mockLegacyHtmlParser.parse(testProfile, -1, any())
-        } returns LegacyParseResult(
-            accounts = testAccounts,
-            transactions = testTransactions
-        )
-        coEvery { mockSyncPersistence.saveAccountsAndTransactions(any(), any(), any()) } just Runs
-        every { mockAppStateService.updateSyncInfo(any()) } just Runs
+    fun `sync throws SyncException with ApiVersionError when JSON account fetch returns null`() =
+        runTest(testDispatcher) {
+            // Given
+            coEvery { mockAccountListFetcher.fetch(testProfile) } returns null
 
-        // When
-        val progressList = syncer.sync(testProfile).toList()
-
-        // Then
-        // Should NOT call transactionListFetcher
-        coVerify(exactly = 0) { mockTransactionListFetcher.fetch(any(), any(), any()) }
-
-        // Should call legacyHtmlParser
-        coVerify { mockLegacyHtmlParser.parse(testProfile, -1, any()) }
-
-        // Verify persistence was called with HTML data
-        coVerify { mockSyncPersistence.saveAccountsAndTransactions(testProfile, testAccounts, testTransactions) }
-
-        // Should emit HTML mode progress
-        val indeterminateProgress = progressList.filterIsInstance<SyncProgress.Indeterminate>()
-        assertTrue(
-            "Should have HTML mode progress",
-            indeterminateProgress.any { it.message.contains("HTML") }
-        )
-    }
+            // When/Then
+            try {
+                syncer.sync(testProfile).toList()
+                assertTrue("Should throw SyncException", false)
+            } catch (e: SyncException) {
+                assertTrue(
+                    "Should be ApiVersionError",
+                    e.syncError is SyncError.ApiVersionError
+                )
+            }
+        }
 
     @Test
-    fun `sync falls back to HTML when JSON transaction fetch returns null`() = runTest(testDispatcher) {
-        // Given
-        coEvery { mockAccountListFetcher.fetch(testProfile) } returns AccountFetchResult(
-            accounts = testAccounts,
-            expectedPostingsCount = 10
-        )
-        coEvery { mockTransactionListFetcher.fetch(testProfile, 10, any()) } returns null
-        coEvery {
-            mockLegacyHtmlParser.parse(testProfile, -1, any())
-        } returns LegacyParseResult(
-            accounts = testAccounts,
-            transactions = testTransactions
-        )
-        coEvery { mockSyncPersistence.saveAccountsAndTransactions(any(), any(), any()) } just Runs
-        every { mockAppStateService.updateSyncInfo(any()) } just Runs
+    fun `sync throws SyncException with ApiVersionError when JSON transaction fetch returns null`() =
+        runTest(testDispatcher) {
+            // Given
+            coEvery { mockAccountListFetcher.fetch(testProfile) } returns AccountFetchResult(
+                accounts = testAccounts,
+                expectedPostingsCount = 10
+            )
+            coEvery { mockTransactionListFetcher.fetch(testProfile, 10, any()) } returns null
 
-        // When
-        syncer.sync(testProfile).toList()
-
-        // Then
-        coVerify { mockLegacyHtmlParser.parse(testProfile, -1, any()) }
-    }
+            // When/Then
+            try {
+                syncer.sync(testProfile).toList()
+                assertTrue("Should throw SyncException", false)
+            } catch (e: SyncException) {
+                assertTrue(
+                    "Should be ApiVersionError",
+                    e.syncError is SyncError.ApiVersionError
+                )
+            }
+        }
 
     // ========================================
     // Error handling tests

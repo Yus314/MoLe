@@ -36,12 +36,12 @@ import net.ktnx.mobileledger.core.domain.model.AccountAmount as DomainAccountAmo
 import net.ktnx.mobileledger.core.domain.model.Profile
 import net.ktnx.mobileledger.core.domain.repository.AccountRepository
 import net.ktnx.mobileledger.core.domain.repository.PreferencesRepository
+import net.ktnx.mobileledger.core.testing.fake.FakeProfileRepository
 import net.ktnx.mobileledger.domain.usecase.AccountHierarchyResolverImpl
 import net.ktnx.mobileledger.domain.usecase.GetShowZeroBalanceUseCaseImpl
 import net.ktnx.mobileledger.domain.usecase.ObserveAccountsWithAmountsUseCaseImpl
 import net.ktnx.mobileledger.domain.usecase.ObserveCurrentProfileUseCaseImpl
 import net.ktnx.mobileledger.domain.usecase.SetShowZeroBalanceUseCaseImpl
-import net.ktnx.mobileledger.fake.FakeProfileRepository
 import net.ktnx.mobileledger.util.createTestDomainProfile
 import org.junit.After
 import org.junit.Assert.assertEquals

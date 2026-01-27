@@ -24,8 +24,6 @@ import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 import net.ktnx.mobileledger.domain.usecase.sync.AccountListFetcher
 import net.ktnx.mobileledger.domain.usecase.sync.AccountListFetcherImpl
-import net.ktnx.mobileledger.domain.usecase.sync.LegacyHtmlParser
-import net.ktnx.mobileledger.domain.usecase.sync.LegacyHtmlParserImpl
 import net.ktnx.mobileledger.domain.usecase.sync.SyncPersistence
 import net.ktnx.mobileledger.domain.usecase.sync.SyncPersistenceImpl
 import net.ktnx.mobileledger.domain.usecase.sync.TransactionListFetcher
@@ -51,8 +49,4 @@ abstract class SyncModule {
     @Binds
     @Singleton
     abstract fun bindTransactionListFetcher(impl: TransactionListFetcherImpl): TransactionListFetcher
-
-    @Binds
-    @Singleton
-    abstract fun bindLegacyHtmlParser(impl: LegacyHtmlParserImpl): LegacyHtmlParser
 }

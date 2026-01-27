@@ -26,13 +26,13 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import net.ktnx.mobileledger.core.domain.model.Template
+import net.ktnx.mobileledger.core.testing.fake.FakeTemplateRepository
 import net.ktnx.mobileledger.domain.usecase.DeleteTemplateUseCaseImpl
 import net.ktnx.mobileledger.domain.usecase.GetTemplateUseCaseImpl
 import net.ktnx.mobileledger.domain.usecase.SaveTemplateUseCaseImpl
 import net.ktnx.mobileledger.fake.FakeTemplateAccountRowManager
 import net.ktnx.mobileledger.fake.FakeTemplateDataMapper
 import net.ktnx.mobileledger.fake.FakeTemplatePatternValidator
-import net.ktnx.mobileledger.fake.FakeTemplateRepository
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse

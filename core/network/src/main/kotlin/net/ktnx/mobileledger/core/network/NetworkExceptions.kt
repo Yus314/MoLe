@@ -21,7 +21,7 @@ package net.ktnx.mobileledger.core.network
  * Network layer exceptions for HledgerClient operations.
  *
  * These exceptions are thrown by [HledgerClientImpl] when HTTP requests fail.
- * They are prefixed with "Network" to distinguish from [net.ktnx.mobileledger.json.ApiNotSupportedException]
+ * They are prefixed with "Network" to distinguish from [net.ktnx.mobileledger.core.network.json.ApiNotSupportedException]
  * which is used by JSON parsers.
  */
 

@@ -21,6 +21,9 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import net.ktnx.mobileledger.core.domain.model.Profile
+import net.ktnx.mobileledger.core.testing.fake.FakeAccountRepository
+import net.ktnx.mobileledger.core.testing.fake.FakeCurrencyRepository
+import net.ktnx.mobileledger.core.testing.fake.FakeProfileRepository
 import net.ktnx.mobileledger.domain.usecase.AccountSuggestionLookup
 import net.ktnx.mobileledger.domain.usecase.AccountSuggestionLookupImpl
 import net.ktnx.mobileledger.domain.usecase.DeleteCurrencyUseCaseImpl
@@ -31,10 +34,7 @@ import net.ktnx.mobileledger.domain.usecase.TransactionAccountRowManager
 import net.ktnx.mobileledger.domain.usecase.TransactionAccountRowManagerImpl
 import net.ktnx.mobileledger.domain.usecase.TransactionBalanceCalculator
 import net.ktnx.mobileledger.domain.usecase.TransactionBalanceCalculatorImpl
-import net.ktnx.mobileledger.fake.FakeAccountRepository
 import net.ktnx.mobileledger.fake.FakeCurrencyFormatter
-import net.ktnx.mobileledger.fake.FakeCurrencyRepository
-import net.ktnx.mobileledger.fake.FakeProfileRepository
 import net.ktnx.mobileledger.fake.FakeRowIdGenerator
 import net.ktnx.mobileledger.util.MainDispatcherRule
 import net.ktnx.mobileledger.util.createTestDomainProfile

@@ -30,9 +30,9 @@ import net.ktnx.mobileledger.core.network.HledgerClient
 import net.ktnx.mobileledger.core.network.NetworkAuthenticationException
 import net.ktnx.mobileledger.core.network.NetworkHttpException
 import net.ktnx.mobileledger.core.network.NetworkNotFoundException
-import net.ktnx.mobileledger.json.API
-import net.ktnx.mobileledger.json.ApiNotSupportedException
-import net.ktnx.mobileledger.json.TransactionListParser
+import net.ktnx.mobileledger.core.network.json.API
+import net.ktnx.mobileledger.core.network.json.ApiNotSupportedException
+import net.ktnx.mobileledger.core.network.json.TransactionListParser
 
 /**
  * Implementation of TransactionListFetcher using HledgerClient.

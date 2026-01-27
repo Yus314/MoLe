@@ -148,7 +148,7 @@ class TemplateMatcherImpl @Inject constructor() : TemplateMatcher {
         )
         val amount = parseAmount(amountStr, line.negateAmount)
 
-        val currencyName = if (line.currencyGroup != null && line.currencyGroup!! > 0) {
+        val currencyName = if ((line.currencyGroup ?: 0) > 0) {
             extractFromMatchGroup(matchResult, line.currencyGroup, null)
         } else {
             line.currencyName

@@ -28,7 +28,7 @@ import net.ktnx.mobileledger.core.domain.model.SyncError
 import net.ktnx.mobileledger.core.domain.model.SyncException
 import net.ktnx.mobileledger.core.network.NetworkAuthenticationException
 import net.ktnx.mobileledger.core.network.NetworkHttpException
-import net.ktnx.mobileledger.json.ApiNotSupportedException
+import net.ktnx.mobileledger.core.network.json.ApiNotSupportedException
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before

@@ -32,7 +32,6 @@ import logcat.logcat
 import net.ktnx.mobileledger.BuildConfig
 import net.ktnx.mobileledger.R
 import net.ktnx.mobileledger.core.domain.model.Profile
-import net.ktnx.mobileledger.ui.HueRing
 
 /**
  * Implementation of [ThemeService] that manages theme colors.
@@ -112,7 +111,7 @@ class ThemeServiceImpl @Inject constructor() : ThemeService {
         if (hueDegrees == ThemeService.DEFAULT_HUE_DEG) {
             return themePrimaryColor.getValue(R.style.AppTheme_default)
         }
-        val mod = hueDegrees % HueRing.hueStepDegrees
+        val mod = hueDegrees % ThemeService.HUE_STEP_DEGREES
         return if (mod == 0) {
             val themeId = getThemeIdForHue(hueDegrees)
             val result = themePrimaryColor.getValue(themeId)
@@ -120,7 +119,7 @@ class ThemeServiceImpl @Inject constructor() : ThemeService {
             result
         } else {
             val x0 = hueDegrees - mod
-            val x1 = (x0 + HueRing.hueStepDegrees) % 360
+            val x1 = (x0 + ThemeService.HUE_STEP_DEGREES) % 360
             val y0 = themePrimaryColor.getValue(getThemeIdForHue(x0)).toFloat()
             val y1 = themePrimaryColor.getValue(getThemeIdForHue(x1)).toFloat()
             kotlin.math.round(y0 + hueDegrees * (y1 - y0) / (x1 - x0)).toInt()
@@ -132,11 +131,11 @@ class ThemeServiceImpl @Inject constructor() : ThemeService {
         var themeIndex = -1
         if (adjustedHue == 360) adjustedHue = 0
         if (adjustedHue in 0 until 360 && adjustedHue != ThemeService.DEFAULT_HUE_DEG) {
-            if (adjustedHue % HueRing.hueStepDegrees != 0) {
+            if (adjustedHue % ThemeService.HUE_STEP_DEGREES != 0) {
                 logcat(LogPriority.WARN) { "Adjusting unexpected hue $adjustedHue" }
-                themeIndex = kotlin.math.round(1f * adjustedHue / HueRing.hueStepDegrees).toInt()
+                themeIndex = kotlin.math.round(1f * adjustedHue / ThemeService.HUE_STEP_DEGREES).toInt()
             } else {
-                themeIndex = adjustedHue / HueRing.hueStepDegrees
+                themeIndex = adjustedHue / ThemeService.HUE_STEP_DEGREES
             }
         }
 
@@ -213,10 +212,10 @@ class ThemeServiceImpl @Inject constructor() : ThemeService {
         }
 
         var finalHue = chosenHue
-        val mod = finalHue % HueRing.hueStepDegrees
+        val mod = finalHue % ThemeService.HUE_STEP_DEGREES
         if (mod != 0) {
-            if (mod > HueRing.hueStepDegrees / 2) {
-                finalHue += (HueRing.hueStepDegrees - mod) // 13 += (5-3) = 15
+            if (mod > ThemeService.HUE_STEP_DEGREES / 2) {
+                finalHue += (ThemeService.HUE_STEP_DEGREES - mod) // 13 += (5-3) = 15
             } else {
                 finalHue -= mod // 12 -= 2 = 10
             }

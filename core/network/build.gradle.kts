@@ -28,7 +28,6 @@ android {
 dependencies {
     implementation(project(":core:common"))
     implementation(project(":core:domain"))
-    implementation(project(":core:database"))
 
     // Ktor client
     implementation(libs.bundles.ktor)
@@ -38,4 +37,8 @@ dependencies {
 
     // Logging
     implementation(libs.logcat)
+
+    // Test dependencies
+    testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
 }

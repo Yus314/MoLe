@@ -31,8 +31,8 @@ import net.ktnx.mobileledger.core.domain.model.TransactionLine
 import net.ktnx.mobileledger.core.network.HledgerClient
 import net.ktnx.mobileledger.core.network.NetworkApiNotSupportedException
 import net.ktnx.mobileledger.core.network.NetworkAuthenticationException
+import net.ktnx.mobileledger.core.network.json.API
 import net.ktnx.mobileledger.fake.FakeCurrencyFormatter
-import net.ktnx.mobileledger.json.API
 import net.ktnx.mobileledger.util.createTestDomainProfile
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull

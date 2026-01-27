@@ -40,6 +40,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
@@ -76,6 +78,7 @@ fun MainScreen(
     accountSummaryUiState: AccountSummaryUiState,
     transactionListUiState: TransactionListUiState,
     drawerOpen: Boolean,
+    snackbarHostState: SnackbarHostState,
     onCoordinatorEvent: (MainCoordinatorEvent) -> Unit,
     onProfileSelectionEvent: (ProfileSelectionEvent) -> Unit,
     onAccountSummaryEvent: (AccountSummaryEvent) -> Unit,
@@ -190,6 +193,7 @@ fun MainScreen(
     ) {
         Scaffold(
             modifier = modifier,
+            snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
             topBar = {
                 TopAppBar(
                     title = {

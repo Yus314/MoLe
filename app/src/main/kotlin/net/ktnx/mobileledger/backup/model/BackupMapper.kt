@@ -24,7 +24,7 @@ import net.ktnx.mobileledger.core.database.entity.TemplateHeader
 import net.ktnx.mobileledger.core.database.entity.TemplateWithAccounts
 import net.ktnx.mobileledger.core.domain.model.Currency as DomainCurrency
 import net.ktnx.mobileledger.core.domain.model.Profile as DomainProfile
-import net.ktnx.mobileledger.json.API
+import net.ktnx.mobileledger.core.network.json.API
 
 /**
  * Mapper for converting between backup models and DB entities/domain models.

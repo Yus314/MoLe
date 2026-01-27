@@ -32,8 +32,8 @@ import net.ktnx.mobileledger.core.domain.model.Profile
 import net.ktnx.mobileledger.core.domain.model.SyncProgress
 import net.ktnx.mobileledger.core.domain.model.SyncResult
 import net.ktnx.mobileledger.core.domain.model.Transaction
+import net.ktnx.mobileledger.core.network.json.ApiNotSupportedException
 import net.ktnx.mobileledger.domain.usecase.sync.AccountListFetcher
-import net.ktnx.mobileledger.domain.usecase.sync.LegacyHtmlParser
 import net.ktnx.mobileledger.domain.usecase.sync.SyncExceptionMapper
 import net.ktnx.mobileledger.domain.usecase.sync.SyncPersistence
 import net.ktnx.mobileledger.domain.usecase.sync.TransactionListFetcher
@@ -46,15 +46,15 @@ import net.ktnx.mobileledger.service.SyncInfo
  * Delegates the actual work to specialized components:
  * - AccountListFetcher: Fetches accounts via JSON API
  * - TransactionListFetcher: Fetches transactions via JSON API
- * - LegacyHtmlParser: Parses HTML as fallback when JSON API is unavailable
  * - SyncPersistence: Saves data to database
  * - SyncExceptionMapper: Maps exceptions to user-friendly errors
+ *
+ * Note: Requires hledger-web v1.32 or later with JSON API support.
  */
 @Singleton
 class TransactionSyncerImpl @Inject constructor(
     private val accountListFetcher: AccountListFetcher,
     private val transactionListFetcher: TransactionListFetcher,
-    private val legacyHtmlParser: LegacyHtmlParser,
     private val syncPersistence: SyncPersistence,
     private val syncExceptionMapper: SyncExceptionMapper,
     private val appStateService: AppStateService,
@@ -69,12 +69,12 @@ class TransactionSyncerImpl @Inject constructor(
         try {
             emit(SyncProgress.Starting("接続中..."))
 
-            // Try JSON API first
+            // Fetch via JSON API (requires hledger-web v1.32+)
             val (accounts, transactions) = fetchViaJsonApi(profile) { progress ->
                 emit(progress)
-            } ?: fetchViaLegacyHtml(profile) { progress ->
-                emit(progress)
-            }
+            } ?: throw ApiNotSupportedException(
+                "JSON API not available. Please ensure hledger-web v1.32 or later is running."
+            )
 
             // Save to database
             coroutineContext.ensureActive()
@@ -123,25 +123,6 @@ class TransactionSyncerImpl @Inject constructor(
         } ?: return null
 
         return Pair(accountResult.accounts, transactions)
-    }
-
-    /**
-     * Fetches data via legacy HTML parsing.
-     *
-     * Used as fallback when JSON API is not available.
-     */
-    private suspend fun fetchViaLegacyHtml(
-        profile: Profile,
-        onProgress: suspend (SyncProgress) -> Unit
-    ): Pair<List<Account>, List<Transaction>> {
-        coroutineContext.ensureActive()
-        onProgress(SyncProgress.Indeterminate("HTMLモードで取得中..."))
-
-        val result = legacyHtmlParser.parse(profile, -1) { current, total ->
-            onProgress(SyncProgress.Running(current, total, "取引を処理中..."))
-        }
-
-        return Pair(result.accounts, result.transactions)
     }
 
     private fun updateSyncInfo(accounts: List<Account>, transactions: List<Transaction>) {

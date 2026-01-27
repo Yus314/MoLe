@@ -17,8 +17,10 @@
 
 package net.ktnx.mobileledger.ui.main
 
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextEquals
@@ -158,6 +160,7 @@ class MainScreenTest {
 
     private fun setContent() {
         composeTestRule.setContent {
+            val snackbarHostState = remember { SnackbarHostState() }
             MoLeTheme {
                 MainScreen(
                     coordinatorUiState = coordinatorUiState,
@@ -165,6 +168,7 @@ class MainScreenTest {
                     accountSummaryUiState = accountSummaryUiState,
                     transactionListUiState = transactionListUiState,
                     drawerOpen = drawerOpen,
+                    snackbarHostState = snackbarHostState,
                     onCoordinatorEvent = { event -> capturedCoordinatorEvents.add(event) },
                     onProfileSelectionEvent = { event -> capturedProfileSelectionEvents.add(event) },
                     onAccountSummaryEvent = { event -> capturedAccountSummaryEvents.add(event) },

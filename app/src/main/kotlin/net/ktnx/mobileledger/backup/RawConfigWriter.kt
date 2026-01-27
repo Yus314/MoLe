@@ -33,7 +33,7 @@ import net.ktnx.mobileledger.core.domain.model.TemplateLine
 import net.ktnx.mobileledger.core.domain.repository.CurrencyRepository
 import net.ktnx.mobileledger.core.domain.repository.ProfileRepository
 import net.ktnx.mobileledger.core.domain.repository.TemplateRepository
-import net.ktnx.mobileledger.json.API
+import net.ktnx.mobileledger.core.network.json.API
 
 /**
  * Writes MoLe configuration to a backup file using kotlinx-serialization.

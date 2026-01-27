@@ -22,7 +22,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import net.ktnx.mobileledger.core.domain.model.Currency
 import net.ktnx.mobileledger.core.domain.model.CurrencyPosition
-import net.ktnx.mobileledger.fake.FakeCurrencyRepository
+import net.ktnx.mobileledger.core.testing.fake.FakeCurrencyRepository
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull

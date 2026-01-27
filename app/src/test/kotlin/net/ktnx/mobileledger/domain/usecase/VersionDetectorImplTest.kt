@@ -24,7 +24,7 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import net.ktnx.mobileledger.core.domain.model.ProfileAuthentication
 import net.ktnx.mobileledger.core.network.NetworkNotFoundException
-import net.ktnx.mobileledger.fake.FakeHledgerClient
+import net.ktnx.mobileledger.core.testing.fake.FakeHledgerClient
 import net.ktnx.mobileledger.util.createTestDomainProfile
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull

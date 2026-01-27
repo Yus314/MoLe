@@ -22,7 +22,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import net.ktnx.mobileledger.core.domain.model.Template
 import net.ktnx.mobileledger.core.domain.model.TemplateLine
-import net.ktnx.mobileledger.fake.FakeTemplateRepository
+import net.ktnx.mobileledger.core.testing.fake.FakeTemplateRepository
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull

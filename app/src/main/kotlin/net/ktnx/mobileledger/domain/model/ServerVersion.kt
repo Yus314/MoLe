@@ -18,7 +18,7 @@
 package net.ktnx.mobileledger.domain.model
 
 import net.ktnx.mobileledger.core.domain.model.ServerVersion
-import net.ktnx.mobileledger.json.API
+import net.ktnx.mobileledger.core.network.json.API
 
 /**
  * Extension function to get suitable API version for ServerVersion.

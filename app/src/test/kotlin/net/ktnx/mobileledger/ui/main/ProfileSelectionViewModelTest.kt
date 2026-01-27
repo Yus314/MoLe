@@ -25,13 +25,13 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import net.ktnx.mobileledger.core.domain.model.Profile
+import net.ktnx.mobileledger.core.testing.fake.FakeProfileRepository
 import net.ktnx.mobileledger.domain.usecase.GetAllProfilesUseCaseImpl
 import net.ktnx.mobileledger.domain.usecase.GetProfileByIdUseCaseImpl
 import net.ktnx.mobileledger.domain.usecase.ObserveCurrentProfileUseCaseImpl
 import net.ktnx.mobileledger.domain.usecase.ObserveProfilesUseCaseImpl
 import net.ktnx.mobileledger.domain.usecase.SetCurrentProfileUseCaseImpl
 import net.ktnx.mobileledger.domain.usecase.UpdateProfileOrderUseCaseImpl
-import net.ktnx.mobileledger.fake.FakeProfileRepository
 import net.ktnx.mobileledger.util.createTestDomainProfile
 import org.junit.After
 import org.junit.Assert.assertEquals

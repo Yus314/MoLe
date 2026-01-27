@@ -26,9 +26,11 @@ import android.os.Bundle
 import android.text.format.DateUtils
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -159,6 +161,7 @@ class MainActivityCompose : ProfileThemedActivity() {
             val accountSummaryUiState by accountSummaryViewModel.uiState.collectAsState()
             val transactionListUiState by transactionListViewModel.uiState.collectAsState()
             val drawerOpen by coordinatorViewModel.drawerOpen.collectAsState()
+            val snackbarHostState = remember { SnackbarHostState() }
 
             // Handle coordinator effects
             LaunchedEffect(Unit) {
@@ -192,8 +195,7 @@ class MainActivityCompose : ProfileThemedActivity() {
                         }
 
                         is MainCoordinatorEffect.ShowError -> {
-                            // TODO: Add SnackbarHostState to MainScreen and show error message
-                            // effect.message contains the error text to display
+                            snackbarHostState.showSnackbar(effect.message)
                         }
                     }
                 }
@@ -212,6 +214,7 @@ class MainActivityCompose : ProfileThemedActivity() {
                     accountSummaryUiState = accountSummaryUiState,
                     transactionListUiState = transactionListUiState,
                     drawerOpen = drawerOpen,
+                    snackbarHostState = snackbarHostState,
                     onCoordinatorEvent = coordinatorViewModel::onEvent,
                     onProfileSelectionEvent = profileSelectionViewModel::onEvent,
                     onAccountSummaryEvent = accountSummaryViewModel::onEvent,

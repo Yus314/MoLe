@@ -116,7 +116,7 @@ class TemplateApplicatorViewModel @Inject constructor(
             TransactionAccountRow(
                 id = rowIdGenerator.nextId(),
                 accountName = line.accountName ?: "",
-                amountText = if (line.amount != null) currencyFormatter.formatNumber(line.amount!!) else "",
+                amountText = line.amount?.let { currencyFormatter.formatNumber(it) } ?: "",
                 currency = currencyName,
                 comment = line.comment ?: "",
                 isAmountValid = true

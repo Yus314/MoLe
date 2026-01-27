@@ -31,9 +31,9 @@ import net.ktnx.mobileledger.core.network.HledgerClient
 import net.ktnx.mobileledger.core.network.NetworkAuthenticationException
 import net.ktnx.mobileledger.core.network.NetworkHttpException
 import net.ktnx.mobileledger.core.network.NetworkNotFoundException
-import net.ktnx.mobileledger.json.API
-import net.ktnx.mobileledger.json.AccountListParser
-import net.ktnx.mobileledger.json.ApiNotSupportedException
+import net.ktnx.mobileledger.core.network.json.API
+import net.ktnx.mobileledger.core.network.json.AccountListParser
+import net.ktnx.mobileledger.core.network.json.ApiNotSupportedException
 
 /**
  * Implementation of AccountListFetcher using HledgerClient.
@@ -134,7 +134,7 @@ class AccountListFetcherImpl @Inject constructor(
                 )
                 existingNames.add(parentName)
                 parentName = parentName.lastIndexOf(':').let { idx ->
-                    if (idx > 0) parentName!!.substring(0, idx) else null
+                    parentName?.takeIf { idx > 0 }?.substring(0, idx)
                 }
             }
         }

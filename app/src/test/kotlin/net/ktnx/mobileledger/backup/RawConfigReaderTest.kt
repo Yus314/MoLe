@@ -26,10 +26,10 @@ import net.ktnx.mobileledger.core.domain.model.FutureDates
 import net.ktnx.mobileledger.core.domain.model.Profile
 import net.ktnx.mobileledger.core.domain.model.Template
 import net.ktnx.mobileledger.core.domain.model.TemplateLine
-import net.ktnx.mobileledger.fake.FakeCurrencyRepository
-import net.ktnx.mobileledger.fake.FakePreferencesRepository
-import net.ktnx.mobileledger.fake.FakeProfileRepository
-import net.ktnx.mobileledger.fake.FakeTemplateRepository
+import net.ktnx.mobileledger.core.testing.fake.FakeCurrencyRepository
+import net.ktnx.mobileledger.core.testing.fake.FakePreferencesRepository
+import net.ktnx.mobileledger.core.testing.fake.FakeProfileRepository
+import net.ktnx.mobileledger.core.testing.fake.FakeTemplateRepository
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull

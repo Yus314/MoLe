@@ -18,8 +18,8 @@
 package net.ktnx.mobileledger.domain.usecase
 
 import kotlinx.coroutines.test.runTest
+import net.ktnx.mobileledger.core.testing.fake.FakeProfileRepository
 import net.ktnx.mobileledger.fake.FakeAuthDataProvider
-import net.ktnx.mobileledger.fake.FakeProfileRepository
 import net.ktnx.mobileledger.util.createTestDomainProfile
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue

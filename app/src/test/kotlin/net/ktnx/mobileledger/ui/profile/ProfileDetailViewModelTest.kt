@@ -33,6 +33,7 @@ import net.ktnx.mobileledger.core.domain.model.FutureDates
 import net.ktnx.mobileledger.core.domain.model.Profile
 import net.ktnx.mobileledger.core.domain.model.TemporaryAuthData
 import net.ktnx.mobileledger.core.domain.repository.ProfileRepository
+import net.ktnx.mobileledger.core.network.json.API
 import net.ktnx.mobileledger.domain.usecase.GetAllProfilesUseCaseImpl
 import net.ktnx.mobileledger.domain.usecase.GetProfileByIdUseCaseImpl
 import net.ktnx.mobileledger.domain.usecase.ProfilePersistence
@@ -41,7 +42,6 @@ import net.ktnx.mobileledger.domain.usecase.ProfileValidator
 import net.ktnx.mobileledger.domain.usecase.ProfileValidatorImpl
 import net.ktnx.mobileledger.domain.usecase.VersionDetector
 import net.ktnx.mobileledger.fake.FakeVersionDetector
-import net.ktnx.mobileledger.json.API
 import net.ktnx.mobileledger.service.AuthDataProvider
 import net.ktnx.mobileledger.util.createTestDomainProfile
 import org.junit.After
