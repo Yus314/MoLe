@@ -17,7 +17,11 @@
 
 package net.ktnx.mobileledger.json.unified
 
+import net.ktnx.mobileledger.core.domain.model.CurrencyPosition
+import net.ktnx.mobileledger.core.domain.model.CurrencySettings
+import net.ktnx.mobileledger.core.domain.model.TransactionLine
 import net.ktnx.mobileledger.json.MoLeJson
+import net.ktnx.mobileledger.json.config.ApiVersionConfig
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -337,4 +341,237 @@ class UnifiedParsedPostingTest {
         assertEquals("99", posting.ptransaction_)
         assertEquals(1, posting.pamount?.size)
     }
+
+    // ========================================
+    // fromDomain tests
+    // ========================================
+
+    @Test
+    fun `fromDomain creates posting with account name`() {
+        val line = TransactionLine(
+            id = null,
+            accountName = "Assets:Bank",
+            amount = 100f,
+            currency = "USD",
+            comment = null
+        )
+
+        val posting = UnifiedParsedPosting.fromDomain(line, ApiVersionConfig.V1_32_40)
+
+        assertEquals("Assets:Bank", posting.paccount)
+    }
+
+    @Test
+    fun `fromDomain creates posting with amount`() {
+        val line = TransactionLine(
+            id = null,
+            accountName = "Assets:Bank",
+            amount = 100.50f,
+            currency = "USD",
+            comment = null
+        )
+
+        val posting = UnifiedParsedPosting.fromDomain(line, ApiVersionConfig.V1_32_40)
+
+        assertEquals(1, posting.pamount?.size)
+        assertEquals("USD", posting.pamount?.first()?.acommodity)
+        assertEquals(10050L, posting.pamount?.first()?.aquantity?.decimalMantissa)
+        assertEquals(2, posting.pamount?.first()?.aquantity?.decimalPlaces)
+    }
+
+    @Test
+    fun `fromDomain creates posting with comment`() {
+        val line = TransactionLine(
+            id = null,
+            accountName = "Assets:Bank",
+            amount = 100f,
+            currency = "USD",
+            comment = "Test comment"
+        )
+
+        val posting = UnifiedParsedPosting.fromDomain(line, ApiVersionConfig.V1_32_40)
+
+        assertEquals("Test comment", posting.pcomment)
+    }
+
+    @Test
+    fun `fromDomain handles null comment`() {
+        val line = TransactionLine(
+            id = null,
+            accountName = "Assets:Bank",
+            amount = 100f,
+            currency = "USD",
+            comment = null
+        )
+
+        val posting = UnifiedParsedPosting.fromDomain(line, ApiVersionConfig.V1_32_40)
+
+        assertEquals("", posting.pcomment)
+    }
+
+    @Test
+    fun `fromDomain handles null amount as zero`() {
+        val line = TransactionLine(
+            id = null,
+            accountName = "Assets:Bank",
+            amount = null,
+            currency = "USD",
+            comment = null
+        )
+
+        val posting = UnifiedParsedPosting.fromDomain(line, ApiVersionConfig.V1_32_40)
+
+        assertEquals(0L, posting.pamount?.first()?.aquantity?.decimalMantissa)
+    }
+
+    // ========================================
+    // CurrencySettings tests
+    // ========================================
+
+    @Test
+    fun `fromDomain with default settings uses left commodity side`() {
+        val line = createTestLine()
+
+        val posting = UnifiedParsedPosting.fromDomain(
+            line,
+            ApiVersionConfig.V1_32_40,
+            CurrencySettings.DEFAULT
+        )
+
+        assertEquals('L', posting.pamount?.first()?.astyle?.ascommodityside)
+    }
+
+    @Test
+    fun `fromDomain with AFTER position uses right commodity side`() {
+        val line = createTestLine()
+        val settings = object : CurrencySettings {
+            override val symbolPosition = CurrencyPosition.AFTER
+            override val hasGap = false
+        }
+
+        val posting = UnifiedParsedPosting.fromDomain(line, ApiVersionConfig.V1_32_40, settings)
+
+        assertEquals('R', posting.pamount?.first()?.astyle?.ascommodityside)
+    }
+
+    @Test
+    fun `fromDomain with BEFORE position uses left commodity side`() {
+        val line = createTestLine()
+        val settings = object : CurrencySettings {
+            override val symbolPosition = CurrencyPosition.BEFORE
+            override val hasGap = false
+        }
+
+        val posting = UnifiedParsedPosting.fromDomain(line, ApiVersionConfig.V1_32_40, settings)
+
+        assertEquals('L', posting.pamount?.first()?.astyle?.ascommodityside)
+    }
+
+    @Test
+    fun `fromDomain with gap enabled sets commodityspaced true`() {
+        val line = createTestLine()
+        val settings = object : CurrencySettings {
+            override val symbolPosition = CurrencyPosition.BEFORE
+            override val hasGap = true
+        }
+
+        val posting = UnifiedParsedPosting.fromDomain(line, ApiVersionConfig.V1_32_40, settings)
+
+        assertEquals(true, posting.pamount?.first()?.astyle?.isAscommodityspaced)
+    }
+
+    @Test
+    fun `fromDomain with gap disabled sets commodityspaced false`() {
+        val line = createTestLine()
+        val settings = object : CurrencySettings {
+            override val symbolPosition = CurrencyPosition.BEFORE
+            override val hasGap = false
+        }
+
+        val posting = UnifiedParsedPosting.fromDomain(line, ApiVersionConfig.V1_32_40, settings)
+
+        assertEquals(false, posting.pamount?.first()?.astyle?.isAscommodityspaced)
+    }
+
+    @Test
+    fun `fromDomain with AFTER and gap uses R side with spacing`() {
+        val line = createTestLine()
+        val settings = object : CurrencySettings {
+            override val symbolPosition = CurrencyPosition.AFTER
+            override val hasGap = true
+        }
+
+        val posting = UnifiedParsedPosting.fromDomain(line, ApiVersionConfig.V1_32_40, settings)
+
+        assertEquals('R', posting.pamount?.first()?.astyle?.ascommodityside)
+        assertEquals(true, posting.pamount?.first()?.astyle?.isAscommodityspaced)
+    }
+
+    // ========================================
+    // Round-trip tests
+    // ========================================
+
+    @Test
+    fun `fromDomain and toDomain round-trip preserves account`() {
+        val original = createTestLine()
+
+        val posting = UnifiedParsedPosting.fromDomain(original, ApiVersionConfig.V1_32_40)
+        val restored = posting.toDomain()
+
+        assertEquals(original.accountName, restored.accountName)
+    }
+
+    @Test
+    fun `fromDomain and toDomain round-trip preserves currency`() {
+        val original = createTestLine()
+
+        val posting = UnifiedParsedPosting.fromDomain(original, ApiVersionConfig.V1_32_40)
+        val restored = posting.toDomain()
+
+        assertEquals(original.currency, restored.currency)
+    }
+
+    @Test
+    fun `fromDomain and toDomain round-trip preserves amount`() {
+        val original = TransactionLine(
+            id = null,
+            accountName = "Assets:Bank",
+            amount = 123.45f,
+            currency = "EUR",
+            comment = null
+        )
+
+        val posting = UnifiedParsedPosting.fromDomain(original, ApiVersionConfig.V1_32_40)
+        val restored = posting.toDomain()
+
+        assertEquals(original.amount!!, restored.amount!!, 0.01f)
+    }
+
+    @Test
+    fun `fromDomain and toDomain round-trip preserves comment`() {
+        val original = TransactionLine(
+            id = null,
+            accountName = "Assets:Bank",
+            amount = 100f,
+            currency = "USD",
+            comment = "Test comment"
+        )
+
+        val posting = UnifiedParsedPosting.fromDomain(original, ApiVersionConfig.V1_32_40)
+        val restored = posting.toDomain()
+
+        assertEquals(original.comment, restored.comment)
+    }
+
+    // ========================================
+    // Helper methods
+    // ========================================
+
+    private fun createTestLine() = TransactionLine(
+        id = null,
+        accountName = "Assets:Bank",
+        amount = 100f,
+        currency = "USD",
+        comment = null
+    )
 }
