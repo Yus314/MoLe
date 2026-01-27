@@ -17,11 +17,11 @@
 
 package net.ktnx.mobileledger.async
 
-import net.ktnx.mobileledger.domain.model.Transaction
-import net.ktnx.mobileledger.domain.model.TransactionLine
+import net.ktnx.mobileledger.core.common.utils.SimpleDate
+import net.ktnx.mobileledger.core.domain.model.Transaction
+import net.ktnx.mobileledger.core.domain.model.TransactionLine
 import net.ktnx.mobileledger.fake.FakeCurrencyFormatter
 import net.ktnx.mobileledger.ui.main.TransactionListDisplayItem
-import net.ktnx.mobileledger.utils.SimpleDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull

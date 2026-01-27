@@ -53,10 +53,10 @@ class ProfileDetailActivity : CrashReportingActivity() {
             themeHue = (Math.random() * 360).toInt()
         }
 
-        // Set up the theme for the activity
-        themeService.setupTheme(this, themeHue)
-
         super.onCreate(savedInstanceState)
+
+        // Set up the theme for the activity (after Hilt injection)
+        themeService.setupTheme(this, themeHue)
 
         setContent {
             MoLeTheme(profileHue = themeHue.toFloat()) {

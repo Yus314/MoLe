@@ -19,7 +19,7 @@ package net.ktnx.mobileledger.service
 
 import java.text.ParseException
 import java.util.Locale
-import net.ktnx.mobileledger.domain.model.CurrencyPosition
+import net.ktnx.mobileledger.core.domain.model.CurrencyPosition
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull

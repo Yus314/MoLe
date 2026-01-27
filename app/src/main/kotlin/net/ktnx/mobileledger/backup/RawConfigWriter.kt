@@ -26,13 +26,13 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
-import net.ktnx.mobileledger.domain.repository.CurrencyRepository
-import net.ktnx.mobileledger.domain.repository.ProfileRepository
+import net.ktnx.mobileledger.core.database.entity.TemplateAccount
+import net.ktnx.mobileledger.core.database.entity.TemplateWithAccounts
+import net.ktnx.mobileledger.core.domain.model.Currency
+import net.ktnx.mobileledger.core.domain.model.Profile
+import net.ktnx.mobileledger.core.domain.repository.CurrencyRepository
+import net.ktnx.mobileledger.core.domain.repository.ProfileRepository
 import net.ktnx.mobileledger.domain.repository.TemplateRepository
-import net.ktnx.mobileledger.db.TemplateAccount
-import net.ktnx.mobileledger.db.TemplateWithAccounts
-import net.ktnx.mobileledger.domain.model.Currency
-import net.ktnx.mobileledger.domain.model.Profile
 import net.ktnx.mobileledger.json.API
 
 /**

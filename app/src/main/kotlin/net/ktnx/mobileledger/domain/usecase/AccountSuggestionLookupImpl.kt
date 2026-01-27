@@ -18,7 +18,7 @@
 package net.ktnx.mobileledger.domain.usecase
 
 import javax.inject.Inject
-import net.ktnx.mobileledger.domain.repository.AccountRepository
+import net.ktnx.mobileledger.core.domain.repository.AccountRepository
 
 /**
  * Implementation of AccountSuggestionLookup.

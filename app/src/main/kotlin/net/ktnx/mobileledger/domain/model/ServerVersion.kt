@@ -17,93 +17,24 @@
 
 package net.ktnx.mobileledger.domain.model
 
+import net.ktnx.mobileledger.core.domain.model.ServerVersion
 import net.ktnx.mobileledger.json.API
 
 /**
- * サーバーバージョン情報
+ * Extension function to get suitable API version for ServerVersion.
+ * This keeps the core domain model free of JSON/API dependencies.
  *
- * hledger-webサーバーの検出されたバージョンを保持する。
- * APIの互換性判断に使用される。
+ * サポート対象: v1_32 以降のみ
+ *
+ * @return 適切なAPIバージョン、または null（v1_32 未満の場合）
  */
-data class ServerVersion(
-    /** メジャーバージョン */
-    val major: Int = 0,
+fun ServerVersion.getSuitableApiVersion(): API? {
+    if (isPre_1_20_1) return null
 
-    /** マイナーバージョン */
-    val minor: Int = 0,
-
-    /** パッチバージョン */
-    val patch: Int? = null,
-
-    /** 1.20.1より前のバージョンかどうか（バージョン検出不可の場合） */
-    val isPre_1_20_1: Boolean = false
-) {
-    /**
-     * 表示用のバージョン文字列
-     *
-     * @return "major.minor" または "major.minor.patch" 形式の文字列
-     */
-    val displayString: String
-        get() = when {
-            isPre_1_20_1 -> "(before 1.20)"
-            patch != null -> "$major.$minor.$patch"
-            else -> "$major.$minor"
-        }
-
-    /**
-     * 指定されたバージョン以上かどうかを判定
-     *
-     * @param major メジャーバージョン
-     * @param minor マイナーバージョン
-     * @return 指定バージョン以上なら true
-     */
-    fun atLeast(major: Int, minor: Int): Boolean = (this.major == major && this.minor >= minor) || this.major > major
-
-    /**
-     * このバージョンに適したAPIバージョンを取得
-     *
-     * サポート対象: v1_32 以降のみ
-     *
-     * @return 適切なAPIバージョン、または null（v1_32 未満の場合）
-     */
-    fun getSuitableApiVersion(): API? {
-        if (isPre_1_20_1) return null
-
-        return when {
-            atLeast(1, 50) -> API.v1_50
-            atLeast(1, 40) -> API.v1_40
-            atLeast(1, 32) -> API.v1_32
-            else -> null // Server version < 1.32 is not supported
-        }
-    }
-
-    companion object {
-        /**
-         * 1.20.1より前のバージョンを示すインスタンスを生成
-         */
-        fun preLegacy(): ServerVersion = ServerVersion(isPre_1_20_1 = true)
-
-        /**
-         * バージョン文字列をパースしてServerVersionを生成
-         *
-         * @param versionString "major.minor" または "major.minor.patch" 形式、または "pre-1.19"
-         * @return パース結果、またはパース失敗時は null
-         */
-        fun parse(versionString: String): ServerVersion? {
-            if (versionString == "pre-1.19") {
-                return preLegacy()
-            }
-
-            val parts = versionString.split(".")
-            if (parts.size >= 2) {
-                val major = parts[0].toIntOrNull() ?: return null
-                val minor = parts[1].toIntOrNull() ?: return null
-                val patch = if (parts.size >= 3) parts[2].toIntOrNull() else null
-
-                return ServerVersion(major, minor, patch)
-            }
-
-            return null
-        }
+    return when {
+        atLeast(1, 50) -> API.v1_50
+        atLeast(1, 40) -> API.v1_40
+        atLeast(1, 32) -> API.v1_32
+        else -> null // Server version < 1.32 is not supported
     }
 }

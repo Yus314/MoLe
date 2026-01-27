@@ -20,8 +20,8 @@ package net.ktnx.mobileledger.ui.main
 import androidx.compose.runtime.Stable
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import net.ktnx.mobileledger.core.common.utils.SimpleDate
 import net.ktnx.mobileledger.domain.model.AmountStyle
-import net.ktnx.mobileledger.utils.SimpleDate
 
 /**
  * UI state for the transaction list tab.

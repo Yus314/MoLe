@@ -25,4 +25,7 @@ android {
 
 dependencies {
     implementation(libs.kotlinx.collections.immutable)
+
+    // javax.inject for @Qualifier annotation (used by DispatcherQualifiers)
+    implementation("javax.inject:javax.inject:1")
 }

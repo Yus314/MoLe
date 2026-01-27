@@ -30,7 +30,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import logcat.logcat
 import net.ktnx.mobileledger.R
-import net.ktnx.mobileledger.domain.model.Profile
+import net.ktnx.mobileledger.core.domain.model.Profile
 import net.ktnx.mobileledger.ui.QR
 import net.ktnx.mobileledger.ui.theme.MoLeTheme
 import net.ktnx.mobileledger.ui.transaction.AccountRowsEvent

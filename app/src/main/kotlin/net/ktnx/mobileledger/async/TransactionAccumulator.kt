@@ -20,11 +20,11 @@ package net.ktnx.mobileledger.async
 import java.math.BigDecimal
 import java.math.RoundingMode
 import kotlinx.collections.immutable.toImmutableList
-import net.ktnx.mobileledger.domain.model.Transaction
+import net.ktnx.mobileledger.core.common.utils.SimpleDate
+import net.ktnx.mobileledger.core.domain.model.Transaction
 import net.ktnx.mobileledger.service.CurrencyFormatter
 import net.ktnx.mobileledger.ui.main.TransactionAccountDisplayItem
 import net.ktnx.mobileledger.ui.main.TransactionListDisplayItem
-import net.ktnx.mobileledger.utils.SimpleDate
 import net.ktnx.mobileledger.utils.emptyToNull
 
 class TransactionAccumulator(

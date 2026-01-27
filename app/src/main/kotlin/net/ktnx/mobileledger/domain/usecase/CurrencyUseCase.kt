@@ -4,8 +4,8 @@
 package net.ktnx.mobileledger.domain.usecase
 
 import javax.inject.Inject
-import net.ktnx.mobileledger.domain.model.Currency
-import net.ktnx.mobileledger.domain.repository.CurrencyRepository
+import net.ktnx.mobileledger.core.domain.model.Currency
+import net.ktnx.mobileledger.core.domain.repository.CurrencyRepository
 
 interface GetAllCurrenciesUseCase {
     suspend operator fun invoke(): Result<List<Currency>>

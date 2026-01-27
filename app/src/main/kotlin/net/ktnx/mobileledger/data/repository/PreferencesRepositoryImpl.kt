@@ -22,7 +22,7 @@ import android.content.SharedPreferences
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
-import net.ktnx.mobileledger.domain.repository.PreferencesRepository
+import net.ktnx.mobileledger.core.domain.repository.PreferencesRepository
 import net.ktnx.mobileledger.service.ThemeService
 
 /**

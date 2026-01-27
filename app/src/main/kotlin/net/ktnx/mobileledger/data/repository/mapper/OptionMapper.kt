@@ -17,8 +17,8 @@
 
 package net.ktnx.mobileledger.data.repository.mapper
 
-import net.ktnx.mobileledger.db.Option as DbOption
-import net.ktnx.mobileledger.domain.model.AppOption
+import net.ktnx.mobileledger.core.database.entity.Option as DbOption
+import net.ktnx.mobileledger.core.domain.model.AppOption
 
 /**
  * AppOption ドメインモデルとデータベースエンティティ間の変換を担当

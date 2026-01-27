@@ -31,7 +31,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import logcat.asLog
 import logcat.logcat
-import net.ktnx.mobileledger.domain.model.Template
+import net.ktnx.mobileledger.core.domain.model.Template
 import net.ktnx.mobileledger.domain.usecase.DeleteTemplateUseCase
 import net.ktnx.mobileledger.domain.usecase.DuplicateTemplateUseCase
 import net.ktnx.mobileledger.domain.usecase.GetTemplateUseCase

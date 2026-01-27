@@ -21,47 +21,11 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import javax.inject.Qualifier
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
-
-/**
- * I/O操作用のDispatcherを識別するためのQualifier
- *
- * UseCase実装でDispatcherを注入する際に使用する。
- * テスト時はTestDispatcherに置き換えることができる。
- *
- * ## Usage
- *
- * ```kotlin
- * class MyUseCaseImpl @Inject constructor(
- *     @IoDispatcher private val ioDispatcher: CoroutineDispatcher
- * ) : MyUseCase {
- *     override suspend fun execute() = withContext(ioDispatcher) {
- *         // I/O operations
- *     }
- * }
- * ```
- */
-@Qualifier
-@Retention(AnnotationRetention.BINARY)
-annotation class IoDispatcher
-
-/**
- * デフォルト計算用のDispatcherを識別するためのQualifier
- *
- * CPU集約処理で使用する。
- */
-@Qualifier
-@Retention(AnnotationRetention.BINARY)
-annotation class DefaultDispatcher
-
-/**
- * メインスレッド用のDispatcherを識別するためのQualifier
- */
-@Qualifier
-@Retention(AnnotationRetention.BINARY)
-annotation class MainDispatcher
+import net.ktnx.mobileledger.core.common.di.DefaultDispatcher
+import net.ktnx.mobileledger.core.common.di.IoDispatcher
+import net.ktnx.mobileledger.core.common.di.MainDispatcher
 
 /**
  * Hilt module for providing CoroutineDispatcher dependencies.

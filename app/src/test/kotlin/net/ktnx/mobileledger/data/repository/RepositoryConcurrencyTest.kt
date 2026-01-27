@@ -32,14 +32,14 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import net.ktnx.mobileledger.dao.TransactionDAO
-import net.ktnx.mobileledger.domain.model.Profile
-import net.ktnx.mobileledger.domain.model.Transaction
-import net.ktnx.mobileledger.domain.model.TransactionLine
-import net.ktnx.mobileledger.domain.repository.ProfileRepository
+import net.ktnx.mobileledger.core.common.utils.SimpleDate
+import net.ktnx.mobileledger.core.database.dao.TransactionDAO
+import net.ktnx.mobileledger.core.domain.model.Profile
+import net.ktnx.mobileledger.core.domain.model.Transaction
+import net.ktnx.mobileledger.core.domain.model.TransactionLine
+import net.ktnx.mobileledger.core.domain.repository.ProfileRepository
 import net.ktnx.mobileledger.domain.repository.TransactionRepository
 import net.ktnx.mobileledger.util.createTestDomainProfile
-import net.ktnx.mobileledger.utils.SimpleDate
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -302,7 +302,8 @@ class ConcurrentFakeProfileRepository : ProfileRepository {
     }
 
     override suspend fun insertProfile(profile: Profile): Result<Long> = synchronized(lock) {
-        val id = if (profile.id == null || profile.id == 0L) idCounter.getAndIncrement().toLong() else profile.id
+        val existingId = profile.id
+        val id = if (existingId == null || existingId == 0L) idCounter.getAndIncrement().toLong() else existingId
         val profileWithId = profile.copy(id = id)
         profiles[id] = profileWithId
         Result.success(id)
@@ -397,9 +398,7 @@ class ConcurrentFakeTransactionRepository : TransactionRepository {
                     .filter { it.transaction.description.contains(term, true) }
                     .distinctBy { it.transaction.description }
                     .map {
-                        TransactionDAO.DescriptionContainer().apply {
-                            description = it.transaction.description
-                        }
+                        TransactionDAO.DescriptionContainer(it.transaction.description)
                     }
             )
         }

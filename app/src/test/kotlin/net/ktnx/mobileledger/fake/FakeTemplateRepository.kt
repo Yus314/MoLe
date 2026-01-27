@@ -20,11 +20,11 @@ package net.ktnx.mobileledger.fake
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
-import net.ktnx.mobileledger.domain.repository.TemplateRepository
+import net.ktnx.mobileledger.core.database.entity.TemplateWithAccounts
+import net.ktnx.mobileledger.core.domain.model.Template
 import net.ktnx.mobileledger.data.repository.mapper.TemplateMapper.toDomain
 import net.ktnx.mobileledger.data.repository.mapper.TemplateMapper.toEntity
-import net.ktnx.mobileledger.db.TemplateWithAccounts
-import net.ktnx.mobileledger.domain.model.Template
+import net.ktnx.mobileledger.domain.repository.TemplateRepository
 
 /**
  * Fake implementation of [TemplateRepository] for testing.

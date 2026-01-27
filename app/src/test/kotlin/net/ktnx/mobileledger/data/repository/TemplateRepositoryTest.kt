@@ -20,8 +20,8 @@ package net.ktnx.mobileledger.data.repository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
-import net.ktnx.mobileledger.domain.model.Template
-import net.ktnx.mobileledger.domain.model.TemplateLine
+import net.ktnx.mobileledger.core.domain.model.Template
+import net.ktnx.mobileledger.core.domain.model.TemplateLine
 import net.ktnx.mobileledger.fake.FakeTemplateRepository
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals

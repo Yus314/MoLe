@@ -25,7 +25,7 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import net.ktnx.mobileledger.domain.model.Template
+import net.ktnx.mobileledger.core.domain.model.Template
 import net.ktnx.mobileledger.domain.usecase.DeleteTemplateUseCaseImpl
 import net.ktnx.mobileledger.domain.usecase.GetTemplateUseCaseImpl
 import net.ktnx.mobileledger.domain.usecase.SaveTemplateUseCaseImpl

@@ -20,7 +20,7 @@ package net.ktnx.mobileledger.json
 import java.io.IOException
 import java.io.InputStream
 import java.text.ParseException
-import net.ktnx.mobileledger.domain.model.Transaction
+import net.ktnx.mobileledger.core.domain.model.Transaction
 
 abstract class TransactionListParser {
     @Throws(ParseException::class)

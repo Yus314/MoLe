@@ -18,16 +18,16 @@
 package net.ktnx.mobileledger.util
 
 import java.util.UUID
-import net.ktnx.mobileledger.db.Account
-import net.ktnx.mobileledger.db.AccountValue
-import net.ktnx.mobileledger.db.AccountWithAmounts
-import net.ktnx.mobileledger.db.Profile
-import net.ktnx.mobileledger.db.Transaction
-import net.ktnx.mobileledger.db.TransactionAccount
-import net.ktnx.mobileledger.db.TransactionWithAccounts
-import net.ktnx.mobileledger.domain.model.FutureDates
-import net.ktnx.mobileledger.domain.model.Profile as DomainProfile
-import net.ktnx.mobileledger.domain.model.ProfileAuthentication
+import net.ktnx.mobileledger.core.database.entity.Account
+import net.ktnx.mobileledger.core.database.entity.AccountValue
+import net.ktnx.mobileledger.core.database.entity.AccountWithAmounts
+import net.ktnx.mobileledger.core.database.entity.Profile
+import net.ktnx.mobileledger.core.database.entity.Transaction
+import net.ktnx.mobileledger.core.database.entity.TransactionAccount
+import net.ktnx.mobileledger.core.database.entity.TransactionWithAccounts
+import net.ktnx.mobileledger.core.domain.model.FutureDates
+import net.ktnx.mobileledger.core.domain.model.Profile as DomainProfile
+import net.ktnx.mobileledger.core.domain.model.ProfileAuthentication
 
 /**
  * Test utility functions for creating test data.

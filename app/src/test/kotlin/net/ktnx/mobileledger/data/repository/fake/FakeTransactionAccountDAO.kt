@@ -19,8 +19,8 @@ package net.ktnx.mobileledger.data.repository.fake
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
-import net.ktnx.mobileledger.dao.TransactionAccountDAO
-import net.ktnx.mobileledger.db.TransactionAccount
+import net.ktnx.mobileledger.core.database.dao.TransactionAccountDAO
+import net.ktnx.mobileledger.core.database.entity.TransactionAccount
 
 /**
  * Fake implementation of TransactionAccountDAO for unit testing.

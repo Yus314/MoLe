@@ -30,11 +30,11 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
-import net.ktnx.mobileledger.dao.ProfileDAO
-import net.ktnx.mobileledger.db.Profile as DbProfile
-import net.ktnx.mobileledger.domain.model.AppException
-import net.ktnx.mobileledger.domain.model.FutureDates
-import net.ktnx.mobileledger.domain.model.Profile as DomainProfile
+import net.ktnx.mobileledger.core.database.dao.ProfileDAO
+import net.ktnx.mobileledger.core.database.entity.Profile as DbProfile
+import net.ktnx.mobileledger.core.domain.model.AppException
+import net.ktnx.mobileledger.core.domain.model.FutureDates
+import net.ktnx.mobileledger.core.domain.model.Profile as DomainProfile
 import net.ktnx.mobileledger.domain.usecase.AppExceptionMapper
 import net.ktnx.mobileledger.domain.usecase.sync.SyncExceptionMapper
 import org.junit.Assert.assertEquals

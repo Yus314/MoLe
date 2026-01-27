@@ -33,11 +33,11 @@ import logcat.asLog
 import logcat.logcat
 import net.ktnx.mobileledger.backup.RawConfigReader
 import net.ktnx.mobileledger.backup.RawConfigWriter
-import net.ktnx.mobileledger.domain.repository.CurrencyRepository
-import net.ktnx.mobileledger.domain.repository.PreferencesRepository
-import net.ktnx.mobileledger.domain.repository.ProfileRepository
+import net.ktnx.mobileledger.core.common.di.IoDispatcher
+import net.ktnx.mobileledger.core.domain.repository.CurrencyRepository
+import net.ktnx.mobileledger.core.domain.repository.PreferencesRepository
+import net.ktnx.mobileledger.core.domain.repository.ProfileRepository
 import net.ktnx.mobileledger.domain.repository.TemplateRepository
-import net.ktnx.mobileledger.di.IoDispatcher
 
 /**
  * Pure Coroutines implementation of [ConfigBackup].

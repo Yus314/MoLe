@@ -23,9 +23,9 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import io.ktor.client.HttpClient
 import javax.inject.Singleton
-import net.ktnx.mobileledger.network.HledgerClient
-import net.ktnx.mobileledger.network.HledgerClientImpl
-import net.ktnx.mobileledger.network.KtorClientFactory
+import net.ktnx.mobileledger.core.network.HledgerClient
+import net.ktnx.mobileledger.core.network.HledgerClientImpl
+import net.ktnx.mobileledger.core.network.KtorClientFactory
 
 /**
  * Hilt module for providing network-related dependencies.

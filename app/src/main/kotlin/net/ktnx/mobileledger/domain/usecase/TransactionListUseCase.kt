@@ -6,8 +6,8 @@ package net.ktnx.mobileledger.domain.usecase
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
-import net.ktnx.mobileledger.domain.model.Transaction
-import net.ktnx.mobileledger.domain.repository.AccountRepository
+import net.ktnx.mobileledger.core.domain.model.Transaction
+import net.ktnx.mobileledger.core.domain.repository.AccountRepository
 import net.ktnx.mobileledger.domain.repository.TransactionRepository
 
 interface ObserveTransactionsUseCase {

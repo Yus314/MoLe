@@ -27,21 +27,21 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
-import net.ktnx.mobileledger.dao.AccountDAO
-import net.ktnx.mobileledger.dao.AccountValueDAO
-import net.ktnx.mobileledger.dao.TransactionAccountDAO
-import net.ktnx.mobileledger.dao.TransactionDAO
-import net.ktnx.mobileledger.db.Account
-import net.ktnx.mobileledger.db.AccountValue
-import net.ktnx.mobileledger.db.Transaction
-import net.ktnx.mobileledger.db.TransactionAccount
-import net.ktnx.mobileledger.db.TransactionWithAccounts
-import net.ktnx.mobileledger.domain.model.AppException
-import net.ktnx.mobileledger.domain.model.Transaction as DomainTransaction
-import net.ktnx.mobileledger.domain.model.TransactionLine
+import net.ktnx.mobileledger.core.common.utils.SimpleDate
+import net.ktnx.mobileledger.core.database.dao.AccountDAO
+import net.ktnx.mobileledger.core.database.dao.AccountValueDAO
+import net.ktnx.mobileledger.core.database.dao.TransactionAccountDAO
+import net.ktnx.mobileledger.core.database.dao.TransactionDAO
+import net.ktnx.mobileledger.core.database.entity.Account
+import net.ktnx.mobileledger.core.database.entity.AccountValue
+import net.ktnx.mobileledger.core.database.entity.Transaction
+import net.ktnx.mobileledger.core.database.entity.TransactionAccount
+import net.ktnx.mobileledger.core.database.entity.TransactionWithAccounts
+import net.ktnx.mobileledger.core.domain.model.AppException
+import net.ktnx.mobileledger.core.domain.model.Transaction as DomainTransaction
+import net.ktnx.mobileledger.core.domain.model.TransactionLine
 import net.ktnx.mobileledger.domain.usecase.AppExceptionMapper
 import net.ktnx.mobileledger.domain.usecase.sync.SyncExceptionMapper
-import net.ktnx.mobileledger.utils.SimpleDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull

@@ -24,7 +24,7 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import net.ktnx.mobileledger.domain.model.Profile
+import net.ktnx.mobileledger.core.domain.model.Profile
 import net.ktnx.mobileledger.domain.usecase.GetAllProfilesUseCaseImpl
 import net.ktnx.mobileledger.domain.usecase.GetProfileByIdUseCaseImpl
 import net.ktnx.mobileledger.domain.usecase.ObserveCurrentProfileUseCaseImpl

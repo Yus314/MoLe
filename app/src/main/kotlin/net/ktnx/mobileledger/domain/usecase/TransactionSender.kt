@@ -17,8 +17,8 @@
 
 package net.ktnx.mobileledger.domain.usecase
 
-import net.ktnx.mobileledger.domain.model.Profile
-import net.ktnx.mobileledger.domain.model.Transaction
+import net.ktnx.mobileledger.core.domain.model.Profile
+import net.ktnx.mobileledger.core.domain.model.Transaction
 
 /**
  * Interface for sending transactions to the ledger server.

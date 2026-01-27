@@ -23,7 +23,8 @@ import android.text.Editable
 import android.view.View
 import android.view.WindowManager
 import android.widget.TextView
-import net.ktnx.mobileledger.domain.model.BalanceConstants
+import net.ktnx.mobileledger.core.common.utils.Misc
+import net.ktnx.mobileledger.core.domain.model.BalanceConstants
 
 /**
  * Extension functions for common patterns used throughout the codebase.

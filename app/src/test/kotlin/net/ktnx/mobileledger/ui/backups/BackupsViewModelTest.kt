@@ -33,8 +33,8 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import net.ktnx.mobileledger.R
-import net.ktnx.mobileledger.domain.repository.ProfileRepository
-import net.ktnx.mobileledger.domain.model.Profile
+import net.ktnx.mobileledger.core.domain.model.Profile
+import net.ktnx.mobileledger.core.domain.repository.ProfileRepository
 import net.ktnx.mobileledger.domain.usecase.ObserveCurrentProfileUseCaseImpl
 import net.ktnx.mobileledger.fake.FakeConfigBackup
 import net.ktnx.mobileledger.util.createTestDomainProfile
@@ -489,7 +489,8 @@ class FakeProfileRepositoryForBackups : ProfileRepository {
     override suspend fun getProfileCount(): Result<Int> = Result.success(profiles.size)
 
     override suspend fun insertProfile(profile: Profile): Result<Long> {
-        val id = if (profile.id == null || profile.id == 0L) nextId++ else profile.id
+        val existingId = profile.id
+        val id = if (existingId == null || existingId == 0L) nextId++ else existingId
         val profileWithId = profile.copy(id = id)
         profiles[id] = profileWithId
         return Result.success(id)

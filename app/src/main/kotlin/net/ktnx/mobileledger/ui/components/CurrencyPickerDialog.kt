@@ -52,7 +52,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import net.ktnx.mobileledger.R
-import net.ktnx.mobileledger.domain.model.CurrencyPosition
+import net.ktnx.mobileledger.core.domain.model.CurrencyPosition
 
 /**
  * Material3 Currency picker dialog.

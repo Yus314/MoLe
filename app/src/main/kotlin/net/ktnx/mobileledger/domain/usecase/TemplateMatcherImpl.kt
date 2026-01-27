@@ -22,10 +22,10 @@ import java.util.regex.Pattern
 import java.util.regex.PatternSyntaxException
 import javax.inject.Inject
 import logcat.logcat
-import net.ktnx.mobileledger.domain.model.MatchedTemplate
-import net.ktnx.mobileledger.domain.model.Template
-import net.ktnx.mobileledger.domain.model.TemplateLine
-import net.ktnx.mobileledger.utils.SimpleDate
+import net.ktnx.mobileledger.core.common.utils.SimpleDate
+import net.ktnx.mobileledger.core.domain.model.MatchedTemplate
+import net.ktnx.mobileledger.core.domain.model.Template
+import net.ktnx.mobileledger.core.domain.model.TemplateLine
 
 /**
  * Implementation of [TemplateMatcher].

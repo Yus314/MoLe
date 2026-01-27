@@ -19,6 +19,7 @@ package net.ktnx.mobileledger.utils
 
 import java.nio.ByteBuffer
 import java.security.NoSuchAlgorithmException
+import net.ktnx.mobileledger.core.common.utils.Digest
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull

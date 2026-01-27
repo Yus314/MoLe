@@ -28,7 +28,7 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
-import net.ktnx.mobileledger.domain.model.CurrencyPosition
+import net.ktnx.mobileledger.core.domain.model.CurrencyPosition
 import net.ktnx.mobileledger.ui.theme.MoLeTheme
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse

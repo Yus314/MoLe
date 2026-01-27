@@ -17,8 +17,8 @@
 
 package net.ktnx.mobileledger.service
 
-import net.ktnx.mobileledger.TemporaryAuthData
-import net.ktnx.mobileledger.domain.model.Profile
+import net.ktnx.mobileledger.core.domain.model.Profile
+import net.ktnx.mobileledger.core.domain.model.TemporaryAuthData
 
 /**
  * Interface for managing temporary authentication data and system services.

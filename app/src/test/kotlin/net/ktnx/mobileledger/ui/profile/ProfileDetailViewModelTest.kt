@@ -29,10 +29,10 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import net.ktnx.mobileledger.TemporaryAuthData
-import net.ktnx.mobileledger.domain.repository.ProfileRepository
-import net.ktnx.mobileledger.domain.model.FutureDates
-import net.ktnx.mobileledger.domain.model.Profile
+import net.ktnx.mobileledger.core.domain.model.FutureDates
+import net.ktnx.mobileledger.core.domain.model.Profile
+import net.ktnx.mobileledger.core.domain.model.TemporaryAuthData
+import net.ktnx.mobileledger.core.domain.repository.ProfileRepository
 import net.ktnx.mobileledger.domain.usecase.GetAllProfilesUseCaseImpl
 import net.ktnx.mobileledger.domain.usecase.GetProfileByIdUseCaseImpl
 import net.ktnx.mobileledger.domain.usecase.ProfilePersistence
@@ -1037,7 +1037,8 @@ class FakeProfileRepositoryForProfileDetail : ProfileRepository {
 
     override suspend fun insertProfile(profile: Profile): Result<Long> {
         if (shouldFailInsert) return Result.failure(errorToThrow)
-        val id = if (profile.id == null || profile.id == 0L) nextId++ else profile.id
+        val existingId = profile.id
+        val id = if (existingId == null || existingId == 0L) nextId++ else existingId
         val profileWithId = profile.copy(id = id)
         profiles[id] = profileWithId
         return Result.success(id)

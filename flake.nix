@@ -32,10 +32,10 @@
 
         # Android SDKバージョン (メタデータ用)
         androidVersions = {
-          buildTools = "35.0.0";    # Android SDK Build Tools 35.0.0
-          platform = "35";          # Android 15 (API Level 35)
-          compileSdk = "35";
-          targetSdk = "35";
+          buildTools = "36.0.0";    # Android SDK Build Tools 36.0.0
+          platform = "36";          # Android 16 (API Level 36)
+          compileSdk = "36";
+          targetSdk = "36";
         };
 
         # Android SDK setup using android-nixpkgs
@@ -246,7 +246,7 @@
 
           ${runInFhs ''
             ${makeLocalProperties}
-            ./gradlew --no-daemon test
+            ./gradlew --no-daemon :app:testDebugUnitTest :core:common:testDebugUnitTest
           ''}
 
           echo ""
@@ -302,7 +302,7 @@
 
           ${runInFhs ''
             ${makeLocalProperties}
-            ./gradlew --no-daemon test
+            ./gradlew --no-daemon :app:testDebugUnitTest :core:common:testDebugUnitTest
           ''}
 
           echo ""

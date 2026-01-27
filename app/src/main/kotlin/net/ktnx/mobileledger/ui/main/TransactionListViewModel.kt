@@ -36,14 +36,14 @@ import kotlinx.coroutines.launch
 import logcat.asLog
 import logcat.logcat
 import net.ktnx.mobileledger.async.TransactionAccumulator
-import net.ktnx.mobileledger.domain.model.Profile
-import net.ktnx.mobileledger.domain.model.Transaction
+import net.ktnx.mobileledger.core.common.utils.SimpleDate
+import net.ktnx.mobileledger.core.domain.model.Profile
+import net.ktnx.mobileledger.core.domain.model.Transaction
 import net.ktnx.mobileledger.domain.usecase.GetTransactionsUseCase
 import net.ktnx.mobileledger.domain.usecase.ObserveCurrentProfileUseCase
 import net.ktnx.mobileledger.domain.usecase.SearchAccountNamesUseCase
 import net.ktnx.mobileledger.domain.usecase.TransactionListConverter
 import net.ktnx.mobileledger.service.CurrencyFormatter
-import net.ktnx.mobileledger.utils.SimpleDate
 
 /**
  * ViewModel for the transaction list tab.

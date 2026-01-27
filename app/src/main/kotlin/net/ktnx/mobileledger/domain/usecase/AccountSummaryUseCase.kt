@@ -5,9 +5,9 @@ package net.ktnx.mobileledger.domain.usecase
 
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
-import net.ktnx.mobileledger.domain.model.Account
-import net.ktnx.mobileledger.domain.repository.AccountRepository
-import net.ktnx.mobileledger.domain.repository.PreferencesRepository
+import net.ktnx.mobileledger.core.domain.model.Account
+import net.ktnx.mobileledger.core.domain.repository.AccountRepository
+import net.ktnx.mobileledger.core.domain.repository.PreferencesRepository
 
 interface GetAccountsWithAmountsUseCase {
     suspend operator fun invoke(profileId: Long, includeZeroBalances: Boolean): Result<List<Account>>

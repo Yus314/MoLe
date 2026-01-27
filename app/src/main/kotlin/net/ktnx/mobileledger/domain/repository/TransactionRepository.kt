@@ -18,8 +18,8 @@
 package net.ktnx.mobileledger.domain.repository
 
 import kotlinx.coroutines.flow.Flow
-import net.ktnx.mobileledger.dao.TransactionDAO
-import net.ktnx.mobileledger.domain.model.Transaction
+import net.ktnx.mobileledger.core.database.dao.TransactionDAO
+import net.ktnx.mobileledger.core.domain.model.Transaction
 
 /**
  * Repository for managing Transaction data.

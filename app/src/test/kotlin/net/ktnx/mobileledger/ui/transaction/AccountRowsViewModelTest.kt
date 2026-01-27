@@ -20,7 +20,7 @@ package net.ktnx.mobileledger.ui.transaction
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import net.ktnx.mobileledger.domain.model.Profile
+import net.ktnx.mobileledger.core.domain.model.Profile
 import net.ktnx.mobileledger.domain.usecase.AccountSuggestionLookup
 import net.ktnx.mobileledger.domain.usecase.AccountSuggestionLookupImpl
 import net.ktnx.mobileledger.domain.usecase.DeleteCurrencyUseCaseImpl
@@ -704,7 +704,7 @@ class AccountRowsViewModelTest {
         viewModel.onEvent(
             AccountRowsEvent.AddCurrency(
                 "EUR",
-                net.ktnx.mobileledger.domain.model.CurrencyPosition.AFTER,
+                net.ktnx.mobileledger.core.domain.model.CurrencyPosition.AFTER,
                 true
             )
         )
@@ -724,9 +724,9 @@ class AccountRowsViewModelTest {
 
         // First add a currency
         currencyRepository.saveCurrency(
-            net.ktnx.mobileledger.domain.model.Currency(
+            net.ktnx.mobileledger.core.domain.model.Currency(
                 name = "JPY",
-                position = net.ktnx.mobileledger.domain.model.CurrencyPosition.BEFORE,
+                position = net.ktnx.mobileledger.core.domain.model.CurrencyPosition.BEFORE,
                 hasGap = false
             )
         )
@@ -745,10 +745,10 @@ class AccountRowsViewModelTest {
     fun `currencies are loaded on initialization`() = runTest {
         // Given
         currencyRepository.saveCurrency(
-            net.ktnx.mobileledger.domain.model.Currency(name = "USD")
+            net.ktnx.mobileledger.core.domain.model.Currency(name = "USD")
         )
         currencyRepository.saveCurrency(
-            net.ktnx.mobileledger.domain.model.Currency(name = "EUR")
+            net.ktnx.mobileledger.core.domain.model.Currency(name = "EUR")
         )
         val profile = createTestProfile()
 

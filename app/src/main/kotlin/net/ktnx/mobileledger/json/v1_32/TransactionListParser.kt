@@ -21,7 +21,7 @@ import java.io.InputStream
 import java.text.ParseException
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.decodeToSequence
-import net.ktnx.mobileledger.domain.model.Transaction
+import net.ktnx.mobileledger.core.domain.model.Transaction
 import net.ktnx.mobileledger.json.MoLeJson
 import net.ktnx.mobileledger.json.TransactionListParser as BaseParser
 import net.ktnx.mobileledger.json.unified.UnifiedParsedLedgerTransaction

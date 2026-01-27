@@ -18,8 +18,8 @@
 package net.ktnx.mobileledger.domain.usecase
 
 import javax.inject.Inject
-import net.ktnx.mobileledger.domain.model.Template
-import net.ktnx.mobileledger.domain.model.TemplateLine
+import net.ktnx.mobileledger.core.domain.model.Template
+import net.ktnx.mobileledger.core.domain.model.TemplateLine
 import net.ktnx.mobileledger.ui.templates.MatchableValue
 import net.ktnx.mobileledger.ui.templates.TemplateAccountRow
 import net.ktnx.mobileledger.ui.templates.TemplateDetailUiState

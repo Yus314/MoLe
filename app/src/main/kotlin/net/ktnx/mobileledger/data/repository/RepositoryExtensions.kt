@@ -20,8 +20,8 @@ package net.ktnx.mobileledger.data.repository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
-import net.ktnx.mobileledger.domain.model.AppError
-import net.ktnx.mobileledger.domain.model.AppException
+import net.ktnx.mobileledger.core.domain.model.AppError
+import net.ktnx.mobileledger.core.domain.model.AppException
 import net.ktnx.mobileledger.domain.usecase.AppExceptionMapper
 
 /**

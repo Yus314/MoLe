@@ -17,6 +17,8 @@
 
 package net.ktnx.mobileledger.db
 
+import net.ktnx.mobileledger.core.database.entity.TemplateAccount
+import net.ktnx.mobileledger.core.database.entity.TemplateHeader
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull

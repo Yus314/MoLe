@@ -27,14 +27,14 @@ import kotlinx.coroutines.withContext
 import logcat.LogPriority
 import logcat.asLog
 import logcat.logcat
-import net.ktnx.mobileledger.di.IoDispatcher
-import net.ktnx.mobileledger.domain.model.Profile
-import net.ktnx.mobileledger.domain.model.Transaction
+import net.ktnx.mobileledger.core.common.di.IoDispatcher
+import net.ktnx.mobileledger.core.domain.model.Profile
+import net.ktnx.mobileledger.core.domain.model.Transaction
+import net.ktnx.mobileledger.core.network.HledgerClient
+import net.ktnx.mobileledger.core.network.NetworkApiNotSupportedException
 import net.ktnx.mobileledger.json.API
 import net.ktnx.mobileledger.json.ApiNotSupportedException
 import net.ktnx.mobileledger.json.Gateway
-import net.ktnx.mobileledger.network.HledgerClient
-import net.ktnx.mobileledger.network.NetworkApiNotSupportedException
 
 /**
  * Pure Coroutines implementation of [TransactionSender].

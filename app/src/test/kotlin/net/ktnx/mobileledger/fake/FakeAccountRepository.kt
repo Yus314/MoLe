@@ -19,8 +19,8 @@ package net.ktnx.mobileledger.fake
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import net.ktnx.mobileledger.domain.repository.AccountRepository
-import net.ktnx.mobileledger.domain.model.Account
+import net.ktnx.mobileledger.core.domain.model.Account
+import net.ktnx.mobileledger.core.domain.repository.AccountRepository
 
 /**
  * Fake AccountRepository for ViewModel testing.

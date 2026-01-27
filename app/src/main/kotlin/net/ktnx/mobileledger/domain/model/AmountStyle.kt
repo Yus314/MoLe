@@ -21,8 +21,9 @@ import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.round
 import logcat.logcat
+import net.ktnx.mobileledger.core.common.utils.emptyToNull
+import net.ktnx.mobileledger.core.domain.model.CurrencyPosition
 import net.ktnx.mobileledger.di.CurrencyFormatterEntryPoint
-import net.ktnx.mobileledger.utils.emptyToNull
 
 /**
  * Represents the display style for currency amounts.

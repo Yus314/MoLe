@@ -23,13 +23,13 @@ import javax.inject.Singleton
 import kotlin.coroutines.coroutineContext
 import kotlinx.coroutines.ensureActive
 import logcat.logcat
-import net.ktnx.mobileledger.domain.repository.AccountRepository
-import net.ktnx.mobileledger.domain.repository.OptionRepository
-import net.ktnx.mobileledger.domain.repository.TransactionRepository
+import net.ktnx.mobileledger.core.domain.model.Account
+import net.ktnx.mobileledger.core.domain.model.Profile
+import net.ktnx.mobileledger.core.domain.model.Transaction
+import net.ktnx.mobileledger.core.domain.repository.AccountRepository
+import net.ktnx.mobileledger.core.domain.repository.OptionRepository
 import net.ktnx.mobileledger.data.repository.mapper.AccountMapper.withStateFrom
-import net.ktnx.mobileledger.domain.model.Account
-import net.ktnx.mobileledger.domain.model.Profile
-import net.ktnx.mobileledger.domain.model.Transaction
+import net.ktnx.mobileledger.domain.repository.TransactionRepository
 
 /**
  * Implementation of SyncPersistence that saves data using repositories.

@@ -23,11 +23,11 @@ import java.io.FileNotFoundException
 import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
-import net.ktnx.mobileledger.domain.model.AppError
-import net.ktnx.mobileledger.domain.model.AppException
-import net.ktnx.mobileledger.domain.model.DatabaseError
-import net.ktnx.mobileledger.domain.model.FileError
-import net.ktnx.mobileledger.domain.model.SyncException
+import net.ktnx.mobileledger.core.domain.model.AppError
+import net.ktnx.mobileledger.core.domain.model.AppException
+import net.ktnx.mobileledger.core.domain.model.DatabaseError
+import net.ktnx.mobileledger.core.domain.model.FileError
+import net.ktnx.mobileledger.core.domain.model.SyncException
 import net.ktnx.mobileledger.domain.usecase.sync.SyncExceptionMapper
 
 /**

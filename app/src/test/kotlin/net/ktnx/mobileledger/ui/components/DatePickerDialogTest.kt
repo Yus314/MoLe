@@ -21,9 +21,9 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import net.ktnx.mobileledger.domain.model.FutureDates
+import net.ktnx.mobileledger.core.common.utils.SimpleDate
+import net.ktnx.mobileledger.core.domain.model.FutureDates
 import net.ktnx.mobileledger.ui.theme.MoLeTheme
-import net.ktnx.mobileledger.utils.SimpleDate
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test

@@ -17,8 +17,8 @@
 
 package net.ktnx.mobileledger.fake
 
-import net.ktnx.mobileledger.domain.model.Profile
-import net.ktnx.mobileledger.domain.model.Transaction
+import net.ktnx.mobileledger.core.domain.model.Profile
+import net.ktnx.mobileledger.core.domain.model.Transaction
 import net.ktnx.mobileledger.domain.usecase.TransactionSender
 
 /**

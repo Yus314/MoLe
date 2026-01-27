@@ -17,7 +17,7 @@
 
 package net.ktnx.mobileledger.domain.usecase
 
-import net.ktnx.mobileledger.domain.model.Account
+import net.ktnx.mobileledger.core.domain.model.Account
 
 /**
  * Resolves account hierarchy relationships and handles zero-balance filtering.

@@ -31,7 +31,7 @@ import androidx.compose.ui.unit.dp
 import java.text.DateFormatSymbols
 import java.util.Calendar
 import java.util.Locale
-import net.ktnx.mobileledger.utils.SimpleDate
+import net.ktnx.mobileledger.core.common.utils.SimpleDate
 
 /**
  * Date delimiter row displayed between transaction groups.

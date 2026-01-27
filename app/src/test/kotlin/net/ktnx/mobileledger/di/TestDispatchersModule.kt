@@ -26,6 +26,9 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestDispatcher
+import net.ktnx.mobileledger.core.common.di.DefaultDispatcher
+import net.ktnx.mobileledger.core.common.di.IoDispatcher
+import net.ktnx.mobileledger.core.common.di.MainDispatcher
 
 /**
  * Test module that replaces DispatcherModule in Hilt instrumented tests.

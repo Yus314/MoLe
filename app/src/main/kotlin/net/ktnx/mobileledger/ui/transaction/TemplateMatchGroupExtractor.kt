@@ -18,8 +18,8 @@
 package net.ktnx.mobileledger.ui.transaction
 
 import logcat.logcat
-import net.ktnx.mobileledger.domain.model.Template
-import net.ktnx.mobileledger.utils.SimpleDate
+import net.ktnx.mobileledger.core.common.utils.SimpleDate
+import net.ktnx.mobileledger.core.domain.model.Template
 
 /**
  * Utility object for extracting values from regex match groups in templates.

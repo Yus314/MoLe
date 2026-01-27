@@ -23,7 +23,7 @@ import java.util.Locale
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import net.ktnx.mobileledger.domain.model.CurrencyPosition
+import net.ktnx.mobileledger.core.domain.model.CurrencyPosition
 import net.ktnx.mobileledger.service.CurrencyFormatConfig
 import net.ktnx.mobileledger.service.CurrencyFormatter
 

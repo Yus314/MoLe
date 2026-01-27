@@ -28,10 +28,10 @@ import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.test.runTest
-import net.ktnx.mobileledger.domain.model.Profile
-import net.ktnx.mobileledger.domain.model.SyncError
-import net.ktnx.mobileledger.domain.model.SyncException
-import net.ktnx.mobileledger.domain.model.SyncProgress
+import net.ktnx.mobileledger.core.domain.model.Profile
+import net.ktnx.mobileledger.core.domain.model.SyncError
+import net.ktnx.mobileledger.core.domain.model.SyncException
+import net.ktnx.mobileledger.core.domain.model.SyncProgress
 import net.ktnx.mobileledger.fake.FakeTransactionSyncer
 import net.ktnx.mobileledger.util.createTestDomainProfile
 import org.junit.Assert.assertEquals

@@ -20,7 +20,7 @@ package net.ktnx.mobileledger.json
 import java.io.IOException
 import java.io.InputStream
 import logcat.logcat
-import net.ktnx.mobileledger.domain.model.Account
+import net.ktnx.mobileledger.core.domain.model.Account
 
 abstract class AccountListParser {
     abstract val apiVersion: API

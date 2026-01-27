@@ -17,7 +17,7 @@
 
 package net.ktnx.mobileledger.fake
 
-import net.ktnx.mobileledger.domain.model.Template
+import net.ktnx.mobileledger.core.domain.model.Template
 import net.ktnx.mobileledger.domain.usecase.TemplateDataMapper
 import net.ktnx.mobileledger.ui.templates.MatchableValue
 import net.ktnx.mobileledger.ui.templates.TemplateAccountRow

@@ -28,14 +28,14 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import net.ktnx.mobileledger.db.Account as DbAccount
-import net.ktnx.mobileledger.db.AccountValue
-import net.ktnx.mobileledger.db.AccountWithAmounts
-import net.ktnx.mobileledger.domain.model.Account
-import net.ktnx.mobileledger.domain.model.AccountAmount as DomainAccountAmount
-import net.ktnx.mobileledger.domain.model.Profile
-import net.ktnx.mobileledger.domain.repository.AccountRepository
-import net.ktnx.mobileledger.domain.repository.PreferencesRepository
+import net.ktnx.mobileledger.core.database.entity.Account as DbAccount
+import net.ktnx.mobileledger.core.database.entity.AccountValue
+import net.ktnx.mobileledger.core.database.entity.AccountWithAmounts
+import net.ktnx.mobileledger.core.domain.model.Account
+import net.ktnx.mobileledger.core.domain.model.AccountAmount as DomainAccountAmount
+import net.ktnx.mobileledger.core.domain.model.Profile
+import net.ktnx.mobileledger.core.domain.repository.AccountRepository
+import net.ktnx.mobileledger.core.domain.repository.PreferencesRepository
 import net.ktnx.mobileledger.domain.usecase.AccountHierarchyResolverImpl
 import net.ktnx.mobileledger.domain.usecase.GetShowZeroBalanceUseCaseImpl
 import net.ktnx.mobileledger.domain.usecase.ObserveAccountsWithAmountsUseCaseImpl

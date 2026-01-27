@@ -48,8 +48,8 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import net.ktnx.mobileledger.R
+import net.ktnx.mobileledger.core.common.utils.Globals
 import net.ktnx.mobileledger.ui.theme.MoLeTheme
-import net.ktnx.mobileledger.utils.Globals
 
 @Composable
 fun CrashReportDialog(crashReportText: String, onDismiss: () -> Unit, modifier: Modifier = Modifier) {

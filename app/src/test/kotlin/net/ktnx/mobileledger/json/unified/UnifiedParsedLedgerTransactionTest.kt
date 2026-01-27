@@ -18,11 +18,11 @@
 package net.ktnx.mobileledger.json.unified
 
 import java.text.ParseException
-import net.ktnx.mobileledger.domain.model.Transaction
-import net.ktnx.mobileledger.domain.model.TransactionLine
+import net.ktnx.mobileledger.core.common.utils.SimpleDate
+import net.ktnx.mobileledger.core.domain.model.Transaction
+import net.ktnx.mobileledger.core.domain.model.TransactionLine
 import net.ktnx.mobileledger.json.MoLeJson
 import net.ktnx.mobileledger.json.config.ApiVersionConfig
-import net.ktnx.mobileledger.utils.SimpleDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue

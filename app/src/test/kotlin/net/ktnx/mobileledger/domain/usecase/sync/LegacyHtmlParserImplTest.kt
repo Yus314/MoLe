@@ -18,9 +18,9 @@
 package net.ktnx.mobileledger.domain.usecase.sync
 
 import kotlinx.coroutines.test.runTest
+import net.ktnx.mobileledger.core.network.NetworkAuthenticationException
+import net.ktnx.mobileledger.core.network.NetworkHttpException
 import net.ktnx.mobileledger.fake.FakeHledgerClient
-import net.ktnx.mobileledger.network.NetworkAuthenticationException
-import net.ktnx.mobileledger.network.NetworkHttpException
 import net.ktnx.mobileledger.util.createTestDomainProfile
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue

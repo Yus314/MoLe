@@ -17,7 +17,7 @@
 
 package net.ktnx.mobileledger.domain.usecase
 
-import net.ktnx.mobileledger.domain.model.Profile
+import net.ktnx.mobileledger.core.domain.model.Profile
 
 /**
  * hledger-web バージョン検出のインターフェース

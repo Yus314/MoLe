@@ -22,6 +22,8 @@ import java.net.MalformedURLException
 import java.net.SocketTimeoutException
 import java.text.ParseException
 import kotlinx.coroutines.CancellationException
+import net.ktnx.mobileledger.core.common.utils.SimpleDate
+import net.ktnx.mobileledger.core.domain.model.*
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue

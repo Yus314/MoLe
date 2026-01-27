@@ -19,10 +19,10 @@ package net.ktnx.mobileledger.async
 
 import java.text.ParseException
 import java.util.regex.Pattern
-import net.ktnx.mobileledger.domain.model.Transaction
-import net.ktnx.mobileledger.domain.model.TransactionLine
-import net.ktnx.mobileledger.utils.SimpleDate
-import net.ktnx.mobileledger.utils.parseLedgerDate
+import net.ktnx.mobileledger.core.common.utils.SimpleDate
+import net.ktnx.mobileledger.core.common.utils.parseLedgerDate
+import net.ktnx.mobileledger.core.domain.model.Transaction
+import net.ktnx.mobileledger.core.domain.model.TransactionLine
 
 /**
  * Parses ledger transactions from legacy HTML format.

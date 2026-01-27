@@ -296,9 +296,13 @@ class AccountRowsViewModel @Inject constructor(
         }
     }
 
-    private fun addCurrency(name: String, position: net.ktnx.mobileledger.domain.model.CurrencyPosition, gap: Boolean) {
+    private fun addCurrency(
+        name: String,
+        position: net.ktnx.mobileledger.core.domain.model.CurrencyPosition,
+        gap: Boolean
+    ) {
         viewModelScope.launch {
-            val currency = net.ktnx.mobileledger.domain.model.Currency(
+            val currency = net.ktnx.mobileledger.core.domain.model.Currency(
                 name = name,
                 position = position,
                 hasGap = gap

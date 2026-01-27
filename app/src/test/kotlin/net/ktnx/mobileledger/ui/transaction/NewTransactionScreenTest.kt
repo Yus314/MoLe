@@ -26,9 +26,9 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import net.ktnx.mobileledger.core.common.utils.SimpleDate
 import net.ktnx.mobileledger.robot.transaction.newTransactionScreen
 import net.ktnx.mobileledger.ui.theme.MoLeTheme
-import net.ktnx.mobileledger.utils.SimpleDate
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule

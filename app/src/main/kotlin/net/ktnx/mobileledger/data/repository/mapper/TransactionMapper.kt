@@ -17,12 +17,12 @@
 
 package net.ktnx.mobileledger.data.repository.mapper
 
-import net.ktnx.mobileledger.db.Transaction as DbTransaction
-import net.ktnx.mobileledger.db.TransactionAccount
-import net.ktnx.mobileledger.db.TransactionWithAccounts
-import net.ktnx.mobileledger.domain.model.Transaction
-import net.ktnx.mobileledger.domain.model.TransactionLine
-import net.ktnx.mobileledger.utils.SimpleDate
+import net.ktnx.mobileledger.core.common.utils.SimpleDate
+import net.ktnx.mobileledger.core.database.entity.Transaction as DbTransaction
+import net.ktnx.mobileledger.core.database.entity.TransactionAccount
+import net.ktnx.mobileledger.core.database.entity.TransactionWithAccounts
+import net.ktnx.mobileledger.core.domain.model.Transaction
+import net.ktnx.mobileledger.core.domain.model.TransactionLine
 
 /**
  * Transaction ドメインモデルとデータベースエンティティ間の変換を担当

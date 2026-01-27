@@ -29,8 +29,9 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import logcat.logcat
-import net.ktnx.mobileledger.domain.model.FutureDates
-import net.ktnx.mobileledger.domain.model.Transaction
+import net.ktnx.mobileledger.core.common.utils.SimpleDate
+import net.ktnx.mobileledger.core.domain.model.FutureDates
+import net.ktnx.mobileledger.core.domain.model.Transaction
 import net.ktnx.mobileledger.domain.usecase.GetFirstTransactionByDescriptionUseCase
 import net.ktnx.mobileledger.domain.usecase.GetTransactionByIdUseCase
 import net.ktnx.mobileledger.domain.usecase.ObserveCurrentProfileUseCase
@@ -39,7 +40,6 @@ import net.ktnx.mobileledger.domain.usecase.StoreTransactionUseCase
 import net.ktnx.mobileledger.domain.usecase.TransactionBalanceCalculator
 import net.ktnx.mobileledger.domain.usecase.TransactionSender
 import net.ktnx.mobileledger.service.AppStateService
-import net.ktnx.mobileledger.utils.SimpleDate
 
 @HiltViewModel
 class TransactionFormViewModel @Inject constructor(

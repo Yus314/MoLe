@@ -30,12 +30,12 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.yield
-import net.ktnx.mobileledger.domain.model.Profile
-import net.ktnx.mobileledger.domain.model.SyncException
-import net.ktnx.mobileledger.domain.model.SyncProgress
-import net.ktnx.mobileledger.domain.model.SyncState
-import net.ktnx.mobileledger.domain.usecase.TransactionSyncer
+import net.ktnx.mobileledger.core.domain.model.Profile
+import net.ktnx.mobileledger.core.domain.model.SyncException
+import net.ktnx.mobileledger.core.domain.model.SyncProgress
+import net.ktnx.mobileledger.core.domain.model.SyncState
 import net.ktnx.mobileledger.domain.usecase.ObserveCurrentProfileUseCase
+import net.ktnx.mobileledger.domain.usecase.TransactionSyncer
 import net.ktnx.mobileledger.service.AppStateService
 import net.ktnx.mobileledger.service.BackgroundTaskManager
 import net.ktnx.mobileledger.service.SyncInfo
@@ -216,7 +216,7 @@ class MainCoordinatorViewModel @Inject constructor(
                 _syncState.value = SyncState.Cancelled
             } catch (e: Exception) {
                 _syncState.value = SyncState.Failed(
-                    net.ktnx.mobileledger.domain.model.SyncError.UnknownError(
+                    net.ktnx.mobileledger.core.domain.model.SyncError.UnknownError(
                         message = e.message ?: "予期しないエラーが発生しました",
                         cause = e
                     )

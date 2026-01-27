@@ -20,8 +20,8 @@ package net.ktnx.mobileledger.service
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
-import net.ktnx.mobileledger.domain.model.FutureDates
-import net.ktnx.mobileledger.domain.model.Profile
+import net.ktnx.mobileledger.core.domain.model.FutureDates
+import net.ktnx.mobileledger.core.domain.model.Profile
 import net.ktnx.mobileledger.ui.HueRing
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue

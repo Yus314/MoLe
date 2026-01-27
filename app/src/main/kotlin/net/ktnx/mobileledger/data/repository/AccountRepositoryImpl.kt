@@ -23,13 +23,13 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
-import net.ktnx.mobileledger.dao.AccountDAO
-import net.ktnx.mobileledger.dao.AccountValueDAO
+import net.ktnx.mobileledger.core.common.di.IoDispatcher
+import net.ktnx.mobileledger.core.database.dao.AccountDAO
+import net.ktnx.mobileledger.core.database.dao.AccountValueDAO
+import net.ktnx.mobileledger.core.domain.model.Account
+import net.ktnx.mobileledger.core.domain.repository.AccountRepository
 import net.ktnx.mobileledger.data.repository.mapper.AccountMapper.toDomain
 import net.ktnx.mobileledger.data.repository.mapper.AccountMapper.toEntity
-import net.ktnx.mobileledger.di.IoDispatcher
-import net.ktnx.mobileledger.domain.model.Account
-import net.ktnx.mobileledger.domain.repository.AccountRepository
 import net.ktnx.mobileledger.domain.usecase.AppExceptionMapper
 
 /**

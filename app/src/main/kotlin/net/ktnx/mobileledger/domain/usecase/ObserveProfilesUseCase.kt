@@ -6,8 +6,8 @@ package net.ktnx.mobileledger.domain.usecase
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
-import net.ktnx.mobileledger.domain.model.Profile
-import net.ktnx.mobileledger.domain.repository.ProfileRepository
+import net.ktnx.mobileledger.core.domain.model.Profile
+import net.ktnx.mobileledger.core.domain.repository.ProfileRepository
 
 interface ObserveCurrentProfileUseCase {
     operator fun invoke(): StateFlow<Profile?>
@@ -68,6 +68,5 @@ class SetCurrentProfileUseCaseImpl @Inject constructor(
 class UpdateProfileOrderUseCaseImpl @Inject constructor(
     private val profileRepository: ProfileRepository
 ) : UpdateProfileOrderUseCase {
-    override suspend fun invoke(profiles: List<Profile>): Result<Unit> =
-        profileRepository.updateProfileOrder(profiles)
+    override suspend fun invoke(profiles: List<Profile>): Result<Unit> = profileRepository.updateProfileOrder(profiles)
 }

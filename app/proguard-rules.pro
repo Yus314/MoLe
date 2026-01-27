@@ -19,3 +19,34 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# ============================================================
+# Kotlinx Serialization (R8 fullMode support)
+# ============================================================
+-keepattributes *Annotation*, InnerClasses
+-dontnote kotlinx.serialization.AnnotationsKt
+
+-keepclassmembers class kotlinx.serialization.json.** {
+    *** Companion;
+}
+-keepclasseswithmembers class kotlinx.serialization.json.** {
+    kotlinx.serialization.KSerializer serializer(...);
+}
+
+# MoLe JSON serializable classes
+-keep,includedescriptorclasses class net.ktnx.mobileledger.json.**$$serializer { *; }
+-keepclassmembers class net.ktnx.mobileledger.json.** {
+    *** Companion;
+}
+-keepclasseswithmembers class net.ktnx.mobileledger.json.** {
+    kotlinx.serialization.KSerializer serializer(...);
+}
+
+# MoLe Backup model serializable classes
+-keep,includedescriptorclasses class net.ktnx.mobileledger.backup.model.**$$serializer { *; }
+-keepclassmembers class net.ktnx.mobileledger.backup.model.** {
+    *** Companion;
+}
+-keepclasseswithmembers class net.ktnx.mobileledger.backup.model.** {
+    kotlinx.serialization.KSerializer serializer(...);
+}

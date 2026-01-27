@@ -17,9 +17,9 @@
 
 package net.ktnx.mobileledger.domain.usecase
 
-import net.ktnx.mobileledger.domain.model.MatchedTemplate
-import net.ktnx.mobileledger.domain.model.Template
-import net.ktnx.mobileledger.utils.SimpleDate
+import net.ktnx.mobileledger.core.common.utils.SimpleDate
+import net.ktnx.mobileledger.core.domain.model.MatchedTemplate
+import net.ktnx.mobileledger.core.domain.model.Template
 
 /**
  * UseCase for matching text against templates and extracting transaction data.

@@ -18,6 +18,8 @@
 package net.ktnx.mobileledger.domain.model
 
 import java.util.regex.Pattern
+import net.ktnx.mobileledger.core.common.utils.SimpleDate
+import net.ktnx.mobileledger.core.domain.model.*
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue

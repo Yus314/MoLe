@@ -30,9 +30,9 @@ import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import net.ktnx.mobileledger.core.domain.model.CurrencyPosition
+import net.ktnx.mobileledger.core.domain.model.TransactionLine
 import net.ktnx.mobileledger.di.CurrencyFormatterEntryPoint
-import net.ktnx.mobileledger.domain.model.CurrencyPosition
-import net.ktnx.mobileledger.domain.model.TransactionLine
 import net.ktnx.mobileledger.json.MoLeJson
 import net.ktnx.mobileledger.json.config.ApiVersionConfig
 

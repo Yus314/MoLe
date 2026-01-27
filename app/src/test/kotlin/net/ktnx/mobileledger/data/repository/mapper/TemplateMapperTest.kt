@@ -17,13 +17,13 @@
 
 package net.ktnx.mobileledger.data.repository.mapper
 
+import net.ktnx.mobileledger.core.database.entity.TemplateAccount
+import net.ktnx.mobileledger.core.database.entity.TemplateHeader
+import net.ktnx.mobileledger.core.database.entity.TemplateWithAccounts
+import net.ktnx.mobileledger.core.domain.model.Template
+import net.ktnx.mobileledger.core.domain.model.TemplateLine
 import net.ktnx.mobileledger.data.repository.mapper.TemplateMapper.toDomain
 import net.ktnx.mobileledger.data.repository.mapper.TemplateMapper.toEntity
-import net.ktnx.mobileledger.db.TemplateAccount
-import net.ktnx.mobileledger.db.TemplateHeader
-import net.ktnx.mobileledger.db.TemplateWithAccounts
-import net.ktnx.mobileledger.domain.model.Template
-import net.ktnx.mobileledger.domain.model.TemplateLine
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull

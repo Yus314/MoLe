@@ -27,16 +27,16 @@ import javax.inject.Singleton
 import kotlin.coroutines.coroutineContext
 import kotlinx.coroutines.ensureActive
 import net.ktnx.mobileledger.async.TransactionParser
-import net.ktnx.mobileledger.domain.model.Account
-import net.ktnx.mobileledger.domain.model.AccountAmount
-import net.ktnx.mobileledger.domain.model.Profile
-import net.ktnx.mobileledger.domain.model.Transaction
-import net.ktnx.mobileledger.domain.model.TransactionLine
-import net.ktnx.mobileledger.network.HledgerClient
-import net.ktnx.mobileledger.network.NetworkAuthenticationException
-import net.ktnx.mobileledger.network.NetworkHttpException
-import net.ktnx.mobileledger.utils.SimpleDate
-import net.ktnx.mobileledger.utils.parseIsoDate
+import net.ktnx.mobileledger.core.common.utils.SimpleDate
+import net.ktnx.mobileledger.core.common.utils.parseIsoDate
+import net.ktnx.mobileledger.core.domain.model.Account
+import net.ktnx.mobileledger.core.domain.model.AccountAmount
+import net.ktnx.mobileledger.core.domain.model.Profile
+import net.ktnx.mobileledger.core.domain.model.Transaction
+import net.ktnx.mobileledger.core.domain.model.TransactionLine
+import net.ktnx.mobileledger.core.network.HledgerClient
+import net.ktnx.mobileledger.core.network.NetworkAuthenticationException
+import net.ktnx.mobileledger.core.network.NetworkHttpException
 
 /**
  * Implementation of LegacyHtmlParser that parses HTML from hledger-web /journal endpoint.

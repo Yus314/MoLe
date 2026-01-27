@@ -21,8 +21,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import net.ktnx.mobileledger.domain.repository.ProfileRepository
-import net.ktnx.mobileledger.domain.model.Profile
+import net.ktnx.mobileledger.core.domain.model.Profile
+import net.ktnx.mobileledger.core.domain.repository.ProfileRepository
 
 /**
  * Fake ProfileRepository for ViewModel testing.
@@ -68,7 +68,8 @@ class FakeProfileRepository : ProfileRepository {
     override suspend fun getProfileCount(): Result<Int> = Result.success(profilesMap.size)
 
     override suspend fun insertProfile(profile: Profile): Result<Long> {
-        val id = if (profile.id == null || profile.id == 0L) nextId++ else profile.id
+        val existingId = profile.id
+        val id = if (existingId == null || existingId == 0L) nextId++ else existingId
         val profileWithId = profile.copy(id = id)
         profilesMap[id] = profileWithId
         return Result.success(id)

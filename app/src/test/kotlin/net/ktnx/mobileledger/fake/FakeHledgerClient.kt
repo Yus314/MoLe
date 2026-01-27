@@ -20,9 +20,9 @@ package net.ktnx.mobileledger.fake
 import java.io.ByteArrayInputStream
 import java.io.InputStream
 import java.nio.charset.StandardCharsets
-import net.ktnx.mobileledger.TemporaryAuthData
-import net.ktnx.mobileledger.domain.model.Profile
-import net.ktnx.mobileledger.network.HledgerClient
+import net.ktnx.mobileledger.core.domain.model.Profile
+import net.ktnx.mobileledger.core.domain.model.TemporaryAuthData
+import net.ktnx.mobileledger.core.network.HledgerClient
 
 /**
  * Fake implementation of [HledgerClient] for testing.

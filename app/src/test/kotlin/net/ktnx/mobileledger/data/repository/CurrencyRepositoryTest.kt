@@ -20,8 +20,8 @@ package net.ktnx.mobileledger.data.repository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
-import net.ktnx.mobileledger.domain.model.Currency
-import net.ktnx.mobileledger.domain.model.CurrencyPosition
+import net.ktnx.mobileledger.core.domain.model.Currency
+import net.ktnx.mobileledger.core.domain.model.CurrencyPosition
 import net.ktnx.mobileledger.fake.FakeCurrencyRepository
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull

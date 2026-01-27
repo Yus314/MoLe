@@ -17,6 +17,8 @@
 
 package net.ktnx.mobileledger.utils
 
+import net.ktnx.mobileledger.core.common.utils.LockHolder
+import net.ktnx.mobileledger.core.common.utils.Locker
 import org.junit.Test
 
 /**

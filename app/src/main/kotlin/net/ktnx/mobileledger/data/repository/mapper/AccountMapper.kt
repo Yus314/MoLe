@@ -17,11 +17,11 @@
 
 package net.ktnx.mobileledger.data.repository.mapper
 
-import net.ktnx.mobileledger.db.Account as DbAccount
-import net.ktnx.mobileledger.db.AccountValue
-import net.ktnx.mobileledger.db.AccountWithAmounts
-import net.ktnx.mobileledger.domain.model.Account
-import net.ktnx.mobileledger.domain.model.AccountAmount
+import net.ktnx.mobileledger.core.database.entity.Account as DbAccount
+import net.ktnx.mobileledger.core.database.entity.AccountValue
+import net.ktnx.mobileledger.core.database.entity.AccountWithAmounts
+import net.ktnx.mobileledger.core.domain.model.Account
+import net.ktnx.mobileledger.core.domain.model.AccountAmount
 
 /**
  * Account ドメインモデルとデータベースエンティティ間の変換を担当

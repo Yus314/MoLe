@@ -17,8 +17,8 @@
 
 package net.ktnx.mobileledger.domain.usecase
 
-import net.ktnx.mobileledger.domain.model.Transaction
-import net.ktnx.mobileledger.utils.SimpleDate
+import net.ktnx.mobileledger.core.common.utils.SimpleDate
+import net.ktnx.mobileledger.core.domain.model.Transaction
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull

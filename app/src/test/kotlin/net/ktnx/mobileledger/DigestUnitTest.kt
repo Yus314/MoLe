@@ -18,7 +18,7 @@
 package net.ktnx.mobileledger
 
 import junit.framework.TestCase.assertEquals
-import net.ktnx.mobileledger.utils.Digest
+import net.ktnx.mobileledger.core.common.utils.Digest
 import org.junit.Test
 
 /**

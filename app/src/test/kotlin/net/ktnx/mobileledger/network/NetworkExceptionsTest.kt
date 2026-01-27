@@ -17,6 +17,10 @@
 
 package net.ktnx.mobileledger.network
 
+import net.ktnx.mobileledger.core.network.NetworkApiNotSupportedException
+import net.ktnx.mobileledger.core.network.NetworkAuthenticationException
+import net.ktnx.mobileledger.core.network.NetworkHttpException
+import net.ktnx.mobileledger.core.network.NetworkNotFoundException
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test

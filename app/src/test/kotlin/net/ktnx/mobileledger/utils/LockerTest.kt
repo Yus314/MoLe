@@ -21,6 +21,7 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
+import net.ktnx.mobileledger.core.common.utils.Locker
 import org.junit.Assert.assertNotNull
 import org.junit.Test
 

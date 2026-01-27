@@ -27,14 +27,14 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
-import net.ktnx.mobileledger.dao.AccountDAO
-import net.ktnx.mobileledger.dao.AccountValueDAO
-import net.ktnx.mobileledger.db.Account
-import net.ktnx.mobileledger.db.AccountValue
-import net.ktnx.mobileledger.db.AccountWithAmounts
-import net.ktnx.mobileledger.domain.model.Account as DomainAccount
-import net.ktnx.mobileledger.domain.model.AccountAmount
-import net.ktnx.mobileledger.domain.model.AppException
+import net.ktnx.mobileledger.core.database.dao.AccountDAO
+import net.ktnx.mobileledger.core.database.dao.AccountValueDAO
+import net.ktnx.mobileledger.core.database.entity.Account
+import net.ktnx.mobileledger.core.database.entity.AccountValue
+import net.ktnx.mobileledger.core.database.entity.AccountWithAmounts
+import net.ktnx.mobileledger.core.domain.model.Account as DomainAccount
+import net.ktnx.mobileledger.core.domain.model.AccountAmount
+import net.ktnx.mobileledger.core.domain.model.AppException
 import net.ktnx.mobileledger.domain.usecase.AppExceptionMapper
 import net.ktnx.mobileledger.domain.usecase.sync.SyncExceptionMapper
 import org.junit.Assert.assertEquals
@@ -186,8 +186,8 @@ class AccountRepositoryImplTest {
     fun `observeSearchAccountNames returns account names`() = runTest(testDispatcher) {
         // Given
         val containers = listOf(
-            AccountDAO.AccountNameContainer().apply { name = "Assets:Bank" },
-            AccountDAO.AccountNameContainer().apply { name = "Assets:Cash" }
+            AccountDAO.AccountNameContainer("Assets:Bank"),
+            AccountDAO.AccountNameContainer("Assets:Cash")
         )
         every { mockAccountDAO.lookupNamesInProfileByName(testProfileId, "ASSETS") } returns flowOf(containers)
 
@@ -203,7 +203,7 @@ class AccountRepositoryImplTest {
     @Test
     fun `observeSearchAccountNamesGlobal searches across profiles`() = runTest(testDispatcher) {
         // Given
-        val containers = listOf(AccountDAO.AccountNameContainer().apply { name = "Expenses:Food" })
+        val containers = listOf(AccountDAO.AccountNameContainer("Expenses:Food"))
         every { mockAccountDAO.lookupNamesByName("FOOD") } returns flowOf(containers)
 
         // When

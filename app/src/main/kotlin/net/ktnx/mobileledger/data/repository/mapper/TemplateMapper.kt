@@ -17,11 +17,11 @@
 
 package net.ktnx.mobileledger.data.repository.mapper
 
-import net.ktnx.mobileledger.db.TemplateAccount
-import net.ktnx.mobileledger.db.TemplateHeader
-import net.ktnx.mobileledger.db.TemplateWithAccounts
-import net.ktnx.mobileledger.domain.model.Template
-import net.ktnx.mobileledger.domain.model.TemplateLine
+import net.ktnx.mobileledger.core.database.entity.TemplateAccount
+import net.ktnx.mobileledger.core.database.entity.TemplateHeader
+import net.ktnx.mobileledger.core.database.entity.TemplateWithAccounts
+import net.ktnx.mobileledger.core.domain.model.Template
+import net.ktnx.mobileledger.core.domain.model.TemplateLine
 
 /**
  * Template ドメインモデルとデータベースエンティティ間の変換を担当

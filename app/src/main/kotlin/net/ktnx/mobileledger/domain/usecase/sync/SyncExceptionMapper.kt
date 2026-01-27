@@ -25,11 +25,11 @@ import java.text.ParseException
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.serialization.SerializationException
-import net.ktnx.mobileledger.domain.model.SyncError
-import net.ktnx.mobileledger.domain.model.SyncException
+import net.ktnx.mobileledger.core.domain.model.SyncError
+import net.ktnx.mobileledger.core.domain.model.SyncException
+import net.ktnx.mobileledger.core.network.NetworkAuthenticationException
+import net.ktnx.mobileledger.core.network.NetworkHttpException
 import net.ktnx.mobileledger.json.ApiNotSupportedException
-import net.ktnx.mobileledger.network.NetworkAuthenticationException
-import net.ktnx.mobileledger.network.NetworkHttpException
 
 /**
  * Maps various exceptions to SyncException with appropriate SyncError.

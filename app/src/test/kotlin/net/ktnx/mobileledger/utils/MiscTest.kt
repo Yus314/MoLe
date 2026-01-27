@@ -17,6 +17,7 @@
 
 package net.ktnx.mobileledger.utils
 
+import net.ktnx.mobileledger.core.common.utils.Misc
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull

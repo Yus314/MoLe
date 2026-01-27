@@ -19,8 +19,8 @@ package net.ktnx.mobileledger.async
 
 import java.net.URLDecoder
 import java.util.regex.Pattern
-import net.ktnx.mobileledger.domain.model.Account
-import net.ktnx.mobileledger.domain.model.AccountAmount
+import net.ktnx.mobileledger.core.domain.model.Account
+import net.ktnx.mobileledger.core.domain.model.AccountAmount
 
 /**
  * Parses ledger accounts from legacy HTML format.

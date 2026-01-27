@@ -26,7 +26,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import net.ktnx.mobileledger.domain.model.Profile
+import net.ktnx.mobileledger.core.domain.model.Profile
 import net.ktnx.mobileledger.domain.usecase.GetAllProfilesUseCase
 import net.ktnx.mobileledger.domain.usecase.GetProfileByIdUseCase
 import net.ktnx.mobileledger.domain.usecase.ObserveCurrentProfileUseCase

@@ -18,7 +18,7 @@
 package net.ktnx.mobileledger.json
 
 import kotlinx.serialization.SerializationException
-import net.ktnx.mobileledger.domain.model.Transaction
+import net.ktnx.mobileledger.core.domain.model.Transaction
 
 abstract class Gateway {
     /**

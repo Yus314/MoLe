@@ -23,16 +23,16 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
-import net.ktnx.mobileledger.dao.TemplateAccountDAO
-import net.ktnx.mobileledger.dao.TemplateHeaderDAO
+import net.ktnx.mobileledger.core.common.di.IoDispatcher
+import net.ktnx.mobileledger.core.database.dao.TemplateAccountDAO
+import net.ktnx.mobileledger.core.database.dao.TemplateHeaderDAO
+import net.ktnx.mobileledger.core.database.entity.TemplateAccount
+import net.ktnx.mobileledger.core.database.entity.TemplateHeader
+import net.ktnx.mobileledger.core.database.entity.TemplateWithAccounts
+import net.ktnx.mobileledger.core.domain.model.Template
+import net.ktnx.mobileledger.core.domain.repository.CurrencyRepository
 import net.ktnx.mobileledger.data.repository.mapper.TemplateMapper.toDomain
 import net.ktnx.mobileledger.data.repository.mapper.TemplateMapper.toEntity
-import net.ktnx.mobileledger.db.TemplateAccount
-import net.ktnx.mobileledger.db.TemplateHeader
-import net.ktnx.mobileledger.db.TemplateWithAccounts
-import net.ktnx.mobileledger.di.IoDispatcher
-import net.ktnx.mobileledger.domain.model.Template
-import net.ktnx.mobileledger.domain.repository.CurrencyRepository
 import net.ktnx.mobileledger.domain.repository.TemplateRepository
 import net.ktnx.mobileledger.domain.usecase.AppExceptionMapper
 

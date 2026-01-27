@@ -18,6 +18,7 @@
 package net.ktnx.mobileledger.utils
 
 import java.util.Calendar
+import net.ktnx.mobileledger.core.common.utils.SimpleDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull

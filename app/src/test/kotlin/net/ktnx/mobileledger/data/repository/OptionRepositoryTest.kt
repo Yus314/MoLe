@@ -22,8 +22,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
-import net.ktnx.mobileledger.domain.model.AppOption
-import net.ktnx.mobileledger.domain.repository.OptionRepository
+import net.ktnx.mobileledger.core.domain.model.AppOption
+import net.ktnx.mobileledger.core.domain.repository.OptionRepository
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull

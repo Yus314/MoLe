@@ -17,8 +17,8 @@
 
 package net.ktnx.mobileledger.json
 
+import net.ktnx.mobileledger.core.domain.model.CurrencyPosition
 import net.ktnx.mobileledger.di.CurrencyFormatterEntryPoint
-import net.ktnx.mobileledger.domain.model.CurrencyPosition
 
 open class ParsedPosting {
     companion object {

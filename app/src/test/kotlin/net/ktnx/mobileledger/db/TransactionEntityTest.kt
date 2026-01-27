@@ -17,6 +17,7 @@
 
 package net.ktnx.mobileledger.db
 
+import net.ktnx.mobileledger.core.database.entity.Transaction
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test

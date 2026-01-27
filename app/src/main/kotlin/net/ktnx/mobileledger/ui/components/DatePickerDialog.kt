@@ -28,8 +28,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import java.util.Calendar
 import java.util.GregorianCalendar
-import net.ktnx.mobileledger.domain.model.FutureDates
-import net.ktnx.mobileledger.utils.SimpleDate
+import net.ktnx.mobileledger.core.common.utils.SimpleDate
+import net.ktnx.mobileledger.core.domain.model.FutureDates
 
 /**
  * Material3 DatePicker dialog for selecting dates.

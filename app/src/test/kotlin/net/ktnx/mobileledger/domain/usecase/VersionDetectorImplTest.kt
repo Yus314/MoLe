@@ -22,9 +22,9 @@ import java.io.IOException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
-import net.ktnx.mobileledger.domain.model.ProfileAuthentication
+import net.ktnx.mobileledger.core.domain.model.ProfileAuthentication
+import net.ktnx.mobileledger.core.network.NetworkNotFoundException
 import net.ktnx.mobileledger.fake.FakeHledgerClient
-import net.ktnx.mobileledger.network.NetworkNotFoundException
 import net.ktnx.mobileledger.util.createTestDomainProfile
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull

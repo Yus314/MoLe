@@ -1,0 +1,176 @@
+/*
+ * Copyright © 2021 Damyan Ivanov.
+ * This file is part of MoLe.
+ * MoLe is free software: you can distribute it and/or modify it
+ * under the term of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your opinion), any later version.
+ *
+ * MoLe is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License terms for details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with MoLe. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+package net.ktnx.mobileledger.core.database.dao
+
+import androidx.room.ColumnInfo
+import androidx.room.Dao
+import androidx.room.Delete
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
+import androidx.room.Update
+import java.util.Locale
+import kotlinx.coroutines.flow.Flow
+import net.ktnx.mobileledger.core.database.entity.Transaction
+import net.ktnx.mobileledger.core.database.entity.TransactionWithAccounts
+
+@Dao
+abstract class TransactionDAO : BaseDAO<Transaction>() {
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    abstract override fun insertSync(item: Transaction): Long
+
+    @Update
+    abstract override fun updateSync(item: Transaction)
+
+    @Delete
+    abstract override fun deleteSync(item: Transaction)
+
+    @Delete
+    abstract fun deleteSync(vararg items: Transaction)
+
+    @Delete
+    abstract fun deleteSync(items: List<Transaction>)
+
+    @Query("DELETE FROM transactions")
+    abstract fun deleteAllSync()
+
+    @Query("SELECT * FROM transactions WHERE id = :id")
+    abstract fun getById(id: Long): Flow<Transaction>
+
+    @androidx.room.Transaction
+    @Query("SELECT * FROM transactions WHERE id = :transactionId")
+    abstract fun getByIdWithAccounts(transactionId: Long): Flow<TransactionWithAccounts>
+
+    @androidx.room.Transaction
+    @Query("SELECT * FROM transactions WHERE id = :transactionId")
+    abstract fun getByIdWithAccountsSync(transactionId: Long): TransactionWithAccounts?
+
+    @Query(
+        "SELECT DISTINCT description, CASE WHEN description_uc LIKE :term||'%' THEN 1 " +
+            "               WHEN description_uc LIKE '%:'||:term||'%' THEN 2 " +
+            "               WHEN description_uc LIKE '% '||:term||'%' THEN 3 " +
+            "               ELSE 9 END AS ordering FROM transactions " +
+            "WHERE description_uc LIKE '%'||:term||'%' ORDER BY ordering, description_uc, rowid "
+    )
+    abstract fun lookupDescriptionSync(term: String): List<DescriptionContainer>
+
+    @androidx.room.Transaction
+    @Query(
+        "SELECT * from transactions WHERE description = :description ORDER BY year desc, month" +
+            " desc, day desc LIMIT 1"
+    )
+    abstract fun getFirstByDescriptionSync(description: String): TransactionWithAccounts?
+
+    @androidx.room.Transaction
+    @Query(
+        "SELECT tr.id, tr.profile_id, tr.ledger_id, tr.description, tr.description_uc, tr" +
+            ".data_hash, tr.comment, tr.year, tr.month, tr.day, tr.generation from transactions tr" +
+            " JOIN transaction_accounts t_a ON t_a.transaction_id = tr.id WHERE tr.description = " +
+            ":description AND t_a.account_name LIKE '%'||:accountTerm||'%' ORDER BY year desc, " +
+            "month desc, day desc, tr.ledger_id desc LIMIT 1"
+    )
+    abstract fun getFirstByDescriptionHavingAccountSync(
+        description: String,
+        accountTerm: String
+    ): TransactionWithAccounts?
+
+    @Query("SELECT * from transactions WHERE profile_id = :profileId")
+    abstract fun getAllForProfileUnorderedSync(profileId: Long): List<Transaction>
+
+    @Query("SELECT generation FROM transactions WHERE profile_id = :profileId LIMIT 1")
+    protected abstract fun getGenerationPOJOSync(profileId: Long): TransactionGenerationContainer?
+
+    @androidx.room.Transaction
+    @Query(
+        "SELECT * FROM transactions tr " +
+            "WHERE tr.profile_id = :profileId " +
+            "AND IIF(:accountName IS NULL OR :accountName = '', 1, " +
+            "    EXISTS(SELECT 1 FROM transaction_accounts ta " +
+            "           WHERE ta.transaction_id = tr.id " +
+            "           AND ta.account_name LIKE '%' || :accountName || '%' " +
+            "           AND ta.amount <> 0)) " +
+            "ORDER BY tr.year ASC, tr.month ASC, tr.day ASC, tr.ledger_id ASC"
+    )
+    abstract fun getAllWithAccountsFiltered(profileId: Long, accountName: String?): Flow<List<TransactionWithAccounts>>
+
+    @Query("DELETE FROM transactions WHERE profile_id = :profileId AND generation <> :currentGeneration")
+    abstract fun purgeOldTransactionsSync(profileId: Long, currentGeneration: Long): Int
+
+    @Query(
+        "DELETE FROM transaction_accounts WHERE EXISTS (SELECT 1 FROM transactions tr WHERE tr" +
+            ".id=transaction_accounts.transaction_id AND tr.profile_id=:profileId) AND generation " +
+            "<> :currentGeneration"
+    )
+    abstract fun purgeOldTransactionAccountsSync(profileId: Long, currentGeneration: Long): Int
+
+    @Query("DELETE FROM transactions WHERE profile_id = :profileId")
+    abstract fun deleteAllSync(profileId: Long): Int
+
+    @Query("DELETE FROM transactions WHERE id = :transactionId")
+    abstract fun deleteByIdSync(transactionId: Long): Int
+
+    @Query("DELETE FROM transactions WHERE id IN (:transactionIds)")
+    abstract fun deleteByIdsSync(transactionIds: List<Long>): Int
+
+    @Query("SELECT * FROM transactions where profile_id = :profileId AND ledger_id = :ledgerId")
+    abstract fun getByLedgerId(profileId: Long, ledgerId: Long): Transaction?
+
+    @Query("UPDATE transactions SET generation = :newGeneration WHERE id = :transactionId")
+    abstract fun updateGeneration(transactionId: Long, newGeneration: Long): Int
+
+    @Query("UPDATE transaction_accounts SET generation = :newGeneration WHERE transaction_id = :transactionId")
+    abstract fun updateAccountsGeneration(transactionId: Long, newGeneration: Long): Int
+
+    @Query("SELECT max(ledger_id) as ledger_id FROM transactions WHERE profile_id = :profileId")
+    abstract fun getMaxLedgerIdPOJOSync(profileId: Long): LedgerIdContainer?
+
+    @androidx.room.Transaction
+    open fun updateGenerationWithAccounts(transactionId: Long, newGeneration: Long) {
+        updateGeneration(transactionId, newGeneration)
+        updateAccountsGeneration(transactionId, newGeneration)
+    }
+
+    fun getGenerationSync(profileId: Long): Long {
+        val result = getGenerationPOJOSync(profileId) ?: return 0
+        return result.generation
+    }
+
+    fun getMaxLedgerIdSync(profileId: Long): Long {
+        val result = getMaxLedgerIdPOJOSync(profileId) ?: return 0
+        return result.ledgerId
+    }
+
+    data class TransactionGenerationContainer(
+        @ColumnInfo(name = "generation") val generation: Long
+    )
+
+    data class LedgerIdContainer(
+        @ColumnInfo(name = "ledger_id") val ledgerId: Long
+    )
+
+    data class DescriptionContainer(
+        @ColumnInfo(name = "description") val description: String?,
+        @ColumnInfo(name = "ordering") val ordering: Int = 0
+    )
+
+    companion object {
+        @JvmStatic
+        fun unbox(list: List<DescriptionContainer>): List<String> = list.mapNotNull { it.description }
+    }
+}

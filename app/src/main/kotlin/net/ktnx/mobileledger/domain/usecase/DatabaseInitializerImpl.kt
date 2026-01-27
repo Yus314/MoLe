@@ -24,8 +24,8 @@ import kotlinx.coroutines.withContext
 import logcat.LogPriority
 import logcat.asLog
 import logcat.logcat
-import net.ktnx.mobileledger.domain.repository.ProfileRepository
-import net.ktnx.mobileledger.di.IoDispatcher
+import net.ktnx.mobileledger.core.common.di.IoDispatcher
+import net.ktnx.mobileledger.core.domain.repository.ProfileRepository
 
 /**
  * DatabaseInitializer の実装

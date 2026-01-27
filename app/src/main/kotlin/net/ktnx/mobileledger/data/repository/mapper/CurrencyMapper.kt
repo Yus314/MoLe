@@ -17,9 +17,9 @@
 
 package net.ktnx.mobileledger.data.repository.mapper
 
-import net.ktnx.mobileledger.db.Currency as DbCurrency
-import net.ktnx.mobileledger.domain.model.Currency as DomainCurrency
-import net.ktnx.mobileledger.domain.model.CurrencyPosition
+import net.ktnx.mobileledger.core.database.entity.Currency as DbCurrency
+import net.ktnx.mobileledger.core.domain.model.Currency as DomainCurrency
+import net.ktnx.mobileledger.core.domain.model.CurrencyPosition
 
 /**
  * Currency ドメインモデルとデータベースエンティティ間の変換を担当

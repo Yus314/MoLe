@@ -18,8 +18,8 @@
 package net.ktnx.mobileledger.domain.repository
 
 import kotlinx.coroutines.flow.Flow
-import net.ktnx.mobileledger.db.TemplateWithAccounts
-import net.ktnx.mobileledger.domain.model.Template
+import net.ktnx.mobileledger.core.database.entity.TemplateWithAccounts
+import net.ktnx.mobileledger.core.domain.model.Template
 
 /**
  * Repository interface for Template data access.

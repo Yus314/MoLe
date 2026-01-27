@@ -19,9 +19,9 @@ package net.ktnx.mobileledger.fake
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import net.ktnx.mobileledger.dao.TransactionDAO
+import net.ktnx.mobileledger.core.database.dao.TransactionDAO
+import net.ktnx.mobileledger.core.domain.model.Transaction
 import net.ktnx.mobileledger.domain.repository.TransactionRepository
-import net.ktnx.mobileledger.domain.model.Transaction
 
 /**
  * Fake TransactionRepository for ViewModel testing.
@@ -73,7 +73,7 @@ class FakeTransactionRepository : TransactionRepository {
             domainTransactions.values
                 .filter { it.description.contains(term, true) }
                 .distinctBy { it.description }
-                .map { TransactionDAO.DescriptionContainer().apply { description = it.description } }
+                .map { TransactionDAO.DescriptionContainer(it.description) }
         )
 
     override suspend fun getFirstByDescription(description: String): Result<Transaction?> =

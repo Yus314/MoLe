@@ -29,12 +29,13 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
-import net.ktnx.mobileledger.domain.model.Account
-import net.ktnx.mobileledger.domain.model.SyncError
-import net.ktnx.mobileledger.domain.model.SyncException
-import net.ktnx.mobileledger.domain.model.SyncProgress
-import net.ktnx.mobileledger.domain.model.Transaction
-import net.ktnx.mobileledger.domain.model.TransactionLine
+import net.ktnx.mobileledger.core.common.utils.SimpleDate
+import net.ktnx.mobileledger.core.domain.model.Account
+import net.ktnx.mobileledger.core.domain.model.SyncError
+import net.ktnx.mobileledger.core.domain.model.SyncException
+import net.ktnx.mobileledger.core.domain.model.SyncProgress
+import net.ktnx.mobileledger.core.domain.model.Transaction
+import net.ktnx.mobileledger.core.domain.model.TransactionLine
 import net.ktnx.mobileledger.domain.usecase.sync.AccountFetchResult
 import net.ktnx.mobileledger.domain.usecase.sync.AccountListFetcher
 import net.ktnx.mobileledger.domain.usecase.sync.LegacyHtmlParser
@@ -44,7 +45,6 @@ import net.ktnx.mobileledger.domain.usecase.sync.SyncPersistence
 import net.ktnx.mobileledger.domain.usecase.sync.TransactionListFetcher
 import net.ktnx.mobileledger.service.AppStateService
 import net.ktnx.mobileledger.util.createTestDomainProfile
-import net.ktnx.mobileledger.utils.SimpleDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull

@@ -52,7 +52,7 @@ sealed class TemplateApplicatorEffect {
     data class ApplyTemplate(
         val description: String,
         val transactionComment: String?,
-        val date: net.ktnx.mobileledger.utils.SimpleDate?,
+        val date: net.ktnx.mobileledger.core.common.utils.SimpleDate?,
         val accounts: List<TransactionAccountRow>
     ) : TemplateApplicatorEffect()
 }

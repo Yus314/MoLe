@@ -20,10 +20,10 @@ package net.ktnx.mobileledger.ui.transaction
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import net.ktnx.mobileledger.db.TemplateAccount
-import net.ktnx.mobileledger.db.TemplateHeader
-import net.ktnx.mobileledger.db.TemplateWithAccounts
-import net.ktnx.mobileledger.domain.model.Profile
+import net.ktnx.mobileledger.core.database.entity.TemplateAccount
+import net.ktnx.mobileledger.core.database.entity.TemplateHeader
+import net.ktnx.mobileledger.core.database.entity.TemplateWithAccounts
+import net.ktnx.mobileledger.core.domain.model.Profile
 import net.ktnx.mobileledger.domain.usecase.GetAllTemplatesUseCaseImpl
 import net.ktnx.mobileledger.domain.usecase.GetTemplateUseCaseImpl
 import net.ktnx.mobileledger.domain.usecase.ObserveCurrentProfileUseCaseImpl

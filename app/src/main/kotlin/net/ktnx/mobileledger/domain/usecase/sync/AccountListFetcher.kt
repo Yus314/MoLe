@@ -17,8 +17,8 @@
 
 package net.ktnx.mobileledger.domain.usecase.sync
 
-import net.ktnx.mobileledger.domain.model.Account
-import net.ktnx.mobileledger.domain.model.Profile
+import net.ktnx.mobileledger.core.domain.model.Account
+import net.ktnx.mobileledger.core.domain.model.Profile
 
 /**
  * Interface for fetching account list from hledger server via JSON API.

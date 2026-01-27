@@ -18,9 +18,9 @@
 package net.ktnx.mobileledger.domain.usecase
 
 import kotlinx.coroutines.flow.Flow
-import net.ktnx.mobileledger.domain.model.Profile
-import net.ktnx.mobileledger.domain.model.SyncProgress
-import net.ktnx.mobileledger.domain.model.SyncResult
+import net.ktnx.mobileledger.core.domain.model.Profile
+import net.ktnx.mobileledger.core.domain.model.SyncProgress
+import net.ktnx.mobileledger.core.domain.model.SyncResult
 
 /**
  * 取引同期処理のインターフェース

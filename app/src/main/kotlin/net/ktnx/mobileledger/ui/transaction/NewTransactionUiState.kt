@@ -17,9 +17,9 @@
 
 package net.ktnx.mobileledger.ui.transaction
 
-import net.ktnx.mobileledger.domain.model.BalanceConstants
-import net.ktnx.mobileledger.domain.model.FutureDates
-import net.ktnx.mobileledger.utils.SimpleDate
+import net.ktnx.mobileledger.core.common.utils.SimpleDate
+import net.ktnx.mobileledger.core.domain.model.BalanceConstants
+import net.ktnx.mobileledger.core.domain.model.FutureDates
 
 /**
  * UI State for the New Transaction screen in Compose.
@@ -193,7 +193,7 @@ sealed class NewTransactionEvent {
     data object DismissCurrencySelector : NewTransactionEvent()
     data class AddCurrency(
         val name: String,
-        val position: net.ktnx.mobileledger.domain.model.CurrencyPosition,
+        val position: net.ktnx.mobileledger.core.domain.model.CurrencyPosition,
         val gap: Boolean
     ) : NewTransactionEvent()
     data class DeleteCurrency(val name: String) : NewTransactionEvent()

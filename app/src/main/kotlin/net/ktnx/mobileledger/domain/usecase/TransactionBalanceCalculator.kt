@@ -17,7 +17,7 @@
 
 package net.ktnx.mobileledger.domain.usecase
 
-import net.ktnx.mobileledger.domain.model.TransactionLine
+import net.ktnx.mobileledger.core.domain.model.TransactionLine
 
 /**
  * Calculates transaction balance and auto-balance amounts across currencies.

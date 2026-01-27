@@ -38,7 +38,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import logcat.asLog
 import logcat.logcat
-import net.ktnx.mobileledger.domain.model.Profile
+import net.ktnx.mobileledger.core.domain.model.Profile
 import net.ktnx.mobileledger.domain.usecase.AccountHierarchyResolver
 import net.ktnx.mobileledger.domain.usecase.GetShowZeroBalanceUseCase
 import net.ktnx.mobileledger.domain.usecase.ObserveAccountsWithAmountsUseCase
@@ -182,7 +182,7 @@ class AccountSummaryViewModel @Inject constructor(
     }
 
     private fun processAccounts(
-        accounts: List<net.ktnx.mobileledger.domain.model.Account>,
+        accounts: List<net.ktnx.mobileledger.core.domain.model.Account>,
         showZeroBalances: Boolean
     ): List<AccountHierarchyResolver.ResolvedAccount> {
         val resolvedAccounts = accountHierarchyResolver.resolve(accounts)

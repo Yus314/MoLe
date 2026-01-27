@@ -19,65 +19,20 @@ package net.ktnx.mobileledger.domain.model
 
 import android.content.res.Resources
 import net.ktnx.mobileledger.R
+import net.ktnx.mobileledger.core.domain.model.FutureDates
 
 /**
- * 将来日付の許可設定
+ * Extension function to get display text for FutureDates.
+ * This keeps the core domain model free of Android dependencies.
  */
-enum class FutureDates(private val value: Int) {
-    /** 将来日付を許可しない */
-    None(0),
-
-    /** 1週間先まで許可 */
-    OneWeek(7),
-
-    /** 2週間先まで許可 */
-    TwoWeeks(14),
-
-    /** 1ヶ月先まで許可 */
-    OneMonth(30),
-
-    /** 2ヶ月先まで許可 */
-    TwoMonths(60),
-
-    /** 3ヶ月先まで許可 */
-    ThreeMonths(90),
-
-    /** 6ヶ月先まで許可 */
-    SixMonths(180),
-
-    /** 1年先まで許可 */
-    OneYear(365),
-
-    /** 全ての将来日付を許可 */
-    All(-1);
-
-    /**
-     * enum を Int (日数) に変換
-     */
-    fun toInt(): Int = value
-
-    /**
-     * 表示用テキストを取得
-     */
-    fun getText(resources: Resources): String = when (value) {
-        7 -> resources.getString(R.string.future_dates_7)
-        14 -> resources.getString(R.string.future_dates_14)
-        30 -> resources.getString(R.string.future_dates_30)
-        60 -> resources.getString(R.string.future_dates_60)
-        90 -> resources.getString(R.string.future_dates_90)
-        180 -> resources.getString(R.string.future_dates_180)
-        365 -> resources.getString(R.string.future_dates_365)
-        -1 -> resources.getString(R.string.future_dates_all)
-        else -> resources.getString(R.string.future_dates_none)
-    }
-
-    companion object {
-        private val map: Map<Int, FutureDates> = entries.associateBy { it.value }
-
-        /**
-         * Int (日数) から enum に変換
-         * 無効な値の場合は None を返す
-         */
-        fun fromInt(value: Int): FutureDates = map[value] ?: None
-    }
+fun FutureDates.getText(resources: Resources): String = when (this) {
+    FutureDates.OneWeek -> resources.getString(R.string.future_dates_7)
+    FutureDates.TwoWeeks -> resources.getString(R.string.future_dates_14)
+    FutureDates.OneMonth -> resources.getString(R.string.future_dates_30)
+    FutureDates.TwoMonths -> resources.getString(R.string.future_dates_60)
+    FutureDates.ThreeMonths -> resources.getString(R.string.future_dates_90)
+    FutureDates.SixMonths -> resources.getString(R.string.future_dates_180)
+    FutureDates.OneYear -> resources.getString(R.string.future_dates_365)
+    FutureDates.All -> resources.getString(R.string.future_dates_all)
+    FutureDates.None -> resources.getString(R.string.future_dates_none)
 }

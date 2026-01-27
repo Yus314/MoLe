@@ -17,8 +17,8 @@
 
 package net.ktnx.mobileledger.ui.transaction
 
-import net.ktnx.mobileledger.domain.model.FutureDates
-import net.ktnx.mobileledger.utils.SimpleDate
+import net.ktnx.mobileledger.core.common.utils.SimpleDate
+import net.ktnx.mobileledger.core.domain.model.FutureDates
 
 /**
  * UI State for transaction form management.

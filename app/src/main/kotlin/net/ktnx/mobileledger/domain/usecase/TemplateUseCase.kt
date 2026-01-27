@@ -5,7 +5,7 @@ package net.ktnx.mobileledger.domain.usecase
 
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
-import net.ktnx.mobileledger.domain.model.Template
+import net.ktnx.mobileledger.core.domain.model.Template
 import net.ktnx.mobileledger.domain.repository.TemplateRepository
 
 interface ObserveTemplatesUseCase {

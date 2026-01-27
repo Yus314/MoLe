@@ -18,7 +18,7 @@
 package net.ktnx.mobileledger.json.v1_50
 
 import kotlinx.serialization.SerializationException
-import net.ktnx.mobileledger.domain.model.Transaction
+import net.ktnx.mobileledger.core.domain.model.Transaction
 import net.ktnx.mobileledger.json.Gateway as BaseGateway
 import net.ktnx.mobileledger.json.MoLeJson
 import net.ktnx.mobileledger.json.config.ApiVersionConfig

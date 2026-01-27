@@ -17,11 +17,11 @@
 
 package net.ktnx.mobileledger.data.repository.mapper
 
-import net.ktnx.mobileledger.db.Profile as DbProfile
-import net.ktnx.mobileledger.domain.model.FutureDates
-import net.ktnx.mobileledger.domain.model.Profile as DomainProfile
-import net.ktnx.mobileledger.domain.model.ProfileAuthentication
-import net.ktnx.mobileledger.domain.model.ServerVersion
+import net.ktnx.mobileledger.core.database.entity.Profile as DbProfile
+import net.ktnx.mobileledger.core.domain.model.FutureDates
+import net.ktnx.mobileledger.core.domain.model.Profile as DomainProfile
+import net.ktnx.mobileledger.core.domain.model.ProfileAuthentication
+import net.ktnx.mobileledger.core.domain.model.ServerVersion
 
 /**
  * Profile ドメインモデルとデータベースエンティティ間の変換を担当

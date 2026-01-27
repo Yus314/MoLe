@@ -17,13 +17,13 @@
 
 package net.ktnx.mobileledger.backup.model
 
-import net.ktnx.mobileledger.db.Currency
-import net.ktnx.mobileledger.db.Profile
-import net.ktnx.mobileledger.db.TemplateAccount
-import net.ktnx.mobileledger.db.TemplateHeader
-import net.ktnx.mobileledger.db.TemplateWithAccounts
-import net.ktnx.mobileledger.domain.model.Currency as DomainCurrency
-import net.ktnx.mobileledger.domain.model.Profile as DomainProfile
+import net.ktnx.mobileledger.core.database.entity.Currency
+import net.ktnx.mobileledger.core.database.entity.Profile
+import net.ktnx.mobileledger.core.database.entity.TemplateAccount
+import net.ktnx.mobileledger.core.database.entity.TemplateHeader
+import net.ktnx.mobileledger.core.database.entity.TemplateWithAccounts
+import net.ktnx.mobileledger.core.domain.model.Currency as DomainCurrency
+import net.ktnx.mobileledger.core.domain.model.Profile as DomainProfile
 import net.ktnx.mobileledger.json.API
 
 /**

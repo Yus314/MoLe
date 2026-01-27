@@ -28,8 +28,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import net.ktnx.mobileledger.domain.model.MatchedTemplate
-import net.ktnx.mobileledger.domain.model.Template
+import net.ktnx.mobileledger.core.domain.model.MatchedTemplate
+import net.ktnx.mobileledger.core.domain.model.Template
 import net.ktnx.mobileledger.domain.usecase.GetAllTemplatesUseCase
 import net.ktnx.mobileledger.domain.usecase.GetTemplateUseCase
 import net.ktnx.mobileledger.domain.usecase.ObserveCurrentProfileUseCase

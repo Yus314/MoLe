@@ -25,21 +25,10 @@ import javax.inject.Inject
 import logcat.AndroidLogcatLogger
 import logcat.LogPriority
 import logcat.logcat
-import net.ktnx.mobileledger.domain.repository.ProfileRepository
+import net.ktnx.mobileledger.core.domain.repository.ProfileRepository
 import net.ktnx.mobileledger.di.CurrencyFormatterEntryPoint
 import net.ktnx.mobileledger.di.ThemeServiceEntryPoint
 import net.ktnx.mobileledger.service.CurrencyFormatter
-
-/**
- * Simple data holder for temporary authentication credentials.
- * Used during profile editing when testing connection to a server.
- */
-data class TemporaryAuthData(
-    val url: String,
-    val useAuthentication: Boolean,
-    val authUser: String,
-    val authPassword: String
-)
 
 @HiltAndroidApp
 class App : Application() {

@@ -35,7 +35,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import net.ktnx.mobileledger.R
-import net.ktnx.mobileledger.domain.model.FutureDates
+import net.ktnx.mobileledger.core.domain.model.FutureDates
+import net.ktnx.mobileledger.domain.model.getText
 
 @Composable
 internal fun ProfileFutureDatesSection(

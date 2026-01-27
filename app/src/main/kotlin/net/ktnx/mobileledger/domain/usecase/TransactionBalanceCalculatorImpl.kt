@@ -20,10 +20,10 @@ package net.ktnx.mobileledger.domain.usecase
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.math.abs
-import net.ktnx.mobileledger.domain.model.BalanceConstants
-import net.ktnx.mobileledger.domain.model.Transaction
-import net.ktnx.mobileledger.domain.model.TransactionLine
-import net.ktnx.mobileledger.utils.SimpleDate
+import net.ktnx.mobileledger.core.common.utils.SimpleDate
+import net.ktnx.mobileledger.core.domain.model.BalanceConstants
+import net.ktnx.mobileledger.core.domain.model.Transaction
+import net.ktnx.mobileledger.core.domain.model.TransactionLine
 
 /**
  * Implementation of [TransactionBalanceCalculator].

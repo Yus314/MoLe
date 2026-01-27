@@ -17,9 +17,9 @@
 
 package net.ktnx.mobileledger.data.repository.mapper
 
-import net.ktnx.mobileledger.db.Account as DbAccount
-import net.ktnx.mobileledger.db.AccountValue
-import net.ktnx.mobileledger.db.AccountWithAmounts
+import net.ktnx.mobileledger.core.database.entity.Account as DbAccount
+import net.ktnx.mobileledger.core.database.entity.AccountValue
+import net.ktnx.mobileledger.core.database.entity.AccountWithAmounts
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -182,14 +182,14 @@ class AccountMapperTest {
 
     @Test
     fun `toEntity maps domain account correctly`() {
-        val domainAccount = net.ktnx.mobileledger.domain.model.Account(
+        val domainAccount = net.ktnx.mobileledger.core.domain.model.Account(
             id = 1L,
             name = "Assets:Bank",
             level = 1,
             isExpanded = true,
             isVisible = true,
             amounts = listOf(
-                net.ktnx.mobileledger.domain.model.AccountAmount(
+                net.ktnx.mobileledger.core.domain.model.AccountAmount(
                     currency = "USD",
                     amount = 100f
                 )
@@ -213,7 +213,7 @@ class AccountMapperTest {
 
     @Test
     fun `toEntity handles new account with null id`() {
-        val domainAccount = net.ktnx.mobileledger.domain.model.Account(
+        val domainAccount = net.ktnx.mobileledger.core.domain.model.Account(
             id = null,
             name = "Assets",
             level = 0
@@ -228,18 +228,18 @@ class AccountMapperTest {
 
     @Test
     fun `roundTrip preserves data`() {
-        val original = net.ktnx.mobileledger.domain.model.Account(
+        val original = net.ktnx.mobileledger.core.domain.model.Account(
             id = 1L,
             name = "Assets:Bank:Checking",
             level = 2,
             isExpanded = true,
             isVisible = true,
             amounts = listOf(
-                net.ktnx.mobileledger.domain.model.AccountAmount(
+                net.ktnx.mobileledger.core.domain.model.AccountAmount(
                     currency = "USD",
                     amount = 100f
                 ),
-                net.ktnx.mobileledger.domain.model.AccountAmount(
+                net.ktnx.mobileledger.core.domain.model.AccountAmount(
                     currency = "EUR",
                     amount = 50f
                 )

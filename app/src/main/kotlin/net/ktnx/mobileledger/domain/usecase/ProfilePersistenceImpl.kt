@@ -19,8 +19,8 @@ package net.ktnx.mobileledger.domain.usecase
 
 import javax.inject.Inject
 import logcat.logcat
-import net.ktnx.mobileledger.domain.repository.ProfileRepository
-import net.ktnx.mobileledger.domain.model.Profile
+import net.ktnx.mobileledger.core.domain.model.Profile
+import net.ktnx.mobileledger.core.domain.repository.ProfileRepository
 import net.ktnx.mobileledger.service.AuthDataProvider
 
 /**
@@ -33,7 +33,8 @@ class ProfilePersistenceImpl @Inject constructor(
 ) : ProfilePersistence {
 
     override suspend fun save(profile: Profile): Result<Unit> = runCatching {
-        if (profile.id != null && profile.id > 0) {
+        val profileId = profile.id
+        if (profileId != null && profileId > 0) {
             profileRepository.updateProfile(profile).getOrThrow()
             logcat { "Profile updated in DB" }
         } else {

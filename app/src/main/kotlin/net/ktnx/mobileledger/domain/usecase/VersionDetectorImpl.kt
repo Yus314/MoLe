@@ -29,11 +29,11 @@ import kotlinx.coroutines.withContext
 import logcat.LogPriority
 import logcat.asLog
 import logcat.logcat
-import net.ktnx.mobileledger.TemporaryAuthData
-import net.ktnx.mobileledger.di.IoDispatcher
-import net.ktnx.mobileledger.domain.model.Profile
-import net.ktnx.mobileledger.network.HledgerClient
-import net.ktnx.mobileledger.network.NetworkNotFoundException
+import net.ktnx.mobileledger.core.common.di.IoDispatcher
+import net.ktnx.mobileledger.core.domain.model.Profile
+import net.ktnx.mobileledger.core.domain.model.TemporaryAuthData
+import net.ktnx.mobileledger.core.network.HledgerClient
+import net.ktnx.mobileledger.core.network.NetworkNotFoundException
 
 /**
  * VersionDetector の実装

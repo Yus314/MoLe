@@ -20,7 +20,6 @@ import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
@@ -36,11 +35,11 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    compileSdk = 35
+    compileSdk = 36
     defaultConfig {
         applicationId = "net.ktnx.mobileledger"
-        minSdk = 22
-        targetSdk = 35
+        minSdk = 23
+        targetSdk = 36
         vectorDrawables.useSupportLibrary = true
         versionCode = 59
         versionName = "0.22.1"
@@ -76,7 +75,7 @@ android {
                 signingConfig = signingConfigs.getByName("release")
             }
             isMinifyEnabled = false
-            proguardFiles(getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro")
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
         debug {
             versionNameSuffix = "-debug"
@@ -86,7 +85,7 @@ android {
             applicationIdSuffix = ".pre"
             versionNameSuffix = "-pre"
             isMinifyEnabled = false
-            proguardFiles(getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro")
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
     sourceSets {
@@ -102,8 +101,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     @Suppress("UnstableApiUsage")
     productFlavors {
@@ -111,8 +110,8 @@ android {
     buildFeatures {
         viewBinding = false
         compose = true
+        buildConfig = true
     }
-    buildToolsVersion = "35.0.0"
     namespace = "net.ktnx.mobileledger"
     testOptions {
         unitTests {
@@ -122,9 +121,14 @@ android {
 }
 
 kotlin {
+    jvmToolchain(17)
     compilerOptions {
-        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_1_8)
-        freeCompilerArgs.addAll("-Xjsr305=strict")
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+        freeCompilerArgs.addAll(
+            "-Xjsr305=strict",
+            // Kotlin 2.3+ default target change; align with recommended behavior.
+            "-Xannotation-default-target=param-property"
+        )
         javaParameters.set(true)
     }
 }
@@ -136,6 +140,12 @@ ksp {
 }
 
 dependencies {
+    // Core modules
+    implementation(project(":core:common"))
+    implementation(project(":core:domain"))
+    implementation(project(":core:database"))
+    implementation(project(":core:network"))
+
     // Kotlin
     implementation(libs.kotlin.stdlib)
     implementation(libs.kotlinx.coroutines.android)
@@ -149,19 +159,10 @@ dependencies {
     implementation(libs.bundles.room)
     ksp(libs.androidx.room.compiler)
 
-    // Navigation
-    implementation(libs.bundles.navigation)
-
     // AndroidX
     implementation(fileTree(mapOf("include" to listOf("*.jar"), "dir" to "libs")))
-    implementation(libs.androidx.legacy.support.v4)
     implementation(libs.google.material)
-    implementation(libs.androidx.constraintlayout)
-    implementation(libs.androidx.recyclerview)
     implementation(libs.androidx.appcompat)
-
-    // Annotations
-    implementation(libs.jetbrains.annotations)
 
     // Logging
     implementation(libs.logcat)
@@ -175,7 +176,7 @@ dependencies {
     ksp(libs.hilt.compiler)
 
     // Compose
-    implementation(platform(libs.compose.bom))
+    implementation(enforcedPlatform(libs.compose.bom))
     implementation(libs.bundles.compose)
     implementation(libs.compose.navigation)
     implementation(libs.compose.hilt.navigation)
@@ -192,14 +193,14 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.hilt.android.testing)
     testImplementation(libs.robolectric)
-    testImplementation(platform(libs.compose.bom))
+    testImplementation(enforcedPlatform(libs.compose.bom))
     testImplementation(libs.bundles.compose.testing)
     kspTest(libs.hilt.compiler)
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.test.espresso.core)
     androidTestImplementation(libs.hilt.android.testing)
-    androidTestImplementation(platform(libs.compose.bom))
+    androidTestImplementation(enforcedPlatform(libs.compose.bom))
     androidTestImplementation(libs.bundles.compose.testing)
     kspAndroidTest(libs.hilt.compiler)
 }

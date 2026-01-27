@@ -17,6 +17,7 @@
 
 package net.ktnx.mobileledger.db
 
+import net.ktnx.mobileledger.core.database.entity.Currency
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue

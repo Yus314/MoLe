@@ -34,11 +34,11 @@ import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import net.ktnx.mobileledger.domain.model.Transaction
+import net.ktnx.mobileledger.core.common.utils.formatIsoDate
+import net.ktnx.mobileledger.core.common.utils.parseIsoDate
+import net.ktnx.mobileledger.core.domain.model.Transaction
 import net.ktnx.mobileledger.json.MoLeJson
 import net.ktnx.mobileledger.json.config.ApiVersionConfig
-import net.ktnx.mobileledger.utils.formatIsoDate
-import net.ktnx.mobileledger.utils.parseIsoDate
 
 /**
  * サロゲートクラス - tsourcepos の型変換対応
@@ -49,10 +49,10 @@ private data class UnifiedParsedLedgerTransactionSurrogate(
     val tdate2: String? = null,
     val tdescription: String? = null,
     val tcomment: String? = null,
-    val tcode: String = "",
-    val tstatus: String = "Unmarked",
-    val tprecedingcomment: String = "",
-    val ttags: List<List<String>> = emptyList(),
+    val tcode: String? = null,
+    val tstatus: String? = null,
+    val tprecedingcomment: String? = null,
+    val ttags: List<List<String>>? = null,
     val tpostings: List<UnifiedParsedPosting>? = null,
     val tsourcepos: JsonElement? = null,
     val tindex: Int = 0
@@ -159,10 +159,10 @@ object UnifiedParsedLedgerTransactionSerializer : KSerializer<UnifiedParsedLedge
             tdate2 = surrogate.tdate2,
             tdescription = surrogate.tdescription,
             tcomment = surrogate.tcomment,
-            tcode = surrogate.tcode,
-            tstatus = surrogate.tstatus,
-            tprecedingcomment = surrogate.tprecedingcomment,
-            ttags = surrogate.ttags,
+            tcode = surrogate.tcode ?: "",
+            tstatus = surrogate.tstatus ?: "Unmarked",
+            tprecedingcomment = surrogate.tprecedingcomment ?: "",
+            ttags = surrogate.ttags ?: emptyList(),
             tpostings = surrogate.tpostings,
             tsourcepos = sourcePosList,
             tindex = surrogate.tindex

@@ -26,12 +26,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
-import net.ktnx.mobileledger.dao.ProfileDAO
+import net.ktnx.mobileledger.core.common.di.IoDispatcher
+import net.ktnx.mobileledger.core.database.dao.ProfileDAO
+import net.ktnx.mobileledger.core.domain.model.Profile
+import net.ktnx.mobileledger.core.domain.repository.ProfileRepository
 import net.ktnx.mobileledger.data.repository.mapper.ProfileMapper.toDomain
 import net.ktnx.mobileledger.data.repository.mapper.ProfileMapper.toEntity
-import net.ktnx.mobileledger.di.IoDispatcher
-import net.ktnx.mobileledger.domain.model.Profile
-import net.ktnx.mobileledger.domain.repository.ProfileRepository
 import net.ktnx.mobileledger.domain.usecase.AppExceptionMapper
 
 /**

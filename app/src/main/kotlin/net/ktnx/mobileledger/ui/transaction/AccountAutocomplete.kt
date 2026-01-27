@@ -126,7 +126,7 @@ fun AccountAutocomplete(
             expanded = expanded,
             onDismissRequest = { expanded = false },
             modifier = Modifier
-                .exposedDropdownSize(matchTextFieldWidth = false)
+                .exposedDropdownSize()
                 .width(screenWidth - 32.dp)
         ) {
             suggestions.take(MAX_SUGGESTIONS).forEach { suggestion ->

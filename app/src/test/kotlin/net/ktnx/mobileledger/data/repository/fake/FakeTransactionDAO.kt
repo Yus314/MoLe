@@ -20,9 +20,9 @@ package net.ktnx.mobileledger.data.repository.fake
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
-import net.ktnx.mobileledger.dao.TransactionDAO
-import net.ktnx.mobileledger.db.Transaction
-import net.ktnx.mobileledger.db.TransactionWithAccounts
+import net.ktnx.mobileledger.core.database.dao.TransactionDAO
+import net.ktnx.mobileledger.core.database.entity.Transaction
+import net.ktnx.mobileledger.core.database.entity.TransactionWithAccounts
 
 /**
  * Fake implementation of TransactionDAO for unit testing.
@@ -172,15 +172,13 @@ class FakeTransactionDAO : TransactionDAO() {
             .filter { it.descriptionUpper.contains(termUpper) }
             .distinctBy { it.description }
             .map { tr ->
-                DescriptionContainer().apply {
-                    description = tr.description
-                    ordering = when {
-                        tr.descriptionUpper.startsWith(termUpper) -> 1
-                        tr.descriptionUpper.contains(":$termUpper") -> 2
-                        tr.descriptionUpper.contains(" $termUpper") -> 3
-                        else -> 9
-                    }
+                val ordering = when {
+                    tr.descriptionUpper.startsWith(termUpper) -> 1
+                    tr.descriptionUpper.contains(":$termUpper") -> 2
+                    tr.descriptionUpper.contains(" $termUpper") -> 3
+                    else -> 9
                 }
+                DescriptionContainer(tr.description, ordering)
             }
             .sortedWith(compareBy({ it.ordering }, { it.description?.uppercase() }))
     }

@@ -18,7 +18,7 @@
 package net.ktnx.mobileledger.ui.transaction
 
 import java.util.regex.Pattern
-import net.ktnx.mobileledger.domain.model.Template
+import net.ktnx.mobileledger.core.domain.model.Template
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull

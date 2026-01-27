@@ -24,15 +24,15 @@ import kotlinx.coroutines.ensureActive
 import logcat.LogPriority
 import logcat.asLog
 import logcat.logcat
-import net.ktnx.mobileledger.domain.model.Profile
-import net.ktnx.mobileledger.domain.model.Transaction
+import net.ktnx.mobileledger.core.domain.model.Profile
+import net.ktnx.mobileledger.core.domain.model.Transaction
+import net.ktnx.mobileledger.core.network.HledgerClient
+import net.ktnx.mobileledger.core.network.NetworkAuthenticationException
+import net.ktnx.mobileledger.core.network.NetworkHttpException
+import net.ktnx.mobileledger.core.network.NetworkNotFoundException
 import net.ktnx.mobileledger.json.API
 import net.ktnx.mobileledger.json.ApiNotSupportedException
 import net.ktnx.mobileledger.json.TransactionListParser
-import net.ktnx.mobileledger.network.HledgerClient
-import net.ktnx.mobileledger.network.NetworkAuthenticationException
-import net.ktnx.mobileledger.network.NetworkHttpException
-import net.ktnx.mobileledger.network.NetworkNotFoundException
 
 /**
  * Implementation of TransactionListFetcher using HledgerClient.

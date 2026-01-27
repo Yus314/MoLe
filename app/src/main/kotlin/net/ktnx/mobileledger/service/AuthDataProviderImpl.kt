@@ -21,8 +21,8 @@ import android.app.backup.BackupManager
 import javax.inject.Inject
 import javax.inject.Singleton
 import net.ktnx.mobileledger.BuildConfig
-import net.ktnx.mobileledger.TemporaryAuthData
-import net.ktnx.mobileledger.domain.model.Profile
+import net.ktnx.mobileledger.core.domain.model.Profile
+import net.ktnx.mobileledger.core.domain.model.TemporaryAuthData
 
 /**
  * Production implementation of AuthDataProvider.

@@ -19,7 +19,7 @@ package net.ktnx.mobileledger.service
 
 import java.util.Locale
 import kotlinx.coroutines.flow.StateFlow
-import net.ktnx.mobileledger.domain.model.CurrencyPosition
+import net.ktnx.mobileledger.core.domain.model.CurrencyPosition
 
 /**
  * Currency/number formatting service interface.

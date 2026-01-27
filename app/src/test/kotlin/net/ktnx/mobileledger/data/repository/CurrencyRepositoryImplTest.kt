@@ -28,10 +28,10 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
-import net.ktnx.mobileledger.dao.CurrencyDAO
-import net.ktnx.mobileledger.db.Currency as DbCurrency
-import net.ktnx.mobileledger.domain.model.Currency as DomainCurrency
-import net.ktnx.mobileledger.domain.model.CurrencyPosition
+import net.ktnx.mobileledger.core.database.dao.CurrencyDAO
+import net.ktnx.mobileledger.core.database.entity.Currency as DbCurrency
+import net.ktnx.mobileledger.core.domain.model.Currency as DomainCurrency
+import net.ktnx.mobileledger.core.domain.model.CurrencyPosition
 import net.ktnx.mobileledger.domain.usecase.AppExceptionMapper
 import net.ktnx.mobileledger.domain.usecase.sync.SyncExceptionMapper
 import org.junit.Assert.assertEquals

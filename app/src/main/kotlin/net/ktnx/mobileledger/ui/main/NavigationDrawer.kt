@@ -35,6 +35,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Add
@@ -65,10 +66,8 @@ import net.ktnx.mobileledger.BuildConfig
 import net.ktnx.mobileledger.R
 import net.ktnx.mobileledger.di.ThemeServiceEntryPoint
 import net.ktnx.mobileledger.service.ThemeService
-import org.burnoutcrew.reorderable.ReorderableItem
-import org.burnoutcrew.reorderable.detectReorderAfterLongPress
-import org.burnoutcrew.reorderable.rememberReorderableLazyListState
-import org.burnoutcrew.reorderable.reorderable
+import sh.calvin.reorderable.ReorderableItem
+import sh.calvin.reorderable.rememberReorderableLazyListState
 
 /**
  * Navigation drawer content for the main screen.
@@ -85,33 +84,28 @@ fun NavigationDrawerContent(
     onProfilesReordered: (List<ProfileListItem>) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // Track dragging state to prevent parent updates from resetting the list during drag
+    val lazyListState = rememberLazyListState()
     var isDragging by remember { mutableStateOf(false) }
     var reorderableProfiles by remember { mutableStateOf(profiles) }
 
-    // Sync with parent profiles only when not dragging
     LaunchedEffect(profiles) {
         if (!isDragging) {
             reorderableProfiles = profiles
         }
     }
 
-    val reorderState = rememberReorderableLazyListState(
-        onMove = { from, to ->
-            isDragging = true
-            // Clamp to.index to valid range to prevent crash when dragging past "New profile"
-            val safeToIndex = to.index.coerceIn(0, reorderableProfiles.lastIndex)
+    val reorderableLazyListState = rememberReorderableLazyListState(lazyListState) { from, to ->
+        isDragging = true
+        val lastIndex = reorderableProfiles.lastIndex
+        if (lastIndex >= 0) {
+            val safeToIndex = to.index.coerceIn(0, lastIndex)
             if (from.index != safeToIndex) {
                 reorderableProfiles = reorderableProfiles.toMutableList().apply {
                     add(safeToIndex, removeAt(from.index))
                 }
             }
-        },
-        onDragEnd = { _, _ ->
-            onProfilesReordered(reorderableProfiles)
-            isDragging = false
         }
-    )
+    }
 
     Column(
         modifier = modifier
@@ -123,21 +117,29 @@ fun NavigationDrawerContent(
 
         // Profile list
         LazyColumn(
-            state = reorderState.listState,
             modifier = Modifier
                 .weight(1f)
-                .fillMaxWidth()
-                .reorderable(reorderState),
+                .fillMaxWidth(),
+            state = lazyListState,
             contentPadding = PaddingValues(vertical = 8.dp)
         ) {
             items(
                 items = reorderableProfiles,
                 key = { it.id }
             ) { profile ->
-                ReorderableItem(reorderState, key = profile.id) { isDragging ->
+                ReorderableItem(reorderableLazyListState, key = profile.id) { itemDragging ->
                     val elevation by animateDpAsState(
-                        if (isDragging) 8.dp else 0.dp,
+                        if (itemDragging) 8.dp else 0.dp,
                         label = "elevation"
+                    )
+                    val dragHandle = Modifier.longPressDraggableHandle(
+                        onDragStarted = { isDragging = true },
+                        onDragStopped = {
+                            if (isDragging) {
+                                onProfilesReordered(reorderableProfiles)
+                            }
+                            isDragging = false
+                        }
                     )
                     ProfileRow(
                         profile = profile,
@@ -147,7 +149,7 @@ fun NavigationDrawerContent(
                         modifier = Modifier
                             .shadow(elevation)
                             .background(MaterialTheme.colorScheme.surface)
-                            .detectReorderAfterLongPress(reorderState)
+                            .then(dragHandle)
                     )
                 }
             }

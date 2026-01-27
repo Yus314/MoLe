@@ -24,8 +24,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
-import net.ktnx.mobileledger.domain.model.Profile
-import net.ktnx.mobileledger.domain.repository.ProfileRepository
+import net.ktnx.mobileledger.core.domain.model.Profile
+import net.ktnx.mobileledger.core.domain.repository.ProfileRepository
 import net.ktnx.mobileledger.util.createTestDomainProfile
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -401,7 +401,8 @@ class FakeProfileRepository : ProfileRepository {
     override suspend fun getProfileCount(): Result<Int> = Result.success(profiles.size)
 
     override suspend fun insertProfile(profile: Profile): Result<Long> {
-        val id = if (profile.id == null || profile.id == 0L) nextId++ else profile.id
+        val existingId = profile.id
+        val id = if (existingId == null || existingId == 0L) nextId++ else existingId
         val profileWithId = profile.copy(id = id)
         profiles[id] = profileWithId
         emitChanges()

@@ -24,11 +24,11 @@ import java.net.SocketTimeoutException
 import java.text.ParseException
 import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.SerializationException
-import net.ktnx.mobileledger.domain.model.SyncError
-import net.ktnx.mobileledger.domain.model.SyncException
+import net.ktnx.mobileledger.core.domain.model.SyncError
+import net.ktnx.mobileledger.core.domain.model.SyncException
+import net.ktnx.mobileledger.core.network.NetworkAuthenticationException
+import net.ktnx.mobileledger.core.network.NetworkHttpException
 import net.ktnx.mobileledger.json.ApiNotSupportedException
-import net.ktnx.mobileledger.network.NetworkAuthenticationException
-import net.ktnx.mobileledger.network.NetworkHttpException
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before

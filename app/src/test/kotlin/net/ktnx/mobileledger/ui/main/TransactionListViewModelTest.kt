@@ -28,13 +28,14 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import net.ktnx.mobileledger.db.Transaction
-import net.ktnx.mobileledger.db.Transaction as DbTransaction
-import net.ktnx.mobileledger.db.TransactionAccount
-import net.ktnx.mobileledger.db.TransactionWithAccounts
-import net.ktnx.mobileledger.domain.model.Profile
-import net.ktnx.mobileledger.domain.model.Transaction as DomainTransaction
-import net.ktnx.mobileledger.domain.model.TransactionLine as TransactionLine
+import net.ktnx.mobileledger.core.common.utils.SimpleDate
+import net.ktnx.mobileledger.core.database.entity.Transaction
+import net.ktnx.mobileledger.core.database.entity.Transaction as DbTransaction
+import net.ktnx.mobileledger.core.database.entity.TransactionAccount
+import net.ktnx.mobileledger.core.database.entity.TransactionWithAccounts
+import net.ktnx.mobileledger.core.domain.model.Profile
+import net.ktnx.mobileledger.core.domain.model.Transaction as DomainTransaction
+import net.ktnx.mobileledger.core.domain.model.TransactionLine as TransactionLine
 import net.ktnx.mobileledger.domain.usecase.GetTransactionsUseCaseImpl
 import net.ktnx.mobileledger.domain.usecase.ObserveCurrentProfileUseCaseImpl
 import net.ktnx.mobileledger.domain.usecase.ObserveTransactionsUseCaseImpl
@@ -43,7 +44,6 @@ import net.ktnx.mobileledger.domain.usecase.TransactionListConverterImpl
 import net.ktnx.mobileledger.fake.FakeCurrencyFormatter
 import net.ktnx.mobileledger.fake.FakeProfileRepository
 import net.ktnx.mobileledger.util.createTestDomainProfile
-import net.ktnx.mobileledger.utils.SimpleDate
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -1300,13 +1300,14 @@ class FakeTransactionRepositoryForTransactionList : net.ktnx.mobileledger.domain
 
     override suspend fun searchByDescription(
         term: String
-    ): Result<List<net.ktnx.mobileledger.dao.TransactionDAO.DescriptionContainer>> = Result.success(
+    ): Result<List<net.ktnx.mobileledger.core.database.dao.TransactionDAO.DescriptionContainer>> = Result.success(
         transactions
             .filter { it.transaction.description.contains(term, ignoreCase = true) }
             .distinctBy { it.transaction.description }
             .map {
-                net.ktnx.mobileledger.dao.TransactionDAO.DescriptionContainer()
-                    .apply { description = it.transaction.description }
+                net.ktnx.mobileledger.core.database.dao.TransactionDAO.DescriptionContainer(
+                    it.transaction.description
+                )
             }
     )
 
@@ -1402,7 +1403,7 @@ class FakeTransactionRepositoryForTransactionList : net.ktnx.mobileledger.domain
  * Fake AccountRepository specialized for TransactionListViewModel tests.
  * Now uses domain models (Account) for query operations.
  */
-class FakeAccountRepositoryForTransactionList : net.ktnx.mobileledger.domain.repository.AccountRepository {
+class FakeAccountRepositoryForTransactionList : net.ktnx.mobileledger.core.domain.repository.AccountRepository {
     private val accountNames = mutableMapOf<Long, MutableList<String>>()
 
     fun addAccount(profileId: Long, name: String) {
@@ -1411,10 +1412,10 @@ class FakeAccountRepositoryForTransactionList : net.ktnx.mobileledger.domain.rep
 
     // Flow methods (observe prefix)
     override fun observeAllWithAmounts(profileId: Long, includeZeroBalances: Boolean) =
-        MutableStateFlow<List<net.ktnx.mobileledger.domain.model.Account>>(emptyList())
+        MutableStateFlow<List<net.ktnx.mobileledger.core.domain.model.Account>>(emptyList())
 
     override fun observeByNameWithAmounts(profileId: Long, accountName: String) =
-        MutableStateFlow<net.ktnx.mobileledger.domain.model.Account?>(null)
+        MutableStateFlow<net.ktnx.mobileledger.core.domain.model.Account?>(null)
 
     override fun observeSearchAccountNames(profileId: Long, term: String) =
         MutableStateFlow(accountNames[profileId]?.filter { it.contains(term, ignoreCase = true) } ?: emptyList())
@@ -1426,12 +1427,12 @@ class FakeAccountRepositoryForTransactionList : net.ktnx.mobileledger.domain.rep
     override suspend fun getAllWithAmounts(
         profileId: Long,
         includeZeroBalances: Boolean
-    ): Result<List<net.ktnx.mobileledger.domain.model.Account>> = Result.success(emptyList())
+    ): Result<List<net.ktnx.mobileledger.core.domain.model.Account>> = Result.success(emptyList())
 
     override suspend fun getByNameWithAmounts(
         profileId: Long,
         accountName: String
-    ): Result<net.ktnx.mobileledger.domain.model.Account?> = Result.success(null)
+    ): Result<net.ktnx.mobileledger.core.domain.model.Account?> = Result.success(null)
 
     override suspend fun searchAccountNames(profileId: Long, term: String): Result<List<String>> =
         Result.success(accountNames[profileId]?.filter { it.contains(term, ignoreCase = true) } ?: emptyList())
@@ -1439,7 +1440,7 @@ class FakeAccountRepositoryForTransactionList : net.ktnx.mobileledger.domain.rep
     override suspend fun searchAccountsWithAmounts(
         profileId: Long,
         term: String
-    ): Result<List<net.ktnx.mobileledger.domain.model.Account>> = Result.success(emptyList())
+    ): Result<List<net.ktnx.mobileledger.core.domain.model.Account>> = Result.success(emptyList())
 
     override suspend fun searchAccountNamesGlobal(term: String): Result<List<String>> =
         Result.success(accountNames.values.flatten().filter { it.contains(term, ignoreCase = true) })
@@ -1453,7 +1454,7 @@ class FakeAccountRepositoryForTransactionList : net.ktnx.mobileledger.domain.rep
     }
 
     override suspend fun storeAccountsAsDomain(
-        accounts: List<net.ktnx.mobileledger.domain.model.Account>,
+        accounts: List<net.ktnx.mobileledger.core.domain.model.Account>,
         profileId: Long
     ): Result<Unit> {
         accounts.forEach { account ->

@@ -28,9 +28,9 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
-import net.ktnx.mobileledger.dao.OptionDAO
-import net.ktnx.mobileledger.db.Option
-import net.ktnx.mobileledger.domain.model.AppOption
+import net.ktnx.mobileledger.core.database.dao.OptionDAO
+import net.ktnx.mobileledger.core.database.entity.Option
+import net.ktnx.mobileledger.core.domain.model.AppOption
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull

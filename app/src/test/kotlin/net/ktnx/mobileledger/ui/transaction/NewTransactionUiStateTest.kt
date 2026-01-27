@@ -17,9 +17,9 @@
 
 package net.ktnx.mobileledger.ui.transaction
 
-import net.ktnx.mobileledger.domain.model.CurrencyPosition
-import net.ktnx.mobileledger.domain.model.FutureDates
-import net.ktnx.mobileledger.utils.SimpleDate
+import net.ktnx.mobileledger.core.common.utils.SimpleDate
+import net.ktnx.mobileledger.core.domain.model.CurrencyPosition
+import net.ktnx.mobileledger.core.domain.model.FutureDates
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull

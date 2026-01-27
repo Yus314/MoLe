@@ -22,14 +22,14 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
-import net.ktnx.mobileledger.dao.TransactionDAO
-import net.ktnx.mobileledger.db.Transaction as DbTransaction
-import net.ktnx.mobileledger.db.TransactionAccount
-import net.ktnx.mobileledger.db.TransactionWithAccounts
-import net.ktnx.mobileledger.domain.model.Transaction
-import net.ktnx.mobileledger.domain.model.TransactionLine
+import net.ktnx.mobileledger.core.common.utils.SimpleDate
+import net.ktnx.mobileledger.core.database.dao.TransactionDAO
+import net.ktnx.mobileledger.core.database.entity.Transaction as DbTransaction
+import net.ktnx.mobileledger.core.database.entity.TransactionAccount
+import net.ktnx.mobileledger.core.database.entity.TransactionWithAccounts
+import net.ktnx.mobileledger.core.domain.model.Transaction
+import net.ktnx.mobileledger.core.domain.model.TransactionLine
 import net.ktnx.mobileledger.domain.repository.TransactionRepository
-import net.ktnx.mobileledger.utils.SimpleDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -484,15 +484,13 @@ class FakeTransactionRepository : TransactionRepository {
                 .distinctBy { it.transaction.description }
                 .map { stored ->
                     val descUpper = stored.transaction.description.uppercase()
-                    TransactionDAO.DescriptionContainer().apply {
-                        description = stored.transaction.description
-                        ordering = when {
-                            descUpper.startsWith(termUpper) -> 1
-                            descUpper.contains(":$termUpper") -> 2
-                            descUpper.contains(" $termUpper") -> 3
-                            else -> 9
-                        }
+                    val ordering = when {
+                        descUpper.startsWith(termUpper) -> 1
+                        descUpper.contains(":$termUpper") -> 2
+                        descUpper.contains(" $termUpper") -> 3
+                        else -> 9
                     }
+                    TransactionDAO.DescriptionContainer(stored.transaction.description, ordering)
                 }
                 .sortedWith(compareBy({ it.ordering }, { it.description?.uppercase() }))
         )

@@ -4,7 +4,7 @@
 package net.ktnx.mobileledger.domain.usecase
 
 import javax.inject.Inject
-import net.ktnx.mobileledger.domain.repository.OptionRepository
+import net.ktnx.mobileledger.core.domain.repository.OptionRepository
 
 interface GetLastSyncTimestampUseCase {
     suspend operator fun invoke(profileId: Long): Result<Long?>

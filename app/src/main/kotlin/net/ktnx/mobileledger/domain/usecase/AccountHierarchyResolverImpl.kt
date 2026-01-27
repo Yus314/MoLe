@@ -18,7 +18,7 @@
 package net.ktnx.mobileledger.domain.usecase
 
 import javax.inject.Inject
-import net.ktnx.mobileledger.domain.model.Account
+import net.ktnx.mobileledger.core.domain.model.Account
 
 /**
  * Implementation of [AccountHierarchyResolver].

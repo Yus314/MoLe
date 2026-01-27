@@ -19,7 +19,7 @@ package net.ktnx.mobileledger.service
 
 import java.text.DecimalFormatSymbols
 import java.util.Locale
-import net.ktnx.mobileledger.domain.model.CurrencyPosition
+import net.ktnx.mobileledger.core.domain.model.CurrencyPosition
 
 /**
  * Currency format configuration.

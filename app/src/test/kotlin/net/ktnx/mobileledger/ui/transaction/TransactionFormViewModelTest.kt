@@ -21,12 +21,13 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import net.ktnx.mobileledger.domain.model.Profile
+import net.ktnx.mobileledger.core.common.utils.SimpleDate
+import net.ktnx.mobileledger.core.domain.model.Profile
+import net.ktnx.mobileledger.domain.usecase.GetFirstTransactionByDescriptionUseCaseImpl
+import net.ktnx.mobileledger.domain.usecase.GetTransactionByIdUseCaseImpl
 import net.ktnx.mobileledger.domain.usecase.ObserveCurrentProfileUseCaseImpl
 import net.ktnx.mobileledger.domain.usecase.SearchTransactionDescriptionsUseCaseImpl
 import net.ktnx.mobileledger.domain.usecase.StoreTransactionUseCaseImpl
-import net.ktnx.mobileledger.domain.usecase.GetTransactionByIdUseCaseImpl
-import net.ktnx.mobileledger.domain.usecase.GetFirstTransactionByDescriptionUseCaseImpl
 import net.ktnx.mobileledger.fake.FakeAppStateService
 import net.ktnx.mobileledger.fake.FakeProfileRepository
 import net.ktnx.mobileledger.fake.FakeTransactionBalanceCalculator
@@ -34,7 +35,6 @@ import net.ktnx.mobileledger.fake.FakeTransactionRepository
 import net.ktnx.mobileledger.fake.FakeTransactionSender
 import net.ktnx.mobileledger.util.MainDispatcherRule
 import net.ktnx.mobileledger.util.createTestDomainProfile
-import net.ktnx.mobileledger.utils.SimpleDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -582,7 +582,7 @@ class TransactionFormViewModelTest {
 
         // Add some transactions to search
         transactionRepository.insertTransaction(
-            net.ktnx.mobileledger.domain.model.Transaction(
+            net.ktnx.mobileledger.core.domain.model.Transaction(
                 id = null,
                 ledgerId = 1L,
                 date = SimpleDate.today(),
@@ -629,7 +629,7 @@ class TransactionFormViewModelTest {
 
         // Create a transaction
         val result = transactionRepository.insertTransaction(
-            net.ktnx.mobileledger.domain.model.Transaction(
+            net.ktnx.mobileledger.core.domain.model.Transaction(
                 id = null,
                 ledgerId = 1L,
                 date = SimpleDate.today(),
@@ -857,7 +857,7 @@ class TransactionFormViewModelTest {
         // Add some transactions for suggestions
         listOf("GROCERY STORE", "GROCERY MART", "GRAND HOTEL").forEach { desc ->
             transactionRepository.insertTransaction(
-                net.ktnx.mobileledger.domain.model.Transaction(
+                net.ktnx.mobileledger.core.domain.model.Transaction(
                     id = null,
                     ledgerId = desc.hashCode().toLong(),
                     date = SimpleDate.today(),
@@ -894,7 +894,7 @@ class TransactionFormViewModelTest {
 
         // Add transaction with special characters
         transactionRepository.insertTransaction(
-            net.ktnx.mobileledger.domain.model.Transaction(
+            net.ktnx.mobileledger.core.domain.model.Transaction(
                 id = null,
                 ledgerId = 1L,
                 date = SimpleDate.today(),
@@ -984,7 +984,7 @@ class TransactionFormViewModelTest {
 
         // Add transactions
         transactionRepository.insertTransaction(
-            net.ktnx.mobileledger.domain.model.Transaction(
+            net.ktnx.mobileledger.core.domain.model.Transaction(
                 id = null,
                 ledgerId = 1L,
                 date = SimpleDate.today(),
@@ -994,7 +994,7 @@ class TransactionFormViewModelTest {
             profile.id!!
         )
         transactionRepository.insertTransaction(
-            net.ktnx.mobileledger.domain.model.Transaction(
+            net.ktnx.mobileledger.core.domain.model.Transaction(
                 id = null,
                 ledgerId = 2L,
                 date = SimpleDate.today(),

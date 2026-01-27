@@ -17,7 +17,7 @@
 
 package net.ktnx.mobileledger.ui.transaction
 
-import net.ktnx.mobileledger.domain.model.BalanceConstants
+import net.ktnx.mobileledger.core.domain.model.BalanceConstants
 
 /**
  * UI State for account rows management.
@@ -112,7 +112,7 @@ sealed class AccountRowsEvent {
     data object DismissCurrencySelector : AccountRowsEvent()
     data class AddCurrency(
         val name: String,
-        val position: net.ktnx.mobileledger.domain.model.CurrencyPosition,
+        val position: net.ktnx.mobileledger.core.domain.model.CurrencyPosition,
         val gap: Boolean
     ) : AccountRowsEvent()
     data class DeleteCurrency(val name: String) : AccountRowsEvent()

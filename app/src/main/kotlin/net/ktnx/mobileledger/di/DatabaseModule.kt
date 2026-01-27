@@ -27,20 +27,25 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import java.io.BufferedReader
+import java.io.IOException
+import java.io.InputStreamReader
 import java.util.Locale
 import java.util.UUID
+import java.util.regex.Pattern
 import javax.inject.Singleton
-import net.ktnx.mobileledger.dao.AccountDAO
-import net.ktnx.mobileledger.dao.AccountValueDAO
-import net.ktnx.mobileledger.dao.CurrencyDAO
-import net.ktnx.mobileledger.dao.OptionDAO
-import net.ktnx.mobileledger.dao.ProfileDAO
-import net.ktnx.mobileledger.dao.TemplateAccountDAO
-import net.ktnx.mobileledger.dao.TemplateHeaderDAO
-import net.ktnx.mobileledger.dao.TransactionAccountDAO
-import net.ktnx.mobileledger.dao.TransactionDAO
-import net.ktnx.mobileledger.domain.repository.PreferencesRepository
-import net.ktnx.mobileledger.db.DB
+import logcat.logcat
+import net.ktnx.mobileledger.core.database.MoLeDatabase
+import net.ktnx.mobileledger.core.database.dao.AccountDAO
+import net.ktnx.mobileledger.core.database.dao.AccountValueDAO
+import net.ktnx.mobileledger.core.database.dao.CurrencyDAO
+import net.ktnx.mobileledger.core.database.dao.OptionDAO
+import net.ktnx.mobileledger.core.database.dao.ProfileDAO
+import net.ktnx.mobileledger.core.database.dao.TemplateAccountDAO
+import net.ktnx.mobileledger.core.database.dao.TemplateHeaderDAO
+import net.ktnx.mobileledger.core.database.dao.TransactionAccountDAO
+import net.ktnx.mobileledger.core.database.dao.TransactionDAO
+import net.ktnx.mobileledger.core.domain.repository.PreferencesRepository
 
 /**
  * Hilt module providing database and DAO dependencies.
@@ -50,7 +55,7 @@ import net.ktnx.mobileledger.db.DB
  *
  * ## Provided Dependencies
  *
- * - [DB] - The Room database instance (singleton)
+ * - [MoLeDatabase] - The Room database instance (singleton)
  * - [ProfileDAO] - Data access for user profiles/ledgers
  * - [TransactionDAO] - Data access for ledger transactions
  * - [AccountDAO] - Data access for accounts
@@ -73,8 +78,11 @@ object DatabaseModule {
 
     @Provides
     @Singleton
-    fun provideDatabase(@ApplicationContext context: Context, preferencesRepository: PreferencesRepository): DB {
-        val builder = Room.databaseBuilder(context, DB::class.java, DB.DB_NAME)
+    fun provideDatabase(
+        @ApplicationContext context: Context,
+        preferencesRepository: PreferencesRepository
+    ): MoLeDatabase {
+        val builder = Room.databaseBuilder(context, MoLeDatabase::class.java, MoLeDatabase.DB_NAME)
             .setJournalMode(RoomDatabase.JournalMode.WRITE_AHEAD_LOGGING)
 
         builder.addMigrations(
@@ -155,7 +163,7 @@ object DatabaseModule {
     ): Migration = object : Migration(toVersion - 1, toVersion) {
         override fun migrate(db: SupportSQLiteDatabase) {
             val fileName = String.format(Locale.US, "db_%d", toVersion)
-            DB.applyRevisionFile(db, resources, packageName, fileName)
+            applyRevisionFile(db, resources, packageName, fileName)
 
             if (toVersion == 59) {
                 db.query(
@@ -195,7 +203,7 @@ object DatabaseModule {
     ): Migration = object : Migration(fromVersion, toVersion) {
         override fun migrate(db: SupportSQLiteDatabase) {
             val fileName = String.format(Locale.US, "db_%d_%d", fromVersion, toVersion)
-            DB.applyRevisionFile(db, resources, packageName, fileName)
+            applyRevisionFile(db, resources, packageName, fileName)
         }
     }
 
@@ -212,30 +220,110 @@ object DatabaseModule {
         }
     }
 
-    @Provides
-    fun provideProfileDAO(db: DB): ProfileDAO = db.getProfileDAO()
+    /**
+     * Apply a SQL revision file from raw resources.
+     *
+     * @param db The SQLite database to apply the revision to
+     * @param resources The Resources instance for loading raw files
+     * @param packageName The package name for resource identification
+     * @param fileName The name of the raw resource file (without extension)
+     */
+    private fun applyRevisionFile(
+        db: SupportSQLiteDatabase,
+        resources: android.content.res.Resources,
+        packageName: String,
+        fileName: String
+    ) {
+        val resId = resources.getIdentifier(fileName, "raw", packageName)
+        if (resId == 0) {
+            throw android.database.SQLException(String.format(Locale.US, "No resource for %s", fileName))
+        }
+
+        try {
+            resources.openRawResource(resId).use { res ->
+                logcat { "Applying $fileName" }
+                val reader = BufferedReader(InputStreamReader(res))
+
+                val endOfStatement = Pattern.compile(";\\s*(?:--.*)?$")
+
+                var sqlStatement: String? = null
+                var lineNo = 0
+
+                reader.forEachLine { line ->
+                    lineNo++
+                    if (line.startsWith("--") || line.isEmpty()) {
+                        return@forEachLine
+                    }
+
+                    sqlStatement = if (sqlStatement == null) {
+                        line
+                    } else {
+                        "$sqlStatement $line"
+                    }
+
+                    val m = endOfStatement.matcher(line)
+                    if (m.find()) {
+                        try {
+                            db.execSQL(checkNotNull(sqlStatement) { "SQL statement is null" })
+                            sqlStatement = null
+                        } catch (e: Exception) {
+                            throw RuntimeException(
+                                String.format(
+                                    "Error applying %s, line %d, statement: %s",
+                                    fileName,
+                                    lineNo,
+                                    sqlStatement
+                                ),
+                                e
+                            )
+                        }
+                    }
+                }
+
+                if (sqlStatement != null) {
+                    throw RuntimeException(
+                        String.format(
+                            "Error applying %s: EOF after continuation. Line %s, " +
+                                "Incomplete statement: %s",
+                            fileName,
+                            lineNo,
+                            sqlStatement
+                        )
+                    )
+                }
+            }
+        } catch (e: IOException) {
+            throw RuntimeException(
+                String.format("Error opening raw resource for %s", fileName),
+                e
+            )
+        }
+    }
 
     @Provides
-    fun provideTransactionDAO(db: DB): TransactionDAO = db.getTransactionDAO()
+    fun provideProfileDAO(db: MoLeDatabase): ProfileDAO = db.getProfileDAO()
 
     @Provides
-    fun provideTransactionAccountDAO(db: DB): TransactionAccountDAO = db.getTransactionAccountDAO()
+    fun provideTransactionDAO(db: MoLeDatabase): TransactionDAO = db.getTransactionDAO()
 
     @Provides
-    fun provideAccountDAO(db: DB): AccountDAO = db.getAccountDAO()
+    fun provideTransactionAccountDAO(db: MoLeDatabase): TransactionAccountDAO = db.getTransactionAccountDAO()
 
     @Provides
-    fun provideAccountValueDAO(db: DB): AccountValueDAO = db.getAccountValueDAO()
+    fun provideAccountDAO(db: MoLeDatabase): AccountDAO = db.getAccountDAO()
 
     @Provides
-    fun provideTemplateHeaderDAO(db: DB): TemplateHeaderDAO = db.getTemplateDAO()
+    fun provideAccountValueDAO(db: MoLeDatabase): AccountValueDAO = db.getAccountValueDAO()
 
     @Provides
-    fun provideTemplateAccountDAO(db: DB): TemplateAccountDAO = db.getTemplateAccountDAO()
+    fun provideTemplateHeaderDAO(db: MoLeDatabase): TemplateHeaderDAO = db.getTemplateDAO()
 
     @Provides
-    fun provideCurrencyDAO(db: DB): CurrencyDAO = db.getCurrencyDAO()
+    fun provideTemplateAccountDAO(db: MoLeDatabase): TemplateAccountDAO = db.getTemplateAccountDAO()
 
     @Provides
-    fun provideOptionDAO(db: DB): OptionDAO = db.getOptionDAO()
+    fun provideCurrencyDAO(db: MoLeDatabase): CurrencyDAO = db.getCurrencyDAO()
+
+    @Provides
+    fun provideOptionDAO(db: MoLeDatabase): OptionDAO = db.getOptionDAO()
 }

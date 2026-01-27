@@ -22,7 +22,7 @@ import android.content.res.ColorStateList
 import android.content.res.Resources
 import androidx.annotation.ColorInt
 import kotlinx.coroutines.flow.StateFlow
-import net.ktnx.mobileledger.domain.model.Profile
+import net.ktnx.mobileledger.core.domain.model.Profile
 
 /**
  * Theme management service interface.

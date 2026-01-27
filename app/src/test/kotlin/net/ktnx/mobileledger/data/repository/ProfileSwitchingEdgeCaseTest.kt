@@ -29,14 +29,14 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import net.ktnx.mobileledger.dao.TransactionDAO
-import net.ktnx.mobileledger.domain.model.Profile
-import net.ktnx.mobileledger.domain.model.Transaction
-import net.ktnx.mobileledger.domain.model.TransactionLine
-import net.ktnx.mobileledger.domain.repository.ProfileRepository
+import net.ktnx.mobileledger.core.common.utils.SimpleDate
+import net.ktnx.mobileledger.core.database.dao.TransactionDAO
+import net.ktnx.mobileledger.core.domain.model.Profile
+import net.ktnx.mobileledger.core.domain.model.Transaction
+import net.ktnx.mobileledger.core.domain.model.TransactionLine
+import net.ktnx.mobileledger.core.domain.repository.ProfileRepository
 import net.ktnx.mobileledger.domain.repository.TransactionRepository
 import net.ktnx.mobileledger.util.createTestDomainProfile
-import net.ktnx.mobileledger.utils.SimpleDate
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -334,7 +334,8 @@ class EdgeCaseFakeProfileRepository : ProfileRepository {
     override suspend fun getProfileCount(): Result<Int> = Result.success(profiles.size)
 
     override suspend fun insertProfile(profile: Profile): Result<Long> {
-        val id = if (profile.id == null || profile.id == 0L) nextId++ else profile.id
+        val existingId = profile.id
+        val id = if (existingId == null || existingId == 0L) nextId++ else existingId
         val profileWithId = profile.copy(id = id)
         profiles[id] = profileWithId
         return Result.success(id)
