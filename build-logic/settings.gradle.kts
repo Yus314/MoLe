@@ -1,5 +1,5 @@
 /*
- * Copyright © 2019 Damyan Ivanov.
+ * Copyright © 2024 Damyan Ivanov.
  * This file is part of MoLe.
  * MoLe is free software: you can distribute it and/or modify it
  * under the term of the GNU General Public License as published by
@@ -15,30 +15,18 @@
  * along with MoLe. If not, see <https://www.gnu.org/licenses/>.
  */
 
-pluginManagement {
-    includeBuild("build-logic")
+dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
         gradlePluginPortal()
     }
-}
-
-dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-    repositories {
-        google()
-        mavenCentral()
+    versionCatalogs {
+        create("libs") {
+            from(files("../gradle/libs.versions.toml"))
+        }
     }
 }
 
-rootProject.name = "MoLe"
-
-include(":app")
-
-// Core modules
-include(":core:common")
-include(":core:domain")
-include(":core:database")
-include(":core:network")
-include(":core:data")
+rootProject.name = "build-logic"
+include(":convention")

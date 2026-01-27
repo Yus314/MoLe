@@ -1,5 +1,5 @@
 /*
- * Copyright © 2019 Damyan Ivanov.
+ * Copyright © 2024 Damyan Ivanov.
  * This file is part of MoLe.
  * MoLe is free software: you can distribute it and/or modify it
  * under the term of the GNU General Public License as published by
@@ -15,30 +15,17 @@
  * along with MoLe. If not, see <https://www.gnu.org/licenses/>.
  */
 
-pluginManagement {
-    includeBuild("build-logic")
-    repositories {
-        google()
-        mavenCentral()
-        gradlePluginPortal()
-    }
+plugins {
+    alias(libs.plugins.mole.android.library)
+    alias(libs.plugins.mole.android.hilt)
 }
 
-dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-    repositories {
-        google()
-        mavenCentral()
-    }
+android {
+    namespace = "net.ktnx.mobileledger.core.domain"
 }
 
-rootProject.name = "MoLe"
+dependencies {
+    implementation(project(":core:common"))
 
-include(":app")
-
-// Core modules
-include(":core:common")
-include(":core:domain")
-include(":core:database")
-include(":core:network")
-include(":core:data")
+    implementation(libs.kotlinx.collections.immutable)
+}
