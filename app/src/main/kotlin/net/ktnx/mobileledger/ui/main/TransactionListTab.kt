@@ -35,7 +35,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import net.ktnx.mobileledger.ui.components.WeakOverscrollContainer
 
 /**
  * Transaction List Tab displaying the list of transactions grouped by date.
@@ -78,44 +77,40 @@ fun TransactionListTab(
                 CircularProgressIndicator()
             }
         } else {
-            WeakOverscrollContainer(
+            LazyColumn(
+                state = listState,
                 modifier = Modifier
                     .fillMaxSize()
                     .weight(1f)
             ) {
-                LazyColumn(
-                    state = listState,
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    items(
-                        items = uiState.transactions,
-                        key = { item ->
-                            when (item) {
-                                is TransactionListDisplayItem.Header -> Long.MIN_VALUE
-                                is TransactionListDisplayItem.DateDelimiter -> -item.date.toDate().time
-                                is TransactionListDisplayItem.Transaction -> item.id
-                            }
-                        },
-                        contentType = { item ->
-                            when (item) {
-                                is TransactionListDisplayItem.Header -> 0
-                                is TransactionListDisplayItem.DateDelimiter -> 1
-                                is TransactionListDisplayItem.Transaction -> 2
-                            }
-                        }
-                    ) { item ->
+                items(
+                    items = uiState.transactions,
+                    key = { item ->
                         when (item) {
-                            is TransactionListDisplayItem.Header -> {
-                                TransactionListHeader(text = uiState.headerText)
-                            }
+                            is TransactionListDisplayItem.Header -> Long.MIN_VALUE
+                            is TransactionListDisplayItem.DateDelimiter -> -item.date.toDate().time
+                            is TransactionListDisplayItem.Transaction -> item.id
+                        }
+                    },
+                    contentType = { item ->
+                        when (item) {
+                            is TransactionListDisplayItem.Header -> 0
+                            is TransactionListDisplayItem.DateDelimiter -> 1
+                            is TransactionListDisplayItem.Transaction -> 2
+                        }
+                    }
+                ) { item ->
+                    when (item) {
+                        is TransactionListDisplayItem.Header -> {
+                            TransactionListHeader(text = uiState.headerText)
+                        }
 
-                            is TransactionListDisplayItem.DateDelimiter -> {
-                                TransactionDateDelimiter(date = item.date, isMonthShown = item.isMonthShown)
-                            }
+                        is TransactionListDisplayItem.DateDelimiter -> {
+                            TransactionDateDelimiter(date = item.date, isMonthShown = item.isMonthShown)
+                        }
 
-                            is TransactionListDisplayItem.Transaction -> {
-                                TransactionCard(transaction = item)
-                            }
+                        is TransactionListDisplayItem.Transaction -> {
+                            TransactionCard(transaction = item)
                         }
                     }
                 }

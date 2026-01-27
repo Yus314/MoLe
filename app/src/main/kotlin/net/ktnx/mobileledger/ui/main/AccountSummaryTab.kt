@@ -59,7 +59,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import net.ktnx.mobileledger.ui.components.WeakOverscrollContainer
 
 /**
  * Account Summary Tab displaying the list of accounts with their balances.
@@ -102,55 +101,53 @@ fun AccountSummaryTab(
         }
     }
 
-    WeakOverscrollContainer(modifier = modifier.fillMaxSize()) {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            items(
-                items = visibleItems,
-                key = { item ->
-                    when (item) {
-                        is AccountSummaryListItem.Header -> "header"
-                        is AccountSummaryListItem.Account -> item.id
-                    }
-                }
-            ) { item ->
+    LazyColumn(
+        modifier = modifier.fillMaxSize()
+    ) {
+        items(
+            items = visibleItems,
+            key = { item ->
                 when (item) {
-                    is AccountSummaryListItem.Header -> {
-                        AccountSummaryHeader(
-                            text = item.text,
-                            modifier = Modifier.animateItem(
-                                fadeInSpec = null,
-                                fadeOutSpec = null,
-                                placementSpec = spring(
-                                    dampingRatio = Spring.DampingRatioLowBouncy,
-                                    stiffness = Spring.StiffnessLow
-                                )
+                    is AccountSummaryListItem.Header -> "header"
+                    is AccountSummaryListItem.Account -> item.id
+                }
+            }
+        ) { item ->
+            when (item) {
+                is AccountSummaryListItem.Header -> {
+                    AccountSummaryHeader(
+                        text = item.text,
+                        modifier = Modifier.animateItem(
+                            fadeInSpec = null,
+                            fadeOutSpec = null,
+                            placementSpec = spring(
+                                dampingRatio = Spring.DampingRatioLowBouncy,
+                                stiffness = Spring.StiffnessLow
                             )
                         )
-                    }
+                    )
+                }
 
-                    is AccountSummaryListItem.Account -> {
-                        Column(
-                            modifier = Modifier.animateItem(
-                                fadeInSpec = null,
-                                fadeOutSpec = null,
-                                placementSpec = spring(
-                                    dampingRatio = Spring.DampingRatioLowBouncy,
-                                    stiffness = Spring.StiffnessLow
-                                )
+                is AccountSummaryListItem.Account -> {
+                    Column(
+                        modifier = Modifier.animateItem(
+                            fadeInSpec = null,
+                            fadeOutSpec = null,
+                            placementSpec = spring(
+                                dampingRatio = Spring.DampingRatioLowBouncy,
+                                stiffness = Spring.StiffnessLow
                             )
-                        ) {
-                            AccountSummaryRow(
-                                account = item,
-                                onToggleExpanded = { onToggleExpanded(item.id) },
-                                onToggleAmountsExpanded = { onToggleAmountsExpanded(item.id) },
-                                onClick = { onAccountClick(item.name) }
-                            )
-                            HorizontalDivider(
-                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                            )
-                        }
+                        )
+                    ) {
+                        AccountSummaryRow(
+                            account = item,
+                            onToggleExpanded = { onToggleExpanded(item.id) },
+                            onToggleAmountsExpanded = { onToggleAmountsExpanded(item.id) },
+                            onClick = { onAccountClick(item.name) }
+                        )
+                        HorizontalDivider(
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                        )
                     }
                 }
             }

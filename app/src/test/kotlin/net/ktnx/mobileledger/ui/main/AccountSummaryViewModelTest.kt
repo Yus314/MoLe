@@ -19,24 +19,26 @@ package net.ktnx.mobileledger.ui.main
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import net.ktnx.mobileledger.domain.repository.AccountRepository
-import net.ktnx.mobileledger.domain.repository.PreferencesRepository
 import net.ktnx.mobileledger.db.Account as DbAccount
 import net.ktnx.mobileledger.db.AccountValue
 import net.ktnx.mobileledger.db.AccountWithAmounts
 import net.ktnx.mobileledger.domain.model.Account
 import net.ktnx.mobileledger.domain.model.AccountAmount as DomainAccountAmount
 import net.ktnx.mobileledger.domain.model.Profile
+import net.ktnx.mobileledger.domain.repository.AccountRepository
+import net.ktnx.mobileledger.domain.repository.PreferencesRepository
 import net.ktnx.mobileledger.domain.usecase.AccountHierarchyResolverImpl
-import net.ktnx.mobileledger.domain.usecase.GetAccountsWithAmountsUseCaseImpl
 import net.ktnx.mobileledger.domain.usecase.GetShowZeroBalanceUseCaseImpl
+import net.ktnx.mobileledger.domain.usecase.ObserveAccountsWithAmountsUseCaseImpl
 import net.ktnx.mobileledger.domain.usecase.ObserveCurrentProfileUseCaseImpl
 import net.ktnx.mobileledger.domain.usecase.SetShowZeroBalanceUseCaseImpl
 import net.ktnx.mobileledger.fake.FakeProfileRepository
@@ -143,7 +145,7 @@ class AccountSummaryViewModelTest {
 
     private fun createViewModel() = AccountSummaryViewModel(
         observeCurrentProfileUseCase = ObserveCurrentProfileUseCaseImpl(profileRepository),
-        getAccountsWithAmountsUseCase = GetAccountsWithAmountsUseCaseImpl(accountRepository),
+        observeAccountsWithAmountsUseCase = ObserveAccountsWithAmountsUseCaseImpl(accountRepository),
         getShowZeroBalanceUseCase = GetShowZeroBalanceUseCaseImpl(preferencesRepository),
         setShowZeroBalanceUseCase = SetShowZeroBalanceUseCaseImpl(preferencesRepository),
         accountHierarchyResolver = AccountHierarchyResolverImpl()
@@ -816,11 +818,24 @@ class AccountSummaryViewModelTest {
  * Fake AccountRepository specialized for AccountSummaryViewModel tests.
  * Implements AccountRepository directly to support account with amounts storage.
  * Now uses domain models (Account) for query operations.
+ * Uses shared MutableStateFlows to support reactive testing.
  */
 class FakeAccountRepositoryForAccountSummary : AccountRepository {
     private val domainAccounts = mutableMapOf<Long, MutableList<Account>>()
     private val accountNames = mutableMapOf<Long, MutableList<String>>()
     var simulateError = false
+
+    // Shared StateFlows for reactive updates
+    private val accountFlows = mutableMapOf<Long, MutableStateFlow<List<Account>>>()
+
+    private fun getOrCreateFlow(profileId: Long): MutableStateFlow<List<Account>> = accountFlows.getOrPut(profileId) {
+        MutableStateFlow(emptyList())
+    }
+
+    private fun emitAccounts(profileId: Long) {
+        val accounts = domainAccounts[profileId] ?: emptyList()
+        getOrCreateFlow(profileId).value = accounts
+    }
 
     /**
      * Add a domain model account for testing.
@@ -828,6 +843,7 @@ class FakeAccountRepositoryForAccountSummary : AccountRepository {
     fun addAccount(profileId: Long, account: Account) {
         domainAccounts.getOrPut(profileId) { mutableListOf() }.add(account)
         accountNames.getOrPut(profileId) { mutableListOf() }.add(account.name)
+        emitAccounts(profileId)
     }
 
     /**
@@ -849,8 +865,17 @@ class FakeAccountRepositoryForAccountSummary : AccountRepository {
     }
 
     // Flow methods (observe prefix)
-    override fun observeAllWithAmounts(profileId: Long, includeZeroBalances: Boolean) =
-        MutableStateFlow(domainAccounts[profileId] ?: emptyList())
+    override fun observeAllWithAmounts(profileId: Long, includeZeroBalances: Boolean): Flow<List<Account>> =
+        getOrCreateFlow(profileId).map { accounts ->
+            if (simulateError) {
+                throw RuntimeException("Simulated error")
+            }
+            if (includeZeroBalances) {
+                accounts
+            } else {
+                accounts.filter { acc -> acc.amounts.any { it.amount != 0f } }
+            }
+        }
 
     override fun observeByNameWithAmounts(profileId: Long, accountName: String) =
         MutableStateFlow(domainAccounts[profileId]?.find { it.name == accountName })
@@ -896,12 +921,14 @@ class FakeAccountRepositoryForAccountSummary : AccountRepository {
     override suspend fun deleteAllAccounts(): Result<Unit> {
         domainAccounts.clear()
         accountNames.clear()
+        accountFlows.values.forEach { it.value = emptyList() }
         return Result.success(Unit)
     }
 
     override suspend fun storeAccountsAsDomain(accounts: List<Account>, profileId: Long): Result<Unit> {
         domainAccounts[profileId] = accounts.toMutableList()
         accountNames[profileId] = accounts.map { it.name }.toMutableList()
+        emitAccounts(profileId)
         return Result.success(Unit)
     }
 }
