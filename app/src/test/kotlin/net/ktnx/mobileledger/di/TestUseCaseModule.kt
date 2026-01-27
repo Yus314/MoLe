@@ -25,11 +25,9 @@ import javax.inject.Singleton
 import net.ktnx.mobileledger.di.UseCaseModule
 import net.ktnx.mobileledger.domain.usecase.ConfigBackup
 import net.ktnx.mobileledger.domain.usecase.DatabaseInitializer
-import net.ktnx.mobileledger.domain.usecase.TransactionSyncer
 import net.ktnx.mobileledger.domain.usecase.VersionDetector
 import net.ktnx.mobileledger.fake.FakeConfigBackup
 import net.ktnx.mobileledger.fake.FakeDatabaseInitializer
-import net.ktnx.mobileledger.fake.FakeTransactionSyncer
 import net.ktnx.mobileledger.fake.FakeVersionDetector
 
 /**
@@ -63,18 +61,6 @@ import net.ktnx.mobileledger.fake.FakeVersionDetector
     replaces = [UseCaseModule::class]
 )
 object TestUseCaseModule {
-
-    /**
-     * T036: Provides FakeTransactionSyncer for testing sync operations.
-     *
-     * Test scenarios:
-     * - Success: syncer.shouldSucceed = true
-     * - Failure: syncer.shouldSucceed = false; syncer.errorToThrow = SyncError.NetworkError()
-     * - Progress: syncer.progressSteps = 5; syncer.delayPerStepMs = 100
-     */
-    @Provides
-    @Singleton
-    fun provideTransactionSyncer(): TransactionSyncer = FakeTransactionSyncer()
 
     /**
      * T037: Provides FakeConfigBackup for testing backup/restore operations.

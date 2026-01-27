@@ -28,7 +28,7 @@ import net.ktnx.mobileledger.core.domain.model.SyncError
 import net.ktnx.mobileledger.core.domain.model.SyncException
 import net.ktnx.mobileledger.core.domain.model.SyncProgress
 import net.ktnx.mobileledger.core.domain.model.SyncResult
-import net.ktnx.mobileledger.domain.usecase.TransactionSyncer
+import net.ktnx.mobileledger.core.sync.TransactionSyncer
 
 class FakeTransactionSyncer : TransactionSyncer {
     var shouldSucceed: Boolean = true

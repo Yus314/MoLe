@@ -114,8 +114,6 @@ import net.ktnx.mobileledger.domain.usecase.TransactionListConverter
 import net.ktnx.mobileledger.domain.usecase.TransactionListConverterImpl
 import net.ktnx.mobileledger.domain.usecase.TransactionSender
 import net.ktnx.mobileledger.domain.usecase.TransactionSenderImpl
-import net.ktnx.mobileledger.domain.usecase.TransactionSyncer
-import net.ktnx.mobileledger.domain.usecase.TransactionSyncerImpl
 import net.ktnx.mobileledger.domain.usecase.UpdateProfileOrderUseCase
 import net.ktnx.mobileledger.domain.usecase.UpdateProfileOrderUseCaseImpl
 import net.ktnx.mobileledger.domain.usecase.VersionDetector
@@ -133,10 +131,6 @@ abstract class UseCaseModule {
     @Binds
     @Singleton
     abstract fun bindTransactionSender(impl: TransactionSenderImpl): TransactionSender
-
-    @Binds
-    @Singleton
-    abstract fun bindTransactionSyncer(impl: TransactionSyncerImpl): TransactionSyncer
 
     @Binds
     @Singleton

@@ -28,7 +28,7 @@ import net.ktnx.mobileledger.core.domain.model.AppError
 import net.ktnx.mobileledger.core.domain.model.AppException
 import net.ktnx.mobileledger.core.domain.model.SyncException
 import net.ktnx.mobileledger.core.domain.repository.ExceptionMapper
-import net.ktnx.mobileledger.domain.usecase.sync.SyncExceptionMapper
+import net.ktnx.mobileledger.core.sync.SyncExceptionMapper
 
 /**
  * 例外をAppErrorに変換するマッパー

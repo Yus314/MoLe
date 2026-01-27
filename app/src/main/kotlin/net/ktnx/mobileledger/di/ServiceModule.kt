@@ -22,6 +22,7 @@ import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
+import net.ktnx.mobileledger.core.sync.SyncStateNotifier
 import net.ktnx.mobileledger.service.AppStateService
 import net.ktnx.mobileledger.service.AppStateServiceImpl
 import net.ktnx.mobileledger.service.AtomicRowIdGenerator
@@ -78,4 +79,8 @@ abstract class ServiceModule {
     @Binds
     @Singleton
     abstract fun bindThemeService(impl: ThemeServiceImpl): ThemeService
+
+    @Binds
+    @Singleton
+    abstract fun bindSyncStateNotifier(impl: AppStateServiceImpl): SyncStateNotifier
 }

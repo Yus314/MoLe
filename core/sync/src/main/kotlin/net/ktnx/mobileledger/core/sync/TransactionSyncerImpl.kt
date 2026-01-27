@@ -15,7 +15,7 @@
  * along with MoLe. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ktnx.mobileledger.domain.usecase
+package net.ktnx.mobileledger.core.sync
 
 import java.util.Date
 import javax.inject.Inject
@@ -33,12 +33,6 @@ import net.ktnx.mobileledger.core.domain.model.SyncProgress
 import net.ktnx.mobileledger.core.domain.model.SyncResult
 import net.ktnx.mobileledger.core.domain.model.Transaction
 import net.ktnx.mobileledger.core.network.json.ApiNotSupportedException
-import net.ktnx.mobileledger.domain.usecase.sync.AccountListFetcher
-import net.ktnx.mobileledger.domain.usecase.sync.SyncExceptionMapper
-import net.ktnx.mobileledger.domain.usecase.sync.SyncPersistence
-import net.ktnx.mobileledger.domain.usecase.sync.TransactionListFetcher
-import net.ktnx.mobileledger.service.AppStateService
-import net.ktnx.mobileledger.service.SyncInfo
 
 /**
  * TransactionSyncer implementation that orchestrates the sync process.
@@ -57,7 +51,7 @@ class TransactionSyncerImpl @Inject constructor(
     private val transactionListFetcher: TransactionListFetcher,
     private val syncPersistence: SyncPersistence,
     private val syncExceptionMapper: SyncExceptionMapper,
-    private val appStateService: AppStateService,
+    private val syncStateNotifier: SyncStateNotifier,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : TransactionSyncer {
 
@@ -82,7 +76,11 @@ class TransactionSyncerImpl @Inject constructor(
             syncPersistence.saveAccountsAndTransactions(profile, accounts, transactions)
 
             // Update sync info
-            updateSyncInfo(accounts, transactions)
+            syncStateNotifier.notifySyncComplete(
+                date = Date(),
+                transactionCount = transactions.size,
+                accountCount = accounts.size
+            )
 
             // Store result
             val duration = System.currentTimeMillis() - startTime
@@ -123,16 +121,5 @@ class TransactionSyncerImpl @Inject constructor(
         } ?: return null
 
         return Pair(accountResult.accounts, transactions)
-    }
-
-    private fun updateSyncInfo(accounts: List<Account>, transactions: List<Transaction>) {
-        appStateService.updateSyncInfo(
-            SyncInfo(
-                date = Date(),
-                transactionCount = transactions.size,
-                accountCount = accounts.size,
-                totalAccountCount = accounts.size
-            )
-        )
     }
 }

@@ -17,20 +17,22 @@
 
 package net.ktnx.mobileledger.service
 
+import java.util.Date
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import net.ktnx.mobileledger.core.sync.SyncStateNotifier
 
 /**
- * Implementation of [AppStateService].
+ * Implementation of [AppStateService] and [SyncStateNotifier].
  *
  * Manages UI-level application state including navigation drawer
  * state and sync information.
  */
 @Singleton
-class AppStateServiceImpl @Inject constructor() : AppStateService {
+class AppStateServiceImpl @Inject constructor() : AppStateService, SyncStateNotifier {
 
     private val _lastSyncInfo = MutableStateFlow(SyncInfo.EMPTY)
     override val lastSyncInfo: StateFlow<SyncInfo> = _lastSyncInfo.asStateFlow()
@@ -59,5 +61,17 @@ class AppStateServiceImpl @Inject constructor() : AppStateService {
 
     override fun signalDataChanged() {
         _dataVersion.value = _dataVersion.value + 1
+    }
+
+    // SyncStateNotifier implementation
+    override fun notifySyncComplete(date: Date, transactionCount: Int, accountCount: Int) {
+        updateSyncInfo(
+            SyncInfo(
+                date = date,
+                transactionCount = transactionCount,
+                accountCount = accountCount,
+                totalAccountCount = accountCount
+            )
+        )
     }
 }

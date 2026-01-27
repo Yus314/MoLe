@@ -34,8 +34,8 @@ import net.ktnx.mobileledger.core.domain.model.Profile
 import net.ktnx.mobileledger.core.domain.model.SyncException
 import net.ktnx.mobileledger.core.domain.model.SyncProgress
 import net.ktnx.mobileledger.core.domain.model.SyncState
+import net.ktnx.mobileledger.core.sync.TransactionSyncer
 import net.ktnx.mobileledger.domain.usecase.ObserveCurrentProfileUseCase
-import net.ktnx.mobileledger.domain.usecase.TransactionSyncer
 import net.ktnx.mobileledger.service.AppStateService
 import net.ktnx.mobileledger.service.BackgroundTaskManager
 import net.ktnx.mobileledger.service.SyncInfo

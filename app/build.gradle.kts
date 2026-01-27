@@ -146,6 +146,7 @@ dependencies {
     implementation(project(":core:database"))
     implementation(project(":core:network"))
     implementation(project(":core:data"))
+    implementation(project(":core:sync"))
     testImplementation(project(":core:testing"))
 
     // Kotlin

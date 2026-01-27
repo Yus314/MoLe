@@ -15,7 +15,7 @@
  * along with MoLe. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ktnx.mobileledger.domain.usecase.sync
+package net.ktnx.mobileledger.core.sync
 
 import net.ktnx.mobileledger.core.domain.model.Account
 import net.ktnx.mobileledger.core.domain.model.Profile

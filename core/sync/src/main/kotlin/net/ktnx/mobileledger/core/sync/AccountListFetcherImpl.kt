@@ -15,7 +15,7 @@
  * along with MoLe. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ktnx.mobileledger.domain.usecase.sync
+package net.ktnx.mobileledger.core.sync
 
 import javax.inject.Inject
 import javax.inject.Singleton

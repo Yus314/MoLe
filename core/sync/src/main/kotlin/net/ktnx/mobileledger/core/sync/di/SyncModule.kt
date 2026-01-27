@@ -15,24 +15,24 @@
  * along with MoLe. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ktnx.mobileledger.di
+package net.ktnx.mobileledger.core.sync.di
 
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
-import net.ktnx.mobileledger.domain.usecase.sync.AccountListFetcher
-import net.ktnx.mobileledger.domain.usecase.sync.AccountListFetcherImpl
-import net.ktnx.mobileledger.domain.usecase.sync.SyncPersistence
-import net.ktnx.mobileledger.domain.usecase.sync.SyncPersistenceImpl
-import net.ktnx.mobileledger.domain.usecase.sync.TransactionListFetcher
-import net.ktnx.mobileledger.domain.usecase.sync.TransactionListFetcherImpl
+import net.ktnx.mobileledger.core.sync.AccountListFetcher
+import net.ktnx.mobileledger.core.sync.AccountListFetcherImpl
+import net.ktnx.mobileledger.core.sync.SyncPersistence
+import net.ktnx.mobileledger.core.sync.SyncPersistenceImpl
+import net.ktnx.mobileledger.core.sync.TransactionListFetcher
+import net.ktnx.mobileledger.core.sync.TransactionListFetcherImpl
+import net.ktnx.mobileledger.core.sync.TransactionSyncer
+import net.ktnx.mobileledger.core.sync.TransactionSyncerImpl
 
 /**
- * Hilt module for sync-related dependencies.
- *
- * Provides bindings for sync components like persistence and data fetching.
+ * Hilt module for providing sync-related dependencies.
  */
 @Module
 @InstallIn(SingletonComponent::class)
@@ -40,7 +40,7 @@ abstract class SyncModule {
 
     @Binds
     @Singleton
-    abstract fun bindSyncPersistence(impl: SyncPersistenceImpl): SyncPersistence
+    abstract fun bindTransactionSyncer(impl: TransactionSyncerImpl): TransactionSyncer
 
     @Binds
     @Singleton
@@ -49,4 +49,8 @@ abstract class SyncModule {
     @Binds
     @Singleton
     abstract fun bindTransactionListFetcher(impl: TransactionListFetcherImpl): TransactionListFetcher
+
+    @Binds
+    @Singleton
+    abstract fun bindSyncPersistence(impl: SyncPersistenceImpl): SyncPersistence
 }

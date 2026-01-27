@@ -28,7 +28,7 @@ import net.ktnx.mobileledger.core.domain.model.DatabaseError
 import net.ktnx.mobileledger.core.domain.model.FileError
 import net.ktnx.mobileledger.core.domain.model.SyncError
 import net.ktnx.mobileledger.core.domain.model.SyncException
-import net.ktnx.mobileledger.domain.usecase.sync.SyncExceptionMapper
+import net.ktnx.mobileledger.core.sync.SyncExceptionMapper
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
