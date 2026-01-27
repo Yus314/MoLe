@@ -63,5 +63,9 @@ gradlePlugin {
             id = "mole.android.room"
             implementationClass = "AndroidRoomConventionPlugin"
         }
+        register("androidFeature") {
+            id = "mole.android.feature"
+            implementationClass = "AndroidFeatureConventionPlugin"
+        }
     }
 }
