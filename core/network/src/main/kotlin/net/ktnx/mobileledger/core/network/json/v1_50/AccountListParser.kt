@@ -20,8 +20,8 @@ package net.ktnx.mobileledger.core.network.json.v1_50
 import java.io.InputStream
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.decodeToSequence
+import net.ktnx.mobileledger.core.domain.model.API
 import net.ktnx.mobileledger.core.domain.model.Account
-import net.ktnx.mobileledger.core.network.json.API
 import net.ktnx.mobileledger.core.network.json.AccountListParser as BaseParser
 import net.ktnx.mobileledger.core.network.json.MoLeJson
 import net.ktnx.mobileledger.core.network.json.unified.UnifiedParsedLedgerAccount

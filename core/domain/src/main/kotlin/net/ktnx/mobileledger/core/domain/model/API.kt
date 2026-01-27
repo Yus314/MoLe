@@ -15,7 +15,7 @@
  * along with MoLe. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ktnx.mobileledger.core.network.json
+package net.ktnx.mobileledger.core.domain.model
 
 /**
  * Supported hledger-web API versions.
@@ -24,7 +24,7 @@ package net.ktnx.mobileledger.core.network.json
  * Earlier versions (v1_14, v1_15, v1_19_1, v1_23) and HTML form fallback
  * have been removed.
  *
- * Note: This class is Android-free to support future core module extraction.
+ * Note: This class is Android-free to support core module usage.
  * Use [net.ktnx.mobileledger.ui.util.ApiDescriptions] for localized UI strings.
  */
 enum class API(private val value: Int) {

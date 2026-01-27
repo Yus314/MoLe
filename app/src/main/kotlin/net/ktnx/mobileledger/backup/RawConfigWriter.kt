@@ -26,6 +26,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import net.ktnx.mobileledger.core.domain.model.API
 import net.ktnx.mobileledger.core.domain.model.Currency
 import net.ktnx.mobileledger.core.domain.model.Profile
 import net.ktnx.mobileledger.core.domain.model.Template
@@ -33,7 +34,6 @@ import net.ktnx.mobileledger.core.domain.model.TemplateLine
 import net.ktnx.mobileledger.core.domain.repository.CurrencyRepository
 import net.ktnx.mobileledger.core.domain.repository.ProfileRepository
 import net.ktnx.mobileledger.core.domain.repository.TemplateRepository
-import net.ktnx.mobileledger.core.network.json.API
 
 /**
  * Writes MoLe configuration to a backup file using kotlinx-serialization.

@@ -17,10 +17,10 @@
 
 package net.ktnx.mobileledger.ui.profile
 
+import net.ktnx.mobileledger.core.domain.model.API
 import net.ktnx.mobileledger.core.domain.model.FutureDates
 import net.ktnx.mobileledger.core.domain.model.Profile
 import net.ktnx.mobileledger.core.domain.model.ServerVersion
-import net.ktnx.mobileledger.core.network.json.API
 import net.ktnx.mobileledger.service.ThemeService
 
 data class ProfileDetailUiState(

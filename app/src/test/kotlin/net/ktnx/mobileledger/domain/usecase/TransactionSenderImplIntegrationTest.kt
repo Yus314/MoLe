@@ -26,12 +26,12 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import net.ktnx.mobileledger.core.common.utils.SimpleDate
+import net.ktnx.mobileledger.core.domain.model.API
 import net.ktnx.mobileledger.core.domain.model.Transaction
 import net.ktnx.mobileledger.core.domain.model.TransactionLine
 import net.ktnx.mobileledger.core.network.HledgerClient
 import net.ktnx.mobileledger.core.network.NetworkApiNotSupportedException
 import net.ktnx.mobileledger.core.network.NetworkAuthenticationException
-import net.ktnx.mobileledger.core.network.json.API
 import net.ktnx.mobileledger.fake.FakeCurrencyFormatter
 import net.ktnx.mobileledger.util.createTestDomainProfile
 import org.junit.Assert.assertEquals

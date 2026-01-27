@@ -25,13 +25,13 @@ import kotlinx.serialization.SerializationException
 import logcat.LogPriority
 import logcat.asLog
 import logcat.logcat
+import net.ktnx.mobileledger.core.domain.model.API
 import net.ktnx.mobileledger.core.domain.model.Account
 import net.ktnx.mobileledger.core.domain.model.Profile
 import net.ktnx.mobileledger.core.network.HledgerClient
 import net.ktnx.mobileledger.core.network.NetworkAuthenticationException
 import net.ktnx.mobileledger.core.network.NetworkHttpException
 import net.ktnx.mobileledger.core.network.NetworkNotFoundException
-import net.ktnx.mobileledger.core.network.json.API
 import net.ktnx.mobileledger.core.network.json.AccountListParser
 import net.ktnx.mobileledger.core.network.json.ApiNotSupportedException
 

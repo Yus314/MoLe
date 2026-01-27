@@ -34,7 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import net.ktnx.mobileledger.R
-import net.ktnx.mobileledger.core.network.json.API
+import net.ktnx.mobileledger.core.domain.model.API
 import net.ktnx.mobileledger.ui.util.localizedDescription
 
 @Composable

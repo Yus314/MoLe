@@ -18,6 +18,7 @@
 package net.ktnx.mobileledger.core.network.json
 
 import kotlinx.serialization.SerializationException
+import net.ktnx.mobileledger.core.domain.model.API
 import net.ktnx.mobileledger.core.domain.model.CurrencySettings
 import net.ktnx.mobileledger.core.domain.model.Transaction
 

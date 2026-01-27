@@ -19,7 +19,7 @@
 
 package net.ktnx.mobileledger.core.network.json.config
 
-import net.ktnx.mobileledger.core.network.json.API
+import net.ktnx.mobileledger.core.domain.model.API
 import net.ktnx.mobileledger.core.network.json.ApiNotSupportedException
 
 /**

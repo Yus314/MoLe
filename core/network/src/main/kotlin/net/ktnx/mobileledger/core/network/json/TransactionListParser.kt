@@ -20,6 +20,7 @@ package net.ktnx.mobileledger.core.network.json
 import java.io.IOException
 import java.io.InputStream
 import java.text.ParseException
+import net.ktnx.mobileledger.core.domain.model.API
 import net.ktnx.mobileledger.core.domain.model.Transaction
 
 abstract class TransactionListParser {

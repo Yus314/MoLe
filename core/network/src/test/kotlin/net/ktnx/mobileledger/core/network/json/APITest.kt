@@ -17,6 +17,7 @@
 
 package net.ktnx.mobileledger.core.network.json
 
+import net.ktnx.mobileledger.core.domain.model.API
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Test

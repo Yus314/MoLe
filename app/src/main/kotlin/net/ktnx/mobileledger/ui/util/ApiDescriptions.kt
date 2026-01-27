@@ -20,7 +20,7 @@ package net.ktnx.mobileledger.ui.util
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import net.ktnx.mobileledger.R
-import net.ktnx.mobileledger.core.network.json.API
+import net.ktnx.mobileledger.core.domain.model.API
 
 /**
  * Composable extension to get localized description of API version.

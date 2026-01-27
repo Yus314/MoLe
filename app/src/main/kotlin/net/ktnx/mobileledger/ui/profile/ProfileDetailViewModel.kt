@@ -37,12 +37,12 @@ import logcat.LogPriority
 import logcat.asLog
 import logcat.logcat
 import net.ktnx.mobileledger.core.common.di.IoDispatcher
+import net.ktnx.mobileledger.core.domain.model.API
 import net.ktnx.mobileledger.core.domain.model.FutureDates
 import net.ktnx.mobileledger.core.domain.model.Profile
 import net.ktnx.mobileledger.core.domain.model.ProfileAuthentication
 import net.ktnx.mobileledger.core.domain.model.ServerVersion
 import net.ktnx.mobileledger.core.domain.model.TemporaryAuthData
-import net.ktnx.mobileledger.core.network.json.API
 import net.ktnx.mobileledger.domain.usecase.GetAllProfilesUseCase
 import net.ktnx.mobileledger.domain.usecase.GetProfileByIdUseCase
 import net.ktnx.mobileledger.domain.usecase.ProfilePersistence

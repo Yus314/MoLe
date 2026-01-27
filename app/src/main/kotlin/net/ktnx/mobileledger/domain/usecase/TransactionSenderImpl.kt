@@ -28,11 +28,11 @@ import logcat.LogPriority
 import logcat.asLog
 import logcat.logcat
 import net.ktnx.mobileledger.core.common.di.IoDispatcher
+import net.ktnx.mobileledger.core.domain.model.API
 import net.ktnx.mobileledger.core.domain.model.Profile
 import net.ktnx.mobileledger.core.domain.model.Transaction
 import net.ktnx.mobileledger.core.network.HledgerClient
 import net.ktnx.mobileledger.core.network.NetworkApiNotSupportedException
-import net.ktnx.mobileledger.core.network.json.API
 import net.ktnx.mobileledger.core.network.json.ApiNotSupportedException
 import net.ktnx.mobileledger.core.network.json.Gateway
 import net.ktnx.mobileledger.service.CurrencyFormatter

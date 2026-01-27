@@ -20,6 +20,7 @@ package net.ktnx.mobileledger.backup
 import java.io.ByteArrayOutputStream
 import java.util.UUID
 import kotlinx.coroutines.test.runTest
+import net.ktnx.mobileledger.core.domain.model.API
 import net.ktnx.mobileledger.core.domain.model.Currency
 import net.ktnx.mobileledger.core.domain.model.CurrencyPosition
 import net.ktnx.mobileledger.core.domain.model.FutureDates
@@ -27,7 +28,6 @@ import net.ktnx.mobileledger.core.domain.model.Profile
 import net.ktnx.mobileledger.core.domain.model.ProfileAuthentication
 import net.ktnx.mobileledger.core.domain.model.Template
 import net.ktnx.mobileledger.core.domain.model.TemplateLine
-import net.ktnx.mobileledger.core.network.json.API
 import net.ktnx.mobileledger.core.testing.fake.FakeCurrencyRepository
 import net.ktnx.mobileledger.core.testing.fake.FakeProfileRepository
 import net.ktnx.mobileledger.core.testing.fake.FakeTemplateRepository
