@@ -17,7 +17,6 @@
 
 package net.ktnx.mobileledger.ui.profile
 
-import android.content.res.Resources
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -36,9 +35,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import net.ktnx.mobileledger.R
 import net.ktnx.mobileledger.json.API
+import net.ktnx.mobileledger.ui.util.localizedDescription
 
 @Composable
-internal fun ProfileApiVersionSection(apiVersion: API, onApiVersionSelected: (API) -> Unit, resources: Resources) {
+internal fun ProfileApiVersionSection(apiVersion: API, onApiVersionSelected: (API) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
 
     Row(
@@ -53,7 +53,7 @@ internal fun ProfileApiVersionSection(apiVersion: API, onApiVersionSelected: (AP
                 style = MaterialTheme.typography.bodyLarge
             )
             Text(
-                text = apiVersion.getDescription(resources),
+                text = apiVersion.localizedDescription(),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -65,7 +65,7 @@ internal fun ProfileApiVersionSection(apiVersion: API, onApiVersionSelected: (AP
         ) {
             listOf(API.auto, *API.allVersions).forEach { api ->
                 DropdownMenuItem(
-                    text = { Text(api.getDescription(resources)) },
+                    text = { Text(api.localizedDescription()) },
                     onClick = {
                         onApiVersionSelected(api)
                         expanded = false

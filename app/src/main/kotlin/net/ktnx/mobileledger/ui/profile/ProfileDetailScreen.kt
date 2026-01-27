@@ -284,8 +284,7 @@ internal fun ProfileDetailContent(
                     // API Version
                     ProfileApiVersionSection(
                         apiVersion = uiState.apiVersion,
-                        onApiVersionSelected = { onEvent(ProfileDetailEvent.UpdateApiVersion(it)) },
-                        resources = resources
+                        onApiVersionSelected = { onEvent(ProfileDetailEvent.UpdateApiVersion(it)) }
                     )
 
                     // Future Dates
