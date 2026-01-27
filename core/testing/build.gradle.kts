@@ -1,5 +1,5 @@
 /*
- * Copyright © 2019 Damyan Ivanov.
+ * Copyright © 2024 Damyan Ivanov.
  * This file is part of MoLe.
  * MoLe is free software: you can distribute it and/or modify it
  * under the term of the GNU General Public License as published by
@@ -15,31 +15,22 @@
  * along with MoLe. If not, see <https://www.gnu.org/licenses/>.
  */
 
-pluginManagement {
-    includeBuild("build-logic")
-    repositories {
-        google()
-        mavenCentral()
-        gradlePluginPortal()
-    }
+plugins {
+    alias(libs.plugins.mole.android.library)
 }
 
-dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-    repositories {
-        google()
-        mavenCentral()
-    }
+android {
+    namespace = "net.ktnx.mobileledger.core.testing"
 }
 
-rootProject.name = "MoLe"
+dependencies {
+    // Core module dependencies for interfaces
+    implementation(project(":core:common"))
+    implementation(project(":core:domain"))
+    implementation(project(":core:database"))
+    implementation(project(":core:network"))
 
-include(":app")
-
-// Core modules
-include(":core:common")
-include(":core:domain")
-include(":core:database")
-include(":core:network")
-include(":core:data")
-include(":core:testing")
+    // Test utilities exposed as main dependencies
+    api(libs.junit)
+    api(libs.kotlinx.coroutines.test)
+}
