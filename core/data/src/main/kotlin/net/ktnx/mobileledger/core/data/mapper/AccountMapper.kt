@@ -15,7 +15,7 @@
  * along with MoLe. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ktnx.mobileledger.data.repository.mapper
+package net.ktnx.mobileledger.core.data.mapper
 
 import net.ktnx.mobileledger.core.database.entity.Account as DbAccount
 import net.ktnx.mobileledger.core.database.entity.AccountValue

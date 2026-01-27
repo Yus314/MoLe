@@ -17,56 +17,5 @@
 
 package net.ktnx.mobileledger.util
 
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.TestDispatcher
-import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.setMain
-import org.junit.rules.TestWatcher
-import org.junit.runner.Description
-
-/**
- * JUnit test rule that replaces the Main dispatcher with a [TestDispatcher]
- * for coroutine testing.
- *
- * This rule ensures that:
- * 1. The Main dispatcher is replaced before each test
- * 2. The Main dispatcher is reset after each test
- * 3. Tests can control virtual time when using [StandardTestDispatcher]
- *
- * ## Usage
- *
- * ```kotlin
- * @OptIn(ExperimentalCoroutinesApi::class)
- * class MyViewModelTest {
- *
- *     @get:Rule
- *     val mainDispatcherRule = MainDispatcherRule()
- *
- *     @Test
- *     fun `test coroutine behavior`() = runTest {
- *         // Main dispatcher is replaced with StandardTestDispatcher
- *         // Use advanceUntilIdle() to execute pending coroutines
- *         viewModel.loadData()
- *         advanceUntilIdle()
- *         // Assert results
- *     }
- * }
- * ```
- *
- * @param testDispatcher The [TestDispatcher] to use as Main. Defaults to [StandardTestDispatcher].
- */
-@OptIn(ExperimentalCoroutinesApi::class)
-class MainDispatcherRule(
-    val testDispatcher: TestDispatcher = StandardTestDispatcher()
-) : TestWatcher() {
-
-    override fun starting(description: Description) {
-        Dispatchers.setMain(testDispatcher)
-    }
-
-    override fun finished(description: Description) {
-        Dispatchers.resetMain()
-    }
-}
+// Re-export from core:testing for backward compatibility
+typealias MainDispatcherRule = net.ktnx.mobileledger.core.testing.MainDispatcherRule

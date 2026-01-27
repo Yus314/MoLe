@@ -28,6 +28,7 @@ import net.ktnx.mobileledger.core.domain.model.AppException
 import net.ktnx.mobileledger.core.domain.model.DatabaseError
 import net.ktnx.mobileledger.core.domain.model.FileError
 import net.ktnx.mobileledger.core.domain.model.SyncException
+import net.ktnx.mobileledger.core.domain.repository.ExceptionMapper
 import net.ktnx.mobileledger.domain.usecase.sync.SyncExceptionMapper
 
 /**
@@ -49,14 +50,14 @@ import net.ktnx.mobileledger.domain.usecase.sync.SyncExceptionMapper
 @Singleton
 class AppExceptionMapper @Inject constructor(
     private val syncExceptionMapper: SyncExceptionMapper
-) {
+) : ExceptionMapper {
     /**
      * 例外をAppErrorに変換する
      *
      * @param e 変換する例外
      * @return 適切なAppErrorサブタイプ
      */
-    fun map(e: Throwable): AppError = when (e) {
+    override fun map(e: Throwable): AppError = when (e) {
         // 既にマッピング済みのエラー
         is AppException -> e.appError
 

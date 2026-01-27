@@ -18,6 +18,7 @@
 package net.ktnx.mobileledger.data.repository.mapper
 
 import net.ktnx.mobileledger.core.common.utils.SimpleDate
+import net.ktnx.mobileledger.core.data.mapper.TransactionMapper
 import net.ktnx.mobileledger.core.database.entity.Transaction as DbTransaction
 import net.ktnx.mobileledger.core.database.entity.TransactionAccount
 import net.ktnx.mobileledger.core.database.entity.TransactionWithAccounts

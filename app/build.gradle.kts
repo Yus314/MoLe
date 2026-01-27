@@ -145,6 +145,8 @@ dependencies {
     implementation(project(":core:domain"))
     implementation(project(":core:database"))
     implementation(project(":core:network"))
+    implementation(project(":core:data"))
+    testImplementation(project(":core:testing"))
 
     // Kotlin
     implementation(libs.kotlin.stdlib)

@@ -24,12 +24,12 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import net.ktnx.mobileledger.core.common.di.IoDispatcher
+import net.ktnx.mobileledger.core.data.mapper.OptionMapper.toDomain
+import net.ktnx.mobileledger.core.data.mapper.OptionMapper.toEntity
 import net.ktnx.mobileledger.core.database.dao.OptionDAO
 import net.ktnx.mobileledger.core.database.entity.Option
 import net.ktnx.mobileledger.core.domain.model.AppOption
 import net.ktnx.mobileledger.core.domain.repository.OptionRepository
-import net.ktnx.mobileledger.data.repository.mapper.OptionMapper.toDomain
-import net.ktnx.mobileledger.data.repository.mapper.OptionMapper.toEntity
 
 /**
  * Implementation of [OptionRepository] that wraps the existing OptionDAO.

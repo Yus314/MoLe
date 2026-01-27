@@ -20,11 +20,11 @@ package net.ktnx.mobileledger.fake
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
+import net.ktnx.mobileledger.core.data.mapper.CurrencyMapper.toDomain
+import net.ktnx.mobileledger.core.data.mapper.CurrencyMapper.toEntity
 import net.ktnx.mobileledger.core.database.entity.Currency
 import net.ktnx.mobileledger.core.domain.model.Currency as DomainCurrency
 import net.ktnx.mobileledger.core.domain.repository.CurrencyRepository
-import net.ktnx.mobileledger.data.repository.mapper.CurrencyMapper.toDomain
-import net.ktnx.mobileledger.data.repository.mapper.CurrencyMapper.toEntity
 
 /**
  * Fake implementation of [CurrencyRepository] for testing.

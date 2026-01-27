@@ -17,6 +17,7 @@
 
 package net.ktnx.mobileledger.data.repository.mapper
 
+import net.ktnx.mobileledger.core.data.mapper.AccountMapper
 import net.ktnx.mobileledger.core.database.entity.Account as DbAccount
 import net.ktnx.mobileledger.core.database.entity.AccountValue
 import net.ktnx.mobileledger.core.database.entity.AccountWithAmounts

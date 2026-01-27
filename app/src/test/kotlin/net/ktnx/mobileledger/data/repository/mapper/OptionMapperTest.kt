@@ -17,10 +17,10 @@
 
 package net.ktnx.mobileledger.data.repository.mapper
 
+import net.ktnx.mobileledger.core.data.mapper.OptionMapper.toDomain
+import net.ktnx.mobileledger.core.data.mapper.OptionMapper.toEntity
 import net.ktnx.mobileledger.core.database.entity.Option as DbOption
 import net.ktnx.mobileledger.core.domain.model.AppOption
-import net.ktnx.mobileledger.data.repository.mapper.OptionMapper.toDomain
-import net.ktnx.mobileledger.data.repository.mapper.OptionMapper.toEntity
 import org.junit.Assert.assertEquals
 import org.junit.Test
 

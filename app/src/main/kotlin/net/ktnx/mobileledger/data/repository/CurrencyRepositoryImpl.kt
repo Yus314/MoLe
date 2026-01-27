@@ -24,11 +24,11 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import net.ktnx.mobileledger.core.common.di.IoDispatcher
+import net.ktnx.mobileledger.core.data.mapper.CurrencyMapper.toDomain
+import net.ktnx.mobileledger.core.data.mapper.CurrencyMapper.toEntity
 import net.ktnx.mobileledger.core.database.dao.CurrencyDAO
 import net.ktnx.mobileledger.core.domain.model.Currency
 import net.ktnx.mobileledger.core.domain.repository.CurrencyRepository
-import net.ktnx.mobileledger.data.repository.mapper.CurrencyMapper.toDomain
-import net.ktnx.mobileledger.data.repository.mapper.CurrencyMapper.toEntity
 import net.ktnx.mobileledger.domain.usecase.AppExceptionMapper
 
 /**

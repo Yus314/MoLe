@@ -17,13 +17,13 @@
 
 package net.ktnx.mobileledger.data.repository.mapper
 
+import net.ktnx.mobileledger.core.data.mapper.ProfileMapper.toDomain
+import net.ktnx.mobileledger.core.data.mapper.ProfileMapper.toEntity
 import net.ktnx.mobileledger.core.database.entity.Profile as DbProfile
 import net.ktnx.mobileledger.core.domain.model.FutureDates
 import net.ktnx.mobileledger.core.domain.model.Profile as DomainProfile
 import net.ktnx.mobileledger.core.domain.model.ProfileAuthentication
 import net.ktnx.mobileledger.core.domain.model.ServerVersion
-import net.ktnx.mobileledger.data.repository.mapper.ProfileMapper.toDomain
-import net.ktnx.mobileledger.data.repository.mapper.ProfileMapper.toEntity
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull

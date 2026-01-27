@@ -15,7 +15,25 @@
  * along with MoLe. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ktnx.mobileledger.fake
+package net.ktnx.mobileledger.core.domain.repository
 
-// Re-export from core:testing for backward compatibility
-typealias FakePreferencesRepository = net.ktnx.mobileledger.core.testing.fake.FakePreferencesRepository
+import net.ktnx.mobileledger.core.domain.model.AppError
+
+/**
+ * Interface for mapping exceptions to application errors.
+ *
+ * This interface allows repository implementations in core:data to handle
+ * exceptions without depending on app-specific exception mappers.
+ *
+ * The app module provides the implementation that knows how to map
+ * various exceptions (network, database, sync, etc.) to AppError.
+ */
+interface ExceptionMapper {
+    /**
+     * Maps a throwable to an AppError.
+     *
+     * @param e The throwable to map
+     * @return An appropriate AppError subtype
+     */
+    fun map(e: Throwable): AppError
+}

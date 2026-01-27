@@ -17,11 +17,11 @@
 
 package net.ktnx.mobileledger.data.repository.mapper
 
+import net.ktnx.mobileledger.core.data.mapper.CurrencyMapper.toDomain
+import net.ktnx.mobileledger.core.data.mapper.CurrencyMapper.toEntity
 import net.ktnx.mobileledger.core.database.entity.Currency as DbCurrency
 import net.ktnx.mobileledger.core.domain.model.Currency as DomainCurrency
 import net.ktnx.mobileledger.core.domain.model.CurrencyPosition
-import net.ktnx.mobileledger.data.repository.mapper.CurrencyMapper.toDomain
-import net.ktnx.mobileledger.data.repository.mapper.CurrencyMapper.toEntity
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue

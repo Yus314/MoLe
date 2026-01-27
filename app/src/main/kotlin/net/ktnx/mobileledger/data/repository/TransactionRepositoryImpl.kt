@@ -27,6 +27,7 @@ import logcat.logcat
 import net.ktnx.mobileledger.core.common.di.IoDispatcher
 import net.ktnx.mobileledger.core.common.utils.accountLevel
 import net.ktnx.mobileledger.core.common.utils.extractParentAccountName
+import net.ktnx.mobileledger.core.data.mapper.TransactionMapper
 import net.ktnx.mobileledger.core.database.dao.AccountDAO
 import net.ktnx.mobileledger.core.database.dao.AccountValueDAO
 import net.ktnx.mobileledger.core.database.dao.TransactionAccountDAO
@@ -35,7 +36,6 @@ import net.ktnx.mobileledger.core.database.entity.Account
 import net.ktnx.mobileledger.core.database.entity.AccountValue
 import net.ktnx.mobileledger.core.database.entity.TransactionWithAccounts
 import net.ktnx.mobileledger.core.domain.model.Transaction
-import net.ktnx.mobileledger.data.repository.mapper.TransactionMapper
 import net.ktnx.mobileledger.domain.repository.TransactionRepository
 import net.ktnx.mobileledger.domain.usecase.AppExceptionMapper
 
