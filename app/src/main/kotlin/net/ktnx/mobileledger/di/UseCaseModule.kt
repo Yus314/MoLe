@@ -22,8 +22,6 @@ import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
-import net.ktnx.mobileledger.domain.usecase.AccountHierarchyResolver
-import net.ktnx.mobileledger.domain.usecase.AccountHierarchyResolverImpl
 import net.ktnx.mobileledger.domain.usecase.ConfigBackup
 import net.ktnx.mobileledger.domain.usecase.ConfigBackupImpl
 import net.ktnx.mobileledger.domain.usecase.DatabaseInitializer
@@ -35,12 +33,13 @@ import net.ktnx.mobileledger.domain.usecase.VersionDetectorImpl
  * Hilt module for app-level infrastructure use cases.
  *
  * Use case modules are split by domain:
- * - ProfileUseCaseModule: Profile-related use cases
- * - TemplateUseCaseModule: Template-related use cases
- * - TransactionUseCaseModule: Transaction-related use cases
- * - AccountUseCaseModule: Account-related use cases
+ * - feature:profile - Profile-related use cases
+ * - feature:templates - Template-related use cases
+ * - feature:transaction - Transaction-related use cases
+ * - feature:account - Account-related use cases
  * - CurrencyUseCaseModule: Currency-related use cases
  * - PreferencesUseCaseModule: Preferences-related use cases
+ * - TransactionUseCaseModule: Transaction sender & row manager (app-level dependencies)
  * - UseCaseModule (this): Infrastructure use cases
  */
 @Module
@@ -58,8 +57,4 @@ abstract class UseCaseModule {
     @Binds
     @Singleton
     abstract fun bindVersionDetector(impl: VersionDetectorImpl): VersionDetector
-
-    @Binds
-    @Singleton
-    abstract fun bindAccountHierarchyResolver(impl: AccountHierarchyResolverImpl): AccountHierarchyResolver
 }

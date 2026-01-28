@@ -37,10 +37,10 @@ import net.ktnx.mobileledger.core.domain.model.Profile
 import net.ktnx.mobileledger.core.domain.repository.AccountRepository
 import net.ktnx.mobileledger.core.domain.repository.PreferencesRepository
 import net.ktnx.mobileledger.core.testing.fake.FakeProfileRepository
-import net.ktnx.mobileledger.domain.usecase.AccountHierarchyResolverImpl
-import net.ktnx.mobileledger.domain.usecase.GetShowZeroBalanceUseCaseImpl
-import net.ktnx.mobileledger.domain.usecase.ObserveAccountsWithAmountsUseCaseImpl
-import net.ktnx.mobileledger.domain.usecase.SetShowZeroBalanceUseCaseImpl
+import net.ktnx.mobileledger.feature.account.usecase.AccountHierarchyResolverImpl
+import net.ktnx.mobileledger.feature.account.usecase.GetShowZeroBalanceUseCaseImpl
+import net.ktnx.mobileledger.feature.account.usecase.ObserveAccountsWithAmountsUseCaseImpl
+import net.ktnx.mobileledger.feature.account.usecase.SetShowZeroBalanceUseCaseImpl
 import net.ktnx.mobileledger.feature.profile.usecase.ObserveCurrentProfileUseCaseImpl
 import net.ktnx.mobileledger.util.createTestDomainProfile
 import org.junit.After

@@ -39,10 +39,10 @@ import kotlinx.coroutines.launch
 import logcat.asLog
 import logcat.logcat
 import net.ktnx.mobileledger.core.domain.model.Profile
-import net.ktnx.mobileledger.domain.usecase.AccountHierarchyResolver
-import net.ktnx.mobileledger.domain.usecase.GetShowZeroBalanceUseCase
-import net.ktnx.mobileledger.domain.usecase.ObserveAccountsWithAmountsUseCase
-import net.ktnx.mobileledger.domain.usecase.SetShowZeroBalanceUseCase
+import net.ktnx.mobileledger.feature.account.usecase.AccountHierarchyResolver
+import net.ktnx.mobileledger.feature.account.usecase.GetShowZeroBalanceUseCase
+import net.ktnx.mobileledger.feature.account.usecase.ObserveAccountsWithAmountsUseCase
+import net.ktnx.mobileledger.feature.account.usecase.SetShowZeroBalanceUseCase
 import net.ktnx.mobileledger.feature.profile.usecase.ObserveCurrentProfileUseCase
 
 /**

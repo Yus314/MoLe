@@ -151,6 +151,7 @@ dependencies {
     testImplementation(project(":core:testing"))
 
     // Feature modules
+    implementation(project(":feature:account"))
     implementation(project(":feature:templates"))
     implementation(project(":feature:profile"))
     implementation(project(":feature:transaction"))

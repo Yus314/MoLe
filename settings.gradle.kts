@@ -53,6 +53,7 @@ include(":core:ui")
 include(":core:testing")
 
 // Feature modules
+include(":feature:account")
 include(":feature:templates")
 include(":feature:profile")
 include(":feature:transaction")

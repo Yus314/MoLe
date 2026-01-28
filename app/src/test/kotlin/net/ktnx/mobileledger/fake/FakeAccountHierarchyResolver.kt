@@ -18,8 +18,8 @@
 package net.ktnx.mobileledger.fake
 
 import net.ktnx.mobileledger.core.domain.model.Account
-import net.ktnx.mobileledger.domain.usecase.AccountHierarchyResolver
-import net.ktnx.mobileledger.domain.usecase.AccountHierarchyResolverImpl
+import net.ktnx.mobileledger.feature.account.usecase.AccountHierarchyResolver
+import net.ktnx.mobileledger.feature.account.usecase.AccountHierarchyResolverImpl
 
 /**
  * Fake implementation of [AccountHierarchyResolver] for testing.
