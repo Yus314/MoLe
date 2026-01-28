@@ -49,4 +49,8 @@ include(":core:database")
 include(":core:network")
 include(":core:data")
 include(":core:sync")
+include(":core:ui")
 include(":core:testing")
+
+// Feature modules
+include(":feature:templates")

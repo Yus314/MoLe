@@ -19,6 +19,7 @@ package net.ktnx.mobileledger.domain.usecase
 
 import net.ktnx.mobileledger.core.domain.model.Template
 import net.ktnx.mobileledger.core.domain.model.TemplateLine
+import net.ktnx.mobileledger.feature.templates.usecase.TemplateMatcherImpl
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull

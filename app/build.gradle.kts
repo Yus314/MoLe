@@ -147,7 +147,11 @@ dependencies {
     implementation(project(":core:network"))
     implementation(project(":core:data"))
     implementation(project(":core:sync"))
+    implementation(project(":core:ui"))
     testImplementation(project(":core:testing"))
+
+    // Feature modules
+    implementation(project(":feature:templates"))
 
     // Kotlin
     implementation(libs.kotlin.stdlib)

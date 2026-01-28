@@ -15,69 +15,94 @@
  * along with MoLe. If not, see <https://www.gnu.org/licenses/>.
  */
 
+@file:Suppress("UNUSED", "MatchingDeclarationName", "ktlint:standard:no-wildcard-imports")
+
 package net.ktnx.mobileledger.ui.theme
 
-import androidx.compose.ui.graphics.Color
+// Re-export all colors from core:ui for backward compatibility
+// New code should import from net.ktnx.mobileledger.core.ui.theme directly
+import net.ktnx.mobileledger.core.ui.theme.MoLeBackground as CoreMoLeBackground
+import net.ktnx.mobileledger.core.ui.theme.MoLeBackgroundDark as CoreMoLeBackgroundDark
+import net.ktnx.mobileledger.core.ui.theme.MoLeError as CoreMoLeError
+import net.ktnx.mobileledger.core.ui.theme.MoLeErrorContainer as CoreMoLeErrorContainer
+import net.ktnx.mobileledger.core.ui.theme.MoLeErrorContainerDark as CoreMoLeErrorContainerDark
+import net.ktnx.mobileledger.core.ui.theme.MoLeErrorDark as CoreMoLeErrorDark
+import net.ktnx.mobileledger.core.ui.theme.MoLeOnBackground as CoreMoLeOnBackground
+import net.ktnx.mobileledger.core.ui.theme.MoLeOnBackgroundDark as CoreMoLeOnBackgroundDark
+import net.ktnx.mobileledger.core.ui.theme.MoLeOnError as CoreMoLeOnError
+import net.ktnx.mobileledger.core.ui.theme.MoLeOnErrorContainer as CoreMoLeOnErrorContainer
+import net.ktnx.mobileledger.core.ui.theme.MoLeOnErrorContainerDark as CoreMoLeOnErrorContainerDark
+import net.ktnx.mobileledger.core.ui.theme.MoLeOnErrorDark as CoreMoLeOnErrorDark
+import net.ktnx.mobileledger.core.ui.theme.MoLeOnPrimary as CoreMoLeOnPrimary
+import net.ktnx.mobileledger.core.ui.theme.MoLeOnPrimaryContainerDark as CoreMoLeOnPrimaryContainerDark
+import net.ktnx.mobileledger.core.ui.theme.MoLeOnPrimaryDark as CoreMoLeOnPrimaryDark
+import net.ktnx.mobileledger.core.ui.theme.MoLeOnSecondary as CoreMoLeOnSecondary
+import net.ktnx.mobileledger.core.ui.theme.MoLeOnSecondaryContainerDark as CoreMoLeOnSecondaryContainerDark
+import net.ktnx.mobileledger.core.ui.theme.MoLeOnSecondaryDark as CoreMoLeOnSecondaryDark
+import net.ktnx.mobileledger.core.ui.theme.MoLeOnSurface as CoreMoLeOnSurface
+import net.ktnx.mobileledger.core.ui.theme.MoLeOnSurfaceDark as CoreMoLeOnSurfaceDark
+import net.ktnx.mobileledger.core.ui.theme.MoLeOnSurfaceVariant as CoreMoLeOnSurfaceVariant
+import net.ktnx.mobileledger.core.ui.theme.MoLeOnSurfaceVariantDark as CoreMoLeOnSurfaceVariantDark
+import net.ktnx.mobileledger.core.ui.theme.MoLeOutline as CoreMoLeOutline
+import net.ktnx.mobileledger.core.ui.theme.MoLeOutlineDark as CoreMoLeOutlineDark
+import net.ktnx.mobileledger.core.ui.theme.MoLeOutlineVariant as CoreMoLeOutlineVariant
+import net.ktnx.mobileledger.core.ui.theme.MoLeOutlineVariantDark as CoreMoLeOutlineVariantDark
+import net.ktnx.mobileledger.core.ui.theme.MoLePrimary as CoreMoLePrimary
+import net.ktnx.mobileledger.core.ui.theme.MoLePrimaryContainerDark as CoreMoLePrimaryContainerDark
+import net.ktnx.mobileledger.core.ui.theme.MoLePrimaryDark as CoreMoLePrimaryDark
+import net.ktnx.mobileledger.core.ui.theme.MoLePrimaryVariant as CoreMoLePrimaryVariant
+import net.ktnx.mobileledger.core.ui.theme.MoLeSecondary as CoreMoLeSecondary
+import net.ktnx.mobileledger.core.ui.theme.MoLeSecondaryContainerDark as CoreMoLeSecondaryContainerDark
+import net.ktnx.mobileledger.core.ui.theme.MoLeSecondaryDark as CoreMoLeSecondaryDark
+import net.ktnx.mobileledger.core.ui.theme.MoLeSecondaryVariant as CoreMoLeSecondaryVariant
+import net.ktnx.mobileledger.core.ui.theme.MoLeSurface as CoreMoLeSurface
+import net.ktnx.mobileledger.core.ui.theme.MoLeSurfaceDark as CoreMoLeSurfaceDark
+import net.ktnx.mobileledger.core.ui.theme.MoLeSurfaceVariant as CoreMoLeSurfaceVariant
+import net.ktnx.mobileledger.core.ui.theme.MoLeSurfaceVariantDark as CoreMoLeSurfaceVariantDark
+import net.ktnx.mobileledger.core.ui.theme.NegativeAmount as CoreNegativeAmount
+import net.ktnx.mobileledger.core.ui.theme.NegativeAmountDark as CoreNegativeAmountDark
+import net.ktnx.mobileledger.core.ui.theme.PositiveAmount as CorePositiveAmount
+import net.ktnx.mobileledger.core.ui.theme.PositiveAmountDark as CorePositiveAmountDark
 
-// Primary colors from the existing theme
-val MoLePrimary = Color(0xFF1B5E20)
-val MoLePrimaryVariant = Color(0xFF003300)
-val MoLeOnPrimary = Color.White
-
-// Secondary colors
-val MoLeSecondary = Color(0xFF4CAF50)
-val MoLeSecondaryVariant = Color(0xFF087f23)
-val MoLeOnSecondary = Color.Black
-
-// Background colors
-val MoLeBackground = Color(0xFFFFFBFE)
-val MoLeOnBackground = Color(0xFF1C1B1F)
-
-// Surface colors
-val MoLeSurface = Color(0xFFFFFBFE)
-val MoLeOnSurface = Color(0xFF1C1B1F)
-val MoLeSurfaceVariant = Color(0xFFE7E0EC)
-val MoLeOnSurfaceVariant = Color(0xFF49454F)
-
-// Error colors
-val MoLeError = Color(0xFFB00020)
-val MoLeOnError = Color.White
-val MoLeErrorContainer = Color(0xFFF9DEDC)
-val MoLeOnErrorContainer = Color(0xFF410E0B)
-
-// Outline colors
-val MoLeOutline = Color(0xFF79747E)
-val MoLeOutlineVariant = Color(0xFFCAC4D0)
-
-// Dark theme colors
-val MoLePrimaryDark = Color(0xFF81C784)
-val MoLePrimaryContainerDark = Color(0xFF004D00)
-val MoLeOnPrimaryDark = Color(0xFF003300)
-val MoLeOnPrimaryContainerDark = Color(0xFFA5D6A7)
-
-val MoLeSecondaryDark = Color(0xFFA5D6A7)
-val MoLeSecondaryContainerDark = Color(0xFF1B5E20)
-val MoLeOnSecondaryDark = Color(0xFF003300)
-val MoLeOnSecondaryContainerDark = Color(0xFFC8E6C9)
-
-val MoLeBackgroundDark = Color(0xFF1C1B1F)
-val MoLeOnBackgroundDark = Color(0xFFE6E1E5)
-
-val MoLeSurfaceDark = Color(0xFF1C1B1F)
-val MoLeOnSurfaceDark = Color(0xFFE6E1E5)
-val MoLeSurfaceVariantDark = Color(0xFF49454F)
-val MoLeOnSurfaceVariantDark = Color(0xFFCAC4D0)
-
-val MoLeErrorDark = Color(0xFFF2B8B5)
-val MoLeOnErrorDark = Color(0xFF601410)
-val MoLeErrorContainerDark = Color(0xFF8C1D18)
-val MoLeOnErrorContainerDark = Color(0xFFF9DEDC)
-
-val MoLeOutlineDark = Color(0xFF938F99)
-val MoLeOutlineVariantDark = Color(0xFF49454F)
-
-// Positive/Negative amount colors
-val PositiveAmount = Color(0xFF4CAF50)
-val NegativeAmount = Color(0xFFE53935)
-val PositiveAmountDark = Color(0xFF81C784)
-val NegativeAmountDark = Color(0xFFEF5350)
+val MoLePrimary = CoreMoLePrimary
+val MoLePrimaryVariant = CoreMoLePrimaryVariant
+val MoLeOnPrimary = CoreMoLeOnPrimary
+val MoLeSecondary = CoreMoLeSecondary
+val MoLeSecondaryVariant = CoreMoLeSecondaryVariant
+val MoLeOnSecondary = CoreMoLeOnSecondary
+val MoLeBackground = CoreMoLeBackground
+val MoLeOnBackground = CoreMoLeOnBackground
+val MoLeSurface = CoreMoLeSurface
+val MoLeOnSurface = CoreMoLeOnSurface
+val MoLeSurfaceVariant = CoreMoLeSurfaceVariant
+val MoLeOnSurfaceVariant = CoreMoLeOnSurfaceVariant
+val MoLeError = CoreMoLeError
+val MoLeOnError = CoreMoLeOnError
+val MoLeErrorContainer = CoreMoLeErrorContainer
+val MoLeOnErrorContainer = CoreMoLeOnErrorContainer
+val MoLeOutline = CoreMoLeOutline
+val MoLeOutlineVariant = CoreMoLeOutlineVariant
+val MoLePrimaryDark = CoreMoLePrimaryDark
+val MoLePrimaryContainerDark = CoreMoLePrimaryContainerDark
+val MoLeOnPrimaryDark = CoreMoLeOnPrimaryDark
+val MoLeOnPrimaryContainerDark = CoreMoLeOnPrimaryContainerDark
+val MoLeSecondaryDark = CoreMoLeSecondaryDark
+val MoLeSecondaryContainerDark = CoreMoLeSecondaryContainerDark
+val MoLeOnSecondaryDark = CoreMoLeOnSecondaryDark
+val MoLeOnSecondaryContainerDark = CoreMoLeOnSecondaryContainerDark
+val MoLeBackgroundDark = CoreMoLeBackgroundDark
+val MoLeOnBackgroundDark = CoreMoLeOnBackgroundDark
+val MoLeSurfaceDark = CoreMoLeSurfaceDark
+val MoLeOnSurfaceDark = CoreMoLeOnSurfaceDark
+val MoLeSurfaceVariantDark = CoreMoLeSurfaceVariantDark
+val MoLeOnSurfaceVariantDark = CoreMoLeOnSurfaceVariantDark
+val MoLeErrorDark = CoreMoLeErrorDark
+val MoLeOnErrorDark = CoreMoLeOnErrorDark
+val MoLeErrorContainerDark = CoreMoLeErrorContainerDark
+val MoLeOnErrorContainerDark = CoreMoLeOnErrorContainerDark
+val MoLeOutlineDark = CoreMoLeOutlineDark
+val MoLeOutlineVariantDark = CoreMoLeOutlineVariantDark
+val PositiveAmount = CorePositiveAmount
+val NegativeAmount = CoreNegativeAmount
+val PositiveAmountDark = CorePositiveAmountDark
+val NegativeAmountDark = CoreNegativeAmountDark

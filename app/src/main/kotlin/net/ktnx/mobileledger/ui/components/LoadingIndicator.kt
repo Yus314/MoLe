@@ -15,49 +15,22 @@
  * along with MoLe. If not, see <https://www.gnu.org/licenses/>.
  */
 
+@file:Suppress("UNUSED", "MatchingDeclarationName")
+
 package net.ktnx.mobileledger.ui.components
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import net.ktnx.mobileledger.ui.theme.MoLeTheme
+
+// Re-export from core:ui for backward compatibility
+// New code should import from net.ktnx.mobileledger.core.ui.components directly
 
 @Composable
-fun LoadingIndicator(modifier: Modifier = Modifier, message: String? = null) {
-    Box(
-        modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            CircularProgressIndicator(
-                modifier = Modifier.size(48.dp),
-                color = MaterialTheme.colorScheme.primary
-            )
-            if (message != null) {
-                Text(
-                    text = message,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 16.dp)
-                )
-            }
-        }
-    }
-}
+fun LoadingIndicator(modifier: Modifier = Modifier, message: String? = null) =
+    net.ktnx.mobileledger.core.ui.components.LoadingIndicator(
+        modifier = modifier,
+        message = message
+    )
 
 @Composable
 fun LoadingOverlay(
@@ -65,32 +38,9 @@ fun LoadingOverlay(
     modifier: Modifier = Modifier,
     message: String? = null,
     content: @Composable () -> Unit
-) {
-    Box(modifier = modifier) {
-        content()
-        if (isLoading) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                LoadingIndicator(message = message)
-            }
-        }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun LoadingIndicatorPreview() {
-    MoLeTheme {
-        LoadingIndicator(message = "読み込み中...")
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun LoadingIndicatorNoMessagePreview() {
-    MoLeTheme {
-        LoadingIndicator()
-    }
-}
+) = net.ktnx.mobileledger.core.ui.components.LoadingOverlay(
+    isLoading = isLoading,
+    modifier = modifier,
+    message = message,
+    content = content
+)

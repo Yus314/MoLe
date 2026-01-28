@@ -19,7 +19,7 @@ package net.ktnx.mobileledger.fake
 
 import net.ktnx.mobileledger.core.domain.model.MatchedTemplate
 import net.ktnx.mobileledger.core.domain.model.Template
-import net.ktnx.mobileledger.domain.usecase.TemplateMatcher
+import net.ktnx.mobileledger.feature.templates.usecase.TemplateMatcher
 
 /**
  * Fake implementation of [TemplateMatcher] for testing.

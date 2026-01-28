@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Damyan Ivanov.
+ * Copyright © 2026 Damyan Ivanov.
  * This file is part of MoLe.
  * MoLe is free software: you can distribute it and/or modify it
  * under the term of the GNU General Public License as published by
@@ -15,23 +15,29 @@
  * along with MoLe. If not, see <https://www.gnu.org/licenses/>.
  */
 
-@file:Suppress("UNUSED", "MatchingDeclarationName")
+plugins {
+    alias(libs.plugins.mole.android.library)
+    alias(libs.plugins.kotlin.compose)
+}
 
-package net.ktnx.mobileledger.ui.components
+android {
+    namespace = "net.ktnx.mobileledger.core.ui"
+    buildFeatures {
+        compose = true
+    }
+}
 
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
+dependencies {
+    implementation(project(":core:common"))
+    implementation(project(":core:domain"))
 
-// Re-export from core:ui for backward compatibility
-// New code should import from net.ktnx.mobileledger.core.ui.components directly
+    // Compose
+    implementation(platform(libs.compose.bom))
+    implementation(libs.compose.ui)
+    implementation(libs.compose.material3)
+    implementation(libs.compose.ui.tooling.preview)
+    debugImplementation(libs.compose.ui.tooling)
 
-@Composable
-fun WeakOverscrollContainer(
-    modifier: Modifier = Modifier,
-    stretchFactor: Float = 0.3f,
-    content: @Composable () -> Unit
-) = net.ktnx.mobileledger.core.ui.components.WeakOverscrollContainer(
-    modifier = modifier,
-    stretchFactor = stretchFactor,
-    content = content
-)
+    // AndroidX
+    implementation(libs.androidx.appcompat)
+}

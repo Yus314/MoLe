@@ -15,128 +15,55 @@
  * along with MoLe. If not, see <https://www.gnu.org/licenses/>.
  */
 
+@file:Suppress("UNUSED", "MatchingDeclarationName")
+
 package net.ktnx.mobileledger.ui.components
 
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarData
 import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
-import androidx.compose.material3.SnackbarVisuals
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import net.ktnx.mobileledger.core.domain.model.AppError
-import net.ktnx.mobileledger.ui.theme.MoLeTheme
+import net.ktnx.mobileledger.core.ui.components.showAppError as coreShowAppError
+import net.ktnx.mobileledger.core.ui.components.showError as coreShowError
+
+// Re-export from core:ui for backward compatibility
+// New code should import from net.ktnx.mobileledger.core.ui.components directly
 
 @Composable
-fun ErrorSnackbarHost(snackbarHostState: SnackbarHostState, modifier: Modifier = Modifier) {
-    SnackbarHost(
-        hostState = snackbarHostState,
+fun ErrorSnackbarHost(snackbarHostState: SnackbarHostState, modifier: Modifier = Modifier) =
+    net.ktnx.mobileledger.core.ui.components.ErrorSnackbarHost(
+        snackbarHostState = snackbarHostState,
         modifier = modifier
-    ) { snackbarData ->
-        ErrorSnackbar(snackbarData = snackbarData)
-    }
-}
+    )
 
 @Composable
-fun ErrorSnackbar(snackbarData: SnackbarData, modifier: Modifier = Modifier) {
-    Snackbar(
+fun ErrorSnackbar(snackbarData: SnackbarData, modifier: Modifier = Modifier) =
+    net.ktnx.mobileledger.core.ui.components.ErrorSnackbar(
+        snackbarData = snackbarData,
         modifier = modifier,
-        action = snackbarData.visuals.actionLabel?.let { actionLabel ->
-            {
-                TextButton(onClick = { snackbarData.performAction() }) {
-                    Text(
-                        text = actionLabel,
-                        color = MaterialTheme.colorScheme.inversePrimary
-                    )
-                }
-            }
-        },
-        dismissAction = if (snackbarData.visuals.withDismissAction) {
-            {
-                TextButton(onClick = { snackbarData.dismiss() }) {
-                    Text(
-                        text = "閉じる",
-                        color = MaterialTheme.colorScheme.inversePrimary
-                    )
-                }
-            }
-        } else {
-            null
-        },
-        containerColor = MaterialTheme.colorScheme.errorContainer,
-        contentColor = MaterialTheme.colorScheme.onErrorContainer
-    ) {
-        Text(text = snackbarData.visuals.message)
-    }
-}
+        dismissText = "閉じる"
+    )
 
 suspend fun SnackbarHostState.showError(
     message: String,
     actionLabel: String? = null,
     duration: SnackbarDuration = SnackbarDuration.Short
-): SnackbarResult = showSnackbar(
-    message = message,
-    actionLabel = actionLabel,
-    duration = duration,
-    withDismissAction = true
-)
+): SnackbarResult = coreShowError(message, actionLabel, duration)
 
-/**
- * AppError を表示するための拡張関数
- *
- * isRetryable フラグに基づいて「再試行」ボタンの表示を自動的に切り替える。
- *
- * @param error 表示するAppError
- * @param retryLabel リトライボタンのラベル（デフォルト: "再試行"）
- * @return SnackbarResult（ActionPerformed なら再試行が押された）
- */
-suspend fun SnackbarHostState.showAppError(error: AppError, retryLabel: String = "再試行"): SnackbarResult = showSnackbar(
-    message = error.message,
-    actionLabel = if (error.isRetryable) retryLabel else null,
-    duration = SnackbarDuration.Long,
-    withDismissAction = true
-)
+suspend fun SnackbarHostState.showAppError(error: AppError, retryLabel: String = "再試行"): SnackbarResult =
+    coreShowAppError(error, retryLabel)
 
 @Composable
-fun rememberErrorSnackbarState(): SnackbarHostState = remember { SnackbarHostState() }
+fun rememberErrorSnackbarState(): SnackbarHostState =
+    net.ktnx.mobileledger.core.ui.components.rememberErrorSnackbarState()
 
 @Composable
-fun ErrorEffect(error: String?, snackbarHostState: SnackbarHostState, onErrorShown: () -> Unit = {}) {
-    LaunchedEffect(error) {
-        error?.let {
-            snackbarHostState.showError(it)
-            onErrorShown()
-        }
-    }
-}
-
-@Preview
-@Composable
-private fun ErrorSnackbarPreview() {
-    MoLeTheme {
-        ErrorSnackbar(
-            snackbarData = object : SnackbarData {
-                override val visuals: SnackbarVisuals = object : SnackbarVisuals {
-                    override val actionLabel: String = "再試行"
-                    override val duration: SnackbarDuration = SnackbarDuration.Short
-                    override val message: String = "接続エラーが発生しました"
-                    override val withDismissAction: Boolean = true
-                }
-                override fun dismiss() {
-                    // No-op: Preview mock
-                }
-                override fun performAction() {
-                    // No-op: Preview mock
-                }
-            }
-        )
-    }
-}
+fun ErrorEffect(error: String?, snackbarHostState: SnackbarHostState, onErrorShown: () -> Unit = {}) =
+    net.ktnx.mobileledger.core.ui.components.ErrorEffect(
+        error = error,
+        snackbarHostState = snackbarHostState,
+        onErrorShown = onErrorShown
+    )

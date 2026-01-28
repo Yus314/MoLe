@@ -15,16 +15,15 @@
  * along with MoLe. If not, see <https://www.gnu.org/licenses/>.
  */
 
+@file:Suppress("UNUSED", "MatchingDeclarationName")
+
 package net.ktnx.mobileledger.ui.components
 
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import net.ktnx.mobileledger.ui.theme.MoLeTheme
+
+// Re-export from core:ui for backward compatibility
+// New code should import from net.ktnx.mobileledger.core.ui.components directly
 
 @Composable
 fun ConfirmDialog(
@@ -36,41 +35,16 @@ fun ConfirmDialog(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
     isDestructive: Boolean = false
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        modifier = modifier,
-        title = {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.headlineSmall
-            )
-        },
-        text = {
-            Text(
-                text = message,
-                style = MaterialTheme.typography.bodyMedium
-            )
-        },
-        confirmButton = {
-            TextButton(onClick = onConfirm) {
-                Text(
-                    text = confirmText,
-                    color = if (isDestructive) {
-                        MaterialTheme.colorScheme.error
-                    } else {
-                        MaterialTheme.colorScheme.primary
-                    }
-                )
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(text = dismissText)
-            }
-        }
-    )
-}
+) = net.ktnx.mobileledger.core.ui.components.ConfirmDialog(
+    title = title,
+    message = message,
+    confirmText = confirmText,
+    dismissText = dismissText,
+    onConfirm = onConfirm,
+    onDismiss = onDismiss,
+    modifier = modifier,
+    isDestructive = isDestructive
+)
 
 @Composable
 fun UnsavedChangesDialog(
@@ -78,88 +52,26 @@ fun UnsavedChangesDialog(
     onDiscard: () -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        modifier = modifier,
-        title = {
-            Text(
-                text = "未保存の変更",
-                style = MaterialTheme.typography.headlineSmall
-            )
-        },
-        text = {
-            Text(
-                text = "変更が保存されていません。保存しますか？",
-                style = MaterialTheme.typography.bodyMedium
-            )
-        },
-        confirmButton = {
-            TextButton(onClick = onSave) {
-                Text(
-                    text = "保存",
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDiscard) {
-                Text(
-                    text = "破棄",
-                    color = MaterialTheme.colorScheme.error
-                )
-            }
-        }
-    )
-}
+) = net.ktnx.mobileledger.core.ui.components.UnsavedChangesDialog(
+    onSave = onSave,
+    onDiscard = onDiscard,
+    onDismiss = onDismiss,
+    modifier = modifier,
+    title = "未保存の変更",
+    message = "変更が保存されていません。保存しますか？",
+    saveText = "保存",
+    discardText = "破棄"
+)
 
 @Composable
-fun DeleteConfirmDialog(itemName: String, onConfirm: () -> Unit, onDismiss: () -> Unit, modifier: Modifier = Modifier) {
-    ConfirmDialog(
-        title = "削除の確認",
-        message = "「$itemName」を削除しますか？この操作は取り消せません。",
-        confirmText = "削除",
-        dismissText = "キャンセル",
+fun DeleteConfirmDialog(itemName: String, onConfirm: () -> Unit, onDismiss: () -> Unit, modifier: Modifier = Modifier) =
+    net.ktnx.mobileledger.core.ui.components.DeleteConfirmDialog(
+        itemName = itemName,
         onConfirm = onConfirm,
         onDismiss = onDismiss,
         modifier = modifier,
-        isDestructive = true
+        title = "削除の確認",
+        messageTemplate = "「%s」を削除しますか？この操作は取り消せません。",
+        confirmText = "削除",
+        dismissText = "キャンセル"
     )
-}
-
-@Preview
-@Composable
-private fun ConfirmDialogPreview() {
-    MoLeTheme {
-        ConfirmDialog(
-            title = "確認",
-            message = "この操作を実行しますか？",
-            onConfirm = {},
-            onDismiss = {}
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun UnsavedChangesDialogPreview() {
-    MoLeTheme {
-        UnsavedChangesDialog(
-            onSave = {},
-            onDiscard = {},
-            onDismiss = {}
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun DeleteConfirmDialogPreview() {
-    MoLeTheme {
-        DeleteConfirmDialog(
-            itemName = "テストプロファイル",
-            onConfirm = {},
-            onDismiss = {}
-        )
-    }
-}

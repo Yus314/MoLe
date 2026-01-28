@@ -15,82 +15,20 @@
  * along with MoLe. If not, see <https://www.gnu.org/licenses/>.
  */
 
+@file:Suppress("UNUSED", "MatchingDeclarationName")
+
 package net.ktnx.mobileledger.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 
-private val LightColorScheme = lightColorScheme(
-    primary = MoLePrimary,
-    onPrimary = MoLeOnPrimary,
-    primaryContainer = MoLePrimary,
-    onPrimaryContainer = MoLeOnPrimary,
-    secondary = MoLeSecondary,
-    onSecondary = MoLeOnSecondary,
-    secondaryContainer = MoLeSecondaryVariant,
-    onSecondaryContainer = MoLeOnSecondary,
-    background = MoLeBackground,
-    onBackground = MoLeOnBackground,
-    surface = MoLeSurface,
-    onSurface = MoLeOnSurface,
-    surfaceVariant = MoLeSurfaceVariant,
-    onSurfaceVariant = MoLeOnSurfaceVariant,
-    error = MoLeError,
-    onError = MoLeOnError,
-    errorContainer = MoLeErrorContainer,
-    onErrorContainer = MoLeOnErrorContainer,
-    outline = MoLeOutline,
-    outlineVariant = MoLeOutlineVariant
-)
-
-private val DarkColorScheme = darkColorScheme(
-    primary = MoLePrimaryDark,
-    onPrimary = MoLeOnPrimaryDark,
-    primaryContainer = MoLePrimaryContainerDark,
-    onPrimaryContainer = MoLeOnPrimaryContainerDark,
-    secondary = MoLeSecondaryDark,
-    onSecondary = MoLeOnSecondaryDark,
-    secondaryContainer = MoLeSecondaryContainerDark,
-    onSecondaryContainer = MoLeOnSecondaryContainerDark,
-    background = MoLeBackgroundDark,
-    onBackground = MoLeOnBackgroundDark,
-    surface = MoLeSurfaceDark,
-    onSurface = MoLeOnSurfaceDark,
-    surfaceVariant = MoLeSurfaceVariantDark,
-    onSurfaceVariant = MoLeOnSurfaceVariantDark,
-    error = MoLeErrorDark,
-    onError = MoLeOnErrorDark,
-    errorContainer = MoLeErrorContainerDark,
-    onErrorContainer = MoLeOnErrorContainerDark,
-    outline = MoLeOutlineDark,
-    outlineVariant = MoLeOutlineVariantDark
-)
+// Re-export MoLeTheme from core:ui for backward compatibility
+// New code should import from net.ktnx.mobileledger.core.ui.theme directly
 
 @Composable
-fun MoLeTheme(darkTheme: Boolean = isSystemInDarkTheme(), profileHue: Float? = null, content: @Composable () -> Unit) {
-    val colorScheme = remember(darkTheme, profileHue) {
-        when {
-            profileHue != null -> {
-                if (darkTheme) {
-                    darkColorSchemeFromHue(profileHue)
-                } else {
-                    lightColorSchemeFromHue(profileHue)
-                }
-            }
-
-            darkTheme -> DarkColorScheme
-
-            else -> LightColorScheme
-        }
-    }
-
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = MoLeTypography,
+fun MoLeTheme(darkTheme: Boolean = isSystemInDarkTheme(), profileHue: Float? = null, content: @Composable () -> Unit) =
+    net.ktnx.mobileledger.core.ui.theme.MoLeTheme(
+        darkTheme = darkTheme,
+        profileHue = profileHue,
         content = content
     )
-}

@@ -35,7 +35,7 @@ import net.ktnx.mobileledger.domain.usecase.GetTemplateUseCase
 import net.ktnx.mobileledger.domain.usecase.SaveTemplateUseCase
 import net.ktnx.mobileledger.domain.usecase.TemplateAccountRowManager
 import net.ktnx.mobileledger.domain.usecase.TemplateDataMapper
-import net.ktnx.mobileledger.domain.usecase.TemplatePatternValidator
+import net.ktnx.mobileledger.feature.templates.usecase.TemplatePatternValidator
 
 /**
  * ViewModel for the template detail screen using Compose.

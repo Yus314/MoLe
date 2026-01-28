@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Damyan Ivanov.
+ * Copyright © 2026 Damyan Ivanov.
  * This file is part of MoLe.
  * MoLe is free software: you can distribute it and/or modify it
  * under the term of the GNU General Public License as published by
@@ -15,7 +15,7 @@
  * along with MoLe. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ktnx.mobileledger.domain.usecase
+package net.ktnx.mobileledger.feature.templates.usecase
 
 import androidx.compose.ui.text.AnnotatedString
 

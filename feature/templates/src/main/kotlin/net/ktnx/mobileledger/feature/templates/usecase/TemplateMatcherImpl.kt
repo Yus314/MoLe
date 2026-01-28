@@ -15,7 +15,7 @@
  * along with MoLe. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ktnx.mobileledger.domain.usecase
+package net.ktnx.mobileledger.feature.templates.usecase
 
 import java.util.regex.MatchResult
 import java.util.regex.Pattern

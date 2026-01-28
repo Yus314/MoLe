@@ -18,8 +18,8 @@
 package net.ktnx.mobileledger.fake
 
 import androidx.compose.ui.text.AnnotatedString
-import net.ktnx.mobileledger.domain.usecase.PatternValidationResult
-import net.ktnx.mobileledger.domain.usecase.TemplatePatternValidator
+import net.ktnx.mobileledger.feature.templates.usecase.PatternValidationResult
+import net.ktnx.mobileledger.feature.templates.usecase.TemplatePatternValidator
 
 /**
  * Fake implementation of TemplatePatternValidator for testing.
