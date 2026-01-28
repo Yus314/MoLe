@@ -55,3 +55,4 @@ include(":core:testing")
 // Feature modules
 include(":feature:templates")
 include(":feature:profile")
+include(":feature:transaction")

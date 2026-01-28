@@ -32,10 +32,10 @@ import net.ktnx.mobileledger.domain.usecase.ObserveCurrentProfileUseCaseImpl
 import net.ktnx.mobileledger.domain.usecase.SaveCurrencyUseCaseImpl
 import net.ktnx.mobileledger.domain.usecase.TransactionAccountRowManager
 import net.ktnx.mobileledger.domain.usecase.TransactionAccountRowManagerImpl
-import net.ktnx.mobileledger.domain.usecase.TransactionBalanceCalculator
-import net.ktnx.mobileledger.domain.usecase.TransactionBalanceCalculatorImpl
 import net.ktnx.mobileledger.fake.FakeCurrencyFormatter
 import net.ktnx.mobileledger.fake.FakeRowIdGenerator
+import net.ktnx.mobileledger.feature.transaction.usecase.TransactionBalanceCalculator
+import net.ktnx.mobileledger.feature.transaction.usecase.TransactionBalanceCalculatorImpl
 import net.ktnx.mobileledger.util.MainDispatcherRule
 import net.ktnx.mobileledger.util.createTestDomainProfile
 import org.junit.Assert.assertEquals

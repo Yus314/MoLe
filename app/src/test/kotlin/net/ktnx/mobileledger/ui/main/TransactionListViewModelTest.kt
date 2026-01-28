@@ -41,8 +41,8 @@ import net.ktnx.mobileledger.domain.usecase.GetTransactionsUseCaseImpl
 import net.ktnx.mobileledger.domain.usecase.ObserveCurrentProfileUseCaseImpl
 import net.ktnx.mobileledger.domain.usecase.ObserveTransactionsUseCaseImpl
 import net.ktnx.mobileledger.domain.usecase.SearchAccountNamesUseCaseImpl
-import net.ktnx.mobileledger.domain.usecase.TransactionListConverterImpl
 import net.ktnx.mobileledger.fake.FakeCurrencyFormatter
+import net.ktnx.mobileledger.feature.transaction.usecase.TransactionListConverterImpl
 import net.ktnx.mobileledger.util.createTestDomainProfile
 import org.junit.After
 import org.junit.Assert.assertEquals

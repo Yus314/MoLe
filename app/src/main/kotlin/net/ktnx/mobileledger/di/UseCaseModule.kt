@@ -100,12 +100,6 @@ import net.ktnx.mobileledger.domain.usecase.TemplateDataMapper
 import net.ktnx.mobileledger.domain.usecase.TemplateDataMapperImpl
 import net.ktnx.mobileledger.domain.usecase.TransactionAccountRowManager
 import net.ktnx.mobileledger.domain.usecase.TransactionAccountRowManagerImpl
-import net.ktnx.mobileledger.domain.usecase.TransactionBalanceCalculator
-import net.ktnx.mobileledger.domain.usecase.TransactionBalanceCalculatorImpl
-import net.ktnx.mobileledger.domain.usecase.TransactionDateNavigator
-import net.ktnx.mobileledger.domain.usecase.TransactionDateNavigatorImpl
-import net.ktnx.mobileledger.domain.usecase.TransactionListConverter
-import net.ktnx.mobileledger.domain.usecase.TransactionListConverterImpl
 import net.ktnx.mobileledger.domain.usecase.TransactionSender
 import net.ktnx.mobileledger.domain.usecase.TransactionSenderImpl
 import net.ktnx.mobileledger.domain.usecase.UpdateProfileOrderUseCase
@@ -140,23 +134,11 @@ abstract class UseCaseModule {
 
     @Binds
     @Singleton
-    abstract fun bindTransactionBalanceCalculator(impl: TransactionBalanceCalculatorImpl): TransactionBalanceCalculator
-
-    @Binds
-    @Singleton
     abstract fun bindProfilePersistence(impl: ProfilePersistenceImpl): ProfilePersistence
 
     @Binds
     @Singleton
-    abstract fun bindTransactionListConverter(impl: TransactionListConverterImpl): TransactionListConverter
-
-    @Binds
-    @Singleton
     abstract fun bindAccountHierarchyResolver(impl: AccountHierarchyResolverImpl): AccountHierarchyResolver
-
-    @Binds
-    @Singleton
-    abstract fun bindTransactionDateNavigator(impl: TransactionDateNavigatorImpl): TransactionDateNavigator
 
     @Binds
     @Singleton

@@ -18,7 +18,7 @@
 package net.ktnx.mobileledger.fake
 
 import net.ktnx.mobileledger.core.domain.model.Transaction
-import net.ktnx.mobileledger.domain.usecase.TransactionListConverter
+import net.ktnx.mobileledger.feature.transaction.usecase.TransactionListConverter
 
 /**
  * Fake implementation of [TransactionListConverter] for testing.
@@ -51,7 +51,7 @@ class FakeTransactionListConverter : TransactionListConverter {
     /**
      * Real implementation for delegation when customResult is null.
      */
-    private val realImpl = net.ktnx.mobileledger.domain.usecase.TransactionListConverterImpl()
+    private val realImpl = net.ktnx.mobileledger.feature.transaction.usecase.TransactionListConverterImpl()
 
     override fun convert(transactions: List<Transaction>): TransactionListConverter.ConversionResult {
         convertCallCount++

@@ -42,7 +42,7 @@ import net.ktnx.mobileledger.core.domain.model.Transaction
 import net.ktnx.mobileledger.domain.usecase.GetTransactionsUseCase
 import net.ktnx.mobileledger.domain.usecase.ObserveCurrentProfileUseCase
 import net.ktnx.mobileledger.domain.usecase.SearchAccountNamesUseCase
-import net.ktnx.mobileledger.domain.usecase.TransactionListConverter
+import net.ktnx.mobileledger.feature.transaction.usecase.TransactionListConverter
 import net.ktnx.mobileledger.service.CurrencyFormatter
 
 /**

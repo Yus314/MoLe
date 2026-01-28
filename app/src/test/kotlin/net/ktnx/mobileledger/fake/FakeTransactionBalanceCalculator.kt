@@ -18,7 +18,7 @@
 package net.ktnx.mobileledger.fake
 
 import net.ktnx.mobileledger.core.domain.model.TransactionLine
-import net.ktnx.mobileledger.domain.usecase.TransactionBalanceCalculator
+import net.ktnx.mobileledger.feature.transaction.usecase.TransactionBalanceCalculator
 
 /**
  * Fake implementation of [TransactionBalanceCalculator] for testing.

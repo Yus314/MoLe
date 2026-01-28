@@ -38,7 +38,7 @@ import net.ktnx.mobileledger.domain.usecase.GetAllCurrenciesUseCase
 import net.ktnx.mobileledger.domain.usecase.ObserveCurrentProfileUseCase
 import net.ktnx.mobileledger.domain.usecase.SaveCurrencyUseCase
 import net.ktnx.mobileledger.domain.usecase.TransactionAccountRowManager
-import net.ktnx.mobileledger.domain.usecase.TransactionBalanceCalculator
+import net.ktnx.mobileledger.feature.transaction.usecase.TransactionBalanceCalculator
 import net.ktnx.mobileledger.service.CurrencyFormatter
 import net.ktnx.mobileledger.service.RowIdGenerator
 
