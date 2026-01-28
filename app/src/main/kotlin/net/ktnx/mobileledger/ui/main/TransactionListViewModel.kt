@@ -39,9 +39,9 @@ import net.ktnx.mobileledger.async.TransactionAccumulator
 import net.ktnx.mobileledger.core.common.utils.SimpleDate
 import net.ktnx.mobileledger.core.domain.model.Profile
 import net.ktnx.mobileledger.core.domain.model.Transaction
-import net.ktnx.mobileledger.domain.usecase.GetTransactionsUseCase
-import net.ktnx.mobileledger.domain.usecase.SearchAccountNamesUseCase
 import net.ktnx.mobileledger.feature.profile.usecase.ObserveCurrentProfileUseCase
+import net.ktnx.mobileledger.feature.transaction.usecase.GetTransactionsUseCase
+import net.ktnx.mobileledger.feature.transaction.usecase.SearchAccountNamesUseCase
 import net.ktnx.mobileledger.feature.transaction.usecase.TransactionListConverter
 import net.ktnx.mobileledger.service.CurrencyFormatter
 

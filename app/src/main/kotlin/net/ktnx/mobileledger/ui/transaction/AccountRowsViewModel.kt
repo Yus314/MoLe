@@ -32,12 +32,12 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import logcat.logcat
-import net.ktnx.mobileledger.domain.usecase.AccountSuggestionLookup
 import net.ktnx.mobileledger.domain.usecase.DeleteCurrencyUseCase
 import net.ktnx.mobileledger.domain.usecase.GetAllCurrenciesUseCase
 import net.ktnx.mobileledger.domain.usecase.SaveCurrencyUseCase
 import net.ktnx.mobileledger.domain.usecase.TransactionAccountRowManager
 import net.ktnx.mobileledger.feature.profile.usecase.ObserveCurrentProfileUseCase
+import net.ktnx.mobileledger.feature.transaction.usecase.AccountSuggestionLookup
 import net.ktnx.mobileledger.feature.transaction.usecase.TransactionBalanceCalculator
 import net.ktnx.mobileledger.service.CurrencyFormatter
 import net.ktnx.mobileledger.service.RowIdGenerator

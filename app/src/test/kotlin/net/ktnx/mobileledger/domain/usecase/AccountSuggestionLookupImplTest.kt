@@ -19,6 +19,7 @@ package net.ktnx.mobileledger.domain.usecase
 
 import kotlinx.coroutines.test.runTest
 import net.ktnx.mobileledger.core.testing.fake.FakeAccountRepository
+import net.ktnx.mobileledger.feature.transaction.usecase.AccountSuggestionLookupImpl
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue

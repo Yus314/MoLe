@@ -24,8 +24,6 @@ import net.ktnx.mobileledger.core.domain.model.Profile
 import net.ktnx.mobileledger.core.testing.fake.FakeAccountRepository
 import net.ktnx.mobileledger.core.testing.fake.FakeCurrencyRepository
 import net.ktnx.mobileledger.core.testing.fake.FakeProfileRepository
-import net.ktnx.mobileledger.domain.usecase.AccountSuggestionLookup
-import net.ktnx.mobileledger.domain.usecase.AccountSuggestionLookupImpl
 import net.ktnx.mobileledger.domain.usecase.DeleteCurrencyUseCaseImpl
 import net.ktnx.mobileledger.domain.usecase.GetAllCurrenciesUseCaseImpl
 import net.ktnx.mobileledger.domain.usecase.SaveCurrencyUseCaseImpl
@@ -34,6 +32,8 @@ import net.ktnx.mobileledger.domain.usecase.TransactionAccountRowManagerImpl
 import net.ktnx.mobileledger.fake.FakeCurrencyFormatter
 import net.ktnx.mobileledger.fake.FakeRowIdGenerator
 import net.ktnx.mobileledger.feature.profile.usecase.ObserveCurrentProfileUseCaseImpl
+import net.ktnx.mobileledger.feature.transaction.usecase.AccountSuggestionLookup
+import net.ktnx.mobileledger.feature.transaction.usecase.AccountSuggestionLookupImpl
 import net.ktnx.mobileledger.feature.transaction.usecase.TransactionBalanceCalculator
 import net.ktnx.mobileledger.feature.transaction.usecase.TransactionBalanceCalculatorImpl
 import net.ktnx.mobileledger.util.MainDispatcherRule
