@@ -23,6 +23,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import net.ktnx.mobileledger.core.common.utils.SimpleDate
 import net.ktnx.mobileledger.core.domain.model.FutureDates
+import net.ktnx.mobileledger.core.ui.components.MoleDatePickerDialog
 import net.ktnx.mobileledger.ui.theme.MoLeTheme
 import org.junit.Assert.assertTrue
 import org.junit.Rule

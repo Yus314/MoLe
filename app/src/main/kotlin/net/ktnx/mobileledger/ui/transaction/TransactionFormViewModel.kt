@@ -34,10 +34,10 @@ import net.ktnx.mobileledger.core.domain.model.FutureDates
 import net.ktnx.mobileledger.core.domain.model.Transaction
 import net.ktnx.mobileledger.domain.usecase.GetFirstTransactionByDescriptionUseCase
 import net.ktnx.mobileledger.domain.usecase.GetTransactionByIdUseCase
-import net.ktnx.mobileledger.domain.usecase.ObserveCurrentProfileUseCase
 import net.ktnx.mobileledger.domain.usecase.SearchTransactionDescriptionsUseCase
 import net.ktnx.mobileledger.domain.usecase.StoreTransactionUseCase
 import net.ktnx.mobileledger.domain.usecase.TransactionSender
+import net.ktnx.mobileledger.feature.profile.usecase.ObserveCurrentProfileUseCase
 import net.ktnx.mobileledger.feature.transaction.usecase.TransactionBalanceCalculator
 import net.ktnx.mobileledger.service.AppStateService
 

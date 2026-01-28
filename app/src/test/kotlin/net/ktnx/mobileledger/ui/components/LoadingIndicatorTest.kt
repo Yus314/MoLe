@@ -24,6 +24,8 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import net.ktnx.mobileledger.core.ui.components.LoadingIndicator
+import net.ktnx.mobileledger.core.ui.components.LoadingOverlay
 import net.ktnx.mobileledger.ui.theme.MoLeTheme
 import org.junit.Assert.assertFalse
 import org.junit.Rule

@@ -27,12 +27,12 @@ import net.ktnx.mobileledger.core.testing.fake.FakeProfileRepository
 import net.ktnx.mobileledger.core.testing.fake.FakeTransactionRepository
 import net.ktnx.mobileledger.domain.usecase.GetFirstTransactionByDescriptionUseCaseImpl
 import net.ktnx.mobileledger.domain.usecase.GetTransactionByIdUseCaseImpl
-import net.ktnx.mobileledger.domain.usecase.ObserveCurrentProfileUseCaseImpl
 import net.ktnx.mobileledger.domain.usecase.SearchTransactionDescriptionsUseCaseImpl
 import net.ktnx.mobileledger.domain.usecase.StoreTransactionUseCaseImpl
 import net.ktnx.mobileledger.fake.FakeAppStateService
 import net.ktnx.mobileledger.fake.FakeTransactionBalanceCalculator
 import net.ktnx.mobileledger.fake.FakeTransactionSender
+import net.ktnx.mobileledger.feature.profile.usecase.ObserveCurrentProfileUseCaseImpl
 import net.ktnx.mobileledger.util.MainDispatcherRule
 import net.ktnx.mobileledger.util.createTestDomainProfile
 import org.junit.Assert.assertEquals

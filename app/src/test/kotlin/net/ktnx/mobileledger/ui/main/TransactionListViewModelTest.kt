@@ -38,10 +38,10 @@ import net.ktnx.mobileledger.core.domain.model.Transaction as DomainTransaction
 import net.ktnx.mobileledger.core.domain.model.TransactionLine as TransactionLine
 import net.ktnx.mobileledger.core.testing.fake.FakeProfileRepository
 import net.ktnx.mobileledger.domain.usecase.GetTransactionsUseCaseImpl
-import net.ktnx.mobileledger.domain.usecase.ObserveCurrentProfileUseCaseImpl
 import net.ktnx.mobileledger.domain.usecase.ObserveTransactionsUseCaseImpl
 import net.ktnx.mobileledger.domain.usecase.SearchAccountNamesUseCaseImpl
 import net.ktnx.mobileledger.fake.FakeCurrencyFormatter
+import net.ktnx.mobileledger.feature.profile.usecase.ObserveCurrentProfileUseCaseImpl
 import net.ktnx.mobileledger.feature.transaction.usecase.TransactionListConverterImpl
 import net.ktnx.mobileledger.util.createTestDomainProfile
 import org.junit.After

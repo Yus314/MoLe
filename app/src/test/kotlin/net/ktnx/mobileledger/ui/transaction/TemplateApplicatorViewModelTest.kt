@@ -25,11 +25,11 @@ import net.ktnx.mobileledger.core.domain.model.Template
 import net.ktnx.mobileledger.core.domain.model.TemplateLine
 import net.ktnx.mobileledger.core.testing.fake.FakeProfileRepository
 import net.ktnx.mobileledger.core.testing.fake.FakeTemplateRepository
-import net.ktnx.mobileledger.domain.usecase.GetAllTemplatesUseCaseImpl
-import net.ktnx.mobileledger.domain.usecase.GetTemplateUseCaseImpl
-import net.ktnx.mobileledger.domain.usecase.ObserveCurrentProfileUseCaseImpl
 import net.ktnx.mobileledger.fake.FakeCurrencyFormatter
 import net.ktnx.mobileledger.fake.FakeRowIdGenerator
+import net.ktnx.mobileledger.feature.profile.usecase.ObserveCurrentProfileUseCaseImpl
+import net.ktnx.mobileledger.feature.templates.usecase.GetAllTemplatesUseCaseImpl
+import net.ktnx.mobileledger.feature.templates.usecase.GetTemplateUseCaseImpl
 import net.ktnx.mobileledger.feature.templates.usecase.TemplateMatcher
 import net.ktnx.mobileledger.feature.templates.usecase.TemplateMatcherImpl
 import net.ktnx.mobileledger.util.MainDispatcherRule

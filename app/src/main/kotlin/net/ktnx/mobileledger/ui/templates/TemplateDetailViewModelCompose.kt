@@ -30,11 +30,11 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import logcat.logcat
-import net.ktnx.mobileledger.domain.usecase.DeleteTemplateUseCase
-import net.ktnx.mobileledger.domain.usecase.GetTemplateUseCase
-import net.ktnx.mobileledger.domain.usecase.SaveTemplateUseCase
 import net.ktnx.mobileledger.domain.usecase.TemplateAccountRowManager
 import net.ktnx.mobileledger.domain.usecase.TemplateDataMapper
+import net.ktnx.mobileledger.feature.templates.usecase.DeleteTemplateUseCase
+import net.ktnx.mobileledger.feature.templates.usecase.GetTemplateUseCase
+import net.ktnx.mobileledger.feature.templates.usecase.SaveTemplateUseCase
 import net.ktnx.mobileledger.feature.templates.usecase.TemplatePatternValidator
 
 /**

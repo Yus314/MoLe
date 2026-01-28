@@ -21,6 +21,9 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import net.ktnx.mobileledger.core.ui.components.ConfirmDialog
+import net.ktnx.mobileledger.core.ui.components.DeleteConfirmDialog
+import net.ktnx.mobileledger.core.ui.components.UnsavedChangesDialog
 import net.ktnx.mobileledger.ui.theme.MoLeTheme
 import org.junit.Assert.assertTrue
 import org.junit.Rule

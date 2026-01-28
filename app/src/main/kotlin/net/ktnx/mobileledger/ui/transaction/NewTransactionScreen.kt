@@ -59,8 +59,8 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import net.ktnx.mobileledger.core.ui.components.MoleDatePickerDialog
 import net.ktnx.mobileledger.ui.components.CurrencyPickerDialog
-import net.ktnx.mobileledger.ui.components.MoleDatePickerDialog
 
 /**
  * Main composable for the New Transaction screen.

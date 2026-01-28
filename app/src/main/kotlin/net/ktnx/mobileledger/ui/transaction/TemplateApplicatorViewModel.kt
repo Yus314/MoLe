@@ -30,9 +30,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import net.ktnx.mobileledger.core.domain.model.MatchedTemplate
 import net.ktnx.mobileledger.core.domain.model.Template
-import net.ktnx.mobileledger.domain.usecase.GetAllTemplatesUseCase
-import net.ktnx.mobileledger.domain.usecase.GetTemplateUseCase
-import net.ktnx.mobileledger.domain.usecase.ObserveCurrentProfileUseCase
+import net.ktnx.mobileledger.feature.profile.usecase.ObserveCurrentProfileUseCase
+import net.ktnx.mobileledger.feature.templates.usecase.GetAllTemplatesUseCase
+import net.ktnx.mobileledger.feature.templates.usecase.GetTemplateUseCase
 import net.ktnx.mobileledger.feature.templates.usecase.TemplateMatcher
 import net.ktnx.mobileledger.service.CurrencyFormatter
 import net.ktnx.mobileledger.service.RowIdGenerator

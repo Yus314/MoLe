@@ -30,6 +30,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.unit.dp
+import net.ktnx.mobileledger.core.ui.components.WeakOverscrollContainer
 import net.ktnx.mobileledger.ui.theme.MoLeTheme
 import org.junit.Rule
 import org.junit.Test

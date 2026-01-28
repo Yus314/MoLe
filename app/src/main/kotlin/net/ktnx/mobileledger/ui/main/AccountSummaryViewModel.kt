@@ -42,8 +42,8 @@ import net.ktnx.mobileledger.core.domain.model.Profile
 import net.ktnx.mobileledger.domain.usecase.AccountHierarchyResolver
 import net.ktnx.mobileledger.domain.usecase.GetShowZeroBalanceUseCase
 import net.ktnx.mobileledger.domain.usecase.ObserveAccountsWithAmountsUseCase
-import net.ktnx.mobileledger.domain.usecase.ObserveCurrentProfileUseCase
 import net.ktnx.mobileledger.domain.usecase.SetShowZeroBalanceUseCase
+import net.ktnx.mobileledger.feature.profile.usecase.ObserveCurrentProfileUseCase
 
 /**
  * ViewModel for the Account Summary tab.

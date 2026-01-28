@@ -28,10 +28,10 @@ import kotlinx.coroutines.test.setMain
 import net.ktnx.mobileledger.core.domain.model.Profile
 import net.ktnx.mobileledger.core.domain.model.SyncState
 import net.ktnx.mobileledger.core.testing.fake.FakeProfileRepository
-import net.ktnx.mobileledger.domain.usecase.ObserveCurrentProfileUseCaseImpl
 import net.ktnx.mobileledger.fake.FakeAppStateService
 import net.ktnx.mobileledger.fake.FakeBackgroundTaskManager
 import net.ktnx.mobileledger.fake.FakeTransactionSyncer
+import net.ktnx.mobileledger.feature.profile.usecase.ObserveCurrentProfileUseCaseImpl
 import net.ktnx.mobileledger.util.createTestDomainProfile
 import org.junit.After
 import org.junit.Assert.assertEquals

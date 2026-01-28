@@ -31,7 +31,7 @@ fun ConfirmDialog(
     title: String,
     message: String,
     confirmText: String = "OK",
-    dismissText: String = "Cancel",
+    dismissText: String = "キャンセル",
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
@@ -78,10 +78,10 @@ fun UnsavedChangesDialog(
     onDiscard: () -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
-    title: String = "Unsaved Changes",
-    message: String = "You have unsaved changes. Do you want to save them?",
-    saveText: String = "Save",
-    discardText: String = "Discard"
+    title: String = "未保存の変更",
+    message: String = "変更が保存されていません。保存しますか？",
+    saveText: String = "保存",
+    discardText: String = "破棄"
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -123,10 +123,10 @@ fun DeleteConfirmDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
-    title: String = "Confirm Delete",
-    messageTemplate: String = "Delete \"%s\"? This action cannot be undone.",
-    confirmText: String = "Delete",
-    dismissText: String = "Cancel"
+    title: String = "削除の確認",
+    messageTemplate: String = "「%s」を削除しますか？この操作は取り消せません。",
+    confirmText: String = "削除",
+    dismissText: String = "キャンセル"
 ) {
     ConfirmDialog(
         title = title,

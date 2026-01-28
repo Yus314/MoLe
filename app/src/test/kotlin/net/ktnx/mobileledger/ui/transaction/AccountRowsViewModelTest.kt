@@ -28,12 +28,12 @@ import net.ktnx.mobileledger.domain.usecase.AccountSuggestionLookup
 import net.ktnx.mobileledger.domain.usecase.AccountSuggestionLookupImpl
 import net.ktnx.mobileledger.domain.usecase.DeleteCurrencyUseCaseImpl
 import net.ktnx.mobileledger.domain.usecase.GetAllCurrenciesUseCaseImpl
-import net.ktnx.mobileledger.domain.usecase.ObserveCurrentProfileUseCaseImpl
 import net.ktnx.mobileledger.domain.usecase.SaveCurrencyUseCaseImpl
 import net.ktnx.mobileledger.domain.usecase.TransactionAccountRowManager
 import net.ktnx.mobileledger.domain.usecase.TransactionAccountRowManagerImpl
 import net.ktnx.mobileledger.fake.FakeCurrencyFormatter
 import net.ktnx.mobileledger.fake.FakeRowIdGenerator
+import net.ktnx.mobileledger.feature.profile.usecase.ObserveCurrentProfileUseCaseImpl
 import net.ktnx.mobileledger.feature.transaction.usecase.TransactionBalanceCalculator
 import net.ktnx.mobileledger.feature.transaction.usecase.TransactionBalanceCalculatorImpl
 import net.ktnx.mobileledger.util.MainDispatcherRule

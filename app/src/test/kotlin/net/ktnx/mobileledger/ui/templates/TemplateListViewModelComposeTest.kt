@@ -27,11 +27,11 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import net.ktnx.mobileledger.core.domain.model.Template
 import net.ktnx.mobileledger.core.testing.fake.FakeTemplateRepository
-import net.ktnx.mobileledger.domain.usecase.DeleteTemplateUseCaseImpl
-import net.ktnx.mobileledger.domain.usecase.DuplicateTemplateUseCaseImpl
-import net.ktnx.mobileledger.domain.usecase.GetTemplateUseCaseImpl
-import net.ktnx.mobileledger.domain.usecase.ObserveTemplatesUseCaseImpl
-import net.ktnx.mobileledger.domain.usecase.SaveTemplateUseCaseImpl
+import net.ktnx.mobileledger.feature.templates.usecase.DeleteTemplateUseCaseImpl
+import net.ktnx.mobileledger.feature.templates.usecase.DuplicateTemplateUseCaseImpl
+import net.ktnx.mobileledger.feature.templates.usecase.GetTemplateUseCaseImpl
+import net.ktnx.mobileledger.feature.templates.usecase.ObserveTemplatesUseCaseImpl
+import net.ktnx.mobileledger.feature.templates.usecase.SaveTemplateUseCaseImpl
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse

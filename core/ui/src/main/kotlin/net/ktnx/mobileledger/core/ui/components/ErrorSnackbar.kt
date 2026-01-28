@@ -46,7 +46,7 @@ fun ErrorSnackbarHost(snackbarHostState: SnackbarHostState, modifier: Modifier =
 }
 
 @Composable
-fun ErrorSnackbar(snackbarData: SnackbarData, modifier: Modifier = Modifier, dismissText: String = "Close") {
+fun ErrorSnackbar(snackbarData: SnackbarData, modifier: Modifier = Modifier, dismissText: String = "閉じる") {
     Snackbar(
         modifier = modifier,
         action = snackbarData.visuals.actionLabel?.let { actionLabel ->
@@ -98,13 +98,12 @@ suspend fun SnackbarHostState.showError(
  * @param retryLabel Label for the retry button (default: "Retry")
  * @return SnackbarResult (ActionPerformed if retry was pressed)
  */
-suspend fun SnackbarHostState.showAppError(error: AppError, retryLabel: String = "Retry"): SnackbarResult =
-    showSnackbar(
-        message = error.message,
-        actionLabel = if (error.isRetryable) retryLabel else null,
-        duration = SnackbarDuration.Long,
-        withDismissAction = true
-    )
+suspend fun SnackbarHostState.showAppError(error: AppError, retryLabel: String = "再試行"): SnackbarResult = showSnackbar(
+    message = error.message,
+    actionLabel = if (error.isRetryable) retryLabel else null,
+    duration = SnackbarDuration.Long,
+    withDismissAction = true
+)
 
 @Composable
 fun rememberErrorSnackbarState(): SnackbarHostState = remember { SnackbarHostState() }

@@ -25,6 +25,10 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import net.ktnx.mobileledger.core.ui.components.ErrorEffect
+import net.ktnx.mobileledger.core.ui.components.ErrorSnackbar
+import net.ktnx.mobileledger.core.ui.components.ErrorSnackbarHost
+import net.ktnx.mobileledger.core.ui.components.rememberErrorSnackbarState
 import net.ktnx.mobileledger.ui.theme.MoLeTheme
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue

@@ -1,0 +1,143 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="net.ktnx.mobileledger.feature.profile.test" >
+4
+5    <uses-sdk
+5-->/home/kaki/MoLe/feature/profile/build/intermediates/tmp/manifest/test/debug/tempFile1ProcessTestManifest9797307713191018911.xml:5:5-74
+6        android:minSdkVersion="23"
+6-->/home/kaki/MoLe/feature/profile/build/intermediates/tmp/manifest/test/debug/tempFile1ProcessTestManifest9797307713191018911.xml:5:15-41
+7        android:targetSdkVersion="36" />
+7-->/home/kaki/MoLe/feature/profile/build/intermediates/tmp/manifest/test/debug/tempFile1ProcessTestManifest9797307713191018911.xml:5:42-71
+8
+9    <instrumentation
+9-->/home/kaki/MoLe/feature/profile/build/intermediates/tmp/manifest/test/debug/tempFile1ProcessTestManifest9797307713191018911.xml:9:5-11:92
+10        android:name="androidx.test.runner.AndroidJUnitRunner"
+10-->/home/kaki/MoLe/feature/profile/build/intermediates/tmp/manifest/test/debug/tempFile1ProcessTestManifest9797307713191018911.xml:9:22-76
+11        android:label="Tests for net.ktnx.mobileledger.feature.profile.test"
+11-->/home/kaki/MoLe/feature/profile/build/intermediates/tmp/manifest/test/debug/tempFile1ProcessTestManifest9797307713191018911.xml:11:22-90
+12        android:targetPackage="net.ktnx.mobileledger.feature.profile.test" />
+12-->/home/kaki/MoLe/feature/profile/build/intermediates/tmp/manifest/test/debug/tempFile1ProcessTestManifest9797307713191018911.xml:10:22-88
+13
+14    <permission
+14-->[androidx.core:core:1.16.0] /home/kaki/.gradle/caches/9.3.0/transforms/080cfbf9b983285b7036cf26afda4c65/transformed/core-1.16.0/AndroidManifest.xml:22:5-24:47
+15        android:name="net.ktnx.mobileledger.feature.profile.test.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+15-->[androidx.core:core:1.16.0] /home/kaki/.gradle/caches/9.3.0/transforms/080cfbf9b983285b7036cf26afda4c65/transformed/core-1.16.0/AndroidManifest.xml:23:9-81
+16        android:protectionLevel="signature" />
+16-->[androidx.core:core:1.16.0] /home/kaki/.gradle/caches/9.3.0/transforms/080cfbf9b983285b7036cf26afda4c65/transformed/core-1.16.0/AndroidManifest.xml:24:9-44
+17
+18    <uses-permission android:name="net.ktnx.mobileledger.feature.profile.test.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
+18-->[androidx.core:core:1.16.0] /home/kaki/.gradle/caches/9.3.0/transforms/080cfbf9b983285b7036cf26afda4c65/transformed/core-1.16.0/AndroidManifest.xml:26:5-97
+18-->[androidx.core:core:1.16.0] /home/kaki/.gradle/caches/9.3.0/transforms/080cfbf9b983285b7036cf26afda4c65/transformed/core-1.16.0/AndroidManifest.xml:26:22-94
+19    <uses-permission android:name="android.permission.INTERNET" />
+19-->[com.squareup.okhttp3:okhttp-android:5.3.2] /home/kaki/.gradle/caches/9.3.0/transforms/db85750f12f43d7b23b38ba89fd7fd15/transformed/okhttp-release/AndroidManifest.xml:8:5-67
+19-->[com.squareup.okhttp3:okhttp-android:5.3.2] /home/kaki/.gradle/caches/9.3.0/transforms/db85750f12f43d7b23b38ba89fd7fd15/transformed/okhttp-release/AndroidManifest.xml:8:22-64
+20
+21    <application
+21-->/home/kaki/MoLe/feature/profile/build/intermediates/tmp/manifest/test/debug/tempFile1ProcessTestManifest9797307713191018911.xml:7:5-46
+22        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
+22-->[androidx.core:core:1.16.0] /home/kaki/.gradle/caches/9.3.0/transforms/080cfbf9b983285b7036cf26afda4c65/transformed/core-1.16.0/AndroidManifest.xml:28:18-86
+23        android:debuggable="true" >
+23-->/home/kaki/MoLe/feature/profile/build/intermediates/tmp/manifest/test/debug/tempFile1ProcessTestManifest9797307713191018911.xml:7:18-43
+24        <service
+24-->[androidx.room:room-runtime-android:2.8.4] /home/kaki/.gradle/caches/9.3.0/transforms/bc9c9d9bd1ad163a48a2a11b85f9a7d1/transformed/room-runtime/AndroidManifest.xml:24:9-28:63
+25            android:name="androidx.room.MultiInstanceInvalidationService"
+25-->[androidx.room:room-runtime-android:2.8.4] /home/kaki/.gradle/caches/9.3.0/transforms/bc9c9d9bd1ad163a48a2a11b85f9a7d1/transformed/room-runtime/AndroidManifest.xml:25:13-74
+26            android:directBootAware="true"
+26-->[androidx.room:room-runtime-android:2.8.4] /home/kaki/.gradle/caches/9.3.0/transforms/bc9c9d9bd1ad163a48a2a11b85f9a7d1/transformed/room-runtime/AndroidManifest.xml:26:13-43
+27            android:exported="false" />
+27-->[androidx.room:room-runtime-android:2.8.4] /home/kaki/.gradle/caches/9.3.0/transforms/bc9c9d9bd1ad163a48a2a11b85f9a7d1/transformed/room-runtime/AndroidManifest.xml:27:13-37
+28
+29        <activity
+29-->[androidx.compose.ui:ui-tooling-android:1.10.1] /home/kaki/.gradle/caches/9.3.0/transforms/c019b4499e8ad2c026531bc0ce7ed068/transformed/ui-tooling/AndroidManifest.xml:23:9-25:39
+30            android:name="androidx.compose.ui.tooling.PreviewActivity"
+30-->[androidx.compose.ui:ui-tooling-android:1.10.1] /home/kaki/.gradle/caches/9.3.0/transforms/c019b4499e8ad2c026531bc0ce7ed068/transformed/ui-tooling/AndroidManifest.xml:24:13-71
+31            android:exported="true" />
+31-->[androidx.compose.ui:ui-tooling-android:1.10.1] /home/kaki/.gradle/caches/9.3.0/transforms/c019b4499e8ad2c026531bc0ce7ed068/transformed/ui-tooling/AndroidManifest.xml:25:13-36
+32
+33        <provider
+33-->[androidx.emoji2:emoji2:1.4.0] /home/kaki/.gradle/caches/9.3.0/transforms/dbd6d8b5206e2a3991db648bcd6be3d4/transformed/emoji2-1.4.0/AndroidManifest.xml:24:9-32:20
+34            android:name="androidx.startup.InitializationProvider"
+34-->[androidx.emoji2:emoji2:1.4.0] /home/kaki/.gradle/caches/9.3.0/transforms/dbd6d8b5206e2a3991db648bcd6be3d4/transformed/emoji2-1.4.0/AndroidManifest.xml:25:13-67
+35            android:authorities="net.ktnx.mobileledger.feature.profile.test.androidx-startup"
+35-->[androidx.emoji2:emoji2:1.4.0] /home/kaki/.gradle/caches/9.3.0/transforms/dbd6d8b5206e2a3991db648bcd6be3d4/transformed/emoji2-1.4.0/AndroidManifest.xml:26:13-68
+36            android:exported="false" >
+36-->[androidx.emoji2:emoji2:1.4.0] /home/kaki/.gradle/caches/9.3.0/transforms/dbd6d8b5206e2a3991db648bcd6be3d4/transformed/emoji2-1.4.0/AndroidManifest.xml:27:13-37
+37            <meta-data
+37-->[androidx.emoji2:emoji2:1.4.0] /home/kaki/.gradle/caches/9.3.0/transforms/dbd6d8b5206e2a3991db648bcd6be3d4/transformed/emoji2-1.4.0/AndroidManifest.xml:29:13-31:52
+38                android:name="androidx.emoji2.text.EmojiCompatInitializer"
+38-->[androidx.emoji2:emoji2:1.4.0] /home/kaki/.gradle/caches/9.3.0/transforms/dbd6d8b5206e2a3991db648bcd6be3d4/transformed/emoji2-1.4.0/AndroidManifest.xml:30:17-75
+39                android:value="androidx.startup" />
+39-->[androidx.emoji2:emoji2:1.4.0] /home/kaki/.gradle/caches/9.3.0/transforms/dbd6d8b5206e2a3991db648bcd6be3d4/transformed/emoji2-1.4.0/AndroidManifest.xml:31:17-49
+40            <meta-data
+40-->[androidx.lifecycle:lifecycle-process:2.10.0] /home/kaki/.gradle/caches/9.3.0/transforms/9f709df7711d920e18a899d2b0863bab/transformed/lifecycle-process-2.10.0/AndroidManifest.xml:29:13-31:52
+41                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
+41-->[androidx.lifecycle:lifecycle-process:2.10.0] /home/kaki/.gradle/caches/9.3.0/transforms/9f709df7711d920e18a899d2b0863bab/transformed/lifecycle-process-2.10.0/AndroidManifest.xml:30:17-78
+42                android:value="androidx.startup" />
+42-->[androidx.lifecycle:lifecycle-process:2.10.0] /home/kaki/.gradle/caches/9.3.0/transforms/9f709df7711d920e18a899d2b0863bab/transformed/lifecycle-process-2.10.0/AndroidManifest.xml:31:17-49
+43            <meta-data
+43-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/kaki/.gradle/caches/9.3.0/transforms/6de61856c38c6c828c653a19fb0509a0/transformed/profileinstaller-1.4.0/AndroidManifest.xml:29:13-31:52
+44                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
+44-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/kaki/.gradle/caches/9.3.0/transforms/6de61856c38c6c828c653a19fb0509a0/transformed/profileinstaller-1.4.0/AndroidManifest.xml:30:17-85
+45                android:value="androidx.startup" />
+45-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/kaki/.gradle/caches/9.3.0/transforms/6de61856c38c6c828c653a19fb0509a0/transformed/profileinstaller-1.4.0/AndroidManifest.xml:31:17-49
+46            <meta-data
+46-->[com.squareup.okhttp3:okhttp-android:5.3.2] /home/kaki/.gradle/caches/9.3.0/transforms/db85750f12f43d7b23b38ba89fd7fd15/transformed/okhttp-release/AndroidManifest.xml:16:13-18:52
+47                android:name="okhttp3.internal.platform.PlatformInitializer"
+47-->[com.squareup.okhttp3:okhttp-android:5.3.2] /home/kaki/.gradle/caches/9.3.0/transforms/db85750f12f43d7b23b38ba89fd7fd15/transformed/okhttp-release/AndroidManifest.xml:17:17-77
+48                android:value="androidx.startup" />
+48-->[com.squareup.okhttp3:okhttp-android:5.3.2] /home/kaki/.gradle/caches/9.3.0/transforms/db85750f12f43d7b23b38ba89fd7fd15/transformed/okhttp-release/AndroidManifest.xml:18:17-49
+49        </provider>
+50
+51        <uses-library
+51-->[androidx.window:window:1.5.0] /home/kaki/.gradle/caches/9.3.0/transforms/58a01d8292f26578d27c307a9701de68/transformed/window-1.5.0/AndroidManifest.xml:23:9-25:40
+52            android:name="androidx.window.extensions"
+52-->[androidx.window:window:1.5.0] /home/kaki/.gradle/caches/9.3.0/transforms/58a01d8292f26578d27c307a9701de68/transformed/window-1.5.0/AndroidManifest.xml:24:13-54
+53            android:required="false" />
+53-->[androidx.window:window:1.5.0] /home/kaki/.gradle/caches/9.3.0/transforms/58a01d8292f26578d27c307a9701de68/transformed/window-1.5.0/AndroidManifest.xml:25:13-37
+54        <uses-library
+54-->[androidx.window:window:1.5.0] /home/kaki/.gradle/caches/9.3.0/transforms/58a01d8292f26578d27c307a9701de68/transformed/window-1.5.0/AndroidManifest.xml:26:9-28:40
+55            android:name="androidx.window.sidecar"
+55-->[androidx.window:window:1.5.0] /home/kaki/.gradle/caches/9.3.0/transforms/58a01d8292f26578d27c307a9701de68/transformed/window-1.5.0/AndroidManifest.xml:27:13-51
+56            android:required="false" />
+56-->[androidx.window:window:1.5.0] /home/kaki/.gradle/caches/9.3.0/transforms/58a01d8292f26578d27c307a9701de68/transformed/window-1.5.0/AndroidManifest.xml:28:13-37
+57
+58        <receiver
+58-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/kaki/.gradle/caches/9.3.0/transforms/6de61856c38c6c828c653a19fb0509a0/transformed/profileinstaller-1.4.0/AndroidManifest.xml:34:9-52:20
+59            android:name="androidx.profileinstaller.ProfileInstallReceiver"
+59-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/kaki/.gradle/caches/9.3.0/transforms/6de61856c38c6c828c653a19fb0509a0/transformed/profileinstaller-1.4.0/AndroidManifest.xml:35:13-76
+60            android:directBootAware="false"
+60-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/kaki/.gradle/caches/9.3.0/transforms/6de61856c38c6c828c653a19fb0509a0/transformed/profileinstaller-1.4.0/AndroidManifest.xml:36:13-44
+61            android:enabled="true"
+61-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/kaki/.gradle/caches/9.3.0/transforms/6de61856c38c6c828c653a19fb0509a0/transformed/profileinstaller-1.4.0/AndroidManifest.xml:37:13-35
+62            android:exported="true"
+62-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/kaki/.gradle/caches/9.3.0/transforms/6de61856c38c6c828c653a19fb0509a0/transformed/profileinstaller-1.4.0/AndroidManifest.xml:38:13-36
+63            android:permission="android.permission.DUMP" >
+63-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/kaki/.gradle/caches/9.3.0/transforms/6de61856c38c6c828c653a19fb0509a0/transformed/profileinstaller-1.4.0/AndroidManifest.xml:39:13-57
+64            <intent-filter>
+64-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/kaki/.gradle/caches/9.3.0/transforms/6de61856c38c6c828c653a19fb0509a0/transformed/profileinstaller-1.4.0/AndroidManifest.xml:40:13-42:29
+65                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
+65-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/kaki/.gradle/caches/9.3.0/transforms/6de61856c38c6c828c653a19fb0509a0/transformed/profileinstaller-1.4.0/AndroidManifest.xml:41:17-91
+65-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/kaki/.gradle/caches/9.3.0/transforms/6de61856c38c6c828c653a19fb0509a0/transformed/profileinstaller-1.4.0/AndroidManifest.xml:41:25-88
+66            </intent-filter>
+67            <intent-filter>
+67-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/kaki/.gradle/caches/9.3.0/transforms/6de61856c38c6c828c653a19fb0509a0/transformed/profileinstaller-1.4.0/AndroidManifest.xml:43:13-45:29
+68                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
+68-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/kaki/.gradle/caches/9.3.0/transforms/6de61856c38c6c828c653a19fb0509a0/transformed/profileinstaller-1.4.0/AndroidManifest.xml:44:17-85
+68-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/kaki/.gradle/caches/9.3.0/transforms/6de61856c38c6c828c653a19fb0509a0/transformed/profileinstaller-1.4.0/AndroidManifest.xml:44:25-82
+69            </intent-filter>
+70            <intent-filter>
+70-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/kaki/.gradle/caches/9.3.0/transforms/6de61856c38c6c828c653a19fb0509a0/transformed/profileinstaller-1.4.0/AndroidManifest.xml:46:13-48:29
+71                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
+71-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/kaki/.gradle/caches/9.3.0/transforms/6de61856c38c6c828c653a19fb0509a0/transformed/profileinstaller-1.4.0/AndroidManifest.xml:47:17-88
+71-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/kaki/.gradle/caches/9.3.0/transforms/6de61856c38c6c828c653a19fb0509a0/transformed/profileinstaller-1.4.0/AndroidManifest.xml:47:25-85
+72            </intent-filter>
+73            <intent-filter>
+73-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/kaki/.gradle/caches/9.3.0/transforms/6de61856c38c6c828c653a19fb0509a0/transformed/profileinstaller-1.4.0/AndroidManifest.xml:49:13-51:29
+74                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
+74-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/kaki/.gradle/caches/9.3.0/transforms/6de61856c38c6c828c653a19fb0509a0/transformed/profileinstaller-1.4.0/AndroidManifest.xml:50:17-95
+74-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/kaki/.gradle/caches/9.3.0/transforms/6de61856c38c6c828c653a19fb0509a0/transformed/profileinstaller-1.4.0/AndroidManifest.xml:50:25-92
+75            </intent-filter>
+76        </receiver>
+77    </application>
+78
+79</manifest>

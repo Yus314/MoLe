@@ -68,10 +68,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import net.ktnx.mobileledger.R
+import net.ktnx.mobileledger.core.ui.components.ConfirmDialog
+import net.ktnx.mobileledger.core.ui.components.LoadingIndicator
+import net.ktnx.mobileledger.core.ui.components.UnsavedChangesDialog
 import net.ktnx.mobileledger.service.ThemeService
-import net.ktnx.mobileledger.ui.components.ConfirmDialog
-import net.ktnx.mobileledger.ui.components.LoadingIndicator
-import net.ktnx.mobileledger.ui.components.UnsavedChangesDialog
 import net.ktnx.mobileledger.ui.theme.MoLeTheme
 
 @OptIn(ExperimentalMaterial3Api::class)

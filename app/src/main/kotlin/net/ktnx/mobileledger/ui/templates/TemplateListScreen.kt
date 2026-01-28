@@ -53,7 +53,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import net.ktnx.mobileledger.R
-import net.ktnx.mobileledger.ui.components.LoadingIndicator
+import net.ktnx.mobileledger.core.ui.components.LoadingIndicator
 import net.ktnx.mobileledger.ui.theme.MoLeTheme
 
 /**

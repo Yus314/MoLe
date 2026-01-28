@@ -34,7 +34,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import net.ktnx.mobileledger.R
 import net.ktnx.mobileledger.domain.usecase.ConfigBackup
-import net.ktnx.mobileledger.domain.usecase.ObserveCurrentProfileUseCase
+import net.ktnx.mobileledger.feature.profile.usecase.ObserveCurrentProfileUseCase
 
 @HiltViewModel
 class BackupsViewModel @Inject constructor(

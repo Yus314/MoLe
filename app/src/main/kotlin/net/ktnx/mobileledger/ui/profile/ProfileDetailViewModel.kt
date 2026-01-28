@@ -43,10 +43,10 @@ import net.ktnx.mobileledger.core.domain.model.Profile
 import net.ktnx.mobileledger.core.domain.model.ProfileAuthentication
 import net.ktnx.mobileledger.core.domain.model.ServerVersion
 import net.ktnx.mobileledger.core.domain.model.TemporaryAuthData
-import net.ktnx.mobileledger.domain.usecase.GetAllProfilesUseCase
-import net.ktnx.mobileledger.domain.usecase.GetProfileByIdUseCase
 import net.ktnx.mobileledger.domain.usecase.ProfilePersistence
 import net.ktnx.mobileledger.domain.usecase.VersionDetector
+import net.ktnx.mobileledger.feature.profile.usecase.GetAllProfilesUseCase
+import net.ktnx.mobileledger.feature.profile.usecase.GetProfileByIdUseCase
 import net.ktnx.mobileledger.feature.profile.usecase.ProfileValidator
 import net.ktnx.mobileledger.service.AuthDataProvider
 

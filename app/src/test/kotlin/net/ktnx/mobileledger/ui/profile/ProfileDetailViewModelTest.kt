@@ -34,12 +34,12 @@ import net.ktnx.mobileledger.core.domain.model.FutureDates
 import net.ktnx.mobileledger.core.domain.model.Profile
 import net.ktnx.mobileledger.core.domain.model.TemporaryAuthData
 import net.ktnx.mobileledger.core.domain.repository.ProfileRepository
-import net.ktnx.mobileledger.domain.usecase.GetAllProfilesUseCaseImpl
-import net.ktnx.mobileledger.domain.usecase.GetProfileByIdUseCaseImpl
 import net.ktnx.mobileledger.domain.usecase.ProfilePersistence
 import net.ktnx.mobileledger.domain.usecase.ProfilePersistenceImpl
 import net.ktnx.mobileledger.domain.usecase.VersionDetector
 import net.ktnx.mobileledger.fake.FakeVersionDetector
+import net.ktnx.mobileledger.feature.profile.usecase.GetAllProfilesUseCaseImpl
+import net.ktnx.mobileledger.feature.profile.usecase.GetProfileByIdUseCaseImpl
 import net.ktnx.mobileledger.feature.profile.usecase.ProfileValidator
 import net.ktnx.mobileledger.feature.profile.usecase.ProfileValidatorImpl
 import net.ktnx.mobileledger.service.AuthDataProvider

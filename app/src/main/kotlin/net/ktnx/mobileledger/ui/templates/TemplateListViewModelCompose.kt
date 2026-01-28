@@ -32,11 +32,11 @@ import kotlinx.coroutines.launch
 import logcat.asLog
 import logcat.logcat
 import net.ktnx.mobileledger.core.domain.model.Template
-import net.ktnx.mobileledger.domain.usecase.DeleteTemplateUseCase
-import net.ktnx.mobileledger.domain.usecase.DuplicateTemplateUseCase
-import net.ktnx.mobileledger.domain.usecase.GetTemplateUseCase
-import net.ktnx.mobileledger.domain.usecase.ObserveTemplatesUseCase
-import net.ktnx.mobileledger.domain.usecase.SaveTemplateUseCase
+import net.ktnx.mobileledger.feature.templates.usecase.DeleteTemplateUseCase
+import net.ktnx.mobileledger.feature.templates.usecase.DuplicateTemplateUseCase
+import net.ktnx.mobileledger.feature.templates.usecase.GetTemplateUseCase
+import net.ktnx.mobileledger.feature.templates.usecase.ObserveTemplatesUseCase
+import net.ktnx.mobileledger.feature.templates.usecase.SaveTemplateUseCase
 
 /**
  * ViewModel for the template list screen using Compose.

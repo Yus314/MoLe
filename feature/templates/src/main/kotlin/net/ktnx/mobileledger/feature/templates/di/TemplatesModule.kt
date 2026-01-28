@@ -22,6 +22,18 @@ import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
+import net.ktnx.mobileledger.feature.templates.usecase.DeleteTemplateUseCase
+import net.ktnx.mobileledger.feature.templates.usecase.DeleteTemplateUseCaseImpl
+import net.ktnx.mobileledger.feature.templates.usecase.DuplicateTemplateUseCase
+import net.ktnx.mobileledger.feature.templates.usecase.DuplicateTemplateUseCaseImpl
+import net.ktnx.mobileledger.feature.templates.usecase.GetAllTemplatesUseCase
+import net.ktnx.mobileledger.feature.templates.usecase.GetAllTemplatesUseCaseImpl
+import net.ktnx.mobileledger.feature.templates.usecase.GetTemplateUseCase
+import net.ktnx.mobileledger.feature.templates.usecase.GetTemplateUseCaseImpl
+import net.ktnx.mobileledger.feature.templates.usecase.ObserveTemplatesUseCase
+import net.ktnx.mobileledger.feature.templates.usecase.ObserveTemplatesUseCaseImpl
+import net.ktnx.mobileledger.feature.templates.usecase.SaveTemplateUseCase
+import net.ktnx.mobileledger.feature.templates.usecase.SaveTemplateUseCaseImpl
 import net.ktnx.mobileledger.feature.templates.usecase.TemplateMatcher
 import net.ktnx.mobileledger.feature.templates.usecase.TemplateMatcherImpl
 import net.ktnx.mobileledger.feature.templates.usecase.TemplatePatternValidator
@@ -29,10 +41,41 @@ import net.ktnx.mobileledger.feature.templates.usecase.TemplatePatternValidatorI
 
 /**
  * Hilt module for providing template feature dependencies.
+ *
+ * Contains:
+ * - CRUD use cases: Observe, Get, GetAll, Save, Delete, Duplicate
+ * - Utility use cases: TemplateMatcher, TemplatePatternValidator
+ *
+ * Note: TemplateAccountRowManager and TemplateDataMapper remain in app
+ * due to UI type dependencies.
  */
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class TemplatesModule {
+
+    @Binds
+    @Singleton
+    abstract fun bindObserveTemplatesUseCase(impl: ObserveTemplatesUseCaseImpl): ObserveTemplatesUseCase
+
+    @Binds
+    @Singleton
+    abstract fun bindGetTemplateUseCase(impl: GetTemplateUseCaseImpl): GetTemplateUseCase
+
+    @Binds
+    @Singleton
+    abstract fun bindGetAllTemplatesUseCase(impl: GetAllTemplatesUseCaseImpl): GetAllTemplatesUseCase
+
+    @Binds
+    @Singleton
+    abstract fun bindSaveTemplateUseCase(impl: SaveTemplateUseCaseImpl): SaveTemplateUseCase
+
+    @Binds
+    @Singleton
+    abstract fun bindDeleteTemplateUseCase(impl: DeleteTemplateUseCaseImpl): DeleteTemplateUseCase
+
+    @Binds
+    @Singleton
+    abstract fun bindDuplicateTemplateUseCase(impl: DuplicateTemplateUseCaseImpl): DuplicateTemplateUseCase
 
     @Binds
     @Singleton

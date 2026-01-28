@@ -40,8 +40,8 @@ import net.ktnx.mobileledger.core.testing.fake.FakeProfileRepository
 import net.ktnx.mobileledger.domain.usecase.AccountHierarchyResolverImpl
 import net.ktnx.mobileledger.domain.usecase.GetShowZeroBalanceUseCaseImpl
 import net.ktnx.mobileledger.domain.usecase.ObserveAccountsWithAmountsUseCaseImpl
-import net.ktnx.mobileledger.domain.usecase.ObserveCurrentProfileUseCaseImpl
 import net.ktnx.mobileledger.domain.usecase.SetShowZeroBalanceUseCaseImpl
+import net.ktnx.mobileledger.feature.profile.usecase.ObserveCurrentProfileUseCaseImpl
 import net.ktnx.mobileledger.util.createTestDomainProfile
 import org.junit.After
 import org.junit.Assert.assertEquals

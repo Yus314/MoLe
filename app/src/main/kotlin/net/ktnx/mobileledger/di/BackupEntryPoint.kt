@@ -29,16 +29,16 @@ import net.ktnx.mobileledger.core.domain.repository.CurrencyRepository
 import net.ktnx.mobileledger.core.domain.repository.PreferencesRepository
 import net.ktnx.mobileledger.core.domain.repository.ProfileRepository
 import net.ktnx.mobileledger.core.domain.repository.TemplateRepository
-import net.ktnx.mobileledger.domain.usecase.GetAllProfilesUseCase
 import net.ktnx.mobileledger.domain.usecase.GetLastSyncTimestampUseCase
-import net.ktnx.mobileledger.domain.usecase.GetProfileByIdUseCase
 import net.ktnx.mobileledger.domain.usecase.GetStartupProfileIdUseCase
 import net.ktnx.mobileledger.domain.usecase.GetStartupThemeUseCase
-import net.ktnx.mobileledger.domain.usecase.ObserveCurrentProfileUseCase
-import net.ktnx.mobileledger.domain.usecase.ObserveProfilesUseCase
-import net.ktnx.mobileledger.domain.usecase.SetCurrentProfileUseCase
 import net.ktnx.mobileledger.domain.usecase.SetStartupProfileIdUseCase
 import net.ktnx.mobileledger.domain.usecase.SetStartupThemeUseCase
+import net.ktnx.mobileledger.feature.profile.usecase.GetAllProfilesUseCase
+import net.ktnx.mobileledger.feature.profile.usecase.GetProfileByIdUseCase
+import net.ktnx.mobileledger.feature.profile.usecase.ObserveCurrentProfileUseCase
+import net.ktnx.mobileledger.feature.profile.usecase.ObserveProfilesUseCase
+import net.ktnx.mobileledger.feature.profile.usecase.SetCurrentProfileUseCase
 import net.ktnx.mobileledger.service.ThemeService
 
 /**

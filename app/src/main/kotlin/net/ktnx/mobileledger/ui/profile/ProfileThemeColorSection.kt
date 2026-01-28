@@ -38,7 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import net.ktnx.mobileledger.ui.components.HueRing
+import net.ktnx.mobileledger.core.ui.components.HueRing
 import net.ktnx.mobileledger.ui.theme.hslToColor
 
 @Composable

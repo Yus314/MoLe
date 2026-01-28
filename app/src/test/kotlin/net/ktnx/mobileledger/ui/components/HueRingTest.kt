@@ -25,6 +25,7 @@ import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipe
 import androidx.compose.ui.unit.dp
+import net.ktnx.mobileledger.core.ui.components.HueRing
 import net.ktnx.mobileledger.ui.theme.MoLeTheme
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue

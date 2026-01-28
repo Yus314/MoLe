@@ -27,12 +27,12 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import net.ktnx.mobileledger.core.domain.model.Profile
-import net.ktnx.mobileledger.domain.usecase.GetAllProfilesUseCase
-import net.ktnx.mobileledger.domain.usecase.GetProfileByIdUseCase
-import net.ktnx.mobileledger.domain.usecase.ObserveCurrentProfileUseCase
-import net.ktnx.mobileledger.domain.usecase.ObserveProfilesUseCase
-import net.ktnx.mobileledger.domain.usecase.SetCurrentProfileUseCase
-import net.ktnx.mobileledger.domain.usecase.UpdateProfileOrderUseCase
+import net.ktnx.mobileledger.feature.profile.usecase.GetAllProfilesUseCase
+import net.ktnx.mobileledger.feature.profile.usecase.GetProfileByIdUseCase
+import net.ktnx.mobileledger.feature.profile.usecase.ObserveCurrentProfileUseCase
+import net.ktnx.mobileledger.feature.profile.usecase.ObserveProfilesUseCase
+import net.ktnx.mobileledger.feature.profile.usecase.SetCurrentProfileUseCase
+import net.ktnx.mobileledger.feature.profile.usecase.UpdateProfileOrderUseCase
 
 /**
  * ViewModel for profile selection in the navigation drawer.
