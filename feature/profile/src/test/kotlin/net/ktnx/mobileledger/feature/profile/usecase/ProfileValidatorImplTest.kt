@@ -15,7 +15,7 @@
  * along with MoLe. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ktnx.mobileledger.domain.usecase
+package net.ktnx.mobileledger.feature.profile.usecase
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse

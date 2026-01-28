@@ -38,10 +38,10 @@ import net.ktnx.mobileledger.domain.usecase.GetAllProfilesUseCaseImpl
 import net.ktnx.mobileledger.domain.usecase.GetProfileByIdUseCaseImpl
 import net.ktnx.mobileledger.domain.usecase.ProfilePersistence
 import net.ktnx.mobileledger.domain.usecase.ProfilePersistenceImpl
-import net.ktnx.mobileledger.domain.usecase.ProfileValidator
-import net.ktnx.mobileledger.domain.usecase.ProfileValidatorImpl
 import net.ktnx.mobileledger.domain.usecase.VersionDetector
 import net.ktnx.mobileledger.fake.FakeVersionDetector
+import net.ktnx.mobileledger.feature.profile.usecase.ProfileValidator
+import net.ktnx.mobileledger.feature.profile.usecase.ProfileValidatorImpl
 import net.ktnx.mobileledger.service.AuthDataProvider
 import net.ktnx.mobileledger.util.createTestDomainProfile
 import org.junit.After

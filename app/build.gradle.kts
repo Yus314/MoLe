@@ -152,6 +152,7 @@ dependencies {
 
     // Feature modules
     implementation(project(":feature:templates"))
+    implementation(project(":feature:profile"))
 
     // Kotlin
     implementation(libs.kotlin.stdlib)

@@ -15,7 +15,7 @@
  * along with MoLe. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ktnx.mobileledger.domain.usecase
+package net.ktnx.mobileledger.feature.profile.usecase
 
 import java.net.MalformedURLException
 import java.net.URL

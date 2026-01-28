@@ -74,8 +74,6 @@ import net.ktnx.mobileledger.domain.usecase.ObserveTransactionsUseCase
 import net.ktnx.mobileledger.domain.usecase.ObserveTransactionsUseCaseImpl
 import net.ktnx.mobileledger.domain.usecase.ProfilePersistence
 import net.ktnx.mobileledger.domain.usecase.ProfilePersistenceImpl
-import net.ktnx.mobileledger.domain.usecase.ProfileValidator
-import net.ktnx.mobileledger.domain.usecase.ProfileValidatorImpl
 import net.ktnx.mobileledger.domain.usecase.SaveCurrencyUseCase
 import net.ktnx.mobileledger.domain.usecase.SaveCurrencyUseCaseImpl
 import net.ktnx.mobileledger.domain.usecase.SaveTemplateUseCase
@@ -143,10 +141,6 @@ abstract class UseCaseModule {
     @Binds
     @Singleton
     abstract fun bindTransactionBalanceCalculator(impl: TransactionBalanceCalculatorImpl): TransactionBalanceCalculator
-
-    @Binds
-    @Singleton
-    abstract fun bindProfileValidator(impl: ProfileValidatorImpl): ProfileValidator
 
     @Binds
     @Singleton

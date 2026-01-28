@@ -17,7 +17,7 @@
 
 package net.ktnx.mobileledger.fake
 
-import net.ktnx.mobileledger.domain.usecase.ProfileValidator
+import net.ktnx.mobileledger.feature.profile.usecase.ProfileValidator
 
 /**
  * Fake implementation of [ProfileValidator] for testing.
